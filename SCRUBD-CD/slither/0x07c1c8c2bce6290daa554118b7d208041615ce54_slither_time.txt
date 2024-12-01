@@ -1,0 +1,540 @@
+'solc --version' running
+'solc ./0x07c1c8c2bce6290daa554118b7d208041615ce54.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+RCpro.takeEther(address) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#478-516) use msg.value in a loop: msg.value >= sendThreshold[i] (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#488)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation/#msgvalue-inside-a-loop
+
+Reentrancy in RC.giveToken(address) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#314-325):
+	External calls:
+	- tokenSaleContract.claim(_buyer,pendingTokenUser[_buyer]) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#319)
+	- tokenSaleContract.wallet().transfer(etherUser[_buyer]) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#323)
+	External calls sending eth:
+	- tokenSaleContract.wallet().transfer(etherUser[_buyer]) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#323)
+	State variables written after the call(s):
+	- etherUser[_buyer] = 0 (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#324)
+	RC.etherUser (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#181) can be used in cross function reentrancies:
+	- RC.etherUser (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#181)
+	- RC.giveToken(address) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#314-325)
+	- RC.refundEther(address) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#345-349)
+	- RC.takeEther(address) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#283-312)
+	- RC.userBalance(address) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#355-357)
+Reentrancy in RCpro.giveToken(address) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#518-529):
+	External calls:
+	- tokenSaleContract.claim(_buyer,pendingTokenUser[_buyer]) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#523)
+	- tokenSaleContract.wallet().transfer(etherUser[_buyer]) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#527)
+	External calls sending eth:
+	- tokenSaleContract.wallet().transfer(etherUser[_buyer]) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#527)
+	State variables written after the call(s):
+	- etherUser[_buyer] = 0 (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#528)
+	RCpro.etherUser (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#374) can be used in cross function reentrancies:
+	- RCpro.etherUser (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#374)
+	- RCpro.giveToken(address) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#518-529)
+	- RCpro.refundEther(address) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#549-553)
+	- RCpro.takeEther(address) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#478-516)
+	- RCpro.userBalance(address) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#559-561)
+Reentrancy in RC.releaseTokensTo(address) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#236-240):
+	External calls:
+	- takeEther(buyer) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#237)
+		- oneToken = 10 ** uint256(tokenSaleContract.decimals()) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#289)
+		- tokenValue = tokenSaleContract.tokenValueInEther(oneTokenInFiatWei) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#290)
+		- unboughtTokens = tokenInterface(tokenSaleContract.tokenContract()).balanceOf(tokenSaleContract) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#293)
+	- giveToken(buyer) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#238)
+		- tokenSaleContract.claim(_buyer,pendingTokenUser[_buyer]) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#319)
+		- tokenSaleContract.wallet().transfer(etherUser[_buyer]) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#323)
+	External calls sending eth:
+	- takeEther(buyer) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#237)
+		- _buyer.transfer(refund) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#303)
+	- giveToken(buyer) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#238)
+		- tokenSaleContract.wallet().transfer(etherUser[_buyer]) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#323)
+	State variables written after the call(s):
+	- giveToken(buyer) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#238)
+		- etherUser[_buyer] = 0 (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#324)
+	RC.etherUser (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#181) can be used in cross function reentrancies:
+	- RC.etherUser (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#181)
+	- RC.giveToken(address) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#314-325)
+	- RC.refundEther(address) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#345-349)
+	- RC.takeEther(address) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#283-312)
+	- RC.userBalance(address) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#355-357)
+	- giveToken(buyer) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#238)
+		- pendingTokenUser[_buyer] = 0 (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#321)
+	RC.pendingTokenUser (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#182) can be used in cross function reentrancies:
+	- RC.giveToken(address) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#314-325)
+	- RC.pendingTokenUser (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#182)
+	- RC.refundEther(address) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#345-349)
+	- RC.takeEther(address) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#283-312)
+	- RC.userBalance(address) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#355-357)
+Reentrancy in RCpro.releaseTokensTo(address) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#431-435):
+	External calls:
+	- takeEther(buyer) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#432)
+		- oneToken = 10 ** uint256(tokenSaleContract.decimals()) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#484)
+		- tokenValue = tokenSaleContract.tokenValueInEther(tknPriceApplied) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#494)
+		- unboughtTokens = tokenInterface(tokenSaleContract.tokenContract()).balanceOf(tokenSaleContract) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#497)
+	- giveToken(buyer) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#433)
+		- tokenSaleContract.claim(_buyer,pendingTokenUser[_buyer]) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#523)
+		- tokenSaleContract.wallet().transfer(etherUser[_buyer]) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#527)
+	External calls sending eth:
+	- takeEther(buyer) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#432)
+		- _buyer.transfer(refund) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#507)
+	- giveToken(buyer) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#433)
+		- tokenSaleContract.wallet().transfer(etherUser[_buyer]) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#527)
+	State variables written after the call(s):
+	- giveToken(buyer) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#433)
+		- etherUser[_buyer] = 0 (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#528)
+	RCpro.etherUser (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#374) can be used in cross function reentrancies:
+	- RCpro.etherUser (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#374)
+	- RCpro.giveToken(address) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#518-529)
+	- RCpro.refundEther(address) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#549-553)
+	- RCpro.takeEther(address) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#478-516)
+	- RCpro.userBalance(address) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#559-561)
+	- giveToken(buyer) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#433)
+		- pendingTokenUser[_buyer] = 0 (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#525)
+	RCpro.pendingTokenUser (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#375) can be used in cross function reentrancies:
+	- RCpro.giveToken(address) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#518-529)
+	- RCpro.pendingTokenUser (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#375)
+	- RCpro.refundEther(address) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#549-553)
+	- RCpro.takeEther(address) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#478-516)
+	- RCpro.userBalance(address) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#559-561)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+TokenSale.buyFromRC(address,uint256,uint256) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#613-640) ignores return value by tokenContract.transfer(_buyer,tokenAmount) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#636)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+Reentrancy in RC.giveToken(address) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#314-325):
+	External calls:
+	- tokenSaleContract.claim(_buyer,pendingTokenUser[_buyer]) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#319)
+	State variables written after the call(s):
+	- pendingTokenUser[_buyer] = 0 (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#321)
+	RC.pendingTokenUser (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#182) can be used in cross function reentrancies:
+	- RC.giveToken(address) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#314-325)
+	- RC.pendingTokenUser (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#182)
+	- RC.refundEther(address) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#345-349)
+	- RC.takeEther(address) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#283-312)
+	- RC.userBalance(address) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#355-357)
+Reentrancy in RCpro.giveToken(address) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#518-529):
+	External calls:
+	- tokenSaleContract.claim(_buyer,pendingTokenUser[_buyer]) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#523)
+	State variables written after the call(s):
+	- pendingTokenUser[_buyer] = 0 (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#525)
+	RCpro.pendingTokenUser (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#375) can be used in cross function reentrancies:
+	- RCpro.giveToken(address) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#518-529)
+	- RCpro.pendingTokenUser (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#375)
+	- RCpro.refundEther(address) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#549-553)
+	- RCpro.takeEther(address) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#478-516)
+	- RCpro.userBalance(address) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#559-561)
+Reentrancy in RC.takeEther(address) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#283-312):
+	External calls:
+	- oneToken = 10 ** uint256(tokenSaleContract.decimals()) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#289)
+	- tokenValue = tokenSaleContract.tokenValueInEther(oneTokenInFiatWei) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#290)
+	- unboughtTokens = tokenInterface(tokenSaleContract.tokenContract()).balanceOf(tokenSaleContract) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#293)
+	State variables written after the call(s):
+	- remainingTokens = 0 (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#302)
+	RC.remainingTokens (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#176) can be used in cross function reentrancies:
+	- RC.RC(address,uint256,uint256,uint256,uint256,uint256,address[],uint256[],uint256[]) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#187-207)
+	- RC.ended() (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#246-248)
+	- RC.remainingTokens() (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#262-264)
+	- RC.remainingTokens (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#176)
+	- RC.started() (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#242-244)
+	- RC.takeEther(address) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#283-312)
+	- RC.totalTokens() (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#258-260)
+	- remainingTokens = remainingTokens.sub(tokenAmount) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#305)
+	RC.remainingTokens (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#176) can be used in cross function reentrancies:
+	- RC.RC(address,uint256,uint256,uint256,uint256,uint256,address[],uint256[],uint256[]) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#187-207)
+	- RC.ended() (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#246-248)
+	- RC.remainingTokens() (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#262-264)
+	- RC.remainingTokens (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#176)
+	- RC.started() (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#242-244)
+	- RC.takeEther(address) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#283-312)
+	- RC.totalTokens() (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#258-260)
+Reentrancy in RCpro.takeEther(address) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#478-516):
+	External calls:
+	- oneToken = 10 ** uint256(tokenSaleContract.decimals()) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#484)
+	- tokenValue = tokenSaleContract.tokenValueInEther(tknPriceApplied) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#494)
+	- unboughtTokens = tokenInterface(tokenSaleContract.tokenContract()).balanceOf(tokenSaleContract) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#497)
+	State variables written after the call(s):
+	- remainingTokens = 0 (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#506)
+	RCpro.remainingTokens (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#368) can be used in cross function reentrancies:
+	- RCpro.RCpro(address,uint256[],uint256[],uint256,uint256,uint256,uint256,address[],uint256[],uint256[]) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#380-402)
+	- RCpro.ended() (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#441-443)
+	- RCpro.remainingTokens() (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#457-459)
+	- RCpro.remainingTokens (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#368)
+	- RCpro.started() (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#437-439)
+	- RCpro.takeEther(address) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#478-516)
+	- RCpro.totalTokens() (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#453-455)
+	- remainingTokens = remainingTokens.sub(tokenAmount) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#509)
+	RCpro.remainingTokens (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#368) can be used in cross function reentrancies:
+	- RCpro.RCpro(address,uint256[],uint256[],uint256,uint256,uint256,uint256,address[],uint256[],uint256[]) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#380-402)
+	- RCpro.ended() (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#441-443)
+	- RCpro.remainingTokens() (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#457-459)
+	- RCpro.remainingTokens (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#368)
+	- RCpro.started() (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#437-439)
+	- RCpro.takeEther(address) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#478-516)
+	- RCpro.totalTokens() (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#453-455)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+TokenSale.addMeByRC() (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#651-657) uses tx.origin for authorization: require(bool)(tx.origin == owner) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#652)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-usage-of-txorigin
+
+RC.giveToken(address) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#314-325) ignores return value by tokenSaleContract.claim(_buyer,pendingTokenUser[_buyer]) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#319)
+RC.claimTokenBonus(address) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#327-343) ignores return value by tokenSaleContract.claim(_buyer,addTokenAmount) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#341)
+RCpro.giveToken(address) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#518-529) ignores return value by tokenSaleContract.claim(_buyer,pendingTokenUser[_buyer]) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#523)
+RCpro.claimTokenBonus(address) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#531-547) ignores return value by tokenSaleContract.claim(_buyer,addTokenAmount) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#545)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+RC.setTime(uint256,uint256) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#227-230) should emit an event for: 
+	- startTime = _newStart (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#228) 
+	- endTime = _newEnd (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#229) 
+RC.changeMinimum(uint256) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#232-234) should emit an event for: 
+	- etherMinimum = _newEtherMinimum (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#233) 
+RCpro.setTime(uint256,uint256) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#422-425) should emit an event for: 
+	- startTime = _newStart (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#423) 
+	- endTime = _newEnd (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#424) 
+RCpro.changeMinimum(uint256) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#427-429) should emit an event for: 
+	- etherMinimum = _newEtherMinimum (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#428) 
+TokenSale.setAdvisorFee(uint256) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#684-686) should emit an event for: 
+	- advisorFee = _advisorFee (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#685) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+RC.refundEther(address).to (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#345) lacks a zero-check on :
+		- to.transfer(etherUser[to]) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#346)
+RC.withdraw(address,uint256).to (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#351) lacks a zero-check on :
+		- to.transfer(value) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#352)
+RCpro.refundEther(address).to (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#549) lacks a zero-check on :
+		- to.transfer(etherUser[to]) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#550)
+RCpro.withdraw(address,uint256).to (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#555) lacks a zero-check on :
+		- to.transfer(value) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#556)
+TokenSale.buyFromRC(address,uint256,uint256)._buyer (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#613) lacks a zero-check on :
+		- _buyer.transfer(refund) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#630)
+TokenSale.withdraw(address,uint256).to (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#664) lacks a zero-check on :
+		- to.transfer(value) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#665)
+TokenSale.setWalletAddress(address)._wallet (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#676) lacks a zero-check on :
+		- wallet = _wallet (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#677)
+TokenSale.setAdvisorAddress(address)._advisor (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#680) lacks a zero-check on :
+		- advisor = _advisor (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#681)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in RC.changeMinimum(uint256) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#232-234):
+	External calls:
+	- onlyTokenSaleOwner() (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#232)
+		- require(bool)(msg.sender == tokenSaleContract.owner()) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#223)
+	State variables written after the call(s):
+	- etherMinimum = _newEtherMinimum (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#233)
+Reentrancy in RCpro.changeMinimum(uint256) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#427-429):
+	External calls:
+	- onlyTokenSaleOwner() (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#427)
+		- require(bool)(msg.sender == tokenSaleContract.owner()) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#418)
+	State variables written after the call(s):
+	- etherMinimum = _newEtherMinimum (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#428)
+Reentrancy in RC.giveToken(address) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#314-325):
+	External calls:
+	- tokenSaleContract.claim(_buyer,pendingTokenUser[_buyer]) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#319)
+	State variables written after the call(s):
+	- soldTokens = soldTokens.add(pendingTokenUser[_buyer]) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#320)
+Reentrancy in RCpro.giveToken(address) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#518-529):
+	External calls:
+	- tokenSaleContract.claim(_buyer,pendingTokenUser[_buyer]) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#523)
+	State variables written after the call(s):
+	- soldTokens = soldTokens.add(pendingTokenUser[_buyer]) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#524)
+Reentrancy in RC.refundEther(address) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#345-349):
+	External calls:
+	- onlyTokenSaleOwner() (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#345)
+		- require(bool)(msg.sender == tokenSaleContract.owner()) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#223)
+	External calls sending eth:
+	- to.transfer(etherUser[to]) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#346)
+	State variables written after the call(s):
+	- etherUser[to] = 0 (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#347)
+	- pendingTokenUser[to] = 0 (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#348)
+Reentrancy in RCpro.refundEther(address) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#549-553):
+	External calls:
+	- onlyTokenSaleOwner() (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#549)
+		- require(bool)(msg.sender == tokenSaleContract.owner()) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#418)
+	External calls sending eth:
+	- to.transfer(etherUser[to]) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#550)
+	State variables written after the call(s):
+	- etherUser[to] = 0 (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#551)
+	- pendingTokenUser[to] = 0 (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#552)
+Reentrancy in RC.setTime(uint256,uint256) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#227-230):
+	External calls:
+	- onlyTokenSaleOwner() (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#227)
+		- require(bool)(msg.sender == tokenSaleContract.owner()) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#223)
+	State variables written after the call(s):
+	- endTime = _newEnd (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#229)
+	- startTime = _newStart (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#228)
+Reentrancy in RCpro.setTime(uint256,uint256) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#422-425):
+	External calls:
+	- onlyTokenSaleOwner() (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#422)
+		- require(bool)(msg.sender == tokenSaleContract.owner()) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#418)
+	State variables written after the call(s):
+	- endTime = _newEnd (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#424)
+	- startTime = _newStart (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#423)
+Reentrancy in RC.setTimeRC(uint256,uint256) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#209-220):
+	External calls:
+	- startTime = tokenSaleContract.startTime() (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#211)
+	- endTime = tokenSaleContract.endTime() (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#216)
+	State variables written after the call(s):
+	- endTime = tokenSaleContract.endTime() (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#216)
+Reentrancy in RC.setTimeRC(uint256,uint256) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#209-220):
+	External calls:
+	- startTime = tokenSaleContract.startTime() (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#211)
+	State variables written after the call(s):
+	- endTime = _endTime (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#218)
+Reentrancy in RCpro.setTimeRC(uint256,uint256) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#404-415):
+	External calls:
+	- startTime = tokenSaleContract.startTime() (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#406)
+	- endTime = tokenSaleContract.endTime() (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#411)
+	State variables written after the call(s):
+	- endTime = tokenSaleContract.endTime() (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#411)
+Reentrancy in RCpro.setTimeRC(uint256,uint256) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#404-415):
+	External calls:
+	- startTime = tokenSaleContract.startTime() (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#406)
+	State variables written after the call(s):
+	- endTime = _endTime (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#413)
+Reentrancy in RC.takeEther(address) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#283-312):
+	External calls:
+	- oneToken = 10 ** uint256(tokenSaleContract.decimals()) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#289)
+	- tokenValue = tokenSaleContract.tokenValueInEther(oneTokenInFiatWei) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#290)
+	- unboughtTokens = tokenInterface(tokenSaleContract.tokenContract()).balanceOf(tokenSaleContract) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#293)
+	External calls sending eth:
+	- _buyer.transfer(refund) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#303)
+	State variables written after the call(s):
+	- etherUser[_buyer] = etherUser[_buyer].add(msg.value.sub(refund)) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#308)
+	- pendingTokenUser[_buyer] = pendingTokenUser[_buyer].add(tokenAmount) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#309)
+Reentrancy in RCpro.takeEther(address) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#478-516):
+	External calls:
+	- oneToken = 10 ** uint256(tokenSaleContract.decimals()) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#484)
+	- tokenValue = tokenSaleContract.tokenValueInEther(tknPriceApplied) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#494)
+	- unboughtTokens = tokenInterface(tokenSaleContract.tokenContract()).balanceOf(tokenSaleContract) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#497)
+	External calls sending eth:
+	- _buyer.transfer(refund) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#507)
+	State variables written after the call(s):
+	- etherUser[_buyer] = etherUser[_buyer].add(msg.value.sub(refund)) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#512)
+	- pendingTokenUser[_buyer] = pendingTokenUser[_buyer].add(tokenAmount) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#513)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in TokenSale.buyFromRC(address,uint256,uint256) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#613-640):
+	External calls:
+	- tokenValue = tokenValueInEther(_rcTokenValue) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#615)
+		- oneEtherInUsd = rateContract.readRate(usd) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#591)
+	- remainingTokens = tokenContract.balanceOf(this) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#620)
+	- tokenContract.transfer(_buyer,tokenAmount) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#636)
+	- isBuyable() (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#613)
+		- remainingTokens = tokenContract.balanceOf(this) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#601)
+	External calls sending eth:
+	- forward(msg.value - refund) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#628)
+		- advisor.transfer(advisorAmount) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#645)
+		- wallet.transfer(walletAmount) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#646)
+	- _buyer.transfer(refund) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#630)
+	- forward(msg.value) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#633)
+		- advisor.transfer(advisorAmount) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#645)
+		- wallet.transfer(walletAmount) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#646)
+	Event emitted after the call(s):
+	- Buy(_buyer,tokenAmount,_ambassador) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#637)
+Reentrancy in RC.takeEther(address) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#283-312):
+	External calls:
+	- oneToken = 10 ** uint256(tokenSaleContract.decimals()) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#289)
+	- tokenValue = tokenSaleContract.tokenValueInEther(oneTokenInFiatWei) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#290)
+	- unboughtTokens = tokenInterface(tokenSaleContract.tokenContract()).balanceOf(tokenSaleContract) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#293)
+	External calls sending eth:
+	- _buyer.transfer(refund) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#303)
+	Event emitted after the call(s):
+	- Buy(_buyer,msg.value,tokenAmount,oneTokenInFiatWei) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#311)
+Reentrancy in RCpro.takeEther(address) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#478-516):
+	External calls:
+	- oneToken = 10 ** uint256(tokenSaleContract.decimals()) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#484)
+	- tokenValue = tokenSaleContract.tokenValueInEther(tknPriceApplied) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#494)
+	- unboughtTokens = tokenInterface(tokenSaleContract.tokenContract()).balanceOf(tokenSaleContract) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#497)
+	External calls sending eth:
+	- _buyer.transfer(refund) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#507)
+	Event emitted after the call(s):
+	- Buy(_buyer,msg.value,tokenAmount,tknPriceApplied) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#515)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+RC.started() (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#242-244) uses timestamp for comparisons
+	Dangerous comparisons:
+	- now > startTime || remainingTokens == 0 (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#243)
+RC.ended() (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#246-248) uses timestamp for comparisons
+	Dangerous comparisons:
+	- now > endTime || remainingTokens == 0 (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#247)
+RC.fallback() (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#271-279) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(now > startTime) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#272)
+	- now < endTime (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#273)
+RC.takeEther(address) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#283-312) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(now > startTime) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#284)
+	- require(bool)(now < endTime) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#285)
+RC.claimTokenBonus(address) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#327-343) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(now > endTime) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#328)
+RCpro.started() (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#437-439) uses timestamp for comparisons
+	Dangerous comparisons:
+	- now > startTime || remainingTokens == 0 (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#438)
+RCpro.ended() (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#441-443) uses timestamp for comparisons
+	Dangerous comparisons:
+	- now > endTime || remainingTokens == 0 (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#442)
+RCpro.fallback() (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#466-474) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(now > startTime) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#467)
+	- now < endTime (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#468)
+RCpro.takeEther(address) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#478-516) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(now > startTime) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#479)
+	- require(bool)(now < endTime) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#480)
+RCpro.claimTokenBonus(address) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#531-547) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(now > endTime) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#532)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Version constraint ^0.4.19 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ABIEncoderV2PackedStorage_0.4.x
+	- ExpExponentCleanup
+	- EventStructWrongData
+	- NestedArrayFunctionCallDecoder.
+It is used by:
+	- ^0.4.19 (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#1)
+solc-0.4.21 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Contract tokenInterface (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#71-74) is not in CapWords
+Contract rateInterface (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#76-78) is not in CapWords
+Parameter RC.setTimeRC(uint256,uint256)._startTime (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#209) is not in mixedCase
+Parameter RC.setTimeRC(uint256,uint256)._endTime (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#209) is not in mixedCase
+Parameter RC.setTime(uint256,uint256)._newStart (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#227) is not in mixedCase
+Parameter RC.setTime(uint256,uint256)._newEnd (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#227) is not in mixedCase
+Parameter RC.changeMinimum(uint256)._newEtherMinimum (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#232) is not in mixedCase
+Parameter RC.takeEther(address)._buyer (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#283) is not in mixedCase
+Parameter RC.giveToken(address)._buyer (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#314) is not in mixedCase
+Parameter RC.claimTokenBonus(address)._buyer (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#327) is not in mixedCase
+Parameter RC.userBalance(address)._user (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#355) is not in mixedCase
+Parameter RCpro.setTimeRC(uint256,uint256)._startTime (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#404) is not in mixedCase
+Parameter RCpro.setTimeRC(uint256,uint256)._endTime (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#404) is not in mixedCase
+Parameter RCpro.setTime(uint256,uint256)._newStart (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#422) is not in mixedCase
+Parameter RCpro.setTime(uint256,uint256)._newEnd (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#422) is not in mixedCase
+Parameter RCpro.changeMinimum(uint256)._newEtherMinimum (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#427) is not in mixedCase
+Parameter RCpro.takeEther(address)._buyer (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#478) is not in mixedCase
+Parameter RCpro.giveToken(address)._buyer (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#518) is not in mixedCase
+Parameter RCpro.claimTokenBonus(address)._buyer (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#531) is not in mixedCase
+Parameter RCpro.userBalance(address)._user (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#559) is not in mixedCase
+Parameter TokenSale.tokenValueInEther(uint256)._oneTokenInFiatWei (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#590) is not in mixedCase
+Parameter TokenSale.buyFromRC(address,uint256,uint256)._buyer (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#613) is not in mixedCase
+Parameter TokenSale.buyFromRC(address,uint256,uint256)._rcTokenValue (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#613) is not in mixedCase
+Parameter TokenSale.buyFromRC(address,uint256,uint256)._remainingTokens (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#613) is not in mixedCase
+Parameter TokenSale.forward(uint256)._amount (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#642) is not in mixedCase
+Parameter TokenSale.setTime(uint256,uint256)._newStart (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#659) is not in mixedCase
+Parameter TokenSale.setTime(uint256,uint256)._newEnd (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#659) is not in mixedCase
+Parameter TokenSale.setTokenContract(address)._tokenContract (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#672) is not in mixedCase
+Parameter TokenSale.setWalletAddress(address)._wallet (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#676) is not in mixedCase
+Parameter TokenSale.setAdvisorAddress(address)._advisor (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#680) is not in mixedCase
+Parameter TokenSale.setAdvisorFee(uint256)._advisorFee (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#684) is not in mixedCase
+Parameter TokenSale.setRateContract(address)._rateAddress (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#688) is not in mixedCase
+Parameter TokenSale.claim(address,uint256)._buyer (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#692) is not in mixedCase
+Parameter TokenSale.claim(address,uint256)._amount (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#692) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in TokenSale.buyFromRC(address,uint256,uint256) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#613-640):
+	External calls:
+	- forward(msg.value - refund) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#628)
+		- advisor.transfer(advisorAmount) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#645)
+		- wallet.transfer(walletAmount) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#646)
+	- _buyer.transfer(refund) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#630)
+	- forward(msg.value) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#633)
+		- advisor.transfer(advisorAmount) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#645)
+		- wallet.transfer(walletAmount) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#646)
+	Event emitted after the call(s):
+	- Buy(_buyer,tokenAmount,_ambassador) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#637)
+Reentrancy in RC.giveToken(address) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#314-325):
+	External calls:
+	- tokenSaleContract.wallet().transfer(etherUser[_buyer]) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#323)
+	State variables written after the call(s):
+	- etherUser[_buyer] = 0 (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#324)
+Reentrancy in RCpro.giveToken(address) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#518-529):
+	External calls:
+	- tokenSaleContract.wallet().transfer(etherUser[_buyer]) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#527)
+	State variables written after the call(s):
+	- etherUser[_buyer] = 0 (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#528)
+Reentrancy in RC.refundEther(address) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#345-349):
+	External calls:
+	- to.transfer(etherUser[to]) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#346)
+	State variables written after the call(s):
+	- etherUser[to] = 0 (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#347)
+	- pendingTokenUser[to] = 0 (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#348)
+Reentrancy in RCpro.refundEther(address) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#549-553):
+	External calls:
+	- to.transfer(etherUser[to]) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#550)
+	State variables written after the call(s):
+	- etherUser[to] = 0 (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#551)
+	- pendingTokenUser[to] = 0 (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#552)
+Reentrancy in RC.releaseTokensTo(address) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#236-240):
+	External calls:
+	- takeEther(buyer) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#237)
+		- _buyer.transfer(refund) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#303)
+	- giveToken(buyer) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#238)
+		- tokenSaleContract.wallet().transfer(etherUser[_buyer]) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#323)
+	State variables written after the call(s):
+	- giveToken(buyer) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#238)
+		- etherUser[_buyer] = 0 (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#324)
+	- giveToken(buyer) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#238)
+		- pendingTokenUser[_buyer] = 0 (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#321)
+	- giveToken(buyer) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#238)
+		- soldTokens = soldTokens.add(pendingTokenUser[_buyer]) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#320)
+	- giveToken(buyer) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#238)
+		- tokenUser[_buyer] = tokenUser[_buyer].add(pendingTokenUser[_buyer]) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#317)
+Reentrancy in RCpro.releaseTokensTo(address) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#431-435):
+	External calls:
+	- takeEther(buyer) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#432)
+		- _buyer.transfer(refund) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#507)
+	- giveToken(buyer) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#433)
+		- tokenSaleContract.wallet().transfer(etherUser[_buyer]) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#527)
+	State variables written after the call(s):
+	- giveToken(buyer) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#433)
+		- etherUser[_buyer] = 0 (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#528)
+	- giveToken(buyer) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#433)
+		- pendingTokenUser[_buyer] = 0 (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#525)
+	- giveToken(buyer) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#433)
+		- soldTokens = soldTokens.add(pendingTokenUser[_buyer]) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#524)
+	- giveToken(buyer) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#433)
+		- tokenUser[_buyer] = tokenUser[_buyer].add(pendingTokenUser[_buyer]) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#521)
+Reentrancy in RC.takeEther(address) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#283-312):
+	External calls:
+	- _buyer.transfer(refund) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#303)
+	State variables written after the call(s):
+	- etherUser[_buyer] = etherUser[_buyer].add(msg.value.sub(refund)) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#308)
+	- pendingTokenUser[_buyer] = pendingTokenUser[_buyer].add(tokenAmount) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#309)
+	Event emitted after the call(s):
+	- Buy(_buyer,msg.value,tokenAmount,oneTokenInFiatWei) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#311)
+Reentrancy in RCpro.takeEther(address) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#478-516):
+	External calls:
+	- _buyer.transfer(refund) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#507)
+	State variables written after the call(s):
+	- etherUser[_buyer] = etherUser[_buyer].add(msg.value.sub(refund)) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#512)
+	- pendingTokenUser[_buyer] = pendingTokenUser[_buyer].add(tokenAmount) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#513)
+	Event emitted after the call(s):
+	- Buy(_buyer,msg.value,tokenAmount,tknPriceApplied) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#515)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+Loop condition i < tokenThreshold.length (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#331) should use cached array length instead of referencing `length` member of the storage array.
+ Loop condition i < sendThreshold.length (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#487) should use cached array length instead of referencing `length` member of the storage array.
+ Loop condition i < tokenThreshold.length (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#535) should use cached array length instead of referencing `length` member of the storage array.
+ Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#cache-array-length
+
+readRate(string) should be declared external:
+	- rateInterface.readRate(string) (0x07c1c8c2bce6290daa554118b7d208041615ce54.sol#77)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#public-function-that-could-be-declared-external
+./0x07c1c8c2bce6290daa554118b7d208041615ce54.sol analyzed (9 contracts with 94 detectors), 104 result(s) found
+
+real	0m3.207s
+user	0m2.904s
+sys	0m0.305s

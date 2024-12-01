@@ -1,0 +1,342 @@
+'solc --version' running
+'solc ./0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol:
+./0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol:4:1: Warning: Source file does not specify required compiler version!Consider adding "pragma solidity ^0.4.11
+contract SafeMath {
+^
+Spanning multiple lines.
+./0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol:169:19: Warning: Unused local variable
+  function isSane(address crowdsale) public constant returns (bool) {
+                  ^---------------^
+./0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol:1127:34: Warning: Statement has no effect.
+    if(!crowdsale.isCrowdsale()) true;
+                                 ^--^
+
+
+Reentrancy in PreICOProxyBuyer.buyForEverybody() (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#1026-1048):
+	External calls:
+	- crowdsale.invest.value(weiRaisedTotal)(address(this)) (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#1037)
+	- tokensBought = getToken().balanceOf(address(this)) (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#1040)
+		- crowdsale.token() (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#983)
+	External calls sending eth:
+	- crowdsale.invest.value(weiRaisedTotal)(address(this)) (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#1037)
+	State variables written after the call(s):
+	- tokensBought = getToken().balanceOf(address(this)) (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#1040)
+	PreICOProxyBuyer.tokensBought (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#928) can be used in cross function reentrancies:
+	- PreICOProxyBuyer.buyForEverybody() (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#1026-1048)
+	- PreICOProxyBuyer.getClaimAmount(address) (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#1053-1060)
+	- PreICOProxyBuyer.getState() (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#1133-1143)
+	- PreICOProxyBuyer.tokensBought (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#928)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+PreICOProxyBuyer.claim(uint256) (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#1080-1102) ignores return value by getToken().transfer(investor,amount) (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#1099)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+PreICOProxyBuyer.buyForEverybody() (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#1026-1048) uses a dangerous strict equality:
+	- tokensBought == 0 (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#1042)
+PreICOProxyBuyer.getState() (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#1133-1143) uses a dangerous strict equality:
+	- tokensBought == 0 (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#1134)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-strict-equalities
+
+Reentrancy in Crowdsale.finalize() (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#545-558):
+	External calls:
+	- finalizeAgent.finalizeCrowdsale() (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#554)
+	- inState(State.Success) (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#545)
+		- ! finalizeAgent.isSane() (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#707)
+		- ! pricingStrategy.isSane(address(this)) (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#708)
+	State variables written after the call(s):
+	- finalized = true (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#557)
+	Crowdsale.finalized (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#300) can be used in cross function reentrancies:
+	- Crowdsale.finalize() (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#545-558)
+	- Crowdsale.finalized (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#300)
+	- Crowdsale.getState() (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#704-714)
+Reentrancy in Crowdsale.investInternal(address,uint128) (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#404-453):
+	External calls:
+	- getState() == State.PreFunding (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#407)
+		- ! finalizeAgent.isSane() (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#707)
+		- ! pricingStrategy.isSane(address(this)) (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#708)
+	- tokenAmount = pricingStrategy.calculatePrice(weiAmount,weiRaised,tokensSold,msg.sender,token.decimals()) (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#421)
+	State variables written after the call(s):
+	- tokensSold = tokensSold.plus(tokenAmount) (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#439)
+	Crowdsale.tokensSold (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#285) can be used in cross function reentrancies:
+	- Crowdsale.investInternal(address,uint128) (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#404-453)
+	- Crowdsale.preallocate(address,uint256,uint256) (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#470-485)
+	- Crowdsale.tokensSold (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#285)
+	- weiRaised = weiRaised.plus(weiAmount) (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#438)
+	Crowdsale.weiRaised (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#288) can be used in cross function reentrancies:
+	- Crowdsale.getState() (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#704-714)
+	- Crowdsale.investInternal(address,uint128) (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#404-453)
+	- Crowdsale.isMinimumGoalReached() (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#681-683)
+	- Crowdsale.preallocate(address,uint256,uint256) (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#470-485)
+	- Crowdsale.weiRaised (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#288)
+Reentrancy in Crowdsale.loadRefund() (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#661-664):
+	External calls:
+	- inState(State.Failure) (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#661)
+		- ! finalizeAgent.isSane() (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#707)
+		- ! pricingStrategy.isSane(address(this)) (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#708)
+	State variables written after the call(s):
+	- loadedRefund = loadedRefund.plus(msg.value) (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#663)
+	Crowdsale.loadedRefund (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#294) can be used in cross function reentrancies:
+	- Crowdsale.getState() (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#704-714)
+	- Crowdsale.loadRefund() (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#661-664)
+	- Crowdsale.loadedRefund (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#294)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+SafeMath.assert(bool) (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#45-49) (function) shadows built-in symbol"
+SafeMathLib.assert(bool) (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#83-85) (function) shadows built-in symbol"
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#builtin-symbol-shadowing
+
+Ownable.transferOwnership(address) (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#111-115) should emit an event for: 
+	- owner = newOwner (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#113) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-access-control
+
+Crowdsale.Crowdsale(address,PricingStrategy,address,uint256,uint256,uint256)._multisigWallet (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#353) lacks a zero-check on :
+		- multisigWallet = _multisigWallet (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#361)
+Crowdsale.setRequireSignedAddress(bool,address)._signerAddress (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#589) lacks a zero-check on :
+		- signerAddress = _signerAddress (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#591)
+Crowdsale.setMultisig(address).addr (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#646) lacks a zero-check on :
+		- multisigWallet = addr (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#653)
+PreICOProxyBuyer.PreICOProxyBuyer(address,uint256,uint256,uint256)._owner (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#956) lacks a zero-check on :
+		- owner = _owner (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#958)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in Crowdsale.investInternal(address,uint128) (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#404-453):
+	External calls:
+	- getState() == State.PreFunding (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#407)
+		- ! finalizeAgent.isSane() (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#707)
+		- ! pricingStrategy.isSane(address(this)) (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#708)
+	- tokenAmount = pricingStrategy.calculatePrice(weiAmount,weiRaised,tokensSold,msg.sender,token.decimals()) (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#421)
+	State variables written after the call(s):
+	- investedAmountOf[receiver] = investedAmountOf[receiver].plus(weiAmount) (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#434)
+	- investorCount ++ (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#430)
+	- tokenAmountOf[receiver] = tokenAmountOf[receiver].plus(tokenAmount) (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#435)
+Reentrancy in Crowdsale.preallocate(address,uint256,uint256) (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#470-485):
+	External calls:
+	- tokenAmount = fullTokens * 10 ** token.decimals() (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#472)
+	State variables written after the call(s):
+	- investedAmountOf[receiver] = investedAmountOf[receiver].plus(weiAmount) (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#478)
+	- tokenAmountOf[receiver] = tokenAmountOf[receiver].plus(tokenAmount) (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#479)
+	- tokensSold = tokensSold.plus(tokenAmount) (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#476)
+	- weiRaised = weiRaised.plus(weiAmount) (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#475)
+Reentrancy in Crowdsale.refund() (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#669-676):
+	External calls:
+	- inState(State.Refunding) (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#669)
+		- ! finalizeAgent.isSane() (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#707)
+		- ! pricingStrategy.isSane(address(this)) (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#708)
+	State variables written after the call(s):
+	- investedAmountOf[msg.sender] = 0 (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#672)
+	- weiRefunded = weiRefunded.plus(weiValue) (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#673)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in PreICOProxyBuyer.buyForEverybody() (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#1026-1048):
+	External calls:
+	- crowdsale.invest.value(weiRaisedTotal)(address(this)) (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#1037)
+	- tokensBought = getToken().balanceOf(address(this)) (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#1040)
+		- crowdsale.token() (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#983)
+	External calls sending eth:
+	- crowdsale.invest.value(weiRaisedTotal)(address(this)) (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#1037)
+	Event emitted after the call(s):
+	- TokensBoughts(tokensBought) (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#1047)
+Reentrancy in PreICOProxyBuyer.claim(uint256) (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#1080-1102):
+	External calls:
+	- getToken().transfer(investor,amount) (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#1099)
+		- crowdsale.token() (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#983)
+	Event emitted after the call(s):
+	- Distributed(investor,amount) (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#1101)
+Reentrancy in Crowdsale.investInternal(address,uint128) (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#404-453):
+	External calls:
+	- getState() == State.PreFunding (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#407)
+		- ! finalizeAgent.isSane() (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#707)
+		- ! pricingStrategy.isSane(address(this)) (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#708)
+	- tokenAmount = pricingStrategy.calculatePrice(weiAmount,weiRaised,tokensSold,msg.sender,token.decimals()) (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#421)
+	External calls sending eth:
+	- ! multisigWallet.send(weiAmount) (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#449)
+	Event emitted after the call(s):
+	- Invested(receiver,weiAmount,tokenAmount,customerId) (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#452)
+Reentrancy in Crowdsale.preallocate(address,uint256,uint256) (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#470-485):
+	External calls:
+	- tokenAmount = fullTokens * 10 ** token.decimals() (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#472)
+	Event emitted after the call(s):
+	- Invested(receiver,weiAmount,tokenAmount,0) (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#484)
+Reentrancy in Crowdsale.refund() (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#669-676):
+	External calls:
+	- inState(State.Refunding) (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#669)
+		- ! finalizeAgent.isSane() (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#707)
+		- ! pricingStrategy.isSane(address(this)) (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#708)
+	Event emitted after the call(s):
+	- Refund(msg.sender,weiValue) (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#674)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+Crowdsale.setEndsAt(uint256) (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#615-623) uses timestamp for comparisons
+	Dangerous comparisons:
+	- now > time (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#617)
+Crowdsale.getState() (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#704-714) uses timestamp for comparisons
+	Dangerous comparisons:
+	- block.timestamp < startsAt (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#709)
+	- block.timestamp <= endsAt && ! isCrowdsaleFull() (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#710)
+PreICOProxyBuyer.getState() (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#1133-1143) uses timestamp for comparisons
+	Dangerous comparisons:
+	- now >= freezeEndsAt (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#1135)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+SafeMath.max256(uint256,uint256) (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#37-39) is never used and should be removed
+SafeMath.max64(uint64,uint64) (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#29-31) is never used and should be removed
+SafeMath.min256(uint256,uint256) (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#41-43) is never used and should be removed
+SafeMath.min64(uint64,uint64) (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#33-35) is never used and should be removed
+SafeMath.safeDiv(uint256,uint256) (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#11-16) is never used and should be removed
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dead-code
+
+Deprecated standard detected THROW (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#47):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#84):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#106):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#133):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#138):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#363):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#367):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#373):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#380):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#391):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#410):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#417):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#425):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#443):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#449):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#492):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#493):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#501):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#502):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#510):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#511):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#549):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#570):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#618):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#635):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#650):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#662):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#671):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#675):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#732):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#840):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#805):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#962):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#967):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#980):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#992):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#994):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#1004):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#1015):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#1030):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#1034):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#1044):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#1057):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#1084):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#1089):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#1110):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#1113):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#1116):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#1147):
+	- Usage of "throw" should be replaced with "revert()"
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#deprecated-standards
+
+solc-0.4.11 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Parameter Crowdsale.setRequireSignedAddress(bool,address)._signerAddress (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#589) is not in mixedCase
+Parameter Crowdsale.setPricingStrategy(PricingStrategy)._pricingStrategy (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#630) is not in mixedCase
+Variable Crowdsale.MAX_INVESTMENTS_BEFORE_MULTISIG_CHANGE (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#259) is not in mixedCase
+Parameter StandardToken.transfer(address,uint256)._to (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#810) is not in mixedCase
+Parameter StandardToken.transfer(address,uint256)._value (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#810) is not in mixedCase
+Parameter StandardToken.transferFrom(address,address,uint256)._from (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#817) is not in mixedCase
+Parameter StandardToken.transferFrom(address,address,uint256)._to (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#817) is not in mixedCase
+Parameter StandardToken.transferFrom(address,address,uint256)._value (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#817) is not in mixedCase
+Parameter StandardToken.balanceOf(address)._owner (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#830) is not in mixedCase
+Parameter StandardToken.approve(address,uint256)._spender (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#834) is not in mixedCase
+Parameter StandardToken.approve(address,uint256)._value (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#834) is not in mixedCase
+Parameter StandardToken.allowance(address,address)._owner (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#847) is not in mixedCase
+Parameter StandardToken.allowance(address,address)._spender (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#847) is not in mixedCase
+Parameter StandardToken.addApproval(address,uint256)._spender (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#857) is not in mixedCase
+Parameter StandardToken.addApproval(address,uint256)._addedValue (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#857) is not in mixedCase
+Parameter StandardToken.subApproval(address,uint256)._spender (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#870) is not in mixedCase
+Parameter StandardToken.subApproval(address,uint256)._subtractedValue (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#870) is not in mixedCase
+Parameter PreICOProxyBuyer.setCrowdsale(Crowdsale)._crowdsale (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#1123) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in Crowdsale.investInternal(address,uint128) (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#404-453):
+	External calls:
+	- ! multisigWallet.send(weiAmount) (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#449)
+	Event emitted after the call(s):
+	- Invested(receiver,weiAmount,tokenAmount,customerId) (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#452)
+Reentrancy in PreICOProxyBuyer.refund() (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#1107-1118):
+	External calls:
+	- ! investor.send(amount) (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#1116)
+	Event emitted after the call(s):
+	- Refunded(investor,amount) (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#1117)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+PricingStrategy (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#158-185) does not implement functions:
+	- PricingStrategy.calculatePrice(uint256,uint256,uint256,address,uint256) (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#184)
+FinalizeAgent (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#195-211) does not implement functions:
+	- FinalizeAgent.finalizeCrowdsale() (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#209)
+	- FinalizeAgent.isSane() (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#206)
+Crowdsale (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#256-767) does not implement functions:
+	- Crowdsale.assignTokens(address,uint256) (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#766)
+	- Crowdsale.isBreakingCap(uint256,uint256,uint256,uint256) (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#756)
+	- Crowdsale.isCrowdsaleFull() (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#761)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unimplemented-functions
+
+Crowdsale.MAX_INVESTMENTS_BEFORE_MULTISIG_CHANGE (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#259) should be constant 
+ERC20.totalSupply (0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol#221) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+./0x3085c9403871c00f7fd2e84dac1bdaa05f5f652e.sol analyzed (11 contracts with 94 detectors), 105 result(s) found
+
+real	0m2.343s
+user	0m2.108s
+sys	0m0.237s

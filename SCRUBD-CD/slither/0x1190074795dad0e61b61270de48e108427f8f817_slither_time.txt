@@ -1,0 +1,316 @@
+'solc --version' running
+'solc ./0x1190074795dad0e61b61270de48e108427f8f817.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+Reentrancy in CoinMerge._disperseEth() (0x1190074795dad0e61b61270de48e108427f8f817.sol#384-405):
+	External calls:
+	- External.deposit(_devBalance) (0x1190074795dad0e61b61270de48e108427f8f817.sol#399)
+	External calls sending eth:
+	- address(address(External)).transfer(_devBalance) (0x1190074795dad0e61b61270de48e108427f8f817.sol#398)
+	- address(address(EthReflect)).transfer(_redistBalance) (0x1190074795dad0e61b61270de48e108427f8f817.sol#400)
+	- m_ProjectWallet.transfer(_projectBalance) (0x1190074795dad0e61b61270de48e108427f8f817.sol#402)
+	State variables written after the call(s):
+	- m_PreviousBalance = m_IncomingEth[address(m_UniswapV2Router)] (0x1190074795dad0e61b61270de48e108427f8f817.sol#404)
+	CoinMerge.m_PreviousBalance (0x1190074795dad0e61b61270de48e108427f8f817.sol#154) can be used in cross function reentrancies:
+	- CoinMerge._disperseEth() (0x1190074795dad0e61b61270de48e108427f8f817.sol#384-405)
+Reentrancy in CoinMerge._transfer(address,address,uint256) (0x1190074795dad0e61b61270de48e108427f8f817.sol#308-341):
+	External calls:
+	- require(bool,string)(! AntiBot.scanAddress(_recipient,m_UniswapV2Pair,tx.origin),Beep Beep Boop, You're a piece of poop) (0x1190074795dad0e61b61270de48e108427f8f817.sol#320)
+	- require(bool,string)(! AntiBot.scanAddress(_sender,m_UniswapV2Pair,tx.origin),Beep Beep Boop, You're a piece of poop) (0x1190074795dad0e61b61270de48e108427f8f817.sol#321)
+	- AntiBot.registerBlock(_sender,_recipient,tx.origin) (0x1190074795dad0e61b61270de48e108427f8f817.sol#322)
+	- _tax(_sender) (0x1190074795dad0e61b61270de48e108427f8f817.sol#332)
+		- m_UniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(_amount,0,_path,address(this),block.timestamp) (0x1190074795dad0e61b61270de48e108427f8f817.sol#375-381)
+		- External.deposit(_devBalance) (0x1190074795dad0e61b61270de48e108427f8f817.sol#399)
+	External calls sending eth:
+	- _tax(_sender) (0x1190074795dad0e61b61270de48e108427f8f817.sol#332)
+		- address(address(External)).transfer(_devBalance) (0x1190074795dad0e61b61270de48e108427f8f817.sol#398)
+		- address(address(EthReflect)).transfer(_redistBalance) (0x1190074795dad0e61b61270de48e108427f8f817.sol#400)
+		- m_ProjectWallet.transfer(_projectBalance) (0x1190074795dad0e61b61270de48e108427f8f817.sol#402)
+	State variables written after the call(s):
+	- m_Balances[_sender] = m_Balances[_sender].sub(_amount) (0x1190074795dad0e61b61270de48e108427f8f817.sol#335)
+	CoinMerge.m_Balances (0x1190074795dad0e61b61270de48e108427f8f817.sol#169) can be used in cross function reentrancies:
+	- CoinMerge._transfer(address,address,uint256) (0x1190074795dad0e61b61270de48e108427f8f817.sol#308-341)
+	- CoinMerge.balanceOf(address) (0x1190074795dad0e61b61270de48e108427f8f817.sol#239-241)
+	- CoinMerge.constructor() (0x1190074795dad0e61b61270de48e108427f8f817.sol#198-213)
+	- m_Balances[_recipient] = m_Balances[_recipient].add(_newAmount) (0x1190074795dad0e61b61270de48e108427f8f817.sol#336)
+	CoinMerge.m_Balances (0x1190074795dad0e61b61270de48e108427f8f817.sol#169) can be used in cross function reentrancies:
+	- CoinMerge._transfer(address,address,uint256) (0x1190074795dad0e61b61270de48e108427f8f817.sol#308-341)
+	- CoinMerge.balanceOf(address) (0x1190074795dad0e61b61270de48e108427f8f817.sol#239-241)
+	- CoinMerge.constructor() (0x1190074795dad0e61b61270de48e108427f8f817.sol#198-213)
+	- m_Balances[address(this)] = m_Balances[address(this)].add(_feeAmount) (0x1190074795dad0e61b61270de48e108427f8f817.sol#337)
+	CoinMerge.m_Balances (0x1190074795dad0e61b61270de48e108427f8f817.sol#169) can be used in cross function reentrancies:
+	- CoinMerge._transfer(address,address,uint256) (0x1190074795dad0e61b61270de48e108427f8f817.sol#308-341)
+	- CoinMerge.balanceOf(address) (0x1190074795dad0e61b61270de48e108427f8f817.sol#239-241)
+	- CoinMerge.constructor() (0x1190074795dad0e61b61270de48e108427f8f817.sol#198-213)
+Reentrancy in CoinMerge.addLiquidity() (0x1190074795dad0e61b61270de48e108427f8f817.sol#415-425):
+	External calls:
+	- m_UniswapV2Pair = IUniswapV2Factory(m_UniswapV2Router.factory()).createPair(address(this),m_UniswapV2Router.WETH()) (0x1190074795dad0e61b61270de48e108427f8f817.sol#420)
+	- m_UniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x1190074795dad0e61b61270de48e108427f8f817.sol#421)
+	- EthReflect.init(address(this),5000,m_UniswapV2Pair,m_UniswapV2Router.WETH(),_ethBalance,TOTAL_SUPPLY) (0x1190074795dad0e61b61270de48e108427f8f817.sol#422)
+	- IERC20(m_UniswapV2Pair).approve(address(m_UniswapV2Router),type()(uint256).max) (0x1190074795dad0e61b61270de48e108427f8f817.sol#423)
+	External calls sending eth:
+	- m_UniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x1190074795dad0e61b61270de48e108427f8f817.sol#421)
+	State variables written after the call(s):
+	- m_Liquidity = true (0x1190074795dad0e61b61270de48e108427f8f817.sol#424)
+	CoinMerge.m_Liquidity (0x1190074795dad0e61b61270de48e108427f8f817.sol#164) can be used in cross function reentrancies:
+	- CoinMerge.addLiquidity() (0x1190074795dad0e61b61270de48e108427f8f817.sol#415-425)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+CoinMerge._transfer(address,address,uint256) (0x1190074795dad0e61b61270de48e108427f8f817.sol#308-341) performs a multiplication on the result of a division:
+	- _feeAmount = _amount.div(100).mul(_totalFee) (0x1190074795dad0e61b61270de48e108427f8f817.sol#316)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+Reentrancy in CoinMerge._trackEthReflection(address,address) (0x1190074795dad0e61b61270de48e108427f8f817.sol#343-352):
+	External calls:
+	- EthReflect.trackSell(_sender,m_EthReflectAmount) (0x1190074795dad0e61b61270de48e108427f8f817.sol#348)
+	State variables written after the call(s):
+	- m_EthReflectAmount = 0 (0x1190074795dad0e61b61270de48e108427f8f817.sol#349)
+	CoinMerge.m_EthReflectAmount (0x1190074795dad0e61b61270de48e108427f8f817.sol#178) can be used in cross function reentrancies:
+	- CoinMerge._disperseEth() (0x1190074795dad0e61b61270de48e108427f8f817.sol#384-405)
+	- CoinMerge._trackEthReflection(address,address) (0x1190074795dad0e61b61270de48e108427f8f817.sol#343-352)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+CoinMerge._transfer(address,address,uint256) (0x1190074795dad0e61b61270de48e108427f8f817.sol#308-341) uses tx.origin for authorization: require(bool,string)(! m_Banned[_sender] && ! m_Banned[_recipient] && ! m_Banned[tx.origin],You were manually banned) (0x1190074795dad0e61b61270de48e108427f8f817.sol#311)
+CoinMerge._transfer(address,address,uint256) (0x1190074795dad0e61b61270de48e108427f8f817.sol#308-341) uses tx.origin for authorization: require(bool,string)(! AntiBot.scanAddress(_recipient,m_UniswapV2Pair,tx.origin),Beep Beep Boop, You're a piece of poop) (0x1190074795dad0e61b61270de48e108427f8f817.sol#320)
+CoinMerge._transfer(address,address,uint256) (0x1190074795dad0e61b61270de48e108427f8f817.sol#308-341) uses tx.origin for authorization: require(bool,string)(! AntiBot.scanAddress(_sender,m_UniswapV2Pair,tx.origin),Beep Beep Boop, You're a piece of poop) (0x1190074795dad0e61b61270de48e108427f8f817.sol#321)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-usage-of-txorigin
+
+CoinMerge.addLiquidity() (0x1190074795dad0e61b61270de48e108427f8f817.sol#415-425) ignores return value by m_UniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x1190074795dad0e61b61270de48e108427f8f817.sol#421)
+CoinMerge.addLiquidity() (0x1190074795dad0e61b61270de48e108427f8f817.sol#415-425) ignores return value by IERC20(m_UniswapV2Pair).approve(address(m_UniswapV2Router),type()(uint256).max) (0x1190074795dad0e61b61270de48e108427f8f817.sol#423)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+CoinMerge.setProjectWallet(address)._address (0x1190074795dad0e61b61270de48e108427f8f817.sol#470) lacks a zero-check on :
+		- m_ProjectWallet = _address (0x1190074795dad0e61b61270de48e108427f8f817.sol#471)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in CoinMerge._tax(address) (0x1190074795dad0e61b61270de48e108427f8f817.sol#362-368):
+	External calls:
+	- _swapTokensForETH(_tokenBalance) (0x1190074795dad0e61b61270de48e108427f8f817.sol#365)
+		- m_UniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(_amount,0,_path,address(this),block.timestamp) (0x1190074795dad0e61b61270de48e108427f8f817.sol#375-381)
+	- _disperseEth() (0x1190074795dad0e61b61270de48e108427f8f817.sol#366)
+		- External.deposit(_devBalance) (0x1190074795dad0e61b61270de48e108427f8f817.sol#399)
+	External calls sending eth:
+	- _disperseEth() (0x1190074795dad0e61b61270de48e108427f8f817.sol#366)
+		- address(address(External)).transfer(_devBalance) (0x1190074795dad0e61b61270de48e108427f8f817.sol#398)
+		- address(address(EthReflect)).transfer(_redistBalance) (0x1190074795dad0e61b61270de48e108427f8f817.sol#400)
+		- m_ProjectWallet.transfer(_projectBalance) (0x1190074795dad0e61b61270de48e108427f8f817.sol#402)
+	State variables written after the call(s):
+	- _disperseEth() (0x1190074795dad0e61b61270de48e108427f8f817.sol#366)
+		- m_EthReflectAmount = _redistBalance (0x1190074795dad0e61b61270de48e108427f8f817.sol#391)
+Reentrancy in CoinMerge._transfer(address,address,uint256) (0x1190074795dad0e61b61270de48e108427f8f817.sol#308-341):
+	External calls:
+	- require(bool,string)(! AntiBot.scanAddress(_recipient,m_UniswapV2Pair,tx.origin),Beep Beep Boop, You're a piece of poop) (0x1190074795dad0e61b61270de48e108427f8f817.sol#320)
+	- require(bool,string)(! AntiBot.scanAddress(_sender,m_UniswapV2Pair,tx.origin),Beep Beep Boop, You're a piece of poop) (0x1190074795dad0e61b61270de48e108427f8f817.sol#321)
+	- AntiBot.registerBlock(_sender,_recipient,tx.origin) (0x1190074795dad0e61b61270de48e108427f8f817.sol#322)
+	- _tax(_sender) (0x1190074795dad0e61b61270de48e108427f8f817.sol#332)
+		- m_UniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(_amount,0,_path,address(this),block.timestamp) (0x1190074795dad0e61b61270de48e108427f8f817.sol#375-381)
+		- External.deposit(_devBalance) (0x1190074795dad0e61b61270de48e108427f8f817.sol#399)
+	External calls sending eth:
+	- _tax(_sender) (0x1190074795dad0e61b61270de48e108427f8f817.sol#332)
+		- address(address(External)).transfer(_devBalance) (0x1190074795dad0e61b61270de48e108427f8f817.sol#398)
+		- address(address(EthReflect)).transfer(_redistBalance) (0x1190074795dad0e61b61270de48e108427f8f817.sol#400)
+		- m_ProjectWallet.transfer(_projectBalance) (0x1190074795dad0e61b61270de48e108427f8f817.sol#402)
+	State variables written after the call(s):
+	- _tax(_sender) (0x1190074795dad0e61b61270de48e108427f8f817.sol#332)
+		- m_Allowances[_owner][_spender] = _amount (0x1190074795dad0e61b61270de48e108427f8f817.sol#304)
+	- _tax(_sender) (0x1190074795dad0e61b61270de48e108427f8f817.sol#332)
+		- m_EthReflectAmount = _redistBalance (0x1190074795dad0e61b61270de48e108427f8f817.sol#391)
+Reentrancy in CoinMerge.transferFrom(address,address,uint256) (0x1190074795dad0e61b61270de48e108427f8f817.sol#257-261):
+	External calls:
+	- _transfer(_sender,_recipient,_amount) (0x1190074795dad0e61b61270de48e108427f8f817.sol#258)
+		- EthReflect.trackPurchase(_recipient) (0x1190074795dad0e61b61270de48e108427f8f817.sol#346)
+		- EthReflect.trackSell(_sender,m_EthReflectAmount) (0x1190074795dad0e61b61270de48e108427f8f817.sol#348)
+		- m_UniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(_amount,0,_path,address(this),block.timestamp) (0x1190074795dad0e61b61270de48e108427f8f817.sol#375-381)
+		- require(bool,string)(! AntiBot.scanAddress(_recipient,m_UniswapV2Pair,tx.origin),Beep Beep Boop, You're a piece of poop) (0x1190074795dad0e61b61270de48e108427f8f817.sol#320)
+		- require(bool,string)(! AntiBot.scanAddress(_sender,m_UniswapV2Pair,tx.origin),Beep Beep Boop, You're a piece of poop) (0x1190074795dad0e61b61270de48e108427f8f817.sol#321)
+		- External.deposit(_devBalance) (0x1190074795dad0e61b61270de48e108427f8f817.sol#399)
+		- AntiBot.registerBlock(_sender,_recipient,tx.origin) (0x1190074795dad0e61b61270de48e108427f8f817.sol#322)
+	External calls sending eth:
+	- _transfer(_sender,_recipient,_amount) (0x1190074795dad0e61b61270de48e108427f8f817.sol#258)
+		- address(address(External)).transfer(_devBalance) (0x1190074795dad0e61b61270de48e108427f8f817.sol#398)
+		- address(address(EthReflect)).transfer(_redistBalance) (0x1190074795dad0e61b61270de48e108427f8f817.sol#400)
+		- m_ProjectWallet.transfer(_projectBalance) (0x1190074795dad0e61b61270de48e108427f8f817.sol#402)
+	State variables written after the call(s):
+	- _approve(_sender,_msgSender(),m_Allowances[_sender][_msgSender()].sub(_amount,ERC20: transfer amount exceeds allowance)) (0x1190074795dad0e61b61270de48e108427f8f817.sol#259)
+		- m_Allowances[_owner][_spender] = _amount (0x1190074795dad0e61b61270de48e108427f8f817.sol#304)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in CoinMerge._transfer(address,address,uint256) (0x1190074795dad0e61b61270de48e108427f8f817.sol#308-341):
+	External calls:
+	- require(bool,string)(! AntiBot.scanAddress(_recipient,m_UniswapV2Pair,tx.origin),Beep Beep Boop, You're a piece of poop) (0x1190074795dad0e61b61270de48e108427f8f817.sol#320)
+	- require(bool,string)(! AntiBot.scanAddress(_sender,m_UniswapV2Pair,tx.origin),Beep Beep Boop, You're a piece of poop) (0x1190074795dad0e61b61270de48e108427f8f817.sol#321)
+	- AntiBot.registerBlock(_sender,_recipient,tx.origin) (0x1190074795dad0e61b61270de48e108427f8f817.sol#322)
+	- _tax(_sender) (0x1190074795dad0e61b61270de48e108427f8f817.sol#332)
+		- m_UniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(_amount,0,_path,address(this),block.timestamp) (0x1190074795dad0e61b61270de48e108427f8f817.sol#375-381)
+		- External.deposit(_devBalance) (0x1190074795dad0e61b61270de48e108427f8f817.sol#399)
+	External calls sending eth:
+	- _tax(_sender) (0x1190074795dad0e61b61270de48e108427f8f817.sol#332)
+		- address(address(External)).transfer(_devBalance) (0x1190074795dad0e61b61270de48e108427f8f817.sol#398)
+		- address(address(EthReflect)).transfer(_redistBalance) (0x1190074795dad0e61b61270de48e108427f8f817.sol#400)
+		- m_ProjectWallet.transfer(_projectBalance) (0x1190074795dad0e61b61270de48e108427f8f817.sol#402)
+	Event emitted after the call(s):
+	- Approval(_owner,_spender,_amount) (0x1190074795dad0e61b61270de48e108427f8f817.sol#305)
+		- _tax(_sender) (0x1190074795dad0e61b61270de48e108427f8f817.sol#332)
+	- Transfer(_sender,_recipient,_newAmount) (0x1190074795dad0e61b61270de48e108427f8f817.sol#339)
+Reentrancy in CoinMerge.transferFrom(address,address,uint256) (0x1190074795dad0e61b61270de48e108427f8f817.sol#257-261):
+	External calls:
+	- _transfer(_sender,_recipient,_amount) (0x1190074795dad0e61b61270de48e108427f8f817.sol#258)
+		- EthReflect.trackPurchase(_recipient) (0x1190074795dad0e61b61270de48e108427f8f817.sol#346)
+		- EthReflect.trackSell(_sender,m_EthReflectAmount) (0x1190074795dad0e61b61270de48e108427f8f817.sol#348)
+		- m_UniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(_amount,0,_path,address(this),block.timestamp) (0x1190074795dad0e61b61270de48e108427f8f817.sol#375-381)
+		- require(bool,string)(! AntiBot.scanAddress(_recipient,m_UniswapV2Pair,tx.origin),Beep Beep Boop, You're a piece of poop) (0x1190074795dad0e61b61270de48e108427f8f817.sol#320)
+		- require(bool,string)(! AntiBot.scanAddress(_sender,m_UniswapV2Pair,tx.origin),Beep Beep Boop, You're a piece of poop) (0x1190074795dad0e61b61270de48e108427f8f817.sol#321)
+		- External.deposit(_devBalance) (0x1190074795dad0e61b61270de48e108427f8f817.sol#399)
+		- AntiBot.registerBlock(_sender,_recipient,tx.origin) (0x1190074795dad0e61b61270de48e108427f8f817.sol#322)
+	External calls sending eth:
+	- _transfer(_sender,_recipient,_amount) (0x1190074795dad0e61b61270de48e108427f8f817.sol#258)
+		- address(address(External)).transfer(_devBalance) (0x1190074795dad0e61b61270de48e108427f8f817.sol#398)
+		- address(address(EthReflect)).transfer(_redistBalance) (0x1190074795dad0e61b61270de48e108427f8f817.sol#400)
+		- m_ProjectWallet.transfer(_projectBalance) (0x1190074795dad0e61b61270de48e108427f8f817.sol#402)
+	Event emitted after the call(s):
+	- Approval(_owner,_spender,_amount) (0x1190074795dad0e61b61270de48e108427f8f817.sol#305)
+		- _approve(_sender,_msgSender(),m_Allowances[_sender][_msgSender()].sub(_amount,ERC20: transfer amount exceeds allowance)) (0x1190074795dad0e61b61270de48e108427f8f817.sol#259)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+CoinMerge._checkTX() (0x1190074795dad0e61b61270de48e108427f8f817.sol#294-299) uses timestamp for comparisons
+	Dangerous comparisons:
+	- block.timestamp <= m_TXRelease (0x1190074795dad0e61b61270de48e108427f8f817.sol#295)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+CoinMerge._senderNotUni(address) (0x1190074795dad0e61b61270de48e108427f8f817.sol#279-281) is never used and should be removed
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dead-code
+
+CoinMerge.m_WalletLimit (0x1190074795dad0e61b61270de48e108427f8f817.sol#152) is set pre-construction with a non-constant function or state variable:
+	- m_TxLimit
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#function-initializing-state
+
+Version constraint ^0.8.4 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- SignedImmutables.
+It is used by:
+	- ^0.8.4 (0x1190074795dad0e61b61270de48e108427f8f817.sol#23)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Variable Ownable.m_Owner (0x1190074795dad0e61b61270de48e108427f8f817.sol#80) is not in mixedCase
+Function IUniswapV2Router02.WETH() (0x1190074795dad0e61b61270de48e108427f8f817.sol#117) is not in mixedCase
+Parameter CoinMerge.balanceOf(address)._account (0x1190074795dad0e61b61270de48e108427f8f817.sol#239) is not in mixedCase
+Parameter CoinMerge.transfer(address,uint256)._recipient (0x1190074795dad0e61b61270de48e108427f8f817.sol#243) is not in mixedCase
+Parameter CoinMerge.transfer(address,uint256)._amount (0x1190074795dad0e61b61270de48e108427f8f817.sol#243) is not in mixedCase
+Parameter CoinMerge.allowance(address,address)._owner (0x1190074795dad0e61b61270de48e108427f8f817.sol#248) is not in mixedCase
+Parameter CoinMerge.allowance(address,address)._spender (0x1190074795dad0e61b61270de48e108427f8f817.sol#248) is not in mixedCase
+Parameter CoinMerge.approve(address,uint256)._spender (0x1190074795dad0e61b61270de48e108427f8f817.sol#252) is not in mixedCase
+Parameter CoinMerge.approve(address,uint256)._amount (0x1190074795dad0e61b61270de48e108427f8f817.sol#252) is not in mixedCase
+Parameter CoinMerge.transferFrom(address,address,uint256)._sender (0x1190074795dad0e61b61270de48e108427f8f817.sol#257) is not in mixedCase
+Parameter CoinMerge.transferFrom(address,address,uint256)._recipient (0x1190074795dad0e61b61270de48e108427f8f817.sol#257) is not in mixedCase
+Parameter CoinMerge.transferFrom(address,address,uint256)._amount (0x1190074795dad0e61b61270de48e108427f8f817.sol#257) is not in mixedCase
+Parameter CoinMerge.transferOwnership(address)._address (0x1190074795dad0e61b61270de48e108427f8f817.sol#432) is not in mixedCase
+Parameter CoinMerge.addTaxWhitelist(address)._address (0x1190074795dad0e61b61270de48e108427f8f817.sol#438) is not in mixedCase
+Parameter CoinMerge.removeTaxWhitelist(address)._address (0x1190074795dad0e61b61270de48e108427f8f817.sol#442) is not in mixedCase
+Parameter CoinMerge.setTxLimit(uint256)._amount (0x1190074795dad0e61b61270de48e108427f8f817.sol#446) is not in mixedCase
+Parameter CoinMerge.setWalletLimit(uint256)._amount (0x1190074795dad0e61b61270de48e108427f8f817.sol#451) is not in mixedCase
+Parameter CoinMerge.manualBan(address)._a (0x1190074795dad0e61b61270de48e108427f8f817.sol#455) is not in mixedCase
+Parameter CoinMerge.removeBan(address)._a (0x1190074795dad0e61b61270de48e108427f8f817.sol#459) is not in mixedCase
+Parameter CoinMerge.setProjectWallet(address)._address (0x1190074795dad0e61b61270de48e108427f8f817.sol#470) is not in mixedCase
+Variable CoinMerge.m_Name (0x1190074795dad0e61b61270de48e108427f8f817.sol#147) is not in mixedCase
+Variable CoinMerge.m_Symbol (0x1190074795dad0e61b61270de48e108427f8f817.sol#148) is not in mixedCase
+Variable CoinMerge.m_Decimals (0x1190074795dad0e61b61270de48e108427f8f817.sol#149) is not in mixedCase
+Variable CoinMerge.m_TxLimit (0x1190074795dad0e61b61270de48e108427f8f817.sol#151) is not in mixedCase
+Variable CoinMerge.m_WalletLimit (0x1190074795dad0e61b61270de48e108427f8f817.sol#152) is not in mixedCase
+Variable CoinMerge.m_TXRelease (0x1190074795dad0e61b61270de48e108427f8f817.sol#153) is not in mixedCase
+Variable CoinMerge.m_PreviousBalance (0x1190074795dad0e61b61270de48e108427f8f817.sol#154) is not in mixedCase
+Variable CoinMerge.m_DevFee (0x1190074795dad0e61b61270de48e108427f8f817.sol#156) is not in mixedCase
+Variable CoinMerge.m_RedistFee (0x1190074795dad0e61b61270de48e108427f8f817.sol#157) is not in mixedCase
+Variable CoinMerge.m_ProjectWallet (0x1190074795dad0e61b61270de48e108427f8f817.sol#159) is not in mixedCase
+Variable CoinMerge.m_UniswapV2Pair (0x1190074795dad0e61b61270de48e108427f8f817.sol#160) is not in mixedCase
+Variable CoinMerge.m_Launched (0x1190074795dad0e61b61270de48e108427f8f817.sol#162) is not in mixedCase
+Variable CoinMerge.m_IsSwap (0x1190074795dad0e61b61270de48e108427f8f817.sol#163) is not in mixedCase
+Variable CoinMerge.m_Liquidity (0x1190074795dad0e61b61270de48e108427f8f817.sol#164) is not in mixedCase
+Variable CoinMerge.m_Banned (0x1190074795dad0e61b61270de48e108427f8f817.sol#166) is not in mixedCase
+Variable CoinMerge.m_TeamMember (0x1190074795dad0e61b61270de48e108427f8f817.sol#167) is not in mixedCase
+Variable CoinMerge.m_ExcludedAddresses (0x1190074795dad0e61b61270de48e108427f8f817.sol#168) is not in mixedCase
+Variable CoinMerge.m_Balances (0x1190074795dad0e61b61270de48e108427f8f817.sol#169) is not in mixedCase
+Variable CoinMerge.m_IncomingEth (0x1190074795dad0e61b61270de48e108427f8f817.sol#170) is not in mixedCase
+Variable CoinMerge.m_TeamBalance (0x1190074795dad0e61b61270de48e108427f8f817.sol#171) is not in mixedCase
+Variable CoinMerge.m_Allowances (0x1190074795dad0e61b61270de48e108427f8f817.sol#172) is not in mixedCase
+Variable CoinMerge.EthReflect (0x1190074795dad0e61b61270de48e108427f8f817.sol#175) is not in mixedCase
+Variable CoinMerge.m_EthReflectSvcAddress (0x1190074795dad0e61b61270de48e108427f8f817.sol#176) is not in mixedCase
+Variable CoinMerge.m_EthReflectAlloc (0x1190074795dad0e61b61270de48e108427f8f817.sol#177) is not in mixedCase
+Variable CoinMerge.m_EthReflectAmount (0x1190074795dad0e61b61270de48e108427f8f817.sol#178) is not in mixedCase
+Variable CoinMerge.m_ExternalServiceAddress (0x1190074795dad0e61b61270de48e108427f8f817.sol#179) is not in mixedCase
+Variable CoinMerge.External (0x1190074795dad0e61b61270de48e108427f8f817.sol#181) is not in mixedCase
+Variable CoinMerge.AntiBot (0x1190074795dad0e61b61270de48e108427f8f817.sol#182) is not in mixedCase
+Variable CoinMerge.m_UniswapV2Router (0x1190074795dad0e61b61270de48e108427f8f817.sol#183) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in CoinMerge._disperseEth() (0x1190074795dad0e61b61270de48e108427f8f817.sol#384-405):
+	External calls:
+	- address(address(External)).transfer(_devBalance) (0x1190074795dad0e61b61270de48e108427f8f817.sol#398)
+	- address(address(EthReflect)).transfer(_redistBalance) (0x1190074795dad0e61b61270de48e108427f8f817.sol#400)
+	- m_ProjectWallet.transfer(_projectBalance) (0x1190074795dad0e61b61270de48e108427f8f817.sol#402)
+	State variables written after the call(s):
+	- m_PreviousBalance = m_IncomingEth[address(m_UniswapV2Router)] (0x1190074795dad0e61b61270de48e108427f8f817.sol#404)
+Reentrancy in CoinMerge._transfer(address,address,uint256) (0x1190074795dad0e61b61270de48e108427f8f817.sol#308-341):
+	External calls:
+	- _tax(_sender) (0x1190074795dad0e61b61270de48e108427f8f817.sol#332)
+		- address(address(External)).transfer(_devBalance) (0x1190074795dad0e61b61270de48e108427f8f817.sol#398)
+		- address(address(EthReflect)).transfer(_redistBalance) (0x1190074795dad0e61b61270de48e108427f8f817.sol#400)
+		- m_ProjectWallet.transfer(_projectBalance) (0x1190074795dad0e61b61270de48e108427f8f817.sol#402)
+	State variables written after the call(s):
+	- m_Balances[_sender] = m_Balances[_sender].sub(_amount) (0x1190074795dad0e61b61270de48e108427f8f817.sol#335)
+	- m_Balances[_recipient] = m_Balances[_recipient].add(_newAmount) (0x1190074795dad0e61b61270de48e108427f8f817.sol#336)
+	- m_Balances[address(this)] = m_Balances[address(this)].add(_feeAmount) (0x1190074795dad0e61b61270de48e108427f8f817.sol#337)
+	- _trackEthReflection(_sender,_recipient) (0x1190074795dad0e61b61270de48e108427f8f817.sol#340)
+		- m_EthReflectAmount = 0 (0x1190074795dad0e61b61270de48e108427f8f817.sol#349)
+	Event emitted after the call(s):
+	- Transfer(_sender,_recipient,_newAmount) (0x1190074795dad0e61b61270de48e108427f8f817.sol#339)
+Reentrancy in CoinMerge.teamWithdraw() (0x1190074795dad0e61b61270de48e108427f8f817.sol#463-468):
+	External calls:
+	- address(_msgSender()).transfer(m_TeamBalance[_msgSender()]) (0x1190074795dad0e61b61270de48e108427f8f817.sol#466)
+	State variables written after the call(s):
+	- m_TeamBalance[_msgSender()] = 0 (0x1190074795dad0e61b61270de48e108427f8f817.sol#467)
+Reentrancy in CoinMerge.transferFrom(address,address,uint256) (0x1190074795dad0e61b61270de48e108427f8f817.sol#257-261):
+	External calls:
+	- _transfer(_sender,_recipient,_amount) (0x1190074795dad0e61b61270de48e108427f8f817.sol#258)
+		- address(address(External)).transfer(_devBalance) (0x1190074795dad0e61b61270de48e108427f8f817.sol#398)
+		- address(address(EthReflect)).transfer(_redistBalance) (0x1190074795dad0e61b61270de48e108427f8f817.sol#400)
+		- m_ProjectWallet.transfer(_projectBalance) (0x1190074795dad0e61b61270de48e108427f8f817.sol#402)
+	State variables written after the call(s):
+	- _approve(_sender,_msgSender(),m_Allowances[_sender][_msgSender()].sub(_amount,ERC20: transfer amount exceeds allowance)) (0x1190074795dad0e61b61270de48e108427f8f817.sol#259)
+		- m_Allowances[_owner][_spender] = _amount (0x1190074795dad0e61b61270de48e108427f8f817.sol#304)
+	Event emitted after the call(s):
+	- Approval(_owner,_spender,_amount) (0x1190074795dad0e61b61270de48e108427f8f817.sol#305)
+		- _approve(_sender,_msgSender(),m_Allowances[_sender][_msgSender()].sub(_amount,ERC20: transfer amount exceeds allowance)) (0x1190074795dad0e61b61270de48e108427f8f817.sol#259)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+CoinMerge.slitherConstructorVariables() (0x1190074795dad0e61b61270de48e108427f8f817.sol#143-475) uses literals with too many digits:
+	- m_TxLimit = 24000000 * 10 ** 9 (0x1190074795dad0e61b61270de48e108427f8f817.sol#151)
+CoinMerge.slitherConstructorConstantVariables() (0x1190074795dad0e61b61270de48e108427f8f817.sol#143-475) uses literals with too many digits:
+	- TOTAL_SUPPLY = 5000000000 * 10 ** 9 (0x1190074795dad0e61b61270de48e108427f8f817.sol#146)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+CoinMerge.m_EthReflectAlloc (0x1190074795dad0e61b61270de48e108427f8f817.sol#177) is never used in CoinMerge (0x1190074795dad0e61b61270de48e108427f8f817.sol#143-475)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-state-variable
+
+CoinMerge.m_Decimals (0x1190074795dad0e61b61270de48e108427f8f817.sol#149) should be constant 
+CoinMerge.m_DevFee (0x1190074795dad0e61b61270de48e108427f8f817.sol#156) should be constant 
+CoinMerge.m_EthReflectAlloc (0x1190074795dad0e61b61270de48e108427f8f817.sol#177) should be constant 
+CoinMerge.m_EthReflectSvcAddress (0x1190074795dad0e61b61270de48e108427f8f817.sol#176) should be constant 
+CoinMerge.m_ExternalServiceAddress (0x1190074795dad0e61b61270de48e108427f8f817.sol#179) should be constant 
+CoinMerge.m_Name (0x1190074795dad0e61b61270de48e108427f8f817.sol#147) should be constant 
+CoinMerge.m_RedistFee (0x1190074795dad0e61b61270de48e108427f8f817.sol#157) should be constant 
+CoinMerge.m_Symbol (0x1190074795dad0e61b61270de48e108427f8f817.sol#148) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+
+CoinMerge.AntiBot (0x1190074795dad0e61b61270de48e108427f8f817.sol#182) should be immutable 
+CoinMerge.EthReflect (0x1190074795dad0e61b61270de48e108427f8f817.sol#175) should be immutable 
+CoinMerge.External (0x1190074795dad0e61b61270de48e108427f8f817.sol#181) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+./0x1190074795dad0e61b61270de48e108427f8f817.sol analyzed (10 contracts with 94 detectors), 87 result(s) found
+
+real	0m2.956s
+user	0m2.687s
+sys	0m0.270s

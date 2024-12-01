@@ -1,0 +1,139 @@
+'solc --version' running
+'solc ./0xaf7aea249098f2c2f50cc11d4000ccf798194373.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+ZTCrowdsale.withdraw() (0xaf7aea249098f2c2f50cc11d4000ccf798194373.sol#197-208) sends eth to arbitrary user
+	Dangerous calls:
+	- creator.transfer(ethFees) (0xaf7aea249098f2c2f50cc11d4000ccf798194373.sol#204)
+	- beneficiary.transfer(ethBalance - ethFees) (0xaf7aea249098f2c2f50cc11d4000ccf798194373.sol#205)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+Reentrancy in ZTCrowdsale.fallback() (0xaf7aea249098f2c2f50cc11d4000ccf798194373.sol#233-278):
+	External calls:
+	- ! ztToken.issue(sender,valueInZT) (0xaf7aea249098f2c2f50cc11d4000ccf798194373.sol#247)
+	External calls sending eth:
+	- ! creator.send(ethFees) (0xaf7aea249098f2c2f50cc11d4000ccf798194373.sol#257)
+	- ! beneficiary.send(received - ethFees) (0xaf7aea249098f2c2f50cc11d4000ccf798194373.sol#262)
+	State variables written after the call(s):
+	- raised += received (0xaf7aea249098f2c2f50cc11d4000ccf798194373.sol#272)
+	ZTCrowdsale.raised (0xaf7aea249098f2c2f50cc11d4000ccf798194373.sol#60) can be used in cross function reentrancies:
+	- ZTCrowdsale.fallback() (0xaf7aea249098f2c2f50cc11d4000ccf798194373.sol#233-278)
+	- ZTCrowdsale.raised (0xaf7aea249098f2c2f50cc11d4000ccf798194373.sol#60)
+	- ZTCrowdsale.refund() (0xaf7aea249098f2c2f50cc11d4000ccf798194373.sol#216-227)
+	- ZTCrowdsale.toZT(uint256) (0xaf7aea249098f2c2f50cc11d4000ccf798194373.sol#131-177)
+	- ZTCrowdsale.withdraw() (0xaf7aea249098f2c2f50cc11d4000ccf798194373.sol#197-208)
+	- stage = Stages.Ended (0xaf7aea249098f2c2f50cc11d4000ccf798194373.sol#276)
+	ZTCrowdsale.stage (0xaf7aea249098f2c2f50cc11d4000ccf798194373.sol#55) can be used in cross function reentrancies:
+	- ZTCrowdsale.atStage(ZTCrowdsale.Stages) (0xaf7aea249098f2c2f50cc11d4000ccf798194373.sol#74-77)
+	- ZTCrowdsale.endCrowdsale() (0xaf7aea249098f2c2f50cc11d4000ccf798194373.sol#184-190)
+	- ZTCrowdsale.fallback() (0xaf7aea249098f2c2f50cc11d4000ccf798194373.sol#233-278)
+	- ZTCrowdsale.stage (0xaf7aea249098f2c2f50cc11d4000ccf798194373.sol#55)
+	- ZTCrowdsale.toZT(uint256) (0xaf7aea249098f2c2f50cc11d4000ccf798194373.sol#131-177)
+	- ZTCrowdsale.withdraw() (0xaf7aea249098f2c2f50cc11d4000ccf798194373.sol#197-208)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+ZTCrowdsale.toZT(uint256) (0xaf7aea249098f2c2f50cc11d4000ccf798194373.sol#131-177) performs a multiplication on the result of a division:
+	- ztAmount = _wei * rate * 10 ** 8 / 1000000000000000000 (0xaf7aea249098f2c2f50cc11d4000ccf798194373.sol#166)
+	- ztAmount = ztAmount * 965936329 / 10 ** 9 (0xaf7aea249098f2c2f50cc11d4000ccf798194373.sol#172)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+ZTCrowdsale.ZTCrowdsale(address,address,address,uint256)._beneficiary (0xaf7aea249098f2c2f50cc11d4000ccf798194373.sol#105) lacks a zero-check on :
+		- beneficiary = _beneficiary (0xaf7aea249098f2c2f50cc11d4000ccf798194373.sol#107)
+ZTCrowdsale.ZTCrowdsale(address,address,address,uint256)._creator (0xaf7aea249098f2c2f50cc11d4000ccf798194373.sol#105) lacks a zero-check on :
+		- creator = _creator (0xaf7aea249098f2c2f50cc11d4000ccf798194373.sol#108)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in ZTCrowdsale.fallback() (0xaf7aea249098f2c2f50cc11d4000ccf798194373.sol#233-278):
+	External calls:
+	- ! ztToken.issue(sender,valueInZT) (0xaf7aea249098f2c2f50cc11d4000ccf798194373.sol#247)
+	State variables written after the call(s):
+	- balances[sender] += received (0xaf7aea249098f2c2f50cc11d4000ccf798194373.sol#269)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+ZTCrowdsale.toZT(uint256) (0xaf7aea249098f2c2f50cc11d4000ccf798194373.sol#131-177) uses timestamp for comparisons
+	Dangerous comparisons:
+	- stage != Stages.Ended && now >= start && now <= end (0xaf7aea249098f2c2f50cc11d4000ccf798194373.sol#133)
+	- now <= start + ratePreICOEnd (0xaf7aea249098f2c2f50cc11d4000ccf798194373.sol#136)
+	- now <= start + rateAngelDayEnd (0xaf7aea249098f2c2f50cc11d4000ccf798194373.sol#141)
+	- now <= start + rateFirstWeekEnd (0xaf7aea249098f2c2f50cc11d4000ccf798194373.sol#146)
+	- now <= start + rateSecondWeekEnd (0xaf7aea249098f2c2f50cc11d4000ccf798194373.sol#151)
+	- now <= start + rateThirdWeekEnd (0xaf7aea249098f2c2f50cc11d4000ccf798194373.sol#156)
+	- now <= start + rateLastWeekEnd (0xaf7aea249098f2c2f50cc11d4000ccf798194373.sol#161)
+ZTCrowdsale.endCrowdsale() (0xaf7aea249098f2c2f50cc11d4000ccf798194373.sol#184-190) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(now >= end) (0xaf7aea249098f2c2f50cc11d4000ccf798194373.sol#187)
+ZTCrowdsale.fallback() (0xaf7aea249098f2c2f50cc11d4000ccf798194373.sol#233-278) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(now > start) (0xaf7aea249098f2c2f50cc11d4000ccf798194373.sol#236)
+	- require(bool)(now < end) (0xaf7aea249098f2c2f50cc11d4000ccf798194373.sol#239)
+	- now <= start + ratePreICOEnd (0xaf7aea249098f2c2f50cc11d4000ccf798194373.sol#251)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Version constraint ^0.4.15 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ExpExponentCleanup
+	- NestedArrayFunctionCallDecoder
+	- ZeroFunctionSelector.
+It is used by:
+	- ^0.4.15 (0xaf7aea249098f2c2f50cc11d4000ccf798194373.sol#1)
+solc-0.4.15 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Parameter ZTCrowdsale.balanceOf(address)._investor (0xaf7aea249098f2c2f50cc11d4000ccf798194373.sol#95) is not in mixedCase
+Parameter ZTCrowdsale.toZT(uint256)._wei (0xaf7aea249098f2c2f50cc11d4000ccf798194373.sol#131) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in ZTCrowdsale.fallback() (0xaf7aea249098f2c2f50cc11d4000ccf798194373.sol#233-278):
+	External calls:
+	- ! creator.send(ethFees) (0xaf7aea249098f2c2f50cc11d4000ccf798194373.sol#257)
+	- ! beneficiary.send(received - ethFees) (0xaf7aea249098f2c2f50cc11d4000ccf798194373.sol#262)
+	State variables written after the call(s):
+	- raised += received (0xaf7aea249098f2c2f50cc11d4000ccf798194373.sol#272)
+	- stage = Stages.Ended (0xaf7aea249098f2c2f50cc11d4000ccf798194373.sol#276)
+Reentrancy in ZTCrowdsale.refund() (0xaf7aea249098f2c2f50cc11d4000ccf798194373.sol#216-227):
+	External calls:
+	- receivedAmount > 0 && ! msg.sender.send(receivedAmount) (0xaf7aea249098f2c2f50cc11d4000ccf798194373.sol#224)
+	State variables written after the call(s):
+	- balances[msg.sender] = receivedAmount (0xaf7aea249098f2c2f50cc11d4000ccf798194373.sol#225)
+Reentrancy in ZTCrowdsale.withdraw() (0xaf7aea249098f2c2f50cc11d4000ccf798194373.sol#197-208):
+	External calls:
+	- creator.transfer(ethFees) (0xaf7aea249098f2c2f50cc11d4000ccf798194373.sol#204)
+	- beneficiary.transfer(ethBalance - ethFees) (0xaf7aea249098f2c2f50cc11d4000ccf798194373.sol#205)
+	State variables written after the call(s):
+	- stage = Stages.Withdrawn (0xaf7aea249098f2c2f50cc11d4000ccf798194373.sol#207)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+ZTCrowdsale.slitherConstructorVariables() (0xaf7aea249098f2c2f50cc11d4000ccf798194373.sol#24-280) uses literals with too many digits:
+	- maxAmount = 400000000000000000000000 (0xaf7aea249098f2c2f50cc11d4000ccf798194373.sol#31)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+ZTCrowdsale.maxAmount (0xaf7aea249098f2c2f50cc11d4000ccf798194373.sol#31) should be constant 
+ZTCrowdsale.minAcceptedAmount (0xaf7aea249098f2c2f50cc11d4000ccf798194373.sol#32) should be constant 
+ZTCrowdsale.minAmount (0xaf7aea249098f2c2f50cc11d4000ccf798194373.sol#30) should be constant 
+ZTCrowdsale.rateAngelDay (0xaf7aea249098f2c2f50cc11d4000ccf798194373.sol#36) should be constant 
+ZTCrowdsale.rateAngelDayEnd (0xaf7aea249098f2c2f50cc11d4000ccf798194373.sol#43) should be constant 
+ZTCrowdsale.rateFirstWeek (0xaf7aea249098f2c2f50cc11d4000ccf798194373.sol#37) should be constant 
+ZTCrowdsale.rateFirstWeekEnd (0xaf7aea249098f2c2f50cc11d4000ccf798194373.sol#44) should be constant 
+ZTCrowdsale.rateLastWeek (0xaf7aea249098f2c2f50cc11d4000ccf798194373.sol#40) should be constant 
+ZTCrowdsale.rateLastWeekEnd (0xaf7aea249098f2c2f50cc11d4000ccf798194373.sol#47) should be constant 
+ZTCrowdsale.ratePreICO (0xaf7aea249098f2c2f50cc11d4000ccf798194373.sol#35) should be constant 
+ZTCrowdsale.ratePreICOEnd (0xaf7aea249098f2c2f50cc11d4000ccf798194373.sol#42) should be constant 
+ZTCrowdsale.rateSecondWeek (0xaf7aea249098f2c2f50cc11d4000ccf798194373.sol#38) should be constant 
+ZTCrowdsale.rateSecondWeekEnd (0xaf7aea249098f2c2f50cc11d4000ccf798194373.sol#45) should be constant 
+ZTCrowdsale.rateThirdWeek (0xaf7aea249098f2c2f50cc11d4000ccf798194373.sol#39) should be constant 
+ZTCrowdsale.rateThirdWeekEnd (0xaf7aea249098f2c2f50cc11d4000ccf798194373.sol#46) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+./0xaf7aea249098f2c2f50cc11d4000ccf798194373.sol analyzed (2 contracts with 94 detectors), 32 result(s) found
+
+real	0m1.864s
+user	0m1.603s
+sys	0m0.264s

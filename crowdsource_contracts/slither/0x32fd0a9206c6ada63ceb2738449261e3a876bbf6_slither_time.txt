@@ -1,0 +1,341 @@
+'solc --version' running
+'solc ./0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+Town.sendExternalTokens(address,address) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#389-411) uses arbitrary from in transferFrom: tokenERC20.transferFrom(official,address(this),balance) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#394)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#arbitrary-from-in-transferfrom
+
+Reentrancy in Town.getTownTokens(address) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#639-711):
+	External calls:
+	- _token.transfer(holder,tokenAmount) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#657)
+	External calls sending eth:
+	- msg.sender.transfer(change) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#651)
+	State variables written after the call(s):
+	- _transactionsCount = _transactionsCount.add(1) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#659)
+	Town._transactionsCount (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#193) can be used in cross function reentrancies:
+	- Town.constructor(uint256,uint256,uint256,uint256,uint256,uint256,uint256,address) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#255-285)
+	- Town.getTownTokens(address) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#639-711)
+	- Town.receive() (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#287-301)
+	- Town.transactionsCount() (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#339-341)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+Town.sendExternalTokens(address,address) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#389-411) ignores return value by tokenERC20.transferFrom(official,address(this),balance) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#394)
+Town.remuneration(uint256) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#413-481) ignores return value by _token.transferFrom(msg.sender,user,amount) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#425)
+Town.remuneration(uint256) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#413-481) ignores return value by _token.transferFrom(msg.sender,address(this),restOfTokens) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#435)
+Town.claimExternalTokens(address) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#597-611) ignores return value by Token(externalTokensForHolder[i]).transfer(holder,_townHoldersLedger[holder][externalTokensForHolder[i]]) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#601)
+Town.getTownTokens(address) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#639-711) ignores return value by _token.transfer(holder,tokenAmount) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#657)
+Town.getTownTokens(address) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#639-711) ignores return value by _token.transfer(holder,tokenBalance) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#663)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+Town.distributionSnapshot() (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#483-582) performs a multiplication on the result of a division:
+	- externalTokenCost = fullBalance.mul(externalToken_scope_1._weight).div(sumWeight) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#515)
+	- amount = externalTokenCost.mul(tokensAmount).div(sumExternalTokens_scope_2) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#519)
+Town.distributionSnapshot() (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#483-582) performs a multiplication on the result of a division:
+	- decayTimestamp = (block.timestamp - _lastDistributionsDate).div(_distributionPeriod).mul(_distributionPeriod).add(_lastDistributionsDate).add(_distributionPeriod) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#520)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+Town.getTownTokens(address) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#639-711) uses a dangerous strict equality:
+	- _remunerationsQueue[i]._priority == 1 (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#675)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-strict-equalities
+
+Reentrancy in Town.claimExternalTokens(address) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#597-611):
+	External calls:
+	- Token(externalTokensForHolder[i]).transfer(holder,_townHoldersLedger[holder][externalTokensForHolder[i]]) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#601)
+	State variables written after the call(s):
+	- _ledgerExternalTokensAddresses[holder].pop() (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#604)
+	Town._ledgerExternalTokensAddresses (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#240) can be used in cross function reentrancies:
+	- Town.claimExternalTokens(address) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#597-611)
+	- Town.distributionSnapshot() (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#483-582)
+	- Town.receive() (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#287-301)
+	- delete _townHoldersLedger[holder][externalTokensForHolder[i]] (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#602)
+	Town._townHoldersLedger (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#239) can be used in cross function reentrancies:
+	- Town.claimExternalTokens(address) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#597-611)
+	- Town.distributionSnapshot() (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#483-582)
+Reentrancy in Town.remuneration(uint256) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#413-481):
+	External calls:
+	- _token.transferFrom(msg.sender,user,amount) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#425)
+	- _token.transferFrom(msg.sender,address(this),restOfTokens) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#435)
+	State variables written after the call(s):
+	- _queueTownTokenRequests[i_scope_0 - executedRequestCount] = _queueTownTokenRequests[i_scope_0] (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#440)
+	Town._queueTownTokenRequests (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#232) can be used in cross function reentrancies:
+	- Town.getLengthQueueTownTokenRequests() (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#359-361)
+	- Town.getQueueTownTokenRequests(uint256) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#363-366)
+	- Town.getTownTokens(address) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#639-711)
+	- Town.remuneration(uint256) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#413-481)
+	- _queueTownTokenRequests.pop() (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#445)
+	Town._queueTownTokenRequests (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#232) can be used in cross function reentrancies:
+	- Town.getLengthQueueTownTokenRequests() (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#359-361)
+	- Town.getQueueTownTokenRequests(uint256) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#363-366)
+	- Town.getTownTokens(address) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#639-711)
+	- Town.remuneration(uint256) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#413-481)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+Town.distributionSnapshot().tempArray (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#487) is a local variable never initialized
+Town.sendExternalTokens(address,address).tokenInfo (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#396) is a local variable never initialized
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#uninitialized-local-variables
+
+Town.constructor(uint256,uint256,uint256,uint256,uint256,uint256,uint256,address).distributionPeriod (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#256) shadows:
+	- Town.distributionPeriod() (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#307-309) (function)
+Town.constructor(uint256,uint256,uint256,uint256,uint256,uint256,uint256,address).distributionPeriodsNumber (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#257) shadows:
+	- Town.distributionPeriodsNumber() (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#311-313) (function)
+Town.constructor(uint256,uint256,uint256,uint256,uint256,uint256,uint256,address).startRate (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#258) shadows:
+	- Town.startRate() (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#315-317) (function)
+Town.constructor(uint256,uint256,uint256,uint256,uint256,uint256,uint256,address).minTokenGetAmount (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#259) shadows:
+	- Town.minTokenGetAmount() (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#319-321) (function)
+Town.constructor(uint256,uint256,uint256,uint256,uint256,uint256,uint256,address).durationOfMinTokenGetAmount (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#260) shadows:
+	- Town.durationOfMinTokenGetAmount() (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#323-325) (function)
+Town.constructor(uint256,uint256,uint256,uint256,uint256,uint256,uint256,address).maxTokenGetAmount (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#261) shadows:
+	- Town.maxTokenGetAmount() (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#327-329) (function)
+Town.constructor(uint256,uint256,uint256,uint256,uint256,uint256,uint256,address).minExternalTokensAmount (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#262) shadows:
+	- Town.minExternalTokensAmount() (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#331-333) (function)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#local-variable-shadowing
+
+Town.remuneration(uint256) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#413-481) has external calls inside a loop: _token.transferFrom(msg.sender,user,amount) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#425)
+Town.distributionSnapshot() (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#483-582) has external calls inside a loop: i_scope_5 < _token.getHoldersCount() (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#528)
+Town.distributionSnapshot() (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#483-582) has external calls inside a loop: holder = _token.getHolderByIndex(i_scope_5) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#529)
+Town.distributionSnapshot() (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#483-582) has external calls inside a loop: balance = _token.balanceOf(holder) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#530)
+Town.claimExternalTokens(address) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#597-611) has external calls inside a loop: Token(externalTokensForHolder[i]).transfer(holder,_townHoldersLedger[holder][externalTokensForHolder[i]]) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#601)
+Town.getTownTokens(address) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#639-711) has external calls inside a loop: _remunerationsQueue[i]._address.transfer(_remunerationsQueue[i]._amount) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#677)
+Town.getTownTokens(address) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#639-711) has external calls inside a loop: _remunerationsQueue[i]._address.transfer(amount) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#686)
+Town.getTownTokens(address) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#639-711) has external calls inside a loop: _remunerationsQueue[i_scope_1]._address.transfer(_remunerationsQueue[i_scope_1]._amount) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#695)
+Town.getTownTokens(address) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#639-711) has external calls inside a loop: _remunerationsQueue[i_scope_1]._address.transfer(amount) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#704)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation/#calls-inside-a-loop
+
+Reentrancy in Town.getTownTokens(address) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#639-711):
+	External calls:
+	- _token.transfer(holder,tokenAmount) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#657)
+	External calls sending eth:
+	- msg.sender.transfer(change) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#651)
+	State variables written after the call(s):
+	- _historyTransactions[holder].push(transactionsHistory) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#658)
+Reentrancy in Town.getTownTokens(address) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#639-711):
+	External calls:
+	- _token.transfer(holder,tokenBalance) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#663)
+	External calls sending eth:
+	- msg.sender.transfer(change) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#651)
+	State variables written after the call(s):
+	- _historyTransactions[holder].push(transactionsHistory_scope_0) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#665)
+	- _queueTownTokenRequests.push(tokenRequest) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#671)
+Reentrancy in Town.getTownTokens(address) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#639-711):
+	External calls:
+	- _token.transfer(holder,tokenAmount) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#657)
+	- _token.transfer(holder,tokenBalance) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#663)
+	External calls sending eth:
+	- msg.sender.transfer(change) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#651)
+	- _remunerationsQueue[i]._address.transfer(_remunerationsQueue[i]._amount) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#677)
+	State variables written after the call(s):
+	- _remunerationsQueue[j - 1] = _remunerationsQueue[j] (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#682)
+	- _remunerationsQueue.pop() (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#684)
+Reentrancy in Town.getTownTokens(address) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#639-711):
+	External calls:
+	- _token.transfer(holder,tokenAmount) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#657)
+	- _token.transfer(holder,tokenBalance) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#663)
+	External calls sending eth:
+	- msg.sender.transfer(change) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#651)
+	- _remunerationsQueue[i]._address.transfer(_remunerationsQueue[i]._amount) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#677)
+	- _remunerationsQueue[i]._address.transfer(amount) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#686)
+	State variables written after the call(s):
+	- _remunerationsQueue[i]._amount = _remunerationsQueue[i]._amount.sub(amount) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#687)
+Reentrancy in Town.getTownTokens(address) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#639-711):
+	External calls:
+	- _token.transfer(holder,tokenAmount) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#657)
+	- _token.transfer(holder,tokenBalance) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#663)
+	External calls sending eth:
+	- msg.sender.transfer(change) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#651)
+	- _remunerationsQueue[i]._address.transfer(_remunerationsQueue[i]._amount) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#677)
+	- _remunerationsQueue[i]._address.transfer(amount) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#686)
+	- _remunerationsQueue[i_scope_1]._address.transfer(_remunerationsQueue[i_scope_1]._amount) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#695)
+	State variables written after the call(s):
+	- _remunerationsQueue[j_scope_2 - 1] = _remunerationsQueue[j_scope_2] (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#700)
+	- _remunerationsQueue.pop() (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#702)
+Reentrancy in Town.getTownTokens(address) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#639-711):
+	External calls:
+	- _token.transfer(holder,tokenAmount) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#657)
+	- _token.transfer(holder,tokenBalance) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#663)
+	External calls sending eth:
+	- msg.sender.transfer(change) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#651)
+	- _remunerationsQueue[i]._address.transfer(_remunerationsQueue[i]._amount) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#677)
+	- _remunerationsQueue[i]._address.transfer(amount) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#686)
+	- _remunerationsQueue[i_scope_1]._address.transfer(_remunerationsQueue[i_scope_1]._amount) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#695)
+	- _remunerationsQueue[i_scope_1]._address.transfer(amount) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#704)
+	State variables written after the call(s):
+	- _remunerationsQueue[i_scope_1]._amount = _remunerationsQueue[i_scope_1]._amount.sub(amount) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#705)
+Reentrancy in Town.remuneration(uint256) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#413-481):
+	External calls:
+	- _token.transferFrom(msg.sender,user,amount) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#425)
+	- _token.transferFrom(msg.sender,address(this),restOfTokens) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#435)
+	State variables written after the call(s):
+	- _historyTransactions[msg.sender].pop() (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#454)
+	- _historyTransactions[msg.sender].push(info) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#458)
+Reentrancy in Town.remuneration(uint256) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#413-481):
+	External calls:
+	- _token.transferFrom(msg.sender,user,amount) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#425)
+	- _token.transferFrom(msg.sender,address(this),restOfTokens) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#435)
+	External calls sending eth:
+	- msg.sender.transfer(address(this).balance) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#472)
+	State variables written after the call(s):
+	- _remunerationsQueue.push(info_scope_5) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#475)
+Reentrancy in Town.sendExternalTokens(address,address) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#389-411):
+	External calls:
+	- tokenERC20.transferFrom(official,address(this),balance) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#394)
+	State variables written after the call(s):
+	- tokenObj._entities.push(tokenInfo) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#407)
+	- _externalTokensAddresses.push(externalToken) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#404)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in Town.sendExternalTokens(address,address) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#389-411):
+	External calls:
+	- tokenERC20.transferFrom(official,address(this),balance) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#394)
+	Event emitted after the call(s):
+	- Proposal(balance,tokenInfo._official,tokenInfo._distributionsCount,tokenInfo._distributionAmount,externalToken) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#408)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+Town.receive() (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#287-301) uses timestamp for comparisons
+	Dangerous comparisons:
+	- _officialsLedger[msg.sender]._amount > 0 (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#289)
+Town.distributionSnapshot() (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#483-582) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(block.timestamp > (_lastDistributionsDate + _distributionPeriod),distribution time has not yet arrived) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#484)
+Town.voteOn(address,uint256) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#584-591) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(block.timestamp < (_lastDistributionsDate + _distributionPeriod),need call distributionSnapshot function) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#586)
+Town.claimFunds(address) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#613-633) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(_officialsLedger[official]._amount != 0,official address not found in ledger) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#614)
+	- block.timestamp >= _officialsLedger[official]._decayTimestamp (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#616)
+	- address(this).balance >= amount (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#623)
+Town.getTownTokens(address) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#639-711) uses timestamp for comparisons
+	Dangerous comparisons:
+	- i < _remunerationsQueue.length (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#674)
+	- _remunerationsQueue[i]._priority == 1 (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#675)
+	- _remunerationsQueue[i]._amount > amount (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#676)
+	- j < _remunerationsQueue.length (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#681)
+	- i_scope_1 < _remunerationsQueue.length (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#693)
+	- _remunerationsQueue[i_scope_1]._amount > amount (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#694)
+	- j_scope_2 < _remunerationsQueue.length (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#699)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Town.distributionSnapshot() (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#483-582) compares to a boolean constant:
+	-found == false (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#546)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#boolean-equality
+
+Town.remuneration(uint256) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#413-481) has costly operations inside a loop:
+	- _queueTownTokenRequests.pop() (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#445)
+Town.getTownTokens(address) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#639-711) has costly operations inside a loop:
+	- _remunerationsQueue.pop() (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#684)
+Town.getTownTokens(address) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#639-711) has costly operations inside a loop:
+	- _remunerationsQueue.pop() (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#702)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#costly-operations-inside-a-loop
+
+Town.distributionSnapshot() (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#483-582) has a high cyclomatic complexity (23).
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#cyclomatic-complexity
+
+Version constraint ^0.7.0 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- SignedImmutables
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup.
+It is used by:
+	- ^0.7.0 (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#3)
+solc-0.7.0 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Function Town.IWantTakeTokensToAmount(uint256) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#635-637) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in Town.claimFunds(address) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#613-633):
+	External calls:
+	- official.transfer(amount) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#624)
+	State variables written after the call(s):
+	- _officialsLedger[official] = info_scope_1 (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#630)
+Reentrancy in Town.getTownTokens(address) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#639-711):
+	External calls:
+	- msg.sender.transfer(change) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#651)
+	State variables written after the call(s):
+	- _historyTransactions[holder].push(transactionsHistory) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#658)
+	- _historyTransactions[holder].push(transactionsHistory_scope_0) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#665)
+	- _queueTownTokenRequests.push(tokenRequest) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#671)
+	- _transactionsCount = _transactionsCount.add(1) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#659)
+Reentrancy in Town.getTownTokens(address) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#639-711):
+	External calls:
+	- msg.sender.transfer(change) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#651)
+	- _remunerationsQueue[i]._address.transfer(_remunerationsQueue[i]._amount) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#677)
+	State variables written after the call(s):
+	- _remunerationsQueue[j - 1] = _remunerationsQueue[j] (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#682)
+	- _remunerationsQueue.pop() (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#684)
+Reentrancy in Town.getTownTokens(address) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#639-711):
+	External calls:
+	- msg.sender.transfer(change) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#651)
+	- _remunerationsQueue[i]._address.transfer(_remunerationsQueue[i]._amount) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#677)
+	- _remunerationsQueue[i]._address.transfer(amount) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#686)
+	State variables written after the call(s):
+	- _remunerationsQueue[i]._amount = _remunerationsQueue[i]._amount.sub(amount) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#687)
+Reentrancy in Town.getTownTokens(address) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#639-711):
+	External calls:
+	- msg.sender.transfer(change) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#651)
+	- _remunerationsQueue[i]._address.transfer(_remunerationsQueue[i]._amount) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#677)
+	- _remunerationsQueue[i]._address.transfer(amount) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#686)
+	- _remunerationsQueue[i_scope_1]._address.transfer(_remunerationsQueue[i_scope_1]._amount) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#695)
+	State variables written after the call(s):
+	- _remunerationsQueue[j_scope_2 - 1] = _remunerationsQueue[j_scope_2] (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#700)
+	- _remunerationsQueue.pop() (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#702)
+Reentrancy in Town.getTownTokens(address) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#639-711):
+	External calls:
+	- msg.sender.transfer(change) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#651)
+	- _remunerationsQueue[i]._address.transfer(_remunerationsQueue[i]._amount) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#677)
+	- _remunerationsQueue[i]._address.transfer(amount) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#686)
+	- _remunerationsQueue[i_scope_1]._address.transfer(_remunerationsQueue[i_scope_1]._amount) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#695)
+	- _remunerationsQueue[i_scope_1]._address.transfer(amount) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#704)
+	State variables written after the call(s):
+	- _remunerationsQueue[i_scope_1]._amount = _remunerationsQueue[i_scope_1]._amount.sub(amount) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#705)
+Reentrancy in Town.receive() (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#287-301):
+	External calls:
+	- claimFunds(msg.sender) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#290)
+		- official.transfer(amount) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#624)
+	State variables written after the call(s):
+	- claimExternalTokens(msg.sender) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#293)
+		- _ledgerExternalTokensAddresses[holder].pop() (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#604)
+	- claimExternalTokens(msg.sender) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#293)
+		- delete _townHoldersLedger[holder][externalTokensForHolder[i]] (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#602)
+Reentrancy in Town.remuneration(uint256) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#413-481):
+	External calls:
+	- msg.sender.transfer(address(this).balance) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#472)
+	State variables written after the call(s):
+	- _remunerationsQueue.push(info_scope_5) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#475)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+Town.constructor(uint256,uint256,uint256,uint256,uint256,uint256,uint256,address) (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#255-285) uses literals with too many digits:
+	- _minSignAmount = 10000000000000 (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#283)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+Loop condition i_scope_0 < _queueTownTokenRequests.length (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#439) should use cached array length instead of referencing `length` member of the storage array.
+ Loop condition j < _remunerationsQueue.length (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#681) should use cached array length instead of referencing `length` member of the storage array.
+ Loop condition j_scope_2 < _remunerationsQueue.length (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#699) should use cached array length instead of referencing `length` member of the storage array.
+ Loop condition i < _externalTokensAddresses.length (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#489) should use cached array length instead of referencing `length` member of the storage array.
+ Loop condition i_scope_0 < _externalTokensWithWight.length (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#509) should use cached array length instead of referencing `length` member of the storage array.
+ Loop condition j_scope_6 < _externalTokensAddresses.length (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#531) should use cached array length instead of referencing `length` member of the storage array.
+ Loop condition j_scope_8 < _externalTokensAddresses.length (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#557) should use cached array length instead of referencing `length` member of the storage array.
+ Loop condition i_scope_10 < _externalTokensAddresses.length (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#574) should use cached array length instead of referencing `length` member of the storage array.
+ Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#cache-array-length
+
+Town._distributionPeriod (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#183) should be immutable 
+Town._distributionPeriodsNumber (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#184) should be immutable 
+Town._durationOfMinTokenGetAmount (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#187) should be immutable 
+Town._maxTokenGetAmount (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#188) should be immutable 
+Town._minExternalTokensAmount (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#189) should be immutable 
+Town._minSignAmount (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#190) should be immutable 
+Town._minTokenGetAmount (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#186) should be immutable 
+Town._startRate (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#185) should be immutable 
+Town._token (0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol#228) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+./0x32fd0a9206c6ada63ceb2738449261e3a876bbf6.sol analyzed (4 contracts with 94 detectors), 80 result(s) found
+
+real	0m4.116s
+user	0m3.824s
+sys	0m0.294s

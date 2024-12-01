@@ -1,0 +1,237 @@
+'solc --version' running
+'solc ./0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+MonethaGateway.acceptPayment(address,uint256,address,uint256,uint256) (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#422-461) sends eth to arbitrary user
+	Dangerous calls:
+	- monethaVault.transfer(_monethaFee) (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#458)
+MerchantWallet.doWithdrawal(address,uint256) (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#830-833) sends eth to arbitrary user
+	Dangerous calls:
+	- beneficiary.transfer(amount) (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#832)
+PaymentProcessor.processPayment(uint256,uint32,uint32,uint256) (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#1186-1236) sends eth to arbitrary user
+	Dangerous calls:
+	- discountWei = monethaGateway.acceptPayment.value(order.price)(fundAddress,order.fee,order.originAddress,order.vouchersApply,PAYBACK_PERMILLE) (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#1209-1214)
+	- discountWei = monethaGateway.acceptPayment.value(order.price)(merchantWallet,order.fee,order.originAddress,order.vouchersApply,PAYBACK_PERMILLE) (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#1216-1221)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+Reentrancy in PaymentProcessor.processPayment(uint256,uint32,uint32,uint256) (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#1186-1236):
+	External calls:
+	- fundAddress = merchantWallet.merchantFundAddress() (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#1196)
+	- discountWei = monethaGateway.acceptPayment.value(order.price)(fundAddress,order.fee,order.originAddress,order.vouchersApply,PAYBACK_PERMILLE) (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#1209-1214)
+	- discountWei = monethaGateway.acceptPayment.value(order.price)(merchantWallet,order.fee,order.originAddress,order.vouchersApply,PAYBACK_PERMILLE) (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#1216-1221)
+	External calls sending eth:
+	- discountWei = monethaGateway.acceptPayment.value(order.price)(fundAddress,order.fee,order.originAddress,order.vouchersApply,PAYBACK_PERMILLE) (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#1209-1214)
+	- discountWei = monethaGateway.acceptPayment.value(order.price)(merchantWallet,order.fee,order.originAddress,order.vouchersApply,PAYBACK_PERMILLE) (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#1216-1221)
+	State variables written after the call(s):
+	- order.discount = discountWei (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#1225)
+	PaymentProcessor.orders (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#954) can be used in cross function reentrancies:
+	- PaymentProcessor.addOrder(uint256,uint256,address,address,uint256,address,uint256) (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#1008-1036)
+	- PaymentProcessor.atState(uint256,PaymentProcessor.State) (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#961-964)
+	- PaymentProcessor.cancelOrder(uint256,uint32,uint32,uint256,string) (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#1079-1109)
+	- PaymentProcessor.orders (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#954)
+	- PaymentProcessor.processPayment(uint256,uint32,uint32,uint256) (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#1186-1236)
+	- PaymentProcessor.refundPayment(uint256,uint32,uint32,uint256,string) (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#1120-1150)
+	- PaymentProcessor.securePay(uint256) (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#1043-1052)
+	- PaymentProcessor.secureTokenPay(uint256) (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#1059-1069)
+	- PaymentProcessor.transition(uint256,PaymentProcessor.State) (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#971-974)
+	- PaymentProcessor.updateDealConditions(uint256,uint32,uint32,bool,uint256) (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#1279-1299)
+	- PaymentProcessor.withdrawRefund(uint256) (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#1156-1164)
+	- PaymentProcessor.withdrawTokenRefund(uint256) (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#1170-1177)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+PaymentProcessor.secureTokenPay(uint256) (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#1059-1069) ignores return value by GenericERC20(order.tokenAddress).transferFrom(msg.sender,address(this),order.price) (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#1068)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+GenericERC20 (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#314-344) has incorrect ERC20 function interface:GenericERC20.transfer(address,uint256) (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#325)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-erc20-interface
+
+SafeDestructible.destroy() (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#687-690) uses a dangerous strict equality:
+	- require(bool)(address(this).balance == 0) (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#688)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-strict-equalities
+
+MonethaGateway.acceptPayment(address,uint256,address,uint256,uint256) (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#422-461) contains a tautology or contradiction:
+	- require(bool)(_monethaFee >= 0 && _monethaFee <= FEE_PERMILLE.mul(price).div(1000)) (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#431)
+MonethaGateway.acceptTokenPayment(address,uint256,address,uint256) (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#471-490) contains a tautology or contradiction:
+	- require(bool)(_monethaFee >= 0 && _monethaFee <= FEE_PERMILLE.mul(_value).div(1000)) (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#482)
+PaymentProcessor.addOrder(uint256,uint256,address,address,uint256,address,uint256) (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#1008-1036) contains a tautology or contradiction:
+	- require(bool)(_fee >= 0 && _fee <= FEE_PERMILLE.mul(_price).div(PERMILLE_COEFFICIENT)) (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#1020)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#tautology-or-contradiction
+
+MonethaGateway.acceptPayment(address,uint256,address,uint256,uint256) (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#422-461) ignores return value by (None,discountWei) = monethaVoucher.applyDiscount(_customerAddress,vouchersApply) (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#444)
+MonethaGateway.acceptPayment(address,uint256,address,uint256,uint256) (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#422-461) ignores return value by monethaVoucher.applyPayback(_customerAddress,paybackWei) (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#450)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+MerchantWallet.changeMerchantAccount(address) (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#880-882) should emit an event for: 
+	- merchantAccount = newAccount (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#881) 
+	- merchantAccount = newAccount (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#881) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-access-control
+
+MonethaGateway.changeMonethaVault(address).newVault (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#496) lacks a zero-check on :
+		- monethaVault = newVault (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#497)
+MerchantWallet.constructor(address,string,address)._fundAddress (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#758) lacks a zero-check on :
+		- merchantFundAddress = _fundAddress (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#765)
+MerchantWallet.changeMerchantAccount(address).newAccount (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#880) lacks a zero-check on :
+		- merchantAccount = newAccount (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#881)
+MerchantWallet.changeFundAddress(address).newFundAddress (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#887) lacks a zero-check on :
+		- merchantFundAddress = newFundAddress (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#888)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in PaymentProcessor.setMerchantDealsHistory(MerchantDealsHistory) (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#1263-1268):
+	External calls:
+	- require(bool)(_merchantHistory.merchantIdHash() == merchantIdHash) (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#1265)
+	State variables written after the call(s):
+	- merchantHistory = _merchantHistory (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#1267)
+Reentrancy in PaymentProcessor.setMerchantWallet(MerchantWallet) (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#1252-1257):
+	External calls:
+	- require(bool)(_newWallet.merchantIdHash() == merchantIdHash) (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#1254)
+	State variables written after the call(s):
+	- merchantWallet = _newWallet (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#1256)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in MonethaGateway.acceptPayment(address,uint256,address,uint256,uint256) (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#422-461):
+	External calls:
+	- maxVouchers = monethaVoucher.fromWei(maxDiscountWei) (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#437)
+	- (None,discountWei) = monethaVoucher.applyDiscount(_customerAddress,vouchersApply) (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#444)
+	- monethaVoucher.applyPayback(_customerAddress,paybackWei) (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#450)
+	External calls sending eth:
+	- _merchantWallet.transfer(merchantIncome) (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#457)
+	- monethaVault.transfer(_monethaFee) (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#458)
+	Event emitted after the call(s):
+	- PaymentProcessedEther(_merchantWallet,merchantIncome,_monethaFee) (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#460)
+Reentrancy in MonethaGateway.acceptTokenPayment(address,uint256,address,uint256) (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#471-490):
+	External calls:
+	- GenericERC20(_tokenAddress).transfer(_merchantWallet,merchantIncome) (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#486)
+	- GenericERC20(_tokenAddress).transfer(monethaVault,_monethaFee) (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#487)
+	Event emitted after the call(s):
+	- PaymentProcessedToken(_tokenAddress,_merchantWallet,merchantIncome,_monethaFee) (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#489)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+Version constraint ^0.4.24 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ABIEncoderV2PackedStorage_0.4.x
+	- ExpExponentCleanup
+	- EventStructWrongData.
+It is used by:
+	- ^0.4.24 (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#1)
+solc-0.4.24 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Parameter SafeMath.mul(uint256,uint256)._a (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#14) is not in mixedCase
+Parameter SafeMath.mul(uint256,uint256)._b (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#14) is not in mixedCase
+Parameter SafeMath.div(uint256,uint256)._a (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#30) is not in mixedCase
+Parameter SafeMath.div(uint256,uint256)._b (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#30) is not in mixedCase
+Parameter SafeMath.sub(uint256,uint256)._a (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#40) is not in mixedCase
+Parameter SafeMath.sub(uint256,uint256)._b (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#40) is not in mixedCase
+Parameter SafeMath.add(uint256,uint256)._a (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#48) is not in mixedCase
+Parameter SafeMath.add(uint256,uint256)._b (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#48) is not in mixedCase
+Parameter Ownable.transferOwnership(address)._newOwner (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#104) is not in mixedCase
+Parameter Destructible.destroyAndSend(address)._recipient (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#179) is not in mixedCase
+Parameter Contactable.setContactInformation(string)._info (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#199) is not in mixedCase
+Parameter Restricted.setMonethaAddress(address,bool)._address (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#230) is not in mixedCase
+Parameter Restricted.setMonethaAddress(address,bool)._isMonethaAddress (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#230) is not in mixedCase
+Parameter MonethaGateway.acceptPayment(address,uint256,address,uint256,uint256)._merchantWallet (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#422) is not in mixedCase
+Parameter MonethaGateway.acceptPayment(address,uint256,address,uint256,uint256)._monethaFee (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#423) is not in mixedCase
+Parameter MonethaGateway.acceptPayment(address,uint256,address,uint256,uint256)._customerAddress (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#424) is not in mixedCase
+Parameter MonethaGateway.acceptPayment(address,uint256,address,uint256,uint256)._vouchersApply (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#425) is not in mixedCase
+Parameter MonethaGateway.acceptPayment(address,uint256,address,uint256,uint256)._paybackPermille (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#426) is not in mixedCase
+Parameter MonethaGateway.acceptTokenPayment(address,uint256,address,uint256)._merchantWallet (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#472) is not in mixedCase
+Parameter MonethaGateway.acceptTokenPayment(address,uint256,address,uint256)._monethaFee (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#473) is not in mixedCase
+Parameter MonethaGateway.acceptTokenPayment(address,uint256,address,uint256)._tokenAddress (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#474) is not in mixedCase
+Parameter MonethaGateway.acceptTokenPayment(address,uint256,address,uint256)._value (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#475) is not in mixedCase
+Parameter MonethaGateway.setMonethaAddress(address,bool)._address (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#503) is not in mixedCase
+Parameter MonethaGateway.setMonethaAddress(address,bool)._isMonethaAddress (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#503) is not in mixedCase
+Parameter MonethaGateway.setAdmin(address)._admin (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#515) is not in mixedCase
+Parameter MonethaGateway.setMonethaVoucher(IMonethaVoucher)._monethaVoucher (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#524) is not in mixedCase
+Parameter MonethaGateway.setMaxDiscountPermille(uint256)._maxDiscountPermille (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#535) is not in mixedCase
+Variable MonethaGateway.MaxDiscountPermille (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#388) is not in mixedCase
+Parameter MerchantDealsHistory.recordDeal(uint256,address,uint32,uint32,bool,uint256)._orderId (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#604) is not in mixedCase
+Parameter MerchantDealsHistory.recordDeal(uint256,address,uint32,uint32,bool,uint256)._clientAddress (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#605) is not in mixedCase
+Parameter MerchantDealsHistory.recordDeal(uint256,address,uint32,uint32,bool,uint256)._clientReputation (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#606) is not in mixedCase
+Parameter MerchantDealsHistory.recordDeal(uint256,address,uint32,uint32,bool,uint256)._merchantReputation (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#607) is not in mixedCase
+Parameter MerchantDealsHistory.recordDeal(uint256,address,uint32,uint32,bool,uint256)._isSuccess (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#608) is not in mixedCase
+Parameter MerchantDealsHistory.recordDeal(uint256,address,uint32,uint32,bool,uint256)._dealHash (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#609) is not in mixedCase
+Parameter MerchantDealsHistory.recordDealCancelReason(uint256,address,uint32,uint32,uint256,string)._orderId (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#632) is not in mixedCase
+Parameter MerchantDealsHistory.recordDealCancelReason(uint256,address,uint32,uint32,uint256,string)._clientAddress (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#633) is not in mixedCase
+Parameter MerchantDealsHistory.recordDealCancelReason(uint256,address,uint32,uint32,uint256,string)._clientReputation (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#634) is not in mixedCase
+Parameter MerchantDealsHistory.recordDealCancelReason(uint256,address,uint32,uint32,uint256,string)._merchantReputation (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#635) is not in mixedCase
+Parameter MerchantDealsHistory.recordDealCancelReason(uint256,address,uint32,uint32,uint256,string)._dealHash (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#636) is not in mixedCase
+Parameter MerchantDealsHistory.recordDealCancelReason(uint256,address,uint32,uint32,uint256,string)._cancelReason (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#637) is not in mixedCase
+Parameter MerchantDealsHistory.recordDealRefundReason(uint256,address,uint32,uint32,uint256,string)._orderId (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#660) is not in mixedCase
+Parameter MerchantDealsHistory.recordDealRefundReason(uint256,address,uint32,uint32,uint256,string)._clientAddress (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#661) is not in mixedCase
+Parameter MerchantDealsHistory.recordDealRefundReason(uint256,address,uint32,uint32,uint256,string)._clientReputation (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#662) is not in mixedCase
+Parameter MerchantDealsHistory.recordDealRefundReason(uint256,address,uint32,uint32,uint256,string)._merchantReputation (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#663) is not in mixedCase
+Parameter MerchantDealsHistory.recordDealRefundReason(uint256,address,uint32,uint32,uint256,string)._dealHash (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#664) is not in mixedCase
+Parameter MerchantDealsHistory.recordDealRefundReason(uint256,address,uint32,uint32,uint256,string)._refundReason (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#665) is not in mixedCase
+Parameter MerchantWallet.withdrawAllToExchange(address,uint256).min_amount (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#859) is not in mixedCase
+Parameter MerchantWallet.withdrawAllTokensToExchange(address,address,uint256)._tokenAddress (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#867) is not in mixedCase
+Parameter MerchantWallet.withdrawAllTokensToExchange(address,address,uint256)._depositAccount (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#867) is not in mixedCase
+Parameter MerchantWallet.withdrawAllTokensToExchange(address,address,uint256)._minAmount (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#867) is not in mixedCase
+Parameter PaymentProcessor.addOrder(uint256,uint256,address,address,uint256,address,uint256)._orderId (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#1009) is not in mixedCase
+Parameter PaymentProcessor.addOrder(uint256,uint256,address,address,uint256,address,uint256)._price (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#1010) is not in mixedCase
+Parameter PaymentProcessor.addOrder(uint256,uint256,address,address,uint256,address,uint256)._paymentAcceptor (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#1011) is not in mixedCase
+Parameter PaymentProcessor.addOrder(uint256,uint256,address,address,uint256,address,uint256)._originAddress (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#1012) is not in mixedCase
+Parameter PaymentProcessor.addOrder(uint256,uint256,address,address,uint256,address,uint256)._fee (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#1013) is not in mixedCase
+Parameter PaymentProcessor.addOrder(uint256,uint256,address,address,uint256,address,uint256)._tokenAddress (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#1014) is not in mixedCase
+Parameter PaymentProcessor.addOrder(uint256,uint256,address,address,uint256,address,uint256)._vouchersApply (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#1015) is not in mixedCase
+Parameter PaymentProcessor.securePay(uint256)._orderId (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#1043) is not in mixedCase
+Parameter PaymentProcessor.secureTokenPay(uint256)._orderId (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#1059) is not in mixedCase
+Parameter PaymentProcessor.cancelOrder(uint256,uint32,uint32,uint256,string)._orderId (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#1080) is not in mixedCase
+Parameter PaymentProcessor.cancelOrder(uint256,uint32,uint32,uint256,string)._clientReputation (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#1081) is not in mixedCase
+Parameter PaymentProcessor.cancelOrder(uint256,uint32,uint32,uint256,string)._merchantReputation (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#1082) is not in mixedCase
+Parameter PaymentProcessor.cancelOrder(uint256,uint32,uint32,uint256,string)._dealHash (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#1083) is not in mixedCase
+Parameter PaymentProcessor.cancelOrder(uint256,uint32,uint32,uint256,string)._cancelReason (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#1084) is not in mixedCase
+Parameter PaymentProcessor.refundPayment(uint256,uint32,uint32,uint256,string)._orderId (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#1121) is not in mixedCase
+Parameter PaymentProcessor.refundPayment(uint256,uint32,uint32,uint256,string)._clientReputation (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#1122) is not in mixedCase
+Parameter PaymentProcessor.refundPayment(uint256,uint32,uint32,uint256,string)._merchantReputation (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#1123) is not in mixedCase
+Parameter PaymentProcessor.refundPayment(uint256,uint32,uint32,uint256,string)._dealHash (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#1124) is not in mixedCase
+Parameter PaymentProcessor.refundPayment(uint256,uint32,uint32,uint256,string)._refundReason (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#1125) is not in mixedCase
+Parameter PaymentProcessor.withdrawRefund(uint256)._orderId (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#1156) is not in mixedCase
+Parameter PaymentProcessor.withdrawTokenRefund(uint256)._orderId (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#1170) is not in mixedCase
+Parameter PaymentProcessor.processPayment(uint256,uint32,uint32,uint256)._orderId (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#1187) is not in mixedCase
+Parameter PaymentProcessor.processPayment(uint256,uint32,uint32,uint256)._clientReputation (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#1188) is not in mixedCase
+Parameter PaymentProcessor.processPayment(uint256,uint32,uint32,uint256)._merchantReputation (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#1189) is not in mixedCase
+Parameter PaymentProcessor.processPayment(uint256,uint32,uint32,uint256)._dealHash (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#1190) is not in mixedCase
+Parameter PaymentProcessor.setMonethaGateway(MonethaGateway)._newGateway (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#1242) is not in mixedCase
+Parameter PaymentProcessor.setMerchantWallet(MerchantWallet)._newWallet (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#1252) is not in mixedCase
+Parameter PaymentProcessor.setMerchantDealsHistory(MerchantDealsHistory)._merchantHistory (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#1263) is not in mixedCase
+Parameter PaymentProcessor.updateDealConditions(uint256,uint32,uint32,bool,uint256)._orderId (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#1280) is not in mixedCase
+Parameter PaymentProcessor.updateDealConditions(uint256,uint32,uint32,bool,uint256)._clientReputation (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#1281) is not in mixedCase
+Parameter PaymentProcessor.updateDealConditions(uint256,uint32,uint32,bool,uint256)._merchantReputation (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#1282) is not in mixedCase
+Parameter PaymentProcessor.updateDealConditions(uint256,uint32,uint32,bool,uint256)._isSuccess (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#1283) is not in mixedCase
+Parameter PaymentProcessor.updateDealConditions(uint256,uint32,uint32,bool,uint256)._dealHash (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#1284) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in MonethaGateway.acceptPayment(address,uint256,address,uint256,uint256) (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#422-461):
+	External calls:
+	- _merchantWallet.transfer(merchantIncome) (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#457)
+	- monethaVault.transfer(_monethaFee) (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#458)
+	Event emitted after the call(s):
+	- PaymentProcessedEther(_merchantWallet,merchantIncome,_monethaFee) (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#460)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+MonethaGateway.VERSION (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#357) is never used in MonethaGateway (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#353-540)
+MerchantDealsHistory.VERSION (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#551) is never used in MerchantDealsHistory (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#549-677)
+MerchantWallet.VERSION (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#704) is never used in MerchantWallet (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#702-890)
+PaymentProcessor.VERSION (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#912) is never used in PaymentProcessor (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#908-1301)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-state-variable
+
+setContactInformation(string) should be declared external:
+	- Contactable.setContactInformation(string) (0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol#199-201)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#public-function-that-could-be-declared-external
+./0x2cf5694906bdd80f33bac7cb80183f1c61bc5be2.sol analyzed (13 contracts with 94 detectors), 112 result(s) found
+
+real	0m3.014s
+user	0m2.779s
+sys	0m0.238s

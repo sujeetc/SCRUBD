@@ -1,0 +1,356 @@
+'solc --version' running
+'solc ./0x19f259affad4eab74ee306f709044b2c8145f692.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x19f259affad4eab74ee306f709044b2c8145f692.sol:
+Warning: Contract code size is 29849 bytes and exceeds 24576 bytes (a limit introduced in Spurious Dragon). This contract may not be deployable on mainnet. Consider enabling the optimizer (with a low "runs" value!), turning off revert strings, or using libraries.
+  --> 0x19f259affad4eab74ee306f709044b2c8145f692.sol:84:1:
+   |
+84 | contract Third_Degree_Burn is IERC20, Ownable //clientchange
+   | ^ (Relevant source part starts here and spans across multiple lines).
+
+
+
+Third_Degree_Burn._swapContractToken(bool) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#388-428) sends eth to arbitrary user
+	Dangerous calls:
+	- (marketing,None) = marketingWallet.call{value: marketbalance}() (0x19f259affad4eab74ee306f709044b2c8145f692.sol#418)
+	- (dev,None) = devWallet.call{value: devbalance}() (0x19f259affad4eab74ee306f709044b2c8145f692.sol#422)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+Reentrancy in Third_Degree_Burn._taxedTransfer(address,address,uint256) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#274-347):
+	External calls:
+	- _swapContractToken(false) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#331)
+		- _DexRouter.addLiquidityETH{value: ethamount}(address(this),tokenamount,0,0,address(this),block.timestamp) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#459-466)
+		- _DexRouter.swapExactETHForTokensSupportingFeeOnTransferTokens{value: amount}(0,path,burnWallet,block.timestamp) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#434-440)
+		- _DexRouter.swapExactTokensForETHSupportingFeeOnTransferTokens(amount,0,path,address(this),block.timestamp) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#448-455)
+		- (marketing,None) = marketingWallet.call{value: marketbalance}() (0x19f259affad4eab74ee306f709044b2c8145f692.sol#418)
+		- (dev,None) = devWallet.call{value: devbalance}() (0x19f259affad4eab74ee306f709044b2c8145f692.sol#422)
+	- autoBurnLPTokens() (0x19f259affad4eab74ee306f709044b2c8145f692.sol#334)
+		- pair.sync() (0x19f259affad4eab74ee306f709044b2c8145f692.sol#529)
+	External calls sending eth:
+	- _swapContractToken(false) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#331)
+		- _DexRouter.addLiquidityETH{value: ethamount}(address(this),tokenamount,0,0,address(this),block.timestamp) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#459-466)
+		- _DexRouter.swapExactETHForTokensSupportingFeeOnTransferTokens{value: amount}(0,path,burnWallet,block.timestamp) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#434-440)
+		- (marketing,None) = marketingWallet.call{value: marketbalance}() (0x19f259affad4eab74ee306f709044b2c8145f692.sol#418)
+		- (dev,None) = devWallet.call{value: devbalance}() (0x19f259affad4eab74ee306f709044b2c8145f692.sol#422)
+	State variables written after the call(s):
+	- autoBurnLPTokens() (0x19f259affad4eab74ee306f709044b2c8145f692.sol#334)
+		- _balances[burnWallet] += amountToBurn (0x19f259affad4eab74ee306f709044b2c8145f692.sol#525)
+	Third_Degree_Burn._balances (0x19f259affad4eab74ee306f709044b2c8145f692.sol#86) can be used in cross function reentrancies:
+	- Third_Degree_Burn._feelessTransfer(address,address,uint256) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#355-361)
+	- Third_Degree_Burn._swapContractToken(bool) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#388-428)
+	- Third_Degree_Burn._taxedTransfer(address,address,uint256) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#274-347)
+	- Third_Degree_Burn.autoBurnLPTokens() (0x19f259affad4eab74ee306f709044b2c8145f692.sol#520-532)
+	- Third_Degree_Burn.balanceOf(address) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#555)
+	- Third_Degree_Burn.constructor() (0x19f259affad4eab74ee306f709044b2c8145f692.sol#174-191)
+	- Third_Degree_Burn.getBurnedTokens() (0x19f259affad4eab74ee306f709044b2c8145f692.sol#468-470)
+	- Third_Degree_Burn.getCirculatingSupply() (0x19f259affad4eab74ee306f709044b2c8145f692.sol#471-473)
+	- Third_Degree_Burn.isOverLiquified() (0x19f259affad4eab74ee306f709044b2c8145f692.sol#385-387)
+	- Third_Degree_Burn.manualBurnLPTokens(uint256) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#534-548)
+	- _balances[sender] -= amount (0x19f259affad4eab74ee306f709044b2c8145f692.sol#341)
+	Third_Degree_Burn._balances (0x19f259affad4eab74ee306f709044b2c8145f692.sol#86) can be used in cross function reentrancies:
+	- Third_Degree_Burn._feelessTransfer(address,address,uint256) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#355-361)
+	- Third_Degree_Burn._swapContractToken(bool) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#388-428)
+	- Third_Degree_Burn._taxedTransfer(address,address,uint256) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#274-347)
+	- Third_Degree_Burn.autoBurnLPTokens() (0x19f259affad4eab74ee306f709044b2c8145f692.sol#520-532)
+	- Third_Degree_Burn.balanceOf(address) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#555)
+	- Third_Degree_Burn.constructor() (0x19f259affad4eab74ee306f709044b2c8145f692.sol#174-191)
+	- Third_Degree_Burn.getBurnedTokens() (0x19f259affad4eab74ee306f709044b2c8145f692.sol#468-470)
+	- Third_Degree_Burn.getCirculatingSupply() (0x19f259affad4eab74ee306f709044b2c8145f692.sol#471-473)
+	- Third_Degree_Burn.isOverLiquified() (0x19f259affad4eab74ee306f709044b2c8145f692.sol#385-387)
+	- Third_Degree_Burn.manualBurnLPTokens(uint256) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#534-548)
+	- _balances[address(this)] += contractToken (0x19f259affad4eab74ee306f709044b2c8145f692.sol#342)
+	Third_Degree_Burn._balances (0x19f259affad4eab74ee306f709044b2c8145f692.sol#86) can be used in cross function reentrancies:
+	- Third_Degree_Burn._feelessTransfer(address,address,uint256) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#355-361)
+	- Third_Degree_Burn._swapContractToken(bool) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#388-428)
+	- Third_Degree_Burn._taxedTransfer(address,address,uint256) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#274-347)
+	- Third_Degree_Burn.autoBurnLPTokens() (0x19f259affad4eab74ee306f709044b2c8145f692.sol#520-532)
+	- Third_Degree_Burn.balanceOf(address) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#555)
+	- Third_Degree_Burn.constructor() (0x19f259affad4eab74ee306f709044b2c8145f692.sol#174-191)
+	- Third_Degree_Burn.getBurnedTokens() (0x19f259affad4eab74ee306f709044b2c8145f692.sol#468-470)
+	- Third_Degree_Burn.getCirculatingSupply() (0x19f259affad4eab74ee306f709044b2c8145f692.sol#471-473)
+	- Third_Degree_Burn.isOverLiquified() (0x19f259affad4eab74ee306f709044b2c8145f692.sol#385-387)
+	- Third_Degree_Burn.manualBurnLPTokens(uint256) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#534-548)
+	- _balances[burnWallet] += tokensToBeSentToBurn (0x19f259affad4eab74ee306f709044b2c8145f692.sol#343)
+	Third_Degree_Burn._balances (0x19f259affad4eab74ee306f709044b2c8145f692.sol#86) can be used in cross function reentrancies:
+	- Third_Degree_Burn._feelessTransfer(address,address,uint256) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#355-361)
+	- Third_Degree_Burn._swapContractToken(bool) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#388-428)
+	- Third_Degree_Burn._taxedTransfer(address,address,uint256) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#274-347)
+	- Third_Degree_Burn.autoBurnLPTokens() (0x19f259affad4eab74ee306f709044b2c8145f692.sol#520-532)
+	- Third_Degree_Burn.balanceOf(address) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#555)
+	- Third_Degree_Burn.constructor() (0x19f259affad4eab74ee306f709044b2c8145f692.sol#174-191)
+	- Third_Degree_Burn.getBurnedTokens() (0x19f259affad4eab74ee306f709044b2c8145f692.sol#468-470)
+	- Third_Degree_Burn.getCirculatingSupply() (0x19f259affad4eab74ee306f709044b2c8145f692.sol#471-473)
+	- Third_Degree_Burn.isOverLiquified() (0x19f259affad4eab74ee306f709044b2c8145f692.sol#385-387)
+	- Third_Degree_Burn.manualBurnLPTokens(uint256) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#534-548)
+	- _balances[recipient] += taxedAmount (0x19f259affad4eab74ee306f709044b2c8145f692.sol#344)
+	Third_Degree_Burn._balances (0x19f259affad4eab74ee306f709044b2c8145f692.sol#86) can be used in cross function reentrancies:
+	- Third_Degree_Burn._feelessTransfer(address,address,uint256) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#355-361)
+	- Third_Degree_Burn._swapContractToken(bool) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#388-428)
+	- Third_Degree_Burn._taxedTransfer(address,address,uint256) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#274-347)
+	- Third_Degree_Burn.autoBurnLPTokens() (0x19f259affad4eab74ee306f709044b2c8145f692.sol#520-532)
+	- Third_Degree_Burn.balanceOf(address) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#555)
+	- Third_Degree_Burn.constructor() (0x19f259affad4eab74ee306f709044b2c8145f692.sol#174-191)
+	- Third_Degree_Burn.getBurnedTokens() (0x19f259affad4eab74ee306f709044b2c8145f692.sol#468-470)
+	- Third_Degree_Burn.getCirculatingSupply() (0x19f259affad4eab74ee306f709044b2c8145f692.sol#471-473)
+	- Third_Degree_Burn.isOverLiquified() (0x19f259affad4eab74ee306f709044b2c8145f692.sol#385-387)
+	- Third_Degree_Burn.manualBurnLPTokens(uint256) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#534-548)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+Third_Degree_Burn.ReleaseLP() (0x19f259affad4eab74ee306f709044b2c8145f692.sol#506-511) ignores return value by liquidityToken.transfer(msg.sender,amount) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#509)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+Third_Degree_Burn._swapContractToken(bool) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#388-428) performs a multiplication on the result of a division:
+	- tokenToSwap = _balances[_PairAddress] * swapTreshold / 1000 (0x19f259affad4eab74ee306f709044b2c8145f692.sol#391)
+	- tokenForLiquidity = (tokenToSwap * liquidityTax) / totalTax (0x19f259affad4eab74ee306f709044b2c8145f692.sol#398-400)
+Third_Degree_Burn._swapContractToken(bool) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#388-428) performs a multiplication on the result of a division:
+	- LiqHalf = tokenForLiquidity / 2 (0x19f259affad4eab74ee306f709044b2c8145f692.sol#404)
+	- liqETH = (newETH * LiqHalf) / swapToken (0x19f259affad4eab74ee306f709044b2c8145f692.sol#411)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+Third_Degree_Burn.setAutoLPBurnSettings(uint256,uint256,bool) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#512-518) contains a tautology or contradiction:
+	- require(bool,string)(_percent <= 1000 && _percent >= 0,Must set auto LP burn percent between 0% and 10%) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#514)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#tautology-or-contradiction
+
+Third_Degree_Burn._addLiquidity(uint256,uint256) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#457-467) ignores return value by _DexRouter.addLiquidityETH{value: ethamount}(address(this),tokenamount,0,0,address(this),block.timestamp) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#459-466)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+Third_Degree_Burn._swapContractToken(bool).marketing (0x19f259affad4eab74ee306f709044b2c8145f692.sol#418) is written in both
+	(marketing,None) = marketingWallet.call{value: marketbalance}() (0x19f259affad4eab74ee306f709044b2c8145f692.sol#418)
+	marketing = true (0x19f259affad4eab74ee306f709044b2c8145f692.sol#419)
+Third_Degree_Burn._swapContractToken(bool).dev (0x19f259affad4eab74ee306f709044b2c8145f692.sol#422) is written in both
+	(dev,None) = devWallet.call{value: devbalance}() (0x19f259affad4eab74ee306f709044b2c8145f692.sol#422)
+	dev = true (0x19f259affad4eab74ee306f709044b2c8145f692.sol#423)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#write-after-write
+
+Third_Degree_Burn.allowance(address,address)._owner (0x19f259affad4eab74ee306f709044b2c8145f692.sol#556) shadows:
+	- Ownable._owner (0x19f259affad4eab74ee306f709044b2c8145f692.sol#58) (state variable)
+Third_Degree_Burn._approve(address,address,uint256).owner (0x19f259affad4eab74ee306f709044b2c8145f692.sol#565) shadows:
+	- Ownable.owner() (0x19f259affad4eab74ee306f709044b2c8145f692.sol#65-67) (function)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#local-variable-shadowing
+
+Third_Degree_Burn.setDailySellPercent(uint256) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#240-243) should emit an event for: 
+	- dailySellPercent = percentInHundreds (0x19f259affad4eab74ee306f709044b2c8145f692.sol#242) 
+Third_Degree_Burn.setDailySellCooldown(uint256) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#244-247) should emit an event for: 
+	- dailySellCooldown = timeInSeconds (0x19f259affad4eab74ee306f709044b2c8145f692.sol#246) 
+Third_Degree_Burn.setAutoLPBurnSettings(uint256,uint256,bool) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#512-518) should emit an event for: 
+	- lpBurnFrequency = _frequencyInSeconds (0x19f259affad4eab74ee306f709044b2c8145f692.sol#515) 
+	- percentForLPBurn = _percent (0x19f259affad4eab74ee306f709044b2c8145f692.sol#516) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+Third_Degree_Burn.ChangeMarketingWallet(address).newWallet (0x19f259affad4eab74ee306f709044b2c8145f692.sol#207) lacks a zero-check on :
+		- marketingWallet = newWallet (0x19f259affad4eab74ee306f709044b2c8145f692.sol#208)
+Third_Degree_Burn.ChangeDevWallet(address).newWallet (0x19f259affad4eab74ee306f709044b2c8145f692.sol#211) lacks a zero-check on :
+		- devWallet = newWallet (0x19f259affad4eab74ee306f709044b2c8145f692.sol#212)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in Third_Degree_Burn._swapContractToken(bool) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#388-428):
+	External calls:
+	- _swapTokenForETH(swapToken) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#407)
+		- _DexRouter.swapExactTokensForETHSupportingFeeOnTransferTokens(amount,0,path,address(this),block.timestamp) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#448-455)
+	- _addLiquidity(LiqHalf,liqETH) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#412)
+		- _DexRouter.addLiquidityETH{value: ethamount}(address(this),tokenamount,0,0,address(this),block.timestamp) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#459-466)
+	External calls sending eth:
+	- _addLiquidity(LiqHalf,liqETH) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#412)
+		- _DexRouter.addLiquidityETH{value: ethamount}(address(this),tokenamount,0,0,address(this),block.timestamp) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#459-466)
+	State variables written after the call(s):
+	- _addLiquidity(LiqHalf,liqETH) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#412)
+		- _allowances[owner][spender] = amount (0x19f259affad4eab74ee306f709044b2c8145f692.sol#568)
+Reentrancy in Third_Degree_Burn.transferFrom(address,address,uint256) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#571-577):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#572)
+		- _DexRouter.addLiquidityETH{value: ethamount}(address(this),tokenamount,0,0,address(this),block.timestamp) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#459-466)
+		- _DexRouter.swapExactETHForTokensSupportingFeeOnTransferTokens{value: amount}(0,path,burnWallet,block.timestamp) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#434-440)
+		- _DexRouter.swapExactTokensForETHSupportingFeeOnTransferTokens(amount,0,path,address(this),block.timestamp) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#448-455)
+		- pair.sync() (0x19f259affad4eab74ee306f709044b2c8145f692.sol#529)
+		- (marketing,None) = marketingWallet.call{value: marketbalance}() (0x19f259affad4eab74ee306f709044b2c8145f692.sol#418)
+		- (dev,None) = devWallet.call{value: devbalance}() (0x19f259affad4eab74ee306f709044b2c8145f692.sol#422)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#572)
+		- _DexRouter.addLiquidityETH{value: ethamount}(address(this),tokenamount,0,0,address(this),block.timestamp) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#459-466)
+		- _DexRouter.swapExactETHForTokensSupportingFeeOnTransferTokens{value: amount}(0,path,burnWallet,block.timestamp) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#434-440)
+		- (marketing,None) = marketingWallet.call{value: marketbalance}() (0x19f259affad4eab74ee306f709044b2c8145f692.sol#418)
+		- (dev,None) = devWallet.call{value: devbalance}() (0x19f259affad4eab74ee306f709044b2c8145f692.sol#422)
+	State variables written after the call(s):
+	- _approve(sender,msg.sender,currentAllowance - amount) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#575)
+		- _allowances[owner][spender] = amount (0x19f259affad4eab74ee306f709044b2c8145f692.sol#568)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in Third_Degree_Burn.ReleaseLP() (0x19f259affad4eab74ee306f709044b2c8145f692.sol#506-511):
+	External calls:
+	- liquidityToken.transfer(msg.sender,amount) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#509)
+	Event emitted after the call(s):
+	- OnReleaseLP() (0x19f259affad4eab74ee306f709044b2c8145f692.sol#510)
+Reentrancy in Third_Degree_Burn.SwapContractToken() (0x19f259affad4eab74ee306f709044b2c8145f692.sol#483-486):
+	External calls:
+	- _swapContractToken(true) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#484)
+		- _DexRouter.addLiquidityETH{value: ethamount}(address(this),tokenamount,0,0,address(this),block.timestamp) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#459-466)
+		- _DexRouter.swapExactETHForTokensSupportingFeeOnTransferTokens{value: amount}(0,path,burnWallet,block.timestamp) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#434-440)
+		- _DexRouter.swapExactTokensForETHSupportingFeeOnTransferTokens(amount,0,path,address(this),block.timestamp) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#448-455)
+		- (marketing,None) = marketingWallet.call{value: marketbalance}() (0x19f259affad4eab74ee306f709044b2c8145f692.sol#418)
+		- (dev,None) = devWallet.call{value: devbalance}() (0x19f259affad4eab74ee306f709044b2c8145f692.sol#422)
+	External calls sending eth:
+	- _swapContractToken(true) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#484)
+		- _DexRouter.addLiquidityETH{value: ethamount}(address(this),tokenamount,0,0,address(this),block.timestamp) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#459-466)
+		- _DexRouter.swapExactETHForTokensSupportingFeeOnTransferTokens{value: amount}(0,path,burnWallet,block.timestamp) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#434-440)
+		- (marketing,None) = marketingWallet.call{value: marketbalance}() (0x19f259affad4eab74ee306f709044b2c8145f692.sol#418)
+		- (dev,None) = devWallet.call{value: devbalance}() (0x19f259affad4eab74ee306f709044b2c8145f692.sol#422)
+	Event emitted after the call(s):
+	- ManualSwapPerformed() (0x19f259affad4eab74ee306f709044b2c8145f692.sol#485)
+Reentrancy in Third_Degree_Burn._swapContractToken(bool) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#388-428):
+	External calls:
+	- _swapTokenForETH(swapToken) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#407)
+		- _DexRouter.swapExactTokensForETHSupportingFeeOnTransferTokens(amount,0,path,address(this),block.timestamp) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#448-455)
+	- _addLiquidity(LiqHalf,liqETH) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#412)
+		- _DexRouter.addLiquidityETH{value: ethamount}(address(this),tokenamount,0,0,address(this),block.timestamp) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#459-466)
+	External calls sending eth:
+	- _addLiquidity(LiqHalf,liqETH) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#412)
+		- _DexRouter.addLiquidityETH{value: ethamount}(address(this),tokenamount,0,0,address(this),block.timestamp) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#459-466)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#569)
+		- _addLiquidity(LiqHalf,liqETH) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#412)
+Reentrancy in Third_Degree_Burn._taxedTransfer(address,address,uint256) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#274-347):
+	External calls:
+	- _swapContractToken(false) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#331)
+		- _DexRouter.addLiquidityETH{value: ethamount}(address(this),tokenamount,0,0,address(this),block.timestamp) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#459-466)
+		- _DexRouter.swapExactETHForTokensSupportingFeeOnTransferTokens{value: amount}(0,path,burnWallet,block.timestamp) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#434-440)
+		- _DexRouter.swapExactTokensForETHSupportingFeeOnTransferTokens(amount,0,path,address(this),block.timestamp) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#448-455)
+		- (marketing,None) = marketingWallet.call{value: marketbalance}() (0x19f259affad4eab74ee306f709044b2c8145f692.sol#418)
+		- (dev,None) = devWallet.call{value: devbalance}() (0x19f259affad4eab74ee306f709044b2c8145f692.sol#422)
+	- autoBurnLPTokens() (0x19f259affad4eab74ee306f709044b2c8145f692.sol#334)
+		- pair.sync() (0x19f259affad4eab74ee306f709044b2c8145f692.sol#529)
+	External calls sending eth:
+	- _swapContractToken(false) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#331)
+		- _DexRouter.addLiquidityETH{value: ethamount}(address(this),tokenamount,0,0,address(this),block.timestamp) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#459-466)
+		- _DexRouter.swapExactETHForTokensSupportingFeeOnTransferTokens{value: amount}(0,path,burnWallet,block.timestamp) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#434-440)
+		- (marketing,None) = marketingWallet.call{value: marketbalance}() (0x19f259affad4eab74ee306f709044b2c8145f692.sol#418)
+		- (dev,None) = devWallet.call{value: devbalance}() (0x19f259affad4eab74ee306f709044b2c8145f692.sol#422)
+	Event emitted after the call(s):
+	- AutoNukeLP() (0x19f259affad4eab74ee306f709044b2c8145f692.sol#530)
+		- autoBurnLPTokens() (0x19f259affad4eab74ee306f709044b2c8145f692.sol#334)
+	- Transfer(_PairAddress,burnWallet,amountToBurn) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#526)
+		- autoBurnLPTokens() (0x19f259affad4eab74ee306f709044b2c8145f692.sol#334)
+	- Transfer(sender,burnWallet,tokensToBeSentToBurn) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#345)
+	- Transfer(sender,recipient,taxedAmount) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#346)
+Reentrancy in Third_Degree_Burn.autoBurnLPTokens() (0x19f259affad4eab74ee306f709044b2c8145f692.sol#520-532):
+	External calls:
+	- pair.sync() (0x19f259affad4eab74ee306f709044b2c8145f692.sol#529)
+	Event emitted after the call(s):
+	- AutoNukeLP() (0x19f259affad4eab74ee306f709044b2c8145f692.sol#530)
+Reentrancy in Third_Degree_Burn.manualBurnLPTokens(uint256) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#534-548):
+	External calls:
+	- pair.sync() (0x19f259affad4eab74ee306f709044b2c8145f692.sol#545)
+	Event emitted after the call(s):
+	- ManualNukeLP() (0x19f259affad4eab74ee306f709044b2c8145f692.sol#546)
+Reentrancy in Third_Degree_Burn.transferFrom(address,address,uint256) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#571-577):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#572)
+		- _DexRouter.addLiquidityETH{value: ethamount}(address(this),tokenamount,0,0,address(this),block.timestamp) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#459-466)
+		- _DexRouter.swapExactETHForTokensSupportingFeeOnTransferTokens{value: amount}(0,path,burnWallet,block.timestamp) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#434-440)
+		- _DexRouter.swapExactTokensForETHSupportingFeeOnTransferTokens(amount,0,path,address(this),block.timestamp) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#448-455)
+		- pair.sync() (0x19f259affad4eab74ee306f709044b2c8145f692.sol#529)
+		- (marketing,None) = marketingWallet.call{value: marketbalance}() (0x19f259affad4eab74ee306f709044b2c8145f692.sol#418)
+		- (dev,None) = devWallet.call{value: devbalance}() (0x19f259affad4eab74ee306f709044b2c8145f692.sol#422)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#572)
+		- _DexRouter.addLiquidityETH{value: ethamount}(address(this),tokenamount,0,0,address(this),block.timestamp) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#459-466)
+		- _DexRouter.swapExactETHForTokensSupportingFeeOnTransferTokens{value: amount}(0,path,burnWallet,block.timestamp) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#434-440)
+		- (marketing,None) = marketingWallet.call{value: marketbalance}() (0x19f259affad4eab74ee306f709044b2c8145f692.sol#418)
+		- (dev,None) = devWallet.call{value: devbalance}() (0x19f259affad4eab74ee306f709044b2c8145f692.sol#422)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#569)
+		- _approve(sender,msg.sender,currentAllowance - amount) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#575)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+Third_Degree_Burn.getSecondsToNextSellReset(address) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#252-259) uses timestamp for comparisons
+	Dangerous comparisons:
+	- time > block.timestamp (0x19f259affad4eab74ee306f709044b2c8145f692.sol#254)
+Third_Degree_Burn._transfer(address,address,uint256) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#260-272) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(LaunchTimestamp > 0,trading not yet enabled) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#269)
+Third_Degree_Burn._taxedTransfer(address,address,uint256) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#274-347) uses timestamp for comparisons
+	Dangerous comparisons:
+	- block.timestamp < LaunchTimestamp + SellTaxDuration (0x19f259affad4eab74ee306f709044b2c8145f692.sol#301)
+	- user[sender].sellStamp + dailySellCooldown > block.timestamp (0x19f259affad4eab74ee306f709044b2c8145f692.sol#306)
+	- block.timestamp < LaunchTimestamp + BuyTaxDuration (0x19f259affad4eab74ee306f709044b2c8145f692.sol#322)
+	- ! _isSwappingContractModifier && isAMM[recipient] && lpBurnEnabled && block.timestamp >= lastLpBurnTime + lpBurnFrequency (0x19f259affad4eab74ee306f709044b2c8145f692.sol#333)
+Third_Degree_Burn.EnableTrading() (0x19f259affad4eab74ee306f709044b2c8145f692.sol#499-505) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(LaunchTimestamp == 0,AlreadyLaunched) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#500)
+Third_Degree_Burn.manualBurnLPTokens(uint256) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#534-548) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(block.timestamp > lastManualLpBurnTime + manualBurnFrequency,Must wait for cooldown to finish) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#535)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Third_Degree_Burn._taxedTransfer(address,address,uint256) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#274-347) has a high cyclomatic complexity (12).
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#cyclomatic-complexity
+
+Version constraint =0.8.15 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- VerbatimInvalidDeduplication
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- StorageWriteRemovalBeforeConditionalTermination
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup.
+It is used by:
+	- =0.8.15 (0x19f259affad4eab74ee306f709044b2c8145f692.sol#4)
+	- =0.8.15 (0x19f259affad4eab74ee306f709044b2c8145f692.sol#83)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in Third_Degree_Burn._swapContractToken(bool) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#388-428):
+	- (marketing,None) = marketingWallet.call{value: marketbalance}() (0x19f259affad4eab74ee306f709044b2c8145f692.sol#418)
+	- (dev,None) = devWallet.call{value: devbalance}() (0x19f259affad4eab74ee306f709044b2c8145f692.sol#422)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Function IDexRouter.WETH() (0x19f259affad4eab74ee306f709044b2c8145f692.sol#48) is not in mixedCase
+Contract Third_Degree_Burn (0x19f259affad4eab74ee306f709044b2c8145f692.sol#84-591) is not in CapWords
+Function Third_Degree_Burn.BlacklistStatus(bool) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#192-195) is not in mixedCase
+Parameter Third_Degree_Burn.BlacklistStatus(bool)._status (0x19f259affad4eab74ee306f709044b2c8145f692.sol#192) is not in mixedCase
+Function Third_Degree_Burn.ManageBlacklist(address[],bool) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#196-201) is not in mixedCase
+Function Third_Degree_Burn.ManageFloorHolders(address[],bool) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#202-206) is not in mixedCase
+Function Third_Degree_Burn.ChangeMarketingWallet(address) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#207-210) is not in mixedCase
+Function Third_Degree_Burn.ChangeDevWallet(address) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#211-214) is not in mixedCase
+Function Third_Degree_Burn.SetFeeShares(uint256,uint256,uint256,uint256) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#215-221) is not in mixedCase
+Parameter Third_Degree_Burn.SetFeeShares(uint256,uint256,uint256,uint256)._devShare (0x19f259affad4eab74ee306f709044b2c8145f692.sol#215) is not in mixedCase
+Parameter Third_Degree_Burn.SetFeeShares(uint256,uint256,uint256,uint256)._marketingShare (0x19f259affad4eab74ee306f709044b2c8145f692.sol#215) is not in mixedCase
+Parameter Third_Degree_Burn.SetFeeShares(uint256,uint256,uint256,uint256)._buybackShare (0x19f259affad4eab74ee306f709044b2c8145f692.sol#215) is not in mixedCase
+Parameter Third_Degree_Burn.SetFeeShares(uint256,uint256,uint256,uint256)._charityShare (0x19f259affad4eab74ee306f709044b2c8145f692.sol#215) is not in mixedCase
+Function Third_Degree_Burn.ToggleFloorMode(bool) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#234-236) is not in mixedCase
+Function Third_Degree_Burn.ToggleFloorBuyerPeriod(bool) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#237-239) is not in mixedCase
+Function Third_Degree_Burn.SetOverLiquifiedTreshold(uint256) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#367-371) is not in mixedCase
+Function Third_Degree_Burn.SetTaxes(uint256,uint256,uint256,uint256,uint256,uint256,uint256) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#372-384) is not in mixedCase
+Parameter Third_Degree_Burn.SetTaxes(uint256,uint256,uint256,uint256,uint256,uint256,uint256).FloorSellTax (0x19f259affad4eab74ee306f709044b2c8145f692.sol#372) is not in mixedCase
+Function Third_Degree_Burn.SetAMM(address,bool) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#474-478) is not in mixedCase
+Parameter Third_Degree_Burn.SetAMM(address,bool).AMM (0x19f259affad4eab74ee306f709044b2c8145f692.sol#474) is not in mixedCase
+Parameter Third_Degree_Burn.SetAMM(address,bool).Add (0x19f259affad4eab74ee306f709044b2c8145f692.sol#474) is not in mixedCase
+Function Third_Degree_Burn.SwitchManualSwap(bool) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#479-482) is not in mixedCase
+Function Third_Degree_Burn.SwapContractToken() (0x19f259affad4eab74ee306f709044b2c8145f692.sol#483-486) is not in mixedCase
+Function Third_Degree_Burn.ExcludeAccountFromFees(address,bool) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#487-491) is not in mixedCase
+Function Third_Degree_Burn.EnableTrading() (0x19f259affad4eab74ee306f709044b2c8145f692.sol#499-505) is not in mixedCase
+Function Third_Degree_Burn.ReleaseLP() (0x19f259affad4eab74ee306f709044b2c8145f692.sol#506-511) is not in mixedCase
+Parameter Third_Degree_Burn.setAutoLPBurnSettings(uint256,uint256,bool)._frequencyInSeconds (0x19f259affad4eab74ee306f709044b2c8145f692.sol#512) is not in mixedCase
+Parameter Third_Degree_Burn.setAutoLPBurnSettings(uint256,uint256,bool)._percent (0x19f259affad4eab74ee306f709044b2c8145f692.sol#512) is not in mixedCase
+Parameter Third_Degree_Burn.setAutoLPBurnSettings(uint256,uint256,bool)._Enabled (0x19f259affad4eab74ee306f709044b2c8145f692.sol#512) is not in mixedCase
+Parameter Third_Degree_Burn.allowance(address,address)._owner (0x19f259affad4eab74ee306f709044b2c8145f692.sol#556) is not in mixedCase
+Constant Third_Degree_Burn._name (0x19f259affad4eab74ee306f709044b2c8145f692.sol#100) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant Third_Degree_Burn._symbol (0x19f259affad4eab74ee306f709044b2c8145f692.sol#101) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant Third_Degree_Burn._decimals (0x19f259affad4eab74ee306f709044b2c8145f692.sol#102) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant Third_Degree_Burn.InitialSupply (0x19f259affad4eab74ee306f709044b2c8145f692.sol#104) is not in UPPER_CASE_WITH_UNDERSCORES
+Variable Third_Degree_Burn.LaunchTimestamp (0x19f259affad4eab74ee306f709044b2c8145f692.sol#114) is not in mixedCase
+Variable Third_Degree_Burn._DexRouter (0x19f259affad4eab74ee306f709044b2c8145f692.sol#139) is not in mixedCase
+Variable Third_Degree_Burn._PairAddress (0x19f259affad4eab74ee306f709044b2c8145f692.sol#141) is not in mixedCase
+Constant Third_Degree_Burn.DexRouter (0x19f259affad4eab74ee306f709044b2c8145f692.sol#145) is not in UPPER_CASE_WITH_UNDERSCORES
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Third_Degree_Burn.manualBurnFrequency (0x19f259affad4eab74ee306f709044b2c8145f692.sol#126) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+
+Third_Degree_Burn._DexRouter (0x19f259affad4eab74ee306f709044b2c8145f692.sol#139) should be immutable 
+Third_Degree_Burn._PairAddress (0x19f259affad4eab74ee306f709044b2c8145f692.sol#141) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+
+The function Third_Degree_Burn.autoBurnLPTokens() (0x19f259affad4eab74ee306f709044b2c8145f692.sol#520-532) reads liquidityPairBalance = this.balanceOf(_PairAddress) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#522) with `this` which adds an extra STATICCALL.
+The function Third_Degree_Burn.manualBurnLPTokens(uint256) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#534-548) reads liquidityPairBalance = this.balanceOf(_PairAddress) (0x19f259affad4eab74ee306f709044b2c8145f692.sol#538) with `this` which adds an extra STATICCALL.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#public-variable-read-in-external-context
+./0x19f259affad4eab74ee306f709044b2c8145f692.sol analyzed (6 contracts with 94 detectors), 76 result(s) found
+
+real	0m3.755s
+user	0m3.489s
+sys	0m0.268s

@@ -1,0 +1,109 @@
+'solc --version' running
+'solc ./0xafb7ae966a9a7801beace4a7d5bbee91d860f616.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+Token.withdrawToken() (0xafb7ae966a9a7801beace4a7d5bbee91d860f616.sol#68-70) ignores return value by token.transfer(owner,tokenBalance()) (0xafb7ae966a9a7801beace4a7d5bbee91d860f616.sol#69)
+Token.buyTokens(address) (0xafb7ae966a9a7801beace4a7d5bbee91d860f616.sol#72-82) ignores return value by token.transfer(_buyer,tokens) (0xafb7ae966a9a7801beace4a7d5bbee91d860f616.sol#78)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+Contract locking ether found:
+	Contract LockableToken (0xafb7ae966a9a7801beace4a7d5bbee91d860f616.sol#18-30) has payable functions:
+	 - LockableToken.approveAndCall(address,uint256,bytes) (0xafb7ae966a9a7801beace4a7d5bbee91d860f616.sol#27)
+	 - LockableToken.transferAndCall(address,uint256,bytes) (0xafb7ae966a9a7801beace4a7d5bbee91d860f616.sol#28)
+	 - LockableToken.transferFromAndCall(address,address,uint256,bytes) (0xafb7ae966a9a7801beace4a7d5bbee91d860f616.sol#29)
+	But does not have a function to withdraw the ether
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#contracts-that-lock-ether
+
+LockableToken.allowance(address,address).owner (0xafb7ae966a9a7801beace4a7d5bbee91d860f616.sol#23) shadows:
+	- Ownable.owner (0xafb7ae966a9a7801beace4a7d5bbee91d860f616.sol#3) (state variable)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#local-variable-shadowing
+
+Ownable.transferOwnership(address) (0xafb7ae966a9a7801beace4a7d5bbee91d860f616.sol#14-16) should emit an event for: 
+	- owner = newOwner (0xafb7ae966a9a7801beace4a7d5bbee91d860f616.sol#15) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-access-control
+
+Token.tokenPrice(uint256) (0xafb7ae966a9a7801beace4a7d5bbee91d860f616.sol#49-51) should emit an event for: 
+	- WeiRatio = _price (0xafb7ae966a9a7801beace4a7d5bbee91d860f616.sol#50) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+Ownable.transferOwnership(address).newOwner (0xafb7ae966a9a7801beace4a7d5bbee91d860f616.sol#14) lacks a zero-check on :
+		- owner = newOwner (0xafb7ae966a9a7801beace4a7d5bbee91d860f616.sol#15)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in Token.buyTokens(address) (0xafb7ae966a9a7801beace4a7d5bbee91d860f616.sol#72-82):
+	External calls:
+	- require(bool,string)(tokenBalance() >= tokens,Not enough tokens for sale) (0xafb7ae966a9a7801beace4a7d5bbee91d860f616.sol#77)
+		- token.balanceOf(address(this)) (0xafb7ae966a9a7801beace4a7d5bbee91d860f616.sol#60)
+	- token.transfer(_buyer,tokens) (0xafb7ae966a9a7801beace4a7d5bbee91d860f616.sol#78)
+	State variables written after the call(s):
+	- SellAmount += tokens (0xafb7ae966a9a7801beace4a7d5bbee91d860f616.sol#79)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in Token.buyTokens(address) (0xafb7ae966a9a7801beace4a7d5bbee91d860f616.sol#72-82):
+	External calls:
+	- require(bool,string)(tokenBalance() >= tokens,Not enough tokens for sale) (0xafb7ae966a9a7801beace4a7d5bbee91d860f616.sol#77)
+		- token.balanceOf(address(this)) (0xafb7ae966a9a7801beace4a7d5bbee91d860f616.sol#60)
+	- token.transfer(_buyer,tokens) (0xafb7ae966a9a7801beace4a7d5bbee91d860f616.sol#78)
+	Event emitted after the call(s):
+	- Buy(msg.sender,WeiRatio,msg.value,tokens) (0xafb7ae966a9a7801beace4a7d5bbee91d860f616.sol#81)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+Version constraint ^0.4.0 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ExpExponentCleanup
+	- NestedArrayFunctionCallDecoder
+	- ZeroFunctionSelector
+	- DelegateCallReturnValue
+	- ECRecoverMalformedInput
+	- SkipEmptyStringLiteral
+	- ConstantOptimizerSubtraction
+	- IdentityPrecompileReturnIgnored
+	- HighOrderByteCleanStorage
+	- OptimizerStaleKnowledgeAboutSHA3
+	- LibrariesNotCallableFromPayableFunctions.
+It is used by:
+	- ^0.4.0 (0xafb7ae966a9a7801beace4a7d5bbee91d860f616.sol#1)
+solc-0.4.22 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Parameter Token.tokenDetail(string)._detail (0xafb7ae966a9a7801beace4a7d5bbee91d860f616.sol#45) is not in mixedCase
+Parameter Token.tokenPrice(uint256)._price (0xafb7ae966a9a7801beace4a7d5bbee91d860f616.sol#49) is not in mixedCase
+Parameter Token.tokenAddress(address)._token (0xafb7ae966a9a7801beace4a7d5bbee91d860f616.sol#53) is not in mixedCase
+Parameter Token.buyTokens(address)._buyer (0xafb7ae966a9a7801beace4a7d5bbee91d860f616.sol#72) is not in mixedCase
+Variable Token.Detail (0xafb7ae966a9a7801beace4a7d5bbee91d860f616.sol#34) is not in mixedCase
+Variable Token.SellAmount (0xafb7ae966a9a7801beace4a7d5bbee91d860f616.sol#35) is not in mixedCase
+Variable Token.WeiRatio (0xafb7ae966a9a7801beace4a7d5bbee91d860f616.sol#36) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+LockableToken (0xafb7ae966a9a7801beace4a7d5bbee91d860f616.sol#18-30) does not implement functions:
+	- LockableToken.allowance(address,address) (0xafb7ae966a9a7801beace4a7d5bbee91d860f616.sol#23)
+	- LockableToken.approve(address,uint256) (0xafb7ae966a9a7801beace4a7d5bbee91d860f616.sol#25)
+	- LockableToken.approveAndCall(address,uint256,bytes) (0xafb7ae966a9a7801beace4a7d5bbee91d860f616.sol#27)
+	- LockableToken.balanceOf(address) (0xafb7ae966a9a7801beace4a7d5bbee91d860f616.sol#20)
+	- LockableToken.totalSupply() (0xafb7ae966a9a7801beace4a7d5bbee91d860f616.sol#19)
+	- LockableToken.transfer(address,uint256) (0xafb7ae966a9a7801beace4a7d5bbee91d860f616.sol#21)
+	- LockableToken.transferAndCall(address,uint256,bytes) (0xafb7ae966a9a7801beace4a7d5bbee91d860f616.sol#28)
+	- LockableToken.transferFrom(address,address,uint256) (0xafb7ae966a9a7801beace4a7d5bbee91d860f616.sol#24)
+	- LockableToken.transferFromAndCall(address,address,uint256,bytes) (0xafb7ae966a9a7801beace4a7d5bbee91d860f616.sol#29)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unimplemented-functions
+
+approveAndCall(address,uint256,bytes) should be declared external:
+	- LockableToken.approveAndCall(address,uint256,bytes) (0xafb7ae966a9a7801beace4a7d5bbee91d860f616.sol#27)
+transferAndCall(address,uint256,bytes) should be declared external:
+	- LockableToken.transferAndCall(address,uint256,bytes) (0xafb7ae966a9a7801beace4a7d5bbee91d860f616.sol#28)
+transferFromAndCall(address,address,uint256,bytes) should be declared external:
+	- LockableToken.transferFromAndCall(address,address,uint256,bytes) (0xafb7ae966a9a7801beace4a7d5bbee91d860f616.sol#29)
+tokenDetail(string) should be declared external:
+	- Token.tokenDetail(string) (0xafb7ae966a9a7801beace4a7d5bbee91d860f616.sol#45-47)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#public-function-that-could-be-declared-external
+./0xafb7ae966a9a7801beace4a7d5bbee91d860f616.sol analyzed (3 contracts with 94 detectors), 23 result(s) found
+
+real	0m1.450s
+user	0m1.231s
+sys	0m0.222s

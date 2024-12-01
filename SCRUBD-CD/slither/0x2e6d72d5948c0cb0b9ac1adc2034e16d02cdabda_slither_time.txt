@@ -1,0 +1,156 @@
+'solc --version' running
+'solc ./0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+Reentrancy in MILADYXP._transfer(address,address,uint256) (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#326-345):
+	External calls:
+	- swapBack() (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#336)
+		- router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,lpWallet,block.timestamp) (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#384-391)
+		- router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#374-380)
+		- IERC20(address(this)).transfer(DEAD,tokensToBurn) (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#402)
+	External calls sending eth:
+	- swapBack() (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#336)
+		- router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,lpWallet,block.timestamp) (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#384-391)
+		- address(devWallet).transfer(address(this).balance) (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#412)
+	State variables written after the call(s):
+	- _balances[sender] = _balances[sender].sub(amount,Insufficient Balance) (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#338)
+	MILADYXP._balances (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#202) can be used in cross function reentrancies:
+	- MILADYXP._basicTransfer(address,address,uint256) (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#347-352)
+	- MILADYXP._transfer(address,address,uint256) (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#326-345)
+	- MILADYXP.balanceOf(address) (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#297)
+	- MILADYXP.constructor() (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#240-257)
+	- MILADYXP.swapBack() (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#394-414)
+	- MILADYXP.takeFee(address,address,uint256) (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#354-364)
+	- _balances[recipient] = _balances[recipient].add(finalAmount) (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#341)
+	MILADYXP._balances (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#202) can be used in cross function reentrancies:
+	- MILADYXP._basicTransfer(address,address,uint256) (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#347-352)
+	- MILADYXP._transfer(address,address,uint256) (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#326-345)
+	- MILADYXP.balanceOf(address) (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#297)
+	- MILADYXP.constructor() (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#240-257)
+	- MILADYXP.swapBack() (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#394-414)
+	- MILADYXP.takeFee(address,address,uint256) (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#354-364)
+	- finalAmount = takeFee(sender,recipient,amount) (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#340)
+		- _balances[address(this)] = _balances[address(this)].add(feeAmount) (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#360)
+	MILADYXP._balances (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#202) can be used in cross function reentrancies:
+	- MILADYXP._basicTransfer(address,address,uint256) (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#347-352)
+	- MILADYXP._transfer(address,address,uint256) (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#326-345)
+	- MILADYXP.balanceOf(address) (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#297)
+	- MILADYXP.constructor() (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#240-257)
+	- MILADYXP.swapBack() (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#394-414)
+	- MILADYXP.takeFee(address,address,uint256) (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#354-364)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+MILADYXP.swapBack() (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#394-414) ignores return value by IERC20(address(this)).transfer(DEAD,tokensToBurn) (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#402)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+MILADYXP.openTrading() (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#262-277) ignores return value by router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#267-274)
+MILADYXP.addLiquidity(uint256,uint256) (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#383-392) ignores return value by router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,lpWallet,block.timestamp) (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#384-391)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+Reentrancy in MILADYXP.openTrading() (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#262-277):
+	External calls:
+	- pair = IDEXFactory(router.factory()).createPair(address(this),WETH) (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#263)
+	State variables written after the call(s):
+	- _allowances[address(this)][address(router)] = type()(uint256).max (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#265)
+	- isTxLimitExempt[pair] = true (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#264)
+Reentrancy in MILADYXP.openTrading() (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#262-277):
+	External calls:
+	- pair = IDEXFactory(router.factory()).createPair(address(this),WETH) (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#263)
+	- router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#267-274)
+	External calls sending eth:
+	- router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#267-274)
+	State variables written after the call(s):
+	- launchedAt = block.number (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#275)
+	- swapAndLiquifyEnabled = true (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#276)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in MILADYXP._transfer(address,address,uint256) (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#326-345):
+	External calls:
+	- swapBack() (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#336)
+		- router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,lpWallet,block.timestamp) (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#384-391)
+		- router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#374-380)
+		- IERC20(address(this)).transfer(DEAD,tokensToBurn) (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#402)
+	External calls sending eth:
+	- swapBack() (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#336)
+		- router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,lpWallet,block.timestamp) (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#384-391)
+		- address(devWallet).transfer(address(this).balance) (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#412)
+	Event emitted after the call(s):
+	- Transfer(sender,address(this),feeAmount) (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#361)
+		- finalAmount = takeFee(sender,recipient,amount) (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#340)
+	- Transfer(sender,recipient,finalAmount) (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#343)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+MILADYXP.lpWallet (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#210) is set pre-construction with a non-constant function or state variable:
+	- DEAD
+MILADYXP.maxTx (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#236) is set pre-construction with a non-constant function or state variable:
+	- _totalSupply * 3 / 100
+MILADYXP.maxWallet (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#237) is set pre-construction with a non-constant function or state variable:
+	- _totalSupply * 3 / 100
+MILADYXP.swapThreshold (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#238) is set pre-construction with a non-constant function or state variable:
+	- _totalSupply * 3 / 1000
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#function-initializing-state
+
+Version constraint ^0.8.16 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- VerbatimInvalidDeduplication
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- StorageWriteRemovalBeforeConditionalTermination.
+It is used by:
+	- ^0.8.16 (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#13)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Function IDEXRouter.WETH() (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#151) is not in mixedCase
+Constant MILADYXP._name (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#192) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant MILADYXP._symbol (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#193) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant MILADYXP._decimals (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#194) is not in UPPER_CASE_WITH_UNDERSCORES
+Variable MILADYXP.WETH (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#196) is not in mixedCase
+Variable MILADYXP.DEAD (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#197) is not in mixedCase
+Variable MILADYXP.ZERO (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#198) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in MILADYXP._transfer(address,address,uint256) (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#326-345):
+	External calls:
+	- swapBack() (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#336)
+		- address(devWallet).transfer(address(this).balance) (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#412)
+	External calls sending eth:
+	- swapBack() (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#336)
+		- router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,lpWallet,block.timestamp) (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#384-391)
+		- address(devWallet).transfer(address(this).balance) (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#412)
+	State variables written after the call(s):
+	- _balances[sender] = _balances[sender].sub(amount,Insufficient Balance) (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#338)
+	- _balances[recipient] = _balances[recipient].add(finalAmount) (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#341)
+	- finalAmount = takeFee(sender,recipient,amount) (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#340)
+		- _balances[address(this)] = _balances[address(this)].add(feeAmount) (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#360)
+	Event emitted after the call(s):
+	- Transfer(sender,address(this),feeAmount) (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#361)
+		- finalAmount = takeFee(sender,recipient,amount) (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#340)
+	- Transfer(sender,recipient,finalAmount) (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#343)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+MILADYXP.cooldown (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#204) is never used in MILADYXP (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#189-427)
+MILADYXP.feeSum (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#219) is never used in MILADYXP (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#189-427)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-state-variable
+
+MILADYXP.DEAD (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#197) should be constant 
+MILADYXP.ZERO (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#198) should be constant 
+MILADYXP._totalSupply (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#200) should be constant 
+MILADYXP.buyFee (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#212) should be constant 
+MILADYXP.devWallet (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#225) should be constant 
+MILADYXP.factory (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#224) should be constant 
+MILADYXP.feeDenominator (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#220) should be constant 
+MILADYXP.feeSum (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#219) should be constant 
+MILADYXP.sellFee (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#213) should be constant 
+MILADYXP.toBurn (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#217) should be constant 
+MILADYXP.toDev (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#216) should be constant 
+MILADYXP.toLiquidity (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#215) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+
+MILADYXP.WETH (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#196) should be immutable 
+MILADYXP.lpWallet (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#210) should be immutable 
+MILADYXP.router (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#222) should be immutable 
+MILADYXP.swapThreshold (0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol#238) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+./0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda.sol analyzed (7 contracts with 94 detectors), 38 result(s) found
+
+real	0m2.283s
+user	0m2.057s
+sys	0m0.229s

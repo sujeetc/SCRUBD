@@ -1,0 +1,325 @@
+'solc --version' running
+'solc ./tool_fail.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/manual_dataset' running
+Compilation warnings/errors on ./tool_fail.sol:
+./tool_fail.sol:120:13: Warning: Return value of low-level calls not used.
+            msg.sender.call.value(b)();
+            ^------------------------^
+./tool_fail.sol:15:17: Warning: Unused function parameter. Remove or comment out the variable name to silence this warning.
+function buggy1(uint amount) public{
+                ^---------^
+./tool_fail.sol:21:18: Warning: Unused function parameter. Remove or comment out the variable name to silence this warning.
+function buggy27(uint amount) public{
+                 ^---------^
+./tool_fail.sol:29:17: Warning: Unused function parameter. Remove or comment out the variable name to silence this warning.
+function buggy3(uint amount) public{
+                ^---------^
+./tool_fail.sol:35:18: Warning: Unused function parameter. Remove or comment out the variable name to silence this warning.
+function buggy21(uint amount) public{
+                 ^---------^
+
+
+tool_fail.buggy1(uint256) (tool_fail.sol#15-18) sends eth to arbitrary user
+	Dangerous calls:
+	- require(bool)(b ++ < 10 && msg.sender.call.value(b)()) (tool_fail.sol#17)
+tool_fail.buggy27(uint256) (tool_fail.sol#21-27) sends eth to arbitrary user
+	Dangerous calls:
+	- ! (msg.sender.send(1000000000000000000)) (tool_fail.sol#23)
+tool_fail.buggy3(uint256) (tool_fail.sol#29-33) sends eth to arbitrary user
+	Dangerous calls:
+	- (msg.sender.call.value(b)()) (tool_fail.sol#31)
+tool_fail.buggy21(uint256) (tool_fail.sol#35-40) sends eth to arbitrary user
+	Dangerous calls:
+	- msg.sender.call.value(c)() && d ++ < 10 (tool_fail.sol#38)
+tool_fail.non_buggy_case1() (tool_fail.sol#42-45) sends eth to arbitrary user
+	Dangerous calls:
+	- msg.sender.call.value(a)() && b < 10 (tool_fail.sol#43)
+tool_fail.buggy_case4() (tool_fail.sol#47-50) sends eth to arbitrary user
+	Dangerous calls:
+	- b < 10 && msg.sender.call.value(a)() (tool_fail.sol#48)
+tool_fail.buggy_case3() (tool_fail.sol#52-55) sends eth to arbitrary user
+	Dangerous calls:
+	- msg.sender.call.value(a)() && b < 10 && msg.sender.call.value(a)() && c > 10 (tool_fail.sol#53)
+	- msg.sender.call.value(a)() && b < 10 && msg.sender.call.value(a)() && c > 10 (tool_fail.sol#53)
+tool_fail.buggy_case7() (tool_fail.sol#57-60) sends eth to arbitrary user
+	Dangerous calls:
+	- require(bool)(msg.sender.call.value(a)()) (tool_fail.sol#58)
+	- require(bool)(msg.sender.call.value(b)() && a ++ < 10) (tool_fail.sol#59)
+tool_fail.buggy1() (tool_fail.sol#62-67) sends eth to arbitrary user
+	Dangerous calls:
+	- msg.sender.call.value(a)() && b ++ < 10 (tool_fail.sol#65)
+tool_fail.buggy_require_wbc_1() (tool_fail.sol#69-73) sends eth to arbitrary user
+	Dangerous calls:
+	- (msg.sender.call.value(b ++)()) (tool_fail.sol#71)
+tool_fail.requiredee() (tool_fail.sol#75-81) sends eth to arbitrary user
+	Dangerous calls:
+	- (msg.sender.call.value(b ++)()) (tool_fail.sol#76)
+tool_fail.non_buggy_requirem() (tool_fail.sol#109-113) sends eth to arbitrary user
+	Dangerous calls:
+	- (msg.sender.call.value(b)()) (tool_fail.sol#111)
+tool_fail.buggy_local() (tool_fail.sol#116-122) sends eth to arbitrary user
+	Dangerous calls:
+	- msg.sender.call.value(b)() (tool_fail.sol#120)
+tool_fail.case_1() (tool_fail.sol#124-126) sends eth to arbitrary user
+	Dangerous calls:
+	- assert(bool)(msg.sender.call.value(b)() && a ++ < 10 && msg.sender.call.value(a)()) (tool_fail.sol#125)
+	- assert(bool)(msg.sender.call.value(b)() && a ++ < 10 && msg.sender.call.value(a)()) (tool_fail.sol#125)
+tool_fail.buggy_if() (tool_fail.sol#128-131) sends eth to arbitrary user
+	Dangerous calls:
+	- require(bool)(msg.sender.call.value(b)() && a ++ < 10 && msg.sender.call.value(a)()) (tool_fail.sol#130)
+	- require(bool)(msg.sender.call.value(b)() && a ++ < 10 && msg.sender.call.value(a)()) (tool_fail.sol#130)
+tool_fail.case_if_2() (tool_fail.sol#133-136) sends eth to arbitrary user
+	Dangerous calls:
+	- require(bool)(a ++ < 10 && msg.sender.call.value(d)()) (tool_fail.sol#135)
+tool_fail.buggy_require() (tool_fail.sol#138-143) sends eth to arbitrary user
+	Dangerous calls:
+	- require(bool)(msg.sender.call.value(local)() && local > 10) (tool_fail.sol#142)
+tool_fail.buggy_require_2() (tool_fail.sol#145-148) sends eth to arbitrary user
+	Dangerous calls:
+	- require(bool)(msg.sender.call.value(b ++)() && b < 10) (tool_fail.sol#147)
+tool_fail.buggy21() (tool_fail.sol#151-156) sends eth to arbitrary user
+	Dangerous calls:
+	- msg.sender.call.value(c)() && d ++ < 10 (tool_fail.sol#154)
+tool_fail.buggy_cross_function() (tool_fail.sol#163-166) sends eth to arbitrary user
+	Dangerous calls:
+	- msg.sender.call.value(d)() && non_buggy_funct() (tool_fail.sol#164)
+tool_fail.non_buggy_single_statement() (tool_fail.sol#169-171) sends eth to arbitrary user
+	Dangerous calls:
+	- require(bool)(msg.sender.call.value(b + c)() && a < 10) (tool_fail.sol#170)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+Reentrancy in tool_fail.buggy_case3() (tool_fail.sol#52-55):
+	External calls:
+	- msg.sender.call.value(a)() && b < 10 && msg.sender.call.value(a)() && c > 10 (tool_fail.sol#53)
+	State variables written after the call(s):
+	- c = b - 10 (tool_fail.sol#54)
+	tool_fail.c (tool_fail.sol#5) can be used in cross function reentrancies:
+	- tool_fail.buggy1() (tool_fail.sol#62-67)
+	- tool_fail.buggy21() (tool_fail.sol#151-156)
+	- tool_fail.buggy21(uint256) (tool_fail.sol#35-40)
+	- tool_fail.buggy3(uint256) (tool_fail.sol#29-33)
+	- tool_fail.buggy_case() (tool_fail.sol#90-97)
+	- tool_fail.buggy_case2() (tool_fail.sol#99-107)
+	- tool_fail.buggy_case3() (tool_fail.sol#52-55)
+	- tool_fail.buggy_cross_function() (tool_fail.sol#163-166)
+	- tool_fail.c (tool_fail.sol#5)
+	- tool_fail.non_buggy_single_statement() (tool_fail.sol#169-171)
+Reentrancy in tool_fail.buggy_case4() (tool_fail.sol#47-50):
+	External calls:
+	- b < 10 && msg.sender.call.value(a)() (tool_fail.sol#48)
+	State variables written after the call(s):
+	- b = b - 10 (tool_fail.sol#49)
+	tool_fail.b (tool_fail.sol#4) can be used in cross function reentrancies:
+	- tool_fail.b (tool_fail.sol#4)
+	- tool_fail.buggy1(uint256) (tool_fail.sol#15-18)
+	- tool_fail.buggy1() (tool_fail.sol#62-67)
+	- tool_fail.buggy3(uint256) (tool_fail.sol#29-33)
+	- tool_fail.buggy_case3() (tool_fail.sol#52-55)
+	- tool_fail.buggy_case4() (tool_fail.sol#47-50)
+	- tool_fail.buggy_case7() (tool_fail.sol#57-60)
+	- tool_fail.buggy_if() (tool_fail.sol#128-131)
+	- tool_fail.buggy_local() (tool_fail.sol#116-122)
+	- tool_fail.buggy_require() (tool_fail.sol#138-143)
+	- tool_fail.buggy_require_2() (tool_fail.sol#145-148)
+	- tool_fail.buggy_require_wbc_1() (tool_fail.sol#69-73)
+	- tool_fail.case_1() (tool_fail.sol#124-126)
+	- tool_fail.non_buggy_case1() (tool_fail.sol#42-45)
+	- tool_fail.non_buggy_requirem() (tool_fail.sol#109-113)
+	- tool_fail.non_buggy_single_statement() (tool_fail.sol#169-171)
+	- tool_fail.requirdeepf() (tool_fail.sol#84-88)
+	- tool_fail.requiredee() (tool_fail.sol#75-81)
+Reentrancy in tool_fail.buggy_case7() (tool_fail.sol#57-60):
+	External calls:
+	- require(bool)(msg.sender.call.value(a)()) (tool_fail.sol#58)
+	- require(bool)(msg.sender.call.value(b)() && a ++ < 10) (tool_fail.sol#59)
+	State variables written after the call(s):
+	- require(bool)(msg.sender.call.value(b)() && a ++ < 10) (tool_fail.sol#59)
+	tool_fail.a (tool_fail.sol#3) can be used in cross function reentrancies:
+	- tool_fail.a (tool_fail.sol#3)
+	- tool_fail.buggy1() (tool_fail.sol#62-67)
+	- tool_fail.buggy_case3() (tool_fail.sol#52-55)
+	- tool_fail.buggy_case4() (tool_fail.sol#47-50)
+	- tool_fail.buggy_case7() (tool_fail.sol#57-60)
+	- tool_fail.buggy_if() (tool_fail.sol#128-131)
+	- tool_fail.buggy_local() (tool_fail.sol#116-122)
+	- tool_fail.case_1() (tool_fail.sol#124-126)
+	- tool_fail.case_if_2() (tool_fail.sol#133-136)
+	- tool_fail.non_buggy_case1() (tool_fail.sol#42-45)
+	- tool_fail.non_buggy_single_statement() (tool_fail.sol#169-171)
+Reentrancy in tool_fail.buggy_local() (tool_fail.sol#116-122):
+	External calls:
+	- msg.sender.call.value(b)() (tool_fail.sol#120)
+	State variables written after the call(s):
+	- a += 10 (tool_fail.sol#121)
+	tool_fail.a (tool_fail.sol#3) can be used in cross function reentrancies:
+	- tool_fail.a (tool_fail.sol#3)
+	- tool_fail.buggy1() (tool_fail.sol#62-67)
+	- tool_fail.buggy_case3() (tool_fail.sol#52-55)
+	- tool_fail.buggy_case4() (tool_fail.sol#47-50)
+	- tool_fail.buggy_case7() (tool_fail.sol#57-60)
+	- tool_fail.buggy_if() (tool_fail.sol#128-131)
+	- tool_fail.buggy_local() (tool_fail.sol#116-122)
+	- tool_fail.case_1() (tool_fail.sol#124-126)
+	- tool_fail.case_if_2() (tool_fail.sol#133-136)
+	- tool_fail.non_buggy_case1() (tool_fail.sol#42-45)
+	- tool_fail.non_buggy_single_statement() (tool_fail.sol#169-171)
+Reentrancy in tool_fail.non_buggy_case1() (tool_fail.sol#42-45):
+	External calls:
+	- msg.sender.call.value(a)() && b < 10 (tool_fail.sol#43)
+	State variables written after the call(s):
+	- b = b - 10 (tool_fail.sol#44)
+	tool_fail.b (tool_fail.sol#4) can be used in cross function reentrancies:
+	- tool_fail.b (tool_fail.sol#4)
+	- tool_fail.buggy1(uint256) (tool_fail.sol#15-18)
+	- tool_fail.buggy1() (tool_fail.sol#62-67)
+	- tool_fail.buggy3(uint256) (tool_fail.sol#29-33)
+	- tool_fail.buggy_case3() (tool_fail.sol#52-55)
+	- tool_fail.buggy_case4() (tool_fail.sol#47-50)
+	- tool_fail.buggy_case7() (tool_fail.sol#57-60)
+	- tool_fail.buggy_if() (tool_fail.sol#128-131)
+	- tool_fail.buggy_local() (tool_fail.sol#116-122)
+	- tool_fail.buggy_require() (tool_fail.sol#138-143)
+	- tool_fail.buggy_require_2() (tool_fail.sol#145-148)
+	- tool_fail.buggy_require_wbc_1() (tool_fail.sol#69-73)
+	- tool_fail.case_1() (tool_fail.sol#124-126)
+	- tool_fail.non_buggy_case1() (tool_fail.sol#42-45)
+	- tool_fail.non_buggy_requirem() (tool_fail.sol#109-113)
+	- tool_fail.non_buggy_single_statement() (tool_fail.sol#169-171)
+	- tool_fail.requirdeepf() (tool_fail.sol#84-88)
+	- tool_fail.requiredee() (tool_fail.sol#75-81)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+tool_fail.buggy3(uint256) (tool_fail.sol#29-33) ignores return value by (msg.sender.call.value(b)()) (tool_fail.sol#31)
+tool_fail.buggy_require_wbc_1() (tool_fail.sol#69-73) ignores return value by (msg.sender.call.value(b ++)()) (tool_fail.sol#71)
+tool_fail.requiredee() (tool_fail.sol#75-81) ignores return value by (msg.sender.call.value(b ++)()) (tool_fail.sol#76)
+tool_fail.non_buggy_requirem() (tool_fail.sol#109-113) ignores return value by (msg.sender.call.value(b)()) (tool_fail.sol#111)
+tool_fail.buggy_local() (tool_fail.sol#116-122) ignores return value by msg.sender.call.value(b)() (tool_fail.sol#120)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-low-level-calls
+
+Reentrancy in tool_fail.buggy1() (tool_fail.sol#62-67):
+	External calls:
+	- msg.sender.call.value(a)() && b ++ < 10 (tool_fail.sol#65)
+	State variables written after the call(s):
+	- c ++ (tool_fail.sol#66)
+Reentrancy in tool_fail.buggy21(uint256) (tool_fail.sol#35-40):
+	External calls:
+	- msg.sender.call.value(c)() && d ++ < 10 (tool_fail.sol#38)
+	State variables written after the call(s):
+	- e ++ (tool_fail.sol#39)
+Reentrancy in tool_fail.buggy21() (tool_fail.sol#151-156):
+	External calls:
+	- msg.sender.call.value(c)() && d ++ < 10 (tool_fail.sol#154)
+	State variables written after the call(s):
+	- e ++ (tool_fail.sol#155)
+Reentrancy in tool_fail.buggy_cross_function() (tool_fail.sol#163-166):
+	External calls:
+	- msg.sender.call.value(d)() && non_buggy_funct() (tool_fail.sol#164)
+	State variables written after the call(s):
+	- c ++ (tool_fail.sol#165)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+tool_fail.case_1() (tool_fail.sol#124-126) has an assert() call which possibly changes state.
+	-assert(bool)(msg.sender.call.value(b)() && a ++ < 10 && msg.sender.call.value(a)()) (tool_fail.sol#125)
+Consider using require() or change the invariant to not modify the state.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#assert-state-change
+
+Version constraint ^0.4.24 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ABIEncoderV2PackedStorage_0.4.x
+	- ExpExponentCleanup
+	- EventStructWrongData.
+It is used by:
+	- ^0.4.24 (tool_fail.sol#1)
+solc-0.4.24 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in tool_fail.buggy1(uint256) (tool_fail.sol#15-18):
+	- require(bool)(b ++ < 10 && msg.sender.call.value(b)()) (tool_fail.sol#17)
+Low level call in tool_fail.buggy3(uint256) (tool_fail.sol#29-33):
+	- (msg.sender.call.value(b)()) (tool_fail.sol#31)
+Low level call in tool_fail.buggy21(uint256) (tool_fail.sol#35-40):
+	- msg.sender.call.value(c)() && d ++ < 10 (tool_fail.sol#38)
+Low level call in tool_fail.non_buggy_case1() (tool_fail.sol#42-45):
+	- msg.sender.call.value(a)() && b < 10 (tool_fail.sol#43)
+Low level call in tool_fail.buggy_case4() (tool_fail.sol#47-50):
+	- b < 10 && msg.sender.call.value(a)() (tool_fail.sol#48)
+Low level call in tool_fail.buggy_case3() (tool_fail.sol#52-55):
+	- msg.sender.call.value(a)() && b < 10 && msg.sender.call.value(a)() && c > 10 (tool_fail.sol#53)
+Low level call in tool_fail.buggy_case7() (tool_fail.sol#57-60):
+	- require(bool)(msg.sender.call.value(a)()) (tool_fail.sol#58)
+	- require(bool)(msg.sender.call.value(b)() && a ++ < 10) (tool_fail.sol#59)
+Low level call in tool_fail.buggy1() (tool_fail.sol#62-67):
+	- msg.sender.call.value(a)() && b ++ < 10 (tool_fail.sol#65)
+Low level call in tool_fail.buggy_require_wbc_1() (tool_fail.sol#69-73):
+	- (msg.sender.call.value(b ++)()) (tool_fail.sol#71)
+Low level call in tool_fail.requiredee() (tool_fail.sol#75-81):
+	- (msg.sender.call.value(b ++)()) (tool_fail.sol#76)
+Low level call in tool_fail.non_buggy_requirem() (tool_fail.sol#109-113):
+	- (msg.sender.call.value(b)()) (tool_fail.sol#111)
+Low level call in tool_fail.buggy_local() (tool_fail.sol#116-122):
+	- msg.sender.call.value(b)() (tool_fail.sol#120)
+Low level call in tool_fail.case_1() (tool_fail.sol#124-126):
+	- assert(bool)(msg.sender.call.value(b)() && a ++ < 10 && msg.sender.call.value(a)()) (tool_fail.sol#125)
+Low level call in tool_fail.buggy_if() (tool_fail.sol#128-131):
+	- require(bool)(msg.sender.call.value(b)() && a ++ < 10 && msg.sender.call.value(a)()) (tool_fail.sol#130)
+Low level call in tool_fail.case_if_2() (tool_fail.sol#133-136):
+	- require(bool)(a ++ < 10 && msg.sender.call.value(d)()) (tool_fail.sol#135)
+Low level call in tool_fail.buggy_require() (tool_fail.sol#138-143):
+	- require(bool)(msg.sender.call.value(local)() && local > 10) (tool_fail.sol#142)
+Low level call in tool_fail.buggy_require_2() (tool_fail.sol#145-148):
+	- require(bool)(msg.sender.call.value(b ++)() && b < 10) (tool_fail.sol#147)
+Low level call in tool_fail.buggy21() (tool_fail.sol#151-156):
+	- msg.sender.call.value(c)() && d ++ < 10 (tool_fail.sol#154)
+Low level call in tool_fail.buggy_cross_function() (tool_fail.sol#163-166):
+	- msg.sender.call.value(d)() && non_buggy_funct() (tool_fail.sol#164)
+Low level call in tool_fail.non_buggy_single_statement() (tool_fail.sol#169-171):
+	- require(bool)(msg.sender.call.value(b + c)() && a < 10) (tool_fail.sol#170)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Contract tool_fail (tool_fail.sol#2-175) is not in CapWords
+Function tool_fail.non_buggy_case1() (tool_fail.sol#42-45) is not in mixedCase
+Function tool_fail.buggy_case4() (tool_fail.sol#47-50) is not in mixedCase
+Function tool_fail.buggy_case3() (tool_fail.sol#52-55) is not in mixedCase
+Function tool_fail.buggy_case7() (tool_fail.sol#57-60) is not in mixedCase
+Function tool_fail.buggy_require_wbc_1() (tool_fail.sol#69-73) is not in mixedCase
+Function tool_fail.buggy_case() (tool_fail.sol#90-97) is not in mixedCase
+Function tool_fail.buggy_case2() (tool_fail.sol#99-107) is not in mixedCase
+Function tool_fail.non_buggy_requirem() (tool_fail.sol#109-113) is not in mixedCase
+Function tool_fail.buggy_local() (tool_fail.sol#116-122) is not in mixedCase
+Function tool_fail.case_1() (tool_fail.sol#124-126) is not in mixedCase
+Function tool_fail.buggy_if() (tool_fail.sol#128-131) is not in mixedCase
+Function tool_fail.case_if_2() (tool_fail.sol#133-136) is not in mixedCase
+Function tool_fail.buggy_require() (tool_fail.sol#138-143) is not in mixedCase
+Function tool_fail.buggy_require_2() (tool_fail.sol#145-148) is not in mixedCase
+Function tool_fail.non_buggy_funct() (tool_fail.sol#158-161) is not in mixedCase
+Function tool_fail.buggy_cross_function() (tool_fail.sol#163-166) is not in mixedCase
+Function tool_fail.non_buggy_single_statement() (tool_fail.sol#169-171) is not in mixedCase
+Variable tool_fail.not_called (tool_fail.sol#9) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in tool_fail.buggy27(uint256) (tool_fail.sol#21-27):
+	External calls:
+	- ! (msg.sender.send(1000000000000000000)) (tool_fail.sol#23)
+	State variables written after the call(s):
+	- not_called = false (tool_fail.sol#26)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+tool_fail.boolean (tool_fail.sol#8) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+./tool_fail.sol analyzed (1 contracts with 94 detectors), 79 result(s) found
+
+real	0m1.901s
+user	0m1.772s
+sys	0m0.133s

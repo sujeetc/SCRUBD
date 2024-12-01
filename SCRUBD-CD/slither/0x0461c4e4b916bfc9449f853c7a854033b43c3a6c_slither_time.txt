@@ -1,0 +1,197 @@
+'solc --version' running
+'solc ./0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol:
+Warning: SPDX license identifier not provided in source file. Before publishing, consider adding a comment containing "SPDX-License-Identifier: <SPDX-License>" to each source file. Use "SPDX-License-Identifier: UNLICENSED" for non-open-source code. Please see https://spdx.org for more information.
+--> ./0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol
+
+Warning: This declaration shadows an existing declaration.
+   --> ./0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol:253:5:
+    |
+253 |     event Poof();
+    |     ^^^^^^^^^^^^^
+Note: The shadowed declaration is here:
+   --> ./0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol:246:1:
+    |
+246 | contract Poof is ERC20 {
+    | ^ (Relevant source part starts here and spans across multiple lines).
+
+Warning: Using ".value(...)" is deprecated. Use "{value: ...}" instead.
+   --> ./0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol:203:9:
+    |
+203 |         WRAPPED_ETH.deposit.value(balance)();
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: Return value of low-level calls not used.
+   --> ./0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol:363:13:
+    |
+363 |             msg.sender.call{ value: msg.value - cost }("");
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: Using ".value(...)" is deprecated. Use "{value: ...}" instead.
+   --> ./0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol:382:13:
+    |
+382 |             WRAPPED_ETH.deposit.value(send)();
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+
+Auction.start() (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#195-205) sends eth to arbitrary user
+	Dangerous calls:
+	- WRAPPED_ETH.deposit.value(balance)() (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#203)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+Reentrancy in Poof.receive() (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#344-385):
+	External calls:
+	- (success1,None) = FEE_RECIPIENT_1.call{value: fee}() (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#372)
+	- (success2,None) = FEE_RECIPIENT_2.call{value: fee}() (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#373)
+	State variables written after the call(s):
+	- setData(address(this),block.timestamp,0,loops + 1) (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#378)
+		- p_data = ((bytes32(uint256(_head)) & MASK_HEAD) | ((bytes32(_last) & MASK_LAST) << SHIFT_LAST) | ((bytes32(_plays) & MASK_PLAYS) << SHIFT_PLAYS) | (bytes32(_loops) << SHIFT_LOOPS)) (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#331-336)
+	Poof.p_data (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#278) can be used in cross function reentrancies:
+	- Poof.getData() (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#316-328)
+	- Poof.setData(address,uint256,uint256,uint256) (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#330-337)
+Reentrancy in Auction.start() (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#195-205):
+	External calls:
+	- WRAPPED_ETH.deposit.value(balance)() (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#203)
+	State variables written after the call(s):
+	- started = block.timestamp (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#204)
+	Auction.started (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#171) can be used in cross function reentrancies:
+	- Auction.start() (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#195-205)
+	- Auction.started (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#171)
+	- Auction.stop() (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#207-214)
+	- Auction.take(uint256) (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#220-233)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+Poof.receive() (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#344-385) ignores return value by WRAPPED_ETH.transfer(head,send) (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#383)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+Auction.stop() (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#207-214) uses a dangerous strict equality:
+	- require(bool,string)(delta >= DURATION || WRAPPED_ETH.balanceOf(address(this)) == 0,on) (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#211)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-strict-equalities
+
+Poof.receive() (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#344-385) ignores return value by msg.sender.call{value: msg.value - cost}() (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#363)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-low-level-calls
+
+Poof.constructor(address,address,address,uint256,uint256,uint256)._weth (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#301) lacks a zero-check on :
+		- FEE_RECIPIENT_1 = address(new Auction(_weth,_minWait,_fromPrice,_duration,hoard_1)) (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#309)
+		- FEE_RECIPIENT_2 = address(new Auction(_weth,_minWait,_fromPrice,_duration,hoard_2)) (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#310)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in Poof.receive() (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#344-385):
+	External calls:
+	- (success1,None) = FEE_RECIPIENT_1.call{value: fee}() (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#372)
+	- (success2,None) = FEE_RECIPIENT_2.call{value: fee}() (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#373)
+	Event emitted after the call(s):
+	- NotPoof(head,total) (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#376)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+Auction.start() (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#195-205) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(block.timestamp > MIN_START,wait) (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#196)
+	- require(bool,string)(started == 0,on) (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#201)
+Auction.stop() (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#207-214) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(started != 0,off) (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#208)
+	- require(bool,string)(delta >= DURATION || WRAPPED_ETH.balanceOf(address(this)) == 0,on) (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#211)
+Auction.take(uint256) (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#220-233) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(delta < DURATION,old) (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#225)
+	- require(bool,string)(HOARD.transferFrom(msg.sender,address(1),cost),s1e) (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#231)
+Poof.receive() (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#344-385) uses timestamp for comparisons
+	Dangerous comparisons:
+	- delta <= PERIOD (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#354)
+	- require(bool,string)(msg.value >= cost,more (￣﹃￣)) (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#356)
+	- head != address(this) (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#380)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+2 different versions of Solidity are used:
+	- Version constraint ^0.6.0 is used by:
+		-^0.6.0 (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#7)
+	- Version constraint ^0.6.12 is used by:
+		-^0.6.12 (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#37)
+		-^0.6.12 (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#87)
+		-^0.6.12 (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#155)
+		-^0.6.12 (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#240)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#different-pragma-directives-are-used
+
+Version constraint ^0.6.0 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- MissingEscapingInFormatting
+	- ArraySliceDynamicallyEncodedBaseType
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- YulOptimizerRedundantAssignmentBreakContinue.
+It is used by:
+	- ^0.6.0 (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#7)
+Version constraint ^0.6.12 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- SignedImmutables
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup.
+It is used by:
+	- ^0.6.12 (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#37)
+	- ^0.6.12 (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#87)
+	- ^0.6.12 (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#155)
+	- ^0.6.12 (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#240)
+solc-0.6.12 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in Poof.receive() (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#344-385):
+	- msg.sender.call{value: msg.value - cost}() (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#363)
+	- (success1,None) = FEE_RECIPIENT_1.call{value: fee}() (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#372)
+	- (success2,None) = FEE_RECIPIENT_2.call{value: fee}() (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#373)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Parameter Auction.take(uint256)._val (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#220) is not in mixedCase
+Variable Auction.FROM_PRICE (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#164) is not in mixedCase
+Variable Auction.DURATION (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#165) is not in mixedCase
+Variable Auction.MIN_START (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#166) is not in mixedCase
+Variable Auction.WRAPPED_ETH (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#168) is not in mixedCase
+Variable Auction.HOARD (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#169) is not in mixedCase
+Parameter Poof.sortTokens(address,address)._tokenA (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#280) is not in mixedCase
+Parameter Poof.sortTokens(address,address)._tokenB (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#280) is not in mixedCase
+Parameter Poof.pairFor(address,address,address)._factory (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#285) is not in mixedCase
+Parameter Poof.pairFor(address,address,address)._tokenA (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#286) is not in mixedCase
+Parameter Poof.pairFor(address,address,address)._tokenB (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#287) is not in mixedCase
+Parameter Poof.setData(address,uint256,uint256,uint256)._head (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#330) is not in mixedCase
+Parameter Poof.setData(address,uint256,uint256,uint256)._last (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#330) is not in mixedCase
+Parameter Poof.setData(address,uint256,uint256,uint256)._plays (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#330) is not in mixedCase
+Parameter Poof.setData(address,uint256,uint256,uint256)._loops (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#330) is not in mixedCase
+Parameter Poof.costFor(uint256,uint256)._plays (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#339) is not in mixedCase
+Parameter Poof.costFor(uint256,uint256)._delta (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#339) is not in mixedCase
+Variable Poof.WRAPPED_ETH (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#256) is not in mixedCase
+Variable Poof.FEE_RECIPIENT_1 (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#264) is not in mixedCase
+Variable Poof.FEE_RECIPIENT_2 (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#265) is not in mixedCase
+Variable Poof.p_data (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#278) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in WETH.withdraw(uint256) (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#112-117):
+	External calls:
+	- msg.sender.transfer(wad) (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#115)
+	Event emitted after the call(s):
+	- Withdrawal(msg.sender,wad) (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#116)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+WETH.decimals (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#93) should be constant 
+WETH.name (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#91) should be constant 
+WETH.symbol (0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol#92) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+./0x0461c4e4b916bfc9449f853c7a854033b43c3a6c.sol analyzed (5 contracts with 94 detectors), 42 result(s) found
+
+real	0m1.951s
+user	0m1.749s
+sys	0m0.204s

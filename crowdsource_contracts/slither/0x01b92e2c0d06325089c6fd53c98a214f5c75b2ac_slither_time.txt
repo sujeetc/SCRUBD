@@ -1,0 +1,210 @@
+'solc --version' running
+'solc ./0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol:
+Warning: Contract code size exceeds 24576 bytes (a limit introduced in Spurious Dragon). This contract may not be deployable on mainnet. Consider enabling the optimizer (with a low "runs" value!), turning off revert strings, or using libraries.
+  --> ./0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol:92:1:
+   |
+92 | contract MYSTIC is ReentrancyGuard { 
+   | ^ (Relevant source part starts here and spans across multiple lines).
+
+
+
+Reentrancy in MYSTIC.processActionProposal(uint256) (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#509-542):
+	External calls:
+	- (success,returnData) = proposal.applicant.call{value: proposal.tributeOffered}(action) (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#530)
+	State variables written after the call(s):
+	- unsafeSubtractFromBalance(GUILD,proposal.applicant,proposal.paymentRequested) (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#532)
+		- userTokenBalances[user][token] -= amount (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#847)
+		- userTokenBalances[TOTAL][token] -= amount (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#848)
+	MYSTIC.userTokenBalances (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#135) can be used in cross function reentrancies:
+	- MYSTIC.getUserTokenBalance(address,address) (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#777-779)
+	- MYSTIC.unsafeAddToBalance(address,address,uint256) (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#836-839)
+Reentrancy in MYSTIC.submitProposal(address,uint256,uint256,uint256,address,uint256,address,bytes32) (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#257-295):
+	External calls:
+	- (success,None) = wETH.call{value: msg.value}() (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#280)
+	- IERC20(wETH).safeTransfer(address(this),msg.value) (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#282)
+	- IERC20(tributeToken).safeTransferFrom(msg.sender,address(this),tributeOffered) (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#284)
+	External calls sending eth:
+	- (success,None) = wETH.call{value: msg.value}() (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#280)
+	State variables written after the call(s):
+	- unsafeAddToBalance(ESCROW,tributeToken,tributeOffered) (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#287)
+		- userTokenBalances[user][token] += amount (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#837)
+		- userTokenBalances[TOTAL][token] += amount (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#838)
+	MYSTIC.userTokenBalances (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#135) can be used in cross function reentrancies:
+	- MYSTIC.getUserTokenBalance(address,address) (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#777-779)
+	- MYSTIC.unsafeAddToBalance(address,address,uint256) (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#836-839)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+MYSTIC.fairShare(uint256,uint256,uint256) (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#786-798) performs a multiplication on the result of a division:
+	- (balance / totalSharesAndLoot) * shares (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#797)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+MYSTIC._validateProposalForProcessing(uint256) (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#617-623) uses a dangerous strict equality:
+	- require(bool,string)(proposal.flags[1] == 0,processed) (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#621)
+MYSTIC.canRagequit(uint256) (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#739-742) uses a dangerous strict equality:
+	- proposals[proposalQueue[highestIndexYesVote]].flags[1] == 1 (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#741)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-strict-equalities
+
+Reentrancy in MYSTIC._withdrawBalance(address,uint256) (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#688-693):
+	External calls:
+	- IERC20(token).safeTransfer(msg.sender,amount) (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#690)
+	State variables written after the call(s):
+	- unsafeSubtractFromBalance(msg.sender,token,amount) (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#691)
+		- userTokenBalances[user][token] -= amount (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#847)
+		- userTokenBalances[TOTAL][token] -= amount (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#848)
+	MYSTIC.userTokenBalances (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#135) can be used in cross function reentrancies:
+	- MYSTIC.getUserTokenBalance(address,address) (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#777-779)
+	- MYSTIC.unsafeAddToBalance(address,address,uint256) (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#836-839)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+MYSTIC.withdrawBalances(address[],uint256[],bool).max (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#677) shadows:
+	- MYSTIC.max(uint256,uint256) (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#751-753) (function)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#local-variable-shadowing
+
+SafeERC20._callOptionalReturn(IERC20,bytes) (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#30-38) has external calls inside a loop: (success,returnData) = address(token).call(data) (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#32)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation/#calls-inside-a-loop
+
+Reentrancy in MYSTIC.processActionProposal(uint256) (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#509-542):
+	External calls:
+	- (success,returnData) = proposal.applicant.call{value: proposal.tributeOffered}(action) (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#530)
+	State variables written after the call(s):
+	- totalGuildBankTokens -= 1 (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#534)
+Reentrancy in MYSTIC.sponsorProposal(uint256) (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#378-418):
+	External calls:
+	- IERC20(depositToken).safeTransferFrom(msg.sender,address(this),proposalDeposit) (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#380)
+	State variables written after the call(s):
+	- proposalQueue.push(proposalId) (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#415)
+	- proposal.startingPeriod = startingPeriod (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#411)
+	- proposal.sponsor = memberAddressByDelegateKey[msg.sender] (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#412)
+	- proposal.flags[0] = 1 (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#413)
+	- proposedToKick[proposal.applicant] = true (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#402)
+	- proposedToWhitelist[address(proposal.tributeToken)] = true (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#397)
+	- unsafeAddToBalance(ESCROW,depositToken,proposalDeposit) (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#381)
+		- userTokenBalances[user][token] += amount (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#837)
+		- userTokenBalances[TOTAL][token] += amount (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#838)
+Reentrancy in MYSTIC.stakeTokenForShares(uint256) (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#869-874):
+	External calls:
+	- IERC20(stakeToken).safeTransferFrom(msg.sender,address(this),amount) (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#870)
+	State variables written after the call(s):
+	- growGuild(msg.sender,amount,0) (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#871)
+		- balanceOf[account] = balanceOf[account].add(sharesAndLoot) (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#828)
+	- growGuild(msg.sender,amount,0) (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#871)
+		- memberAddressByDelegateKey[memberToOverride] = memberToOverride (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#811)
+		- memberAddressByDelegateKey[account] = account (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#823)
+	- growGuild(msg.sender,amount,0) (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#871)
+		- members[account].shares = members[account].shares.add(shares) (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#803)
+		- members[account].loot = members[account].loot.add(loot) (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#804)
+		- members[memberToOverride].delegateKey = memberToOverride (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#812)
+		- members[account] = Member({delegateKey:account,exists:1,shares:shares,loot:loot.add(members[account].loot),highestIndexYesVote:0,jailed:0}) (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#815-822)
+	- growGuild(msg.sender,amount,0) (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#871)
+		- totalLoot = totalLoot.add(loot) (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#830)
+	- growGuild(msg.sender,amount,0) (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#871)
+		- totalShares = totalShares.add(shares) (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#829)
+	- growGuild(msg.sender,amount,0) (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#871)
+		- totalSupply = totalShares.add(totalLoot) (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#831)
+Reentrancy in MYSTIC.submitProposal(address,uint256,uint256,uint256,address,uint256,address,bytes32) (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#257-295):
+	External calls:
+	- (success,None) = wETH.call{value: msg.value}() (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#280)
+	- IERC20(wETH).safeTransfer(address(this),msg.value) (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#282)
+	- IERC20(tributeToken).safeTransferFrom(msg.sender,address(this),tributeOffered) (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#284)
+	External calls sending eth:
+	- (success,None) = wETH.call{value: msg.value}() (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#280)
+	State variables written after the call(s):
+	- _submitProposal(applicant,sharesRequested,lootRequested,tributeOffered,tributeToken,paymentRequested,paymentToken,details,flags,) (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#292)
+		- actions[proposalCount] = data (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#368)
+	- _submitProposal(applicant,sharesRequested,lootRequested,tributeOffered,tributeToken,paymentRequested,paymentToken,details,flags,) (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#292)
+		- proposalCount += 1 (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#375)
+	- _submitProposal(applicant,sharesRequested,lootRequested,tributeOffered,tributeToken,paymentRequested,paymentToken,details,flags,) (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#292)
+		- proposals[proposalCount] = proposal (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#371)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+MYSTIC.sponsorProposal(uint256) (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#378-418) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(proposal.proposer != address(0),!proposed) (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#383)
+	- require(bool,string)(proposal.flags[0] == 0,sponsored) (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#384)
+	- require(bool,string)(proposal.flags[3] == 0,cancelled) (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#385)
+	- require(bool,string)(members[proposal.applicant].jailed == 0,applicant jailed) (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#386)
+	- require(bool,string)(! tokenWhitelist[address(proposal.tributeToken)],whitelisted) (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#394)
+	- require(bool,string)(! proposedToWhitelist[address(proposal.tributeToken)],whitelist proposed) (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#395)
+	- require(bool,string)(! proposedToKick[proposal.applicant],kick proposed) (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#401)
+MYSTIC.submitVote(uint256,uint8) (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#421-454) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(getCurrentPeriod() >= proposal.startingPeriod,pending) (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#429)
+MYSTIC._didPass(uint256) (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#595-615) uses timestamp for comparisons
+	Dangerous comparisons:
+	- proposal.yesVotes > proposal.noVotes (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#598)
+	- (totalSupply.mul(dilutionBound)) < proposal.maxTotalSharesAndLootAtYesVote (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#603)
+MYSTIC._validateProposalForProcessing(uint256) (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#617-623) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(getCurrentPeriod() >= proposal.startingPeriod.add(votingPeriodLength).add(gracePeriodLength),!ready) (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#620)
+	- require(bool,string)(proposal.flags[1] == 0,processed) (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#621)
+	- require(bool,string)(proposalIndex == 0 || proposals[proposalQueue[proposalIndex - 1]].flags[1] == 1,prior !processed) (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#622)
+MYSTIC.canRagequit(uint256) (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#739-742) uses timestamp for comparisons
+	Dangerous comparisons:
+	- proposals[proposalQueue[highestIndexYesVote]].flags[1] == 1 (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#741)
+MYSTIC.hasVotingPeriodExpired(uint256) (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#744-746) uses timestamp for comparisons
+	Dangerous comparisons:
+	- getCurrentPeriod() >= startingPeriod.add(votingPeriodLength) (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#745)
+MYSTIC.max(uint256,uint256) (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#751-753) uses timestamp for comparisons
+	Dangerous comparisons:
+	- x >= y (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#752)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Address.isContract(address) (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#11-16) uses assembly
+	- INLINE ASM (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#14)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#assembly-usage
+
+MYSTIC.growGuild(address,uint256,uint256) (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#800-834) has costly operations inside a loop:
+	- totalShares = totalShares.add(shares) (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#829)
+MYSTIC.growGuild(address,uint256,uint256) (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#800-834) has costly operations inside a loop:
+	- totalLoot = totalLoot.add(loot) (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#830)
+MYSTIC.growGuild(address,uint256,uint256) (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#800-834) has costly operations inside a loop:
+	- totalSupply = totalShares.add(totalLoot) (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#831)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#costly-operations-inside-a-loop
+
+Version constraint 0.6.12 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- SignedImmutables
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup.
+It is used by:
+	- 0.6.12 (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#2)
+solc-0.6.12 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in SafeERC20._callOptionalReturn(IERC20,bytes) (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#30-38):
+	- (success,returnData) = address(token).call(data) (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#32)
+Low level call in MYSTIC.submitProposal(address,uint256,uint256,uint256,address,uint256,address,bytes32) (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#257-295):
+	- (success,None) = wETH.call{value: msg.value}() (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#280)
+Low level call in MYSTIC.processActionProposal(uint256) (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#509-542):
+	- (success,returnData) = proposal.applicant.call{value: proposal.tributeOffered}(action) (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#530)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Parameter MYSTIC.init(address,address,address[],uint256[],uint256,uint256,uint256,uint256,uint256,uint256,uint256,string)._depositToken (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#210) is not in mixedCase
+Parameter MYSTIC.init(address,address,address[],uint256[],uint256,uint256,uint256,uint256,uint256,uint256,uint256,string)._stakeToken (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#211) is not in mixedCase
+Parameter MYSTIC.init(address,address,address[],uint256[],uint256,uint256,uint256,uint256,uint256,uint256,uint256,string)._summoner (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#212) is not in mixedCase
+Parameter MYSTIC.init(address,address,address[],uint256[],uint256,uint256,uint256,uint256,uint256,uint256,uint256,string)._summonerShares (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#213) is not in mixedCase
+Parameter MYSTIC.init(address,address,address[],uint256[],uint256,uint256,uint256,uint256,uint256,uint256,uint256,string)._summonerDeposit (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#214) is not in mixedCase
+Parameter MYSTIC.init(address,address,address[],uint256[],uint256,uint256,uint256,uint256,uint256,uint256,uint256,string)._proposalDeposit (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#215) is not in mixedCase
+Parameter MYSTIC.init(address,address,address[],uint256[],uint256,uint256,uint256,uint256,uint256,uint256,uint256,string)._processingReward (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#216) is not in mixedCase
+Parameter MYSTIC.init(address,address,address[],uint256[],uint256,uint256,uint256,uint256,uint256,uint256,uint256,string)._periodDuration (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#217) is not in mixedCase
+Parameter MYSTIC.init(address,address,address[],uint256[],uint256,uint256,uint256,uint256,uint256,uint256,uint256,string)._votingPeriodLength (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#218) is not in mixedCase
+Parameter MYSTIC.init(address,address,address[],uint256[],uint256,uint256,uint256,uint256,uint256,uint256,uint256,string)._gracePeriodLength (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#219) is not in mixedCase
+Parameter MYSTIC.init(address,address,address[],uint256[],uint256,uint256,uint256,uint256,uint256,uint256,uint256,string)._dilutionBound (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#220) is not in mixedCase
+Parameter MYSTIC.init(address,address,address[],uint256[],uint256,uint256,uint256,uint256,uint256,uint256,uint256,string)._guildName (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#221) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Loop condition i < approvedTokens.length (0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol#651) should use cached array length instead of referencing `length` member of the storage array.
+ Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#cache-array-length
+./0x01b92e2c0d06325089c6fd53c98a214f5c75b2ac.sol analyzed (6 contracts with 94 detectors), 41 result(s) found
+
+real	0m3.476s
+user	0m3.308s
+sys	0m0.169s

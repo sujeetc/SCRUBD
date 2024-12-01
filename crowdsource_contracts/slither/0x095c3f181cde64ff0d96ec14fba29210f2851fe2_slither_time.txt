@@ -1,0 +1,223 @@
+'solc --version' running
+'solc ./0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol:
+./0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol:180:5: Warning: Function state mutability can be restricted to pure
+    function finalization() internal {}
+    ^---------------------------------^
+
+
+Reentrancy in CompliantCrowdsale.approveMint(uint256) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#878-901):
+	External calls:
+	- token.mint(pendingMints[nonce].to,pendingMints[nonce].tokens) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#888)
+	- checkIsInvestorApproved(pendingMints[nonce].to) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#881)
+		- require(bool)(whiteListingContract.isInvestorApproved(_account)) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#807)
+	External calls sending eth:
+	- forwardFunds(pendingMints[nonce].weiAmount) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#897)
+		- wallet.transfer(amount) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#953)
+	State variables written after the call(s):
+	- delete pendingMints[nonce] (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#898)
+	CompliantCrowdsale.pendingMints (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#802) can be used in cross function reentrancies:
+	- CompliantCrowdsale.approveMint(uint256) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#878-901)
+	- CompliantCrowdsale.buyTokens(address) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#860-876)
+	- CompliantCrowdsale.pendingMints (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#802)
+	- CompliantCrowdsale.rejectMint(uint256,uint256) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#903-919)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+Reentrancy in CompliantToken.approveTransfer(uint256) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#703-762):
+	External calls:
+	- checkIsInvestorApproved(pendingTransactions[nonce].from) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#706)
+		- require(bool)(whiteListingContract.isInvestorApproved(_account)) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#554)
+	- checkIsInvestorApproved(pendingTransactions[nonce].to) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#707)
+		- require(bool)(whiteListingContract.isInvestorApproved(_account)) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#554)
+	State variables written after the call(s):
+	- delete pendingTransactions[nonce] (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#721)
+	CompliantToken.pendingTransactions (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#547) can be used in cross function reentrancies:
+	- CompliantToken.approveTransfer(uint256) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#703-762)
+	- CompliantToken.pendingTransactions (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#547)
+	- CompliantToken.rejectTransfer(uint256,uint256) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#764-789)
+	- CompliantToken.transfer(address,uint256) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#638-667)
+	- CompliantToken.transferFrom(address,address,uint256) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#669-701)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+Crowdsale.buyTokens(address) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#62-78) ignores return value by token.mint(beneficiary,tokens) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#74)
+CompliantCrowdsale.approveMint(uint256) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#878-901) ignores return value by token.mint(pendingMints[nonce].to,pendingMints[nonce].tokens) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#888)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+Reentrancy in CompliantCrowdsale.approveMint(uint256) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#878-901):
+	External calls:
+	- checkIsInvestorApproved(pendingMints[nonce].to) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#881)
+		- require(bool)(whiteListingContract.isInvestorApproved(_account)) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#807)
+	State variables written after the call(s):
+	- weiRaised = weiRaised.add(pendingMints[nonce].weiAmount) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#885)
+Reentrancy in CompliantToken.approveTransfer(uint256) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#703-762):
+	External calls:
+	- checkIsInvestorApproved(pendingTransactions[nonce].from) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#706)
+		- require(bool)(whiteListingContract.isInvestorApproved(_account)) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#554)
+	- checkIsInvestorApproved(pendingTransactions[nonce].to) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#707)
+		- require(bool)(whiteListingContract.isInvestorApproved(_account)) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#554)
+	State variables written after the call(s):
+	- allowed[from][spender] = allowedTransferAmount (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#759)
+	- balances[feeRecipient] = balances[feeRecipient].add(fee) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#736)
+	- balances[from] = balanceFrom (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#757)
+	- balances[to] = balanceTo (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#758)
+	- pendingApprovalAmount[from][spender] = pendingAmount (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#760)
+Reentrancy in CompliantCrowdsale.buyTokens(address) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#860-876):
+	External calls:
+	- checkIsInvestorApproved(beneficiary) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#863)
+		- require(bool)(whiteListingContract.isInvestorApproved(_account)) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#807)
+	State variables written after the call(s):
+	- currentMintNonce ++ (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#875)
+	- pendingMints[currentMintNonce] = MintStruct(beneficiary,tokens,weiAmount) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#872)
+Reentrancy in CompliantToken.transfer(address,uint256) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#638-667):
+	External calls:
+	- checkIsInvestorApproved(msg.sender) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#640)
+		- require(bool)(whiteListingContract.isInvestorApproved(_account)) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#554)
+	- checkIsInvestorApproved(_to) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#641)
+		- require(bool)(whiteListingContract.isInvestorApproved(_account)) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#554)
+	State variables written after the call(s):
+	- currentNonce ++ (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#664)
+	- pendingApprovalAmount[msg.sender][address(0)] = pendingAmount.add(_value) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#649)
+	- pendingApprovalAmount[msg.sender][address(0)] = pendingAmount.add(_value).add(transferFee) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#652)
+	- pendingTransactions[currentNonce] = TransactionStruct(msg.sender,_to,_value,transferFee,address(0)) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#655-661)
+Reentrancy in CompliantToken.transferFrom(address,address,uint256) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#669-701):
+	External calls:
+	- checkIsInvestorApproved(_from) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#671)
+		- require(bool)(whiteListingContract.isInvestorApproved(_account)) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#554)
+	- checkIsInvestorApproved(_to) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#672)
+		- require(bool)(whiteListingContract.isInvestorApproved(_account)) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#554)
+	State variables written after the call(s):
+	- currentNonce ++ (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#698)
+	- pendingApprovalAmount[_from][msg.sender] = pendingAmount.add(_value) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#682)
+	- pendingApprovalAmount[_from][msg.sender] = pendingAmount.add(_value).add(transferFee) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#686)
+	- pendingTransactions[currentNonce] = TransactionStruct(_from,_to,_value,transferFee,msg.sender) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#689-695)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in CompliantCrowdsale.approveMint(uint256) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#878-901):
+	External calls:
+	- token.mint(pendingMints[nonce].to,pendingMints[nonce].tokens) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#888)
+	- checkIsInvestorApproved(pendingMints[nonce].to) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#881)
+		- require(bool)(whiteListingContract.isInvestorApproved(_account)) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#807)
+	Event emitted after the call(s):
+	- TokenPurchase(msg.sender,pendingMints[nonce].to,pendingMints[nonce].weiAmount,pendingMints[nonce].tokens) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#890-895)
+Reentrancy in CompliantToken.approveTransfer(uint256) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#703-762):
+	External calls:
+	- checkIsInvestorApproved(pendingTransactions[nonce].from) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#706)
+		- require(bool)(whiteListingContract.isInvestorApproved(_account)) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#554)
+	- checkIsInvestorApproved(pendingTransactions[nonce].to) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#707)
+		- require(bool)(whiteListingContract.isInvestorApproved(_account)) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#554)
+	Event emitted after the call(s):
+	- Transfer(from,to,value) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#751-755)
+	- TransferWithFee(from,to,value,fee) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#744-749)
+Reentrancy in Crowdsale.buyTokens(address) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#62-78):
+	External calls:
+	- token.mint(beneficiary,tokens) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#74)
+	Event emitted after the call(s):
+	- TokenPurchase(msg.sender,beneficiary,weiAmount,tokens) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#75)
+Reentrancy in CompliantCrowdsale.buyTokens(address) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#860-876):
+	External calls:
+	- checkIsInvestorApproved(beneficiary) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#863)
+		- require(bool)(whiteListingContract.isInvestorApproved(_account)) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#807)
+	Event emitted after the call(s):
+	- ContributionRegistered(beneficiary,tokens,weiAmount,currentMintNonce) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#873)
+Reentrancy in CompliantToken.transfer(address,uint256) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#638-667):
+	External calls:
+	- checkIsInvestorApproved(msg.sender) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#640)
+		- require(bool)(whiteListingContract.isInvestorApproved(_account)) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#554)
+	- checkIsInvestorApproved(_to) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#641)
+		- require(bool)(whiteListingContract.isInvestorApproved(_account)) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#554)
+	Event emitted after the call(s):
+	- RecordedPendingTransaction(msg.sender,_to,_value,transferFee,address(0)) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#663)
+Reentrancy in CompliantToken.transferFrom(address,address,uint256) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#669-701):
+	External calls:
+	- checkIsInvestorApproved(_from) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#671)
+		- require(bool)(whiteListingContract.isInvestorApproved(_account)) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#554)
+	- checkIsInvestorApproved(_to) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#672)
+		- require(bool)(whiteListingContract.isInvestorApproved(_account)) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#554)
+	Event emitted after the call(s):
+	- RecordedPendingTransaction(_from,_to,_value,transferFee,msg.sender) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#697)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+Crowdsale.constructor(uint256,uint256,uint256,address,MintableToken) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#42-54) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(_startTime >= now) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#43)
+Crowdsale.hasEnded() (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#81-83) uses timestamp for comparisons
+	Dangerous comparisons:
+	- now > endTime (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#82)
+Crowdsale.validPurchase() (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#97-101) uses timestamp for comparisons
+	Dangerous comparisons:
+	- withinPeriod = now >= startTime && now <= endTime (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#98)
+	- withinPeriod && nonZeroPurchase (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#100)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Whitelist.disapproveInvestorsInBulk(address[]) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#217-222) has costly operations inside a loop:
+	- delete investorMap[toDisapprove[i]] (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#219)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#costly-operations-inside-a-loop
+
+Crowdsale.forwardFunds() (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#92-94) is never used and should be removed
+Crowdsale.getTokenAmount(uint256) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#86-88) is never used and should be removed
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dead-code
+
+Version constraint ^0.4.23 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ABIEncoderV2PackedStorage_0.4.x
+	- ExpExponentCleanup
+	- EventStructWrongData.
+It is used by:
+	- ^0.4.23 (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#1)
+solc-0.4.23 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Parameter Whitelist.isInvestorApproved(address)._investor (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#195) is not in mixedCase
+Parameter BasicToken.transfer(address,uint256)._to (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#310) is not in mixedCase
+Parameter BasicToken.transfer(address,uint256)._value (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#310) is not in mixedCase
+Parameter BasicToken.balanceOf(address)._owner (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#326) is not in mixedCase
+Parameter StandardToken.transferFrom(address,address,uint256)._from (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#368) is not in mixedCase
+Parameter StandardToken.transferFrom(address,address,uint256)._to (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#368) is not in mixedCase
+Parameter StandardToken.transferFrom(address,address,uint256)._value (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#368) is not in mixedCase
+Parameter StandardToken.approve(address,uint256)._spender (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#390) is not in mixedCase
+Parameter StandardToken.approve(address,uint256)._value (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#390) is not in mixedCase
+Parameter StandardToken.allowance(address,address)._owner (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#402) is not in mixedCase
+Parameter StandardToken.allowance(address,address)._spender (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#402) is not in mixedCase
+Parameter StandardToken.increaseApproval(address,uint256)._spender (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#416) is not in mixedCase
+Parameter StandardToken.increaseApproval(address,uint256)._addedValue (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#416) is not in mixedCase
+Parameter StandardToken.decreaseApproval(address,uint256)._spender (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#432) is not in mixedCase
+Parameter StandardToken.decreaseApproval(address,uint256)._subtractedValue (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#432) is not in mixedCase
+Parameter MintableToken.mint(address,uint256)._to (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#477) is not in mixedCase
+Parameter MintableToken.mint(address,uint256)._amount (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#477) is not in mixedCase
+Parameter CompliantToken.transfer(address,uint256)._to (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#638) is not in mixedCase
+Parameter CompliantToken.transfer(address,uint256)._value (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#638) is not in mixedCase
+Parameter CompliantToken.transferFrom(address,address,uint256)._from (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#669) is not in mixedCase
+Parameter CompliantToken.transferFrom(address,address,uint256)._to (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#669) is not in mixedCase
+Parameter CompliantToken.transferFrom(address,address,uint256)._value (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#669) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in CompliantCrowdsale.approveMint(uint256) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#878-901):
+	External calls:
+	- forwardFunds(pendingMints[nonce].weiAmount) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#897)
+		- wallet.transfer(amount) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#953)
+	State variables written after the call(s):
+	- delete pendingMints[nonce] (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#898)
+Reentrancy in CompliantCrowdsale.claim() (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#921-929):
+	External calls:
+	- msg.sender.transfer(value) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#926)
+	Event emitted after the call(s):
+	- Claimed(msg.sender,value) (0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol#928)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+./0x095c3f181cde64ff0d96ec14fba29210f2851fe2.sol analyzed (13 contracts with 94 detectors), 47 result(s) found
+
+real	0m2.829s
+user	0m2.598s
+sys	0m0.235s

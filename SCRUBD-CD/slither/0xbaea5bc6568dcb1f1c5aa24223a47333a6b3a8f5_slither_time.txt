@@ -1,0 +1,166 @@
+'solc --version' running
+'solc ./0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+TrustlessOTC (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#165-352) contract sets array length with a user-controlled value:
+	- tradeTracker[msg.sender].push(tradeID) (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#265)
+TrustlessOTC (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#165-352) contract sets array length with a user-controlled value:
+	- tradeTracker[msg.sender].push(newTradeID) (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#235)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#array-length-assignment
+
+Reentrancy in TrustlessOTC.cancelTrade(uint256) (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#239-255):
+	External calls:
+	- TokenNoReturn(o.tokenFrom).transfer(o.creator,o.amountFrom) (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#246)
+	- Token(o.tokenFrom).transfer(o.creator,o.amountFrom) (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#248)
+	External calls sending eth:
+	- msg.sender.transfer(o.amountFrom) (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#243)
+	State variables written after the call(s):
+	- o.active = false (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#252)
+	TrustlessOTC.offers (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#204) can be used in cross function reentrancies:
+	- TrustlessOTC.cancelTrade(uint256) (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#239-255)
+	- TrustlessOTC.getOfferDetails(uint256) (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#293-312)
+	- TrustlessOTC.initiateTrade(address,address,uint256,uint256,address) (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#206-237)
+	- TrustlessOTC.offers (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#204)
+	- TrustlessOTC.take(uint256) (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#257-291)
+Reentrancy in TrustlessOTC.take(uint256) (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#257-291):
+	External calls:
+	- TokenNoReturn(o.tokenFrom).transfer(msg.sender,o.amountFrom.sub(fee)) (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#271)
+	- Token(o.tokenFrom).transfer(msg.sender,o.amountFrom.sub(fee)) (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#273)
+	- TokenNoReturn(o.tokenTo).transferFrom(msg.sender,o.creator,o.amountTo) (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#283)
+	- Token(o.tokenTo).transferFrom(msg.sender,o.creator,o.amountTo) (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#285)
+	External calls sending eth:
+	- msg.sender.transfer(o.amountFrom.sub(fee)) (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#268)
+	- o.creator.transfer(msg.value) (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#279)
+	State variables written after the call(s):
+	- o.completed = true (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#288)
+	TrustlessOTC.offers (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#204) can be used in cross function reentrancies:
+	- TrustlessOTC.cancelTrade(uint256) (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#239-255)
+	- TrustlessOTC.getOfferDetails(uint256) (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#293-312)
+	- TrustlessOTC.initiateTrade(address,address,uint256,uint256,address) (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#206-237)
+	- TrustlessOTC.offers (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#204)
+	- TrustlessOTC.take(uint256) (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#257-291)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+TrustlessOTC.initiateTrade(address,address,uint256,uint256,address) (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#206-237) ignores return value by Token(_tokenFrom).transferFrom(msg.sender,address(this),_amountFrom) (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#220)
+TrustlessOTC.cancelTrade(uint256) (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#239-255) ignores return value by Token(o.tokenFrom).transfer(o.creator,o.amountFrom) (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#248)
+TrustlessOTC.take(uint256) (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#257-291) ignores return value by Token(o.tokenFrom).transfer(msg.sender,o.amountFrom.sub(fee)) (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#273)
+TrustlessOTC.take(uint256) (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#257-291) ignores return value by Token(o.tokenTo).transferFrom(msg.sender,o.creator,o.amountTo) (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#285)
+TrustlessOTC.reclaimToken(Token) (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#318-327) ignores return value by _token.transfer(owner(),excess) (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#325)
+TrustlessOTC.claimFees(Token) (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#340-349) ignores return value by _token.transfer(owner(),feesToClaim) (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#347)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+TokenNoReturn (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#158-163) has incorrect ERC20 function interface:TokenNoReturn.transfer(address,uint256) (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#160)
+TokenNoReturn (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#158-163) has incorrect ERC20 function interface:TokenNoReturn.transferFrom(address,address,uint256) (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#161)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-erc20-interface
+
+Reentrancy in TrustlessOTC.cancelTrade(uint256) (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#239-255):
+	External calls:
+	- TokenNoReturn(o.tokenFrom).transfer(o.creator,o.amountFrom) (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#246)
+	- Token(o.tokenFrom).transfer(o.creator,o.amountFrom) (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#248)
+	External calls sending eth:
+	- msg.sender.transfer(o.amountFrom) (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#243)
+	State variables written after the call(s):
+	- balanceTracker[o.tokenFrom] -= o.amountFrom (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#251)
+Reentrancy in TrustlessOTC.initiateTrade(address,address,uint256,uint256,address) (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#206-237):
+	External calls:
+	- TokenNoReturn(_tokenFrom).transferFrom(msg.sender,address(this),_amountFrom) (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#218)
+	- Token(_tokenFrom).transferFrom(msg.sender,address(this),_amountFrom) (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#220)
+	State variables written after the call(s):
+	- balanceTracker[_tokenFrom] = balanceTracker[_tokenFrom].add(_amountFrom) (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#226)
+	- offers.length ++ (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#224)
+	- o.tokenFrom = _tokenFrom (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#227)
+	- o.tokenTo = _tokenTo (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#228)
+	- o.amountFrom = _amountFrom (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#229)
+	- o.amountTo = _amountTo (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#230)
+	- o.creator = msg.sender (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#231)
+	- o.optionalTaker = _optionalTaker (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#232)
+	- o.active = true (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#233)
+	- o.tradeID = newTradeID (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#234)
+	- tradeTracker[msg.sender].push(newTradeID) (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#235)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in TrustlessOTC.cancelTrade(uint256) (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#239-255):
+	External calls:
+	- TokenNoReturn(o.tokenFrom).transfer(o.creator,o.amountFrom) (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#246)
+	- Token(o.tokenFrom).transfer(o.creator,o.amountFrom) (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#248)
+	External calls sending eth:
+	- msg.sender.transfer(o.amountFrom) (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#243)
+	Event emitted after the call(s):
+	- OfferCancelled(tradeID) (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#253)
+Reentrancy in TrustlessOTC.initiateTrade(address,address,uint256,uint256,address) (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#206-237):
+	External calls:
+	- TokenNoReturn(_tokenFrom).transferFrom(msg.sender,address(this),_amountFrom) (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#218)
+	- Token(_tokenFrom).transferFrom(msg.sender,address(this),_amountFrom) (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#220)
+	Event emitted after the call(s):
+	- OfferCreated(newTradeID) (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#236)
+Reentrancy in TrustlessOTC.take(uint256) (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#257-291):
+	External calls:
+	- TokenNoReturn(o.tokenFrom).transfer(msg.sender,o.amountFrom.sub(fee)) (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#271)
+	- Token(o.tokenFrom).transfer(msg.sender,o.amountFrom.sub(fee)) (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#273)
+	- TokenNoReturn(o.tokenTo).transferFrom(msg.sender,o.creator,o.amountTo) (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#283)
+	- Token(o.tokenTo).transferFrom(msg.sender,o.creator,o.amountTo) (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#285)
+	External calls sending eth:
+	- msg.sender.transfer(o.amountFrom.sub(fee)) (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#268)
+	- o.creator.transfer(msg.value) (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#279)
+	Event emitted after the call(s):
+	- OfferTaken(tradeID) (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#289)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+TrustlessOTC.take(uint256) (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#257-291) compares to a boolean constant:
+	-require(bool)(o.active == true) (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#260)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#boolean-equality
+
+Version constraint ^0.5.5 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor
+	- IncorrectEventSignatureInLibraries
+	- ABIEncoderV2PackedStorage
+	- IncorrectByteInstructionOptimization
+	- DoubleShiftSizeOverflow.
+It is used by:
+	- ^0.5.5 (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#1)
+solc-0.5.5 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Parameter TrustlessOTC.initiateTrade(address,address,uint256,uint256,address)._tokenFrom (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#207) is not in mixedCase
+Parameter TrustlessOTC.initiateTrade(address,address,uint256,uint256,address)._tokenTo (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#208) is not in mixedCase
+Parameter TrustlessOTC.initiateTrade(address,address,uint256,uint256,address)._amountFrom (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#209) is not in mixedCase
+Parameter TrustlessOTC.initiateTrade(address,address,uint256,uint256,address)._amountTo (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#210) is not in mixedCase
+Parameter TrustlessOTC.initiateTrade(address,address,uint256,uint256,address)._optionalTaker (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#211) is not in mixedCase
+Parameter TrustlessOTC.reclaimToken(Token)._token (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#318) is not in mixedCase
+Parameter TrustlessOTC.reclaimTokenNoReturn(TokenNoReturn)._token (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#329) is not in mixedCase
+Parameter TrustlessOTC.claimFees(Token)._token (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#340) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in TrustlessOTC.cancelTrade(uint256) (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#239-255):
+	External calls:
+	- msg.sender.transfer(o.amountFrom) (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#243)
+	State variables written after the call(s):
+	- balanceTracker[o.tokenFrom] -= o.amountFrom (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#251)
+	- o.active = false (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#252)
+	Event emitted after the call(s):
+	- OfferCancelled(tradeID) (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#253)
+Reentrancy in TrustlessOTC.take(uint256) (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#257-291):
+	External calls:
+	- msg.sender.transfer(o.amountFrom.sub(fee)) (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#268)
+	- o.creator.transfer(msg.value) (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#279)
+	State variables written after the call(s):
+	- o.completed = true (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#288)
+	Event emitted after the call(s):
+	- OfferTaken(tradeID) (0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol#289)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+./0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5.sol analyzed (5 contracts with 94 detectors), 30 result(s) found
+
+real	0m2.235s
+user	0m2.005s
+sys	0m0.230s

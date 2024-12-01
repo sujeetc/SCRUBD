@@ -1,0 +1,91 @@
+'solc --version' running
+'solc ./0x0d7c864bf6c86bf11da2c8068b4c4edee4d76080.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x0d7c864bf6c86bf11da2c8068b4c4edee4d76080.sol:
+./0x0d7c864bf6c86bf11da2c8068b4c4edee4d76080.sol:120:3: Warning: Failure condition of 'send' ignored. Consider using 'transfer' instead.
+		theInvestor.send(msg.value.div(10));
+		^---------------------------------^
+./0x0d7c864bf6c86bf11da2c8068b4c4edee4d76080.sol:122:3: Warning: Failure condition of 'send' ignored. Consider using 'transfer' instead.
+		lastOwner.send(msg.value.div(2));
+		^------------------------------^
+./0x0d7c864bf6c86bf11da2c8068b4c4edee4d76080.sol:147:3: Warning: Failure condition of 'send' ignored. Consider using 'transfer' instead.
+		theInvestor.send(msg.value.div(100).mul(60));
+		^------------------------------------------^
+
+
+DappVolumeAd.updateInvestor() (0x0d7c864bf6c86bf11da2c8068b4c4edee4d76080.sol#144-152) performs a multiplication on the result of a division:
+	- theInvestor.send(msg.value.div(100).mul(60)) (0x0d7c864bf6c86bf11da2c8068b4c4edee4d76080.sol#147)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+DappVolumeAd.updateAd(uint256) (0x0d7c864bf6c86bf11da2c8068b4c4edee4d76080.sol#113-141) ignores return value by theInvestor.send(msg.value.div(10)) (0x0d7c864bf6c86bf11da2c8068b4c4edee4d76080.sol#120)
+DappVolumeAd.updateAd(uint256) (0x0d7c864bf6c86bf11da2c8068b4c4edee4d76080.sol#113-141) ignores return value by lastOwner.send(msg.value.div(2)) (0x0d7c864bf6c86bf11da2c8068b4c4edee4d76080.sol#122)
+DappVolumeAd.updateInvestor() (0x0d7c864bf6c86bf11da2c8068b4c4edee4d76080.sol#144-152) ignores return value by theInvestor.send(msg.value.div(100).mul(60)) (0x0d7c864bf6c86bf11da2c8068b4c4edee4d76080.sol#147)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-send
+
+DappVolumeAd.setAdPriceMultiple(uint256) (0x0d7c864bf6c86bf11da2c8068b4c4edee4d76080.sol#108-110) should emit an event for: 
+	- adPriceMultiple = amount (0x0d7c864bf6c86bf11da2c8068b4c4edee4d76080.sol#109) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+DappVolumeAd.updateAd(uint256) (0x0d7c864bf6c86bf11da2c8068b4c4edee4d76080.sol#113-141) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(block.timestamp > purchaseTimestamp.add(purchaseSeconds)) (0x0d7c864bf6c86bf11da2c8068b4c4edee4d76080.sol#116)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Version constraint ^0.4.24 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ABIEncoderV2PackedStorage_0.4.x
+	- ExpExponentCleanup
+	- EventStructWrongData.
+It is used by:
+	- ^0.4.24 (0x0d7c864bf6c86bf11da2c8068b4c4edee4d76080.sol#1)
+solc-0.4.24 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Reentrancy in DappVolumeAd.updateAd(uint256) (0x0d7c864bf6c86bf11da2c8068b4c4edee4d76080.sol#113-141):
+	External calls:
+	- theInvestor.send(msg.value.div(10)) (0x0d7c864bf6c86bf11da2c8068b4c4edee4d76080.sol#120)
+	- lastOwner.send(msg.value.div(2)) (0x0d7c864bf6c86bf11da2c8068b4c4edee4d76080.sol#122)
+	State variables written after the call(s):
+	- dappId = id (0x0d7c864bf6c86bf11da2c8068b4c4edee4d76080.sol#136)
+	- lastOwner = msg.sender (0x0d7c864bf6c86bf11da2c8068b4c4edee4d76080.sol#140)
+	- purchaseSeconds = 604800 (0x0d7c864bf6c86bf11da2c8068b4c4edee4d76080.sol#126)
+	- purchaseSeconds = 86400 (0x0d7c864bf6c86bf11da2c8068b4c4edee4d76080.sol#128)
+	- purchaseSeconds = 43200 (0x0d7c864bf6c86bf11da2c8068b4c4edee4d76080.sol#130)
+	- purchaseSeconds = 3600 (0x0d7c864bf6c86bf11da2c8068b4c4edee4d76080.sol#132)
+	- purchaseTimestamp = block.timestamp (0x0d7c864bf6c86bf11da2c8068b4c4edee4d76080.sol#138)
+Reentrancy in DappVolumeAd.updateInvestor() (0x0d7c864bf6c86bf11da2c8068b4c4edee4d76080.sol#144-152):
+	External calls:
+	- theInvestor.send(msg.value.div(100).mul(60)) (0x0d7c864bf6c86bf11da2c8068b4c4edee4d76080.sol#147)
+	State variables written after the call(s):
+	- investmentMin = investmentMin.mul(2) (0x0d7c864bf6c86bf11da2c8068b4c4edee4d76080.sol#149)
+	- theInvestor = msg.sender (0x0d7c864bf6c86bf11da2c8068b4c4edee4d76080.sol#151)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+DappVolumeAd.constructor() (0x0d7c864bf6c86bf11da2c8068b4c4edee4d76080.sol#90-100) uses literals with too many digits:
+	- investmentMin = 4096000000000000000 (0x0d7c864bf6c86bf11da2c8068b4c4edee4d76080.sol#91)
+DappVolumeAd.constructor() (0x0d7c864bf6c86bf11da2c8068b4c4edee4d76080.sol#90-100) uses literals with too many digits:
+	- adPriceHour = 5000000000000000 (0x0d7c864bf6c86bf11da2c8068b4c4edee4d76080.sol#92)
+DappVolumeAd.constructor() (0x0d7c864bf6c86bf11da2c8068b4c4edee4d76080.sol#90-100) uses literals with too many digits:
+	- adPriceHalfDay = 50000000000000000 (0x0d7c864bf6c86bf11da2c8068b4c4edee4d76080.sol#93)
+DappVolumeAd.constructor() (0x0d7c864bf6c86bf11da2c8068b4c4edee4d76080.sol#90-100) uses literals with too many digits:
+	- adPriceDay = 100000000000000000 (0x0d7c864bf6c86bf11da2c8068b4c4edee4d76080.sol#94)
+DappVolumeAd.constructor() (0x0d7c864bf6c86bf11da2c8068b4c4edee4d76080.sol#90-100) uses literals with too many digits:
+	- adPriceWeek = 500000000000000000 (0x0d7c864bf6c86bf11da2c8068b4c4edee4d76080.sol#95)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+./0x0d7c864bf6c86bf11da2c8068b4c4edee4d76080.sol analyzed (2 contracts with 94 detectors), 15 result(s) found
+
+real	0m1.702s
+user	0m1.476s
+sys	0m0.228s

@@ -1,0 +1,112 @@
+'solc --version' running
+'solc ./0x13d6cfd3b119dadaadd7561fe9a864064259bc56.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x13d6cfd3b119dadaadd7561fe9a864064259bc56.sol:
+./0x13d6cfd3b119dadaadd7561fe9a864064259bc56.sol:413:13: Warning: Variable is declared as a storage pointer. Use an explicit "storage" keyword to silence this warning.
+            SDDatasets.Plan plan = plan_[player_[uid].plans[i].planId];
+            ^------------------^
+./0x13d6cfd3b119dadaadd7561fe9a864064259bc56.sol:430:13: Warning: Failure condition of 'send' ignored. Consider using 'transfer' instead.
+            sender.send(amount);
+            ^-----------------^
+
+
+SafeDif.withdraw() (0x13d6cfd3b119dadaadd7561fe9a864064259bc56.sol#402-437) performs a multiplication on the result of a division:
+	- amount = player_[uid].plans[i].invested * plan.interest / 10000 * (blockNumber - player_[uid].plans[i].atBlock) / G_DayBlocks (0x13d6cfd3b119dadaadd7561fe9a864064259bc56.sol#426)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+SafeDif.withdraw() (0x13d6cfd3b119dadaadd7561fe9a864064259bc56.sol#402-437) ignores return value by sender.send(amount) (0x13d6cfd3b119dadaadd7561fe9a864064259bc56.sol#430)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-send
+
+SafeDif.invest(uint256,uint256) (0x13d6cfd3b119dadaadd7561fe9a864064259bc56.sol#356-399) should emit an event for: 
+	- G_AllEth = G_AllEth.add(msg.value) (0x13d6cfd3b119dadaadd7561fe9a864064259bc56.sol#387) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+SafeDif.withdraw().sender (0x13d6cfd3b119dadaadd7561fe9a864064259bc56.sol#429) lacks a zero-check on :
+		- sender.send(amount) (0x13d6cfd3b119dadaadd7561fe9a864064259bc56.sol#430)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+SafeDif.withdraw() (0x13d6cfd3b119dadaadd7561fe9a864064259bc56.sol#402-437) has external calls inside a loop: sender.send(amount) (0x13d6cfd3b119dadaadd7561fe9a864064259bc56.sol#430)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation/#calls-inside-a-loop
+
+SafeDif.version1Invest(address,uint256,uint256,uint256) (0x13d6cfd3b119dadaadd7561fe9a864064259bc56.sol#178-211) compares to a boolean constant:
+	-require(bool,string)(activated_ == false,Only not active) (0x13d6cfd3b119dadaadd7561fe9a864064259bc56.sol#180)
+SafeDif.activate() (0x13d6cfd3b119dadaadd7561fe9a864064259bc56.sol#214-221) compares to a boolean constant:
+	-require(bool,string)(activated_ == false,Only once) (0x13d6cfd3b119dadaadd7561fe9a864064259bc56.sol#219)
+SafeDif.isActivated() (0x13d6cfd3b119dadaadd7561fe9a864064259bc56.sol#172-175) compares to a boolean constant:
+	-require(bool,string)(activated_ == true,its not active yet.) (0x13d6cfd3b119dadaadd7561fe9a864064259bc56.sol#173)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#boolean-equality
+
+Version constraint ^0.4.24 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ABIEncoderV2PackedStorage_0.4.x
+	- ExpExponentCleanup
+	- EventStructWrongData.
+It is used by:
+	- ^0.4.24 (0x13d6cfd3b119dadaadd7561fe9a864064259bc56.sol#1)
+solc-0.4.24 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Parameter SafeDif.version1Invest(address,uint256,uint256,uint256)._affCode (0x13d6cfd3b119dadaadd7561fe9a864064259bc56.sol#178) is not in mixedCase
+Parameter SafeDif.version1Invest(address,uint256,uint256,uint256)._planId (0x13d6cfd3b119dadaadd7561fe9a864064259bc56.sol#178) is not in mixedCase
+Function SafeDif.GetIdByAddr(address) (0x13d6cfd3b119dadaadd7561fe9a864064259bc56.sol#245-249) is not in mixedCase
+Function SafeDif.GetPlayerByUid(uint256) (0x13d6cfd3b119dadaadd7561fe9a864064259bc56.sol#252-267) is not in mixedCase
+Function SafeDif.GetPlanByUid(uint256) (0x13d6cfd3b119dadaadd7561fe9a864064259bc56.sol#269-297) is not in mixedCase
+Function SafeDif.GetPlanTimeByUid(uint256) (0x13d6cfd3b119dadaadd7561fe9a864064259bc56.sol#299-312) is not in mixedCase
+Parameter SafeDif.register_(address,uint256)._affCode (0x13d6cfd3b119dadaadd7561fe9a864064259bc56.sol#324) is not in mixedCase
+Parameter SafeDif.invest(uint256,uint256)._affCode (0x13d6cfd3b119dadaadd7561fe9a864064259bc56.sol#356) is not in mixedCase
+Parameter SafeDif.invest(uint256,uint256)._planId (0x13d6cfd3b119dadaadd7561fe9a864064259bc56.sol#356) is not in mixedCase
+Parameter SafeDif.distributeRef(uint256,uint256)._eth (0x13d6cfd3b119dadaadd7561fe9a864064259bc56.sol#440) is not in mixedCase
+Parameter SafeDif.distributeRef(uint256,uint256)._affID (0x13d6cfd3b119dadaadd7561fe9a864064259bc56.sol#440) is not in mixedCase
+Variable SafeDif.g_users (0x13d6cfd3b119dadaadd7561fe9a864064259bc56.sol#223) is not in mixedCase
+Variable SafeDif.G_NowUserId (0x13d6cfd3b119dadaadd7561fe9a864064259bc56.sol#237) is not in mixedCase
+Variable SafeDif.G_AllEth (0x13d6cfd3b119dadaadd7561fe9a864064259bc56.sol#238) is not in mixedCase
+Variable SafeDif.G_DayBlocks (0x13d6cfd3b119dadaadd7561fe9a864064259bc56.sol#239) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in SafeDif.distributeRef(uint256,uint256) (0x13d6cfd3b119dadaadd7561fe9a864064259bc56.sol#440-473):
+	External calls:
+	- player_[_affID1].addr.transfer(_aff) (0x13d6cfd3b119dadaadd7561fe9a864064259bc56.sol#453)
+	State variables written after the call(s):
+	- player_[_affID2].aff = _aff.add(player_[_affID2].aff) (0x13d6cfd3b119dadaadd7561fe9a864064259bc56.sol#459)
+Reentrancy in SafeDif.distributeRef(uint256,uint256) (0x13d6cfd3b119dadaadd7561fe9a864064259bc56.sol#440-473):
+	External calls:
+	- player_[_affID1].addr.transfer(_aff) (0x13d6cfd3b119dadaadd7561fe9a864064259bc56.sol#453)
+	- player_[_affID2].addr.transfer(_aff) (0x13d6cfd3b119dadaadd7561fe9a864064259bc56.sol#460)
+	State variables written after the call(s):
+	- player_[_affID3].aff = _aff.add(player_[_affID3].aff) (0x13d6cfd3b119dadaadd7561fe9a864064259bc56.sol#466)
+Reentrancy in SafeDif.withdraw() (0x13d6cfd3b119dadaadd7561fe9a864064259bc56.sol#402-437):
+	External calls:
+	- sender.send(amount) (0x13d6cfd3b119dadaadd7561fe9a864064259bc56.sol#430)
+	State variables written after the call(s):
+	- player_[uid].plans[i].atBlock = block.number (0x13d6cfd3b119dadaadd7561fe9a864064259bc56.sol#433)
+	- player_[uid].plans[i].isClose = bClose (0x13d6cfd3b119dadaadd7561fe9a864064259bc56.sol#434)
+	- player_[uid].plans[i].payEth += amount (0x13d6cfd3b119dadaadd7561fe9a864064259bc56.sol#435)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+SafeDif.invest(uint256,uint256) (0x13d6cfd3b119dadaadd7561fe9a864064259bc56.sol#356-399) uses literals with too many digits:
+	- msg.value > 1000000000 (0x13d6cfd3b119dadaadd7561fe9a864064259bc56.sol#389)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+SafeDif.G_DayBlocks (0x13d6cfd3b119dadaadd7561fe9a864064259bc56.sol#239) should be constant 
+SafeDif.affiAddr_ (0x13d6cfd3b119dadaadd7561fe9a864064259bc56.sol#164) should be constant 
+SafeDif.devAddr_ (0x13d6cfd3b119dadaadd7561fe9a864064259bc56.sol#163) should be constant 
+SafeDif.partnerAddr_ (0x13d6cfd3b119dadaadd7561fe9a864064259bc56.sol#167) should be constant 
+SafeDif.ruleSum_ (0x13d6cfd3b119dadaadd7561fe9a864064259bc56.sol#171) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+./0x13d6cfd3b119dadaadd7561fe9a864064259bc56.sol analyzed (3 contracts with 94 detectors), 34 result(s) found
+
+real	0m2.887s
+user	0m2.680s
+sys	0m0.208s

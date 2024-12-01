@@ -1,0 +1,130 @@
+'solc --version' running
+'solc ./0x88355a32a8c5cc399aa09b9d21ebcba935ae5d2f.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x88355a32a8c5cc399aa09b9d21ebcba935ae5d2f.sol:
+./0x88355a32a8c5cc399aa09b9d21ebcba935ae5d2f.sol:31:5: Warning: Function state mutability can be restricted to pure
+    function transfer(address receiver, uint amount) public returns (bool) {
+    ^ (Relevant source part starts here and spans across multiple lines).
+./0x88355a32a8c5cc399aa09b9d21ebcba935ae5d2f.sol:37:5: Warning: Function state mutability can be restricted to pure
+    function balanceOf(address holder) public view returns (uint) {
+    ^ (Relevant source part starts here and spans across multiple lines).
+./0x88355a32a8c5cc399aa09b9d21ebcba935ae5d2f.sol:42:5: Warning: Function state mutability can be restricted to pure
+    function approve(address _spender, uint256 _value) public returns (bool) {
+    ^ (Relevant source part starts here and spans across multiple lines).
+
+
+BankWallet.fund(address,uint256) (0x88355a32a8c5cc399aa09b9d21ebcba935ae5d2f.sol#196-202) sends eth to arbitrary user
+	Dangerous calls:
+	- _success = _address.send(_amount) (0x88355a32a8c5cc399aa09b9d21ebcba935ae5d2f.sol#198)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+Owned.setOwner(address) (0x88355a32a8c5cc399aa09b9d21ebcba935ae5d2f.sol#80-82) should emit an event for: 
+	- owner = _address (0x88355a32a8c5cc399aa09b9d21ebcba935ae5d2f.sol#81) 
+	- owner = _address (0x88355a32a8c5cc399aa09b9d21ebcba935ae5d2f.sol#81) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-access-control
+
+BankWallet.setMaxFundAmount(uint256) (0x88355a32a8c5cc399aa09b9d21ebcba935ae5d2f.sol#209-211) should emit an event for: 
+	- maxFundAmount = _amount (0x88355a32a8c5cc399aa09b9d21ebcba935ae5d2f.sol#210) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+Owned.setOwner(address)._address (0x88355a32a8c5cc399aa09b9d21ebcba935ae5d2f.sol#80) lacks a zero-check on :
+		- owner = _address (0x88355a32a8c5cc399aa09b9d21ebcba935ae5d2f.sol#81)
+Owned.setReceiver(address)._address (0x88355a32a8c5cc399aa09b9d21ebcba935ae5d2f.sol#84) lacks a zero-check on :
+		- receiver = _address (0x88355a32a8c5cc399aa09b9d21ebcba935ae5d2f.sol#85)
+BankWallet.constructor(address,address)._token (0x88355a32a8c5cc399aa09b9d21ebcba935ae5d2f.sol#156) lacks a zero-check on :
+		- edgelessToken = _token (0x88355a32a8c5cc399aa09b9d21ebcba935ae5d2f.sol#157)
+BankWallet.constructor(address,address)._casino (0x88355a32a8c5cc399aa09b9d21ebcba935ae5d2f.sol#156) lacks a zero-check on :
+		- edgelessCasino = _casino (0x88355a32a8c5cc399aa09b9d21ebcba935ae5d2f.sol#158)
+BankWallet.fund(address,uint256)._address (0x88355a32a8c5cc399aa09b9d21ebcba935ae5d2f.sol#196) lacks a zero-check on :
+		- _success = _address.send(_amount) (0x88355a32a8c5cc399aa09b9d21ebcba935ae5d2f.sol#198)
+BankWallet.setCasinoContract(address)._casino (0x88355a32a8c5cc399aa09b9d21ebcba935ae5d2f.sol#204) lacks a zero-check on :
+		- edgelessCasino = _casino (0x88355a32a8c5cc399aa09b9d21ebcba935ae5d2f.sol#205)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in BankWallet.deposit(address,uint256,bool) (0x88355a32a8c5cc399aa09b9d21ebcba935ae5d2f.sol#190-194):
+	External calls:
+	- __casino.deposit(_address,_amount,_chargeGas) (0x88355a32a8c5cc399aa09b9d21ebcba935ae5d2f.sol#192)
+	Event emitted after the call(s):
+	- Deposit(_address,_amount) (0x88355a32a8c5cc399aa09b9d21ebcba935ae5d2f.sol#193)
+Reentrancy in BankWallet.withdraw(address,uint256) (0x88355a32a8c5cc399aa09b9d21ebcba935ae5d2f.sol#164-184):
+	External calls:
+	- _success = __token.transfer(receiver,amount) (0x88355a32a8c5cc399aa09b9d21ebcba935ae5d2f.sol#178)
+	External calls sending eth:
+	- _success = receiver.send(weiAmount) (0x88355a32a8c5cc399aa09b9d21ebcba935ae5d2f.sol#171)
+	Event emitted after the call(s):
+	- Withdrawal(_token,_amount) (0x88355a32a8c5cc399aa09b9d21ebcba935ae5d2f.sol#182)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+Pausable.onlyPaused() (0x88355a32a8c5cc399aa09b9d21ebcba935ae5d2f.sol#126-129) compares to a boolean constant:
+	-require(bool)(paused == true) (0x88355a32a8c5cc399aa09b9d21ebcba935ae5d2f.sol#127)
+Pausable.onlyActive() (0x88355a32a8c5cc399aa09b9d21ebcba935ae5d2f.sol#131-134) compares to a boolean constant:
+	-require(bool)(paused == false) (0x88355a32a8c5cc399aa09b9d21ebcba935ae5d2f.sol#132)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#boolean-equality
+
+SafeMath.safeAdd(uint256,uint256) (0x88355a32a8c5cc399aa09b9d21ebcba935ae5d2f.sol#16-20) is never used and should be removed
+SafeMath.safeMul(uint256,uint256) (0x88355a32a8c5cc399aa09b9d21ebcba935ae5d2f.sol#22-26) is never used and should be removed
+SafeMath.safeSub(int256,int256) (0x88355a32a8c5cc399aa09b9d21ebcba935ae5d2f.sol#10-14) is never used and should be removed
+SafeMath.safeSub(uint256,uint256) (0x88355a32a8c5cc399aa09b9d21ebcba935ae5d2f.sol#5-8) is never used and should be removed
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dead-code
+
+Version constraint ^0.4.25 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ABIEncoderV2PackedStorage_0.4.x.
+It is used by:
+	- ^0.4.25 (0x88355a32a8c5cc399aa09b9d21ebcba935ae5d2f.sol#1)
+solc-0.4.25 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+BankWallet (0x88355a32a8c5cc399aa09b9d21ebcba935ae5d2f.sol#146-219) should inherit from Casino (0x88355a32a8c5cc399aa09b9d21ebcba935ae5d2f.sol#50-52)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-inheritance
+
+Parameter Owned.setOwner(address)._address (0x88355a32a8c5cc399aa09b9d21ebcba935ae5d2f.sol#80) is not in mixedCase
+Parameter Owned.setReceiver(address)._address (0x88355a32a8c5cc399aa09b9d21ebcba935ae5d2f.sol#84) is not in mixedCase
+Parameter Owned.addModerator(address)._address (0x88355a32a8c5cc399aa09b9d21ebcba935ae5d2f.sol#88) is not in mixedCase
+Parameter Owned.removeModerator(address)._address (0x88355a32a8c5cc399aa09b9d21ebcba935ae5d2f.sol#92) is not in mixedCase
+Parameter RequiringAuthorization.authorize(address)._address (0x88355a32a8c5cc399aa09b9d21ebcba935ae5d2f.sol#110) is not in mixedCase
+Parameter RequiringAuthorization.deauthorize(address)._address (0x88355a32a8c5cc399aa09b9d21ebcba935ae5d2f.sol#114) is not in mixedCase
+Parameter BankWallet.withdraw(address,uint256)._token (0x88355a32a8c5cc399aa09b9d21ebcba935ae5d2f.sol#164) is not in mixedCase
+Parameter BankWallet.withdraw(address,uint256)._amount (0x88355a32a8c5cc399aa09b9d21ebcba935ae5d2f.sol#164) is not in mixedCase
+Parameter BankWallet.approve(uint256)._amount (0x88355a32a8c5cc399aa09b9d21ebcba935ae5d2f.sol#186) is not in mixedCase
+Parameter BankWallet.deposit(address,uint256,bool)._address (0x88355a32a8c5cc399aa09b9d21ebcba935ae5d2f.sol#190) is not in mixedCase
+Parameter BankWallet.deposit(address,uint256,bool)._amount (0x88355a32a8c5cc399aa09b9d21ebcba935ae5d2f.sol#190) is not in mixedCase
+Parameter BankWallet.deposit(address,uint256,bool)._chargeGas (0x88355a32a8c5cc399aa09b9d21ebcba935ae5d2f.sol#190) is not in mixedCase
+Parameter BankWallet.fund(address,uint256)._address (0x88355a32a8c5cc399aa09b9d21ebcba935ae5d2f.sol#196) is not in mixedCase
+Parameter BankWallet.fund(address,uint256)._amount (0x88355a32a8c5cc399aa09b9d21ebcba935ae5d2f.sol#196) is not in mixedCase
+Parameter BankWallet.setCasinoContract(address)._casino (0x88355a32a8c5cc399aa09b9d21ebcba935ae5d2f.sol#204) is not in mixedCase
+Parameter BankWallet.setMaxFundAmount(uint256)._amount (0x88355a32a8c5cc399aa09b9d21ebcba935ae5d2f.sol#209) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in BankWallet.fund(address,uint256) (0x88355a32a8c5cc399aa09b9d21ebcba935ae5d2f.sol#196-202):
+	External calls:
+	- _success = _address.send(_amount) (0x88355a32a8c5cc399aa09b9d21ebcba935ae5d2f.sol#198)
+	Event emitted after the call(s):
+	- Fund(_address,_amount) (0x88355a32a8c5cc399aa09b9d21ebcba935ae5d2f.sol#200)
+Reentrancy in BankWallet.withdraw(address,uint256) (0x88355a32a8c5cc399aa09b9d21ebcba935ae5d2f.sol#164-184):
+	External calls:
+	- _success = receiver.send(weiAmount) (0x88355a32a8c5cc399aa09b9d21ebcba935ae5d2f.sol#171)
+	Event emitted after the call(s):
+	- Withdrawal(_token,_amount) (0x88355a32a8c5cc399aa09b9d21ebcba935ae5d2f.sol#182)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+BankWallet.setCasinoContract(address) (0x88355a32a8c5cc399aa09b9d21ebcba935ae5d2f.sol#204-207) uses literals with too many digits:
+	- _approveForCasino(_casino,1000000000) (0x88355a32a8c5cc399aa09b9d21ebcba935ae5d2f.sol#206)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+./0x88355a32a8c5cc399aa09b9d21ebcba935ae5d2f.sol analyzed (7 contracts with 94 detectors), 39 result(s) found
+
+real	0m1.841s
+user	0m1.620s
+sys	0m0.223s

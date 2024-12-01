@@ -1,0 +1,106 @@
+'solc --version' running
+'solc ./0x72bf3030e276a96539143551bd8f91aff699bf7c.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+LotteryGameLogic.onlyAfterDraw() (0x72bf3030e276a96539143551bd8f91aff699bf7c.sol#133-141) uses a dangerous strict equality:
+	- currentRound == LotteryRoundInterface(0) || currentRound.winningNumbersPicked() == false (0x72bf3030e276a96539143551bd8f91aff699bf7c.sol#135-136)
+LotteryGameLogic.onlyBeforeDraw() (0x72bf3030e276a96539143551bd8f91aff699bf7c.sol#122-131) uses a dangerous strict equality:
+	- currentRound == LotteryRoundInterface(0) || block.number <= currentRound.closingBlock() || currentRound.winningNumbersPicked() == true (0x72bf3030e276a96539143551bd8f91aff699bf7c.sol#124-126)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-strict-equalities
+
+Reentrancy in LotteryGameLogic.finalizeRound() (0x72bf3030e276a96539143551bd8f91aff699bf7c.sol#216-241):
+	External calls:
+	- ! currentRound.paidOut() (0x72bf3030e276a96539143551bd8f91aff699bf7c.sol#218)
+	- currentRound.distributeWinnings() (0x72bf3030e276a96539143551bd8f91aff699bf7c.sol#220)
+	- currentRound.claimOwnerFee(curator) (0x72bf3030e276a96539143551bd8f91aff699bf7c.sol#221)
+	- currentRound.withdraw() (0x72bf3030e276a96539143551bd8f91aff699bf7c.sol#225)
+	- currentRound.transferOwnership(curator) (0x72bf3030e276a96539143551bd8f91aff699bf7c.sol#231)
+	- onlyAfterDraw() (0x72bf3030e276a96539143551bd8f91aff699bf7c.sol#216)
+		- currentRound == LotteryRoundInterface(0) || currentRound.winningNumbersPicked() == false (0x72bf3030e276a96539143551bd8f91aff699bf7c.sol#135-136)
+	State variables written after the call(s):
+	- delete currentRound (0x72bf3030e276a96539143551bd8f91aff699bf7c.sol#234)
+	LotteryGameLogic.currentRound (0x72bf3030e276a96539143551bd8f91aff699bf7c.sol#113) can be used in cross function reentrancies:
+	- LotteryGameLogic.closeRound(bytes32,uint8) (0x72bf3030e276a96539143551bd8f91aff699bf7c.sol#206-208)
+	- LotteryGameLogic.currentRound (0x72bf3030e276a96539143551bd8f91aff699bf7c.sol#113)
+	- LotteryGameLogic.finalizeRound() (0x72bf3030e276a96539143551bd8f91aff699bf7c.sol#216-241)
+	- LotteryGameLogic.isUpgradeAllowed() (0x72bf3030e276a96539143551bd8f91aff699bf7c.sol#180-182)
+	- LotteryGameLogic.onlyAfterDraw() (0x72bf3030e276a96539143551bd8f91aff699bf7c.sol#133-141)
+	- LotteryGameLogic.onlyBeforeDraw() (0x72bf3030e276a96539143551bd8f91aff699bf7c.sol#122-131)
+	- LotteryGameLogic.onlyFromCurrentRound() (0x72bf3030e276a96539143551bd8f91aff699bf7c.sol#150-155)
+	- LotteryGameLogic.onlyWhenNoRound() (0x72bf3030e276a96539143551bd8f91aff699bf7c.sol#115-120)
+	- LotteryGameLogic.startRound(bytes32,bytes32) (0x72bf3030e276a96539143551bd8f91aff699bf7c.sol#190-198)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+LotteryGameLogic.currentRound (0x72bf3030e276a96539143551bd8f91aff699bf7c.sol#113) shadows:
+	- LotteryGameLogicInterface.currentRound (0x72bf3030e276a96539143551bd8f91aff699bf7c.sol#86)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variable-shadowing-from-abstract-contracts
+
+Owned.transferOwnership(address) (0x72bf3030e276a96539143551bd8f91aff699bf7c.sol#28-30) should emit an event for: 
+	- owner = newOwner (0x72bf3030e276a96539143551bd8f91aff699bf7c.sol#29) 
+LotteryGameLogic.setCurator(address) (0x72bf3030e276a96539143551bd8f91aff699bf7c.sol#172-174) should emit an event for: 
+	- curator = newCurator (0x72bf3030e276a96539143551bd8f91aff699bf7c.sol#173) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-access-control
+
+Owned.transferOwnership(address).newOwner (0x72bf3030e276a96539143551bd8f91aff699bf7c.sol#28) lacks a zero-check on :
+		- owner = newOwner (0x72bf3030e276a96539143551bd8f91aff699bf7c.sol#29)
+LotteryGameLogic.LotteryGameLogic(address,address)._curator (0x72bf3030e276a96539143551bd8f91aff699bf7c.sol#163) lacks a zero-check on :
+		- curator = _curator (0x72bf3030e276a96539143551bd8f91aff699bf7c.sol#165)
+LotteryGameLogic.setCurator(address).newCurator (0x72bf3030e276a96539143551bd8f91aff699bf7c.sol#172) lacks a zero-check on :
+		- curator = newCurator (0x72bf3030e276a96539143551bd8f91aff699bf7c.sol#173)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+LotteryGameLogic.onlyBeforeDraw() (0x72bf3030e276a96539143551bd8f91aff699bf7c.sol#122-131) compares to a boolean constant:
+	-currentRound == LotteryRoundInterface(0) || block.number <= currentRound.closingBlock() || currentRound.winningNumbersPicked() == true (0x72bf3030e276a96539143551bd8f91aff699bf7c.sol#124-126)
+LotteryGameLogic.onlyAfterDraw() (0x72bf3030e276a96539143551bd8f91aff699bf7c.sol#133-141) compares to a boolean constant:
+	-currentRound == LotteryRoundInterface(0) || currentRound.winningNumbersPicked() == false (0x72bf3030e276a96539143551bd8f91aff699bf7c.sol#135-136)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#boolean-equality
+
+Deprecated standard detected THROW (0x72bf3030e276a96539143551bd8f91aff699bf7c.sol#46):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x72bf3030e276a96539143551bd8f91aff699bf7c.sol#12):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x72bf3030e276a96539143551bd8f91aff699bf7c.sol#117):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x72bf3030e276a96539143551bd8f91aff699bf7c.sol#128):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x72bf3030e276a96539143551bd8f91aff699bf7c.sol#138):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x72bf3030e276a96539143551bd8f91aff699bf7c.sol#145):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x72bf3030e276a96539143551bd8f91aff699bf7c.sol#152):
+	- Usage of "throw" should be replaced with "revert()"
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#deprecated-standards
+
+Version constraint ^0.4.8 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ExpExponentCleanup
+	- NestedArrayFunctionCallDecoder
+	- ZeroFunctionSelector
+	- DelegateCallReturnValue
+	- ECRecoverMalformedInput
+	- SkipEmptyStringLiteral
+	- ConstantOptimizerSubtraction.
+It is used by:
+	- ^0.4.8 (0x72bf3030e276a96539143551bd8f91aff699bf7c.sol#1)
+solc-0.4.11 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Variable LotteryRoundFactoryInterface.VERSION (0x72bf3030e276a96539143551bd8f91aff699bf7c.sol#52) is not in mixedCase
+Parameter LotteryRoundInterface.proofOfSalt(bytes32,uint8).N (0x72bf3030e276a96539143551bd8f91aff699bf7c.sol#67) is not in mixedCase
+Parameter LotteryRoundInterface.closeGame(bytes32,uint8).N (0x72bf3030e276a96539143551bd8f91aff699bf7c.sol#68) is not in mixedCase
+Parameter LotteryGameLogic.closeRound(bytes32,uint8).N (0x72bf3030e276a96539143551bd8f91aff699bf7c.sol#206) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+./0x72bf3030e276a96539143551bd8f91aff699bf7c.sol analyzed (7 contracts with 94 detectors), 24 result(s) found
+
+real	0m1.959s
+user	0m1.728s
+sys	0m0.233s

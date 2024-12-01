@@ -1,0 +1,340 @@
+'solc --version' running
+'solc ./0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol:
+./0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol:8:1: Warning: Experimental features are turned on. Do not use experimental features on live deployments.
+pragma experimental ABIEncoderV2;
+^-------------------------------^
+
+
+BrokerV2.collect(uint256,address) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#580-650) sends eth to arbitrary user
+	Dangerous calls:
+	- creator.transfer(royality) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#606)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+TokenDetArrayLib (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#11-82) contract sets array length with a user-controlled value:
+	- self.array.push(_tokenDet) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#32)
+ERC20Addresses (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#149-210) contract sets array length with a user-controlled value:
+	- self.array.push(erc20address) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#159)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#array-length-assignment
+
+Reentrancy in BrokerV2.bid(uint256,address,uint256) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#515-578):
+	External calls:
+	- erc20Token.transferFrom(msg.sender,address(this),amount) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#548)
+	- erc20Token.transfer(_auction.highestBidder,_auction.currentBid) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#551-554)
+	- Token.safeTransferFrom(Token.ownerOf(tokenID),address(this),tokenID) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#562)
+	External calls sending eth:
+	- _auction.highestBidder.transfer(_auction.currentBid) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#536)
+	State variables written after the call(s):
+	- auctions[_mintableToken][tokenID] = _auction (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#566)
+	Storage.auctions (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#325) can be used in cross function reentrancies:
+	- BrokerModifiers.activeAuction(uint256,address) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#398-404)
+	- Storage.auctions (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#325)
+	- BrokerV2.bid(uint256,address,uint256) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#515-578)
+	- BrokerV2.buy(uint256,address) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#652-721)
+	- BrokerV2.collect(uint256,address) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#580-650)
+	- BrokerModifiers.flatSaleOnly(uint256,address) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#414-420)
+	- BrokerV2.putOnSale(uint256,uint256,uint256,uint256,uint256,address,address) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#738-810)
+	- BrokerV2.putSaleOff(uint256,address) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#855-883)
+	- BrokerV2.updatePrice(uint256,address,uint256,address) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#812-853)
+Reentrancy in BrokerV2.buy(uint256,address) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#652-721):
+	External calls:
+	- erc20Token.transferFrom(msg.sender,creator,royality) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#685)
+	- erc20Token.transferFrom(msg.sender,address(this),brokerageAmount) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#687)
+	- erc20Token.transferFrom(msg.sender,lastOwner2,lastOwner_funds) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#689)
+	External calls sending eth:
+	- creator.transfer(royality) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#673)
+	- lastOwner2.transfer(lastOwner_funds) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#674)
+	State variables written after the call(s):
+	- tokenOpenForSale[_tokenDet.NFTAddress][_tokenDet.tokenID] = false (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#693)
+	Storage.tokenOpenForSale (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#302) can be used in cross function reentrancies:
+	- BrokerV2.buy(uint256,address) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#652-721)
+	- BrokerV2.collect(uint256,address) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#580-650)
+	- BrokerV2.getOnSaleStatus(address,uint256) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#885-891)
+	- BrokerModifiers.onSaleOnly(uint256,address) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#390-396)
+	- BrokerV2.putOnSale(uint256,uint256,uint256,uint256,uint256,address,address) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#738-810)
+	- BrokerV2.putSaleOff(uint256,address) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#855-883)
+Reentrancy in BrokerV2.buy(uint256,address) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#652-721):
+	External calls:
+	- erc20Token.transferFrom(msg.sender,creator,royality) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#685)
+	- erc20Token.transferFrom(msg.sender,address(this),brokerageAmount) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#687)
+	- erc20Token.transferFrom(msg.sender,lastOwner2,lastOwner_funds) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#689)
+	- Token.safeTransferFrom(Token.ownerOf(_tokenDet.tokenID),msg.sender,_tokenDet.tokenID) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#698-703)
+	External calls sending eth:
+	- creator.transfer(royality) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#673)
+	- lastOwner2.transfer(lastOwner_funds) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#674)
+	State variables written after the call(s):
+	- delete auctions[_tokenDet.NFTAddress][_tokenDet.tokenID] (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#720)
+	Storage.auctions (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#325) can be used in cross function reentrancies:
+	- BrokerModifiers.activeAuction(uint256,address) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#398-404)
+	- Storage.auctions (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#325)
+	- BrokerV2.bid(uint256,address,uint256) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#515-578)
+	- BrokerV2.buy(uint256,address) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#652-721)
+	- BrokerV2.collect(uint256,address) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#580-650)
+	- BrokerModifiers.flatSaleOnly(uint256,address) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#414-420)
+	- BrokerV2.putOnSale(uint256,uint256,uint256,uint256,uint256,address,address) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#738-810)
+	- BrokerV2.putSaleOff(uint256,address) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#855-883)
+	- BrokerV2.updatePrice(uint256,address,uint256,address) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#812-853)
+Reentrancy in BrokerV2.collect(uint256,address) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#580-650):
+	External calls:
+	- erc20Token.transfer(creator,royality) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#611)
+	- erc20Token.transfer(lastOwner2,lastOwner_funds) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#612)
+	- Token.safeTransferFrom(Token.ownerOf(tokenID),_auction.highestBidder,tokenID) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#616-620)
+	External calls sending eth:
+	- creator.transfer(royality) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#606)
+	- lastOwner2.transfer(lastOwner_funds) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#607)
+	State variables written after the call(s):
+	- delete auctions[_mintableToken][tokenID] (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#649)
+	Storage.auctions (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#325) can be used in cross function reentrancies:
+	- BrokerModifiers.activeAuction(uint256,address) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#398-404)
+	- Storage.auctions (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#325)
+	- BrokerV2.bid(uint256,address,uint256) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#515-578)
+	- BrokerV2.buy(uint256,address) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#652-721)
+	- BrokerV2.collect(uint256,address) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#580-650)
+	- BrokerModifiers.flatSaleOnly(uint256,address) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#414-420)
+	- BrokerV2.putOnSale(uint256,uint256,uint256,uint256,uint256,address,address) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#738-810)
+	- BrokerV2.putSaleOff(uint256,address) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#855-883)
+	- BrokerV2.updatePrice(uint256,address,uint256,address) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#812-853)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+BrokerV2.bid(uint256,address,uint256) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#515-578) ignores return value by erc20Token.transferFrom(msg.sender,address(this),amount) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#548)
+BrokerV2.bid(uint256,address,uint256) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#515-578) ignores return value by erc20Token.transfer(_auction.highestBidder,_auction.currentBid) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#551-554)
+BrokerV2.collect(uint256,address) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#580-650) ignores return value by erc20Token.transfer(creator,royality) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#611)
+BrokerV2.collect(uint256,address) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#580-650) ignores return value by erc20Token.transfer(lastOwner2,lastOwner_funds) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#612)
+BrokerV2.buy(uint256,address) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#652-721) ignores return value by erc20Token.transferFrom(msg.sender,creator,royality) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#685)
+BrokerV2.buy(uint256,address) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#652-721) ignores return value by erc20Token.transferFrom(msg.sender,address(this),brokerageAmount) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#687)
+BrokerV2.buy(uint256,address) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#652-721) ignores return value by erc20Token.transferFrom(msg.sender,lastOwner2,lastOwner_funds) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#689)
+BrokerV2.withdrawERC20(address) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#728-736) ignores return value by erc20Token.transfer(msg.sender,brokerageBalance[_erc20Token]) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#734)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+BrokerV2.putOnSale(uint256,uint256,uint256,uint256,uint256,address,address) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#738-810) uses a dangerous strict equality:
+	- newAuction.auctionType == 1 (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#801-809)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-strict-equalities
+
+Reentrancy in BrokerV2.withdrawERC20(address) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#728-736):
+	External calls:
+	- erc20Token.transfer(msg.sender,brokerageBalance[_erc20Token]) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#734)
+	State variables written after the call(s):
+	- brokerageBalance[_erc20Token] = 0 (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#735)
+	BrokerV2.brokerageBalance (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#495) can be used in cross function reentrancies:
+	- BrokerV2.buy(uint256,address) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#652-721)
+	- BrokerV2.collect(uint256,address) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#580-650)
+	- BrokerV2.withdraw() (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#723-726)
+	- BrokerV2.withdrawERC20(address) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#728-736)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+ERC20Addresses.getIndexByERC20Token(ERC20Addresses.erc20Addresses,address).index (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#166) is a local variable never initialized
+TokenDetArrayLib.getIndexByTokenDet(TokenDetArrayLib.TokenDets,TokenDetArrayLib.TokenDet).index (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#40) is a local variable never initialized
+ERC20Addresses.getIndexByERC20Token(ERC20Addresses.erc20Addresses,address).exists (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#167) is a local variable never initialized
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#uninitialized-local-variables
+
+BrokerV2.collect(uint256,address) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#580-650) ignores return value by tokensForSale.removeTokenDet(_tokenDet) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#645)
+BrokerV2.collect(uint256,address) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#580-650) ignores return value by tokensForSalePerUser[lastOwner2].removeTokenDet(_tokenDet) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#647)
+BrokerV2.collect(uint256,address) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#580-650) ignores return value by auctionTokens.removeTokenDet(_tokenDet) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#648)
+BrokerV2.buy(uint256,address) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#652-721) ignores return value by tokensForSale.removeTokenDet(_tokenDet) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#716)
+BrokerV2.buy(uint256,address) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#652-721) ignores return value by tokensForSalePerUser[lastOwner2].removeTokenDet(_tokenDet) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#717)
+BrokerV2.buy(uint256,address) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#652-721) ignores return value by fixedPriceTokens.removeTokenDet(_tokenDet) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#719)
+BrokerV2.putSaleOff(uint256,address) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#855-883) ignores return value by tokensForSale.removeTokenDet(_tokenDet) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#873)
+BrokerV2.putSaleOff(uint256,address) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#855-883) ignores return value by tokensForSalePerUser[msg.sender].removeTokenDet(_tokenDet) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#875)
+BrokerV2.putSaleOff(uint256,address) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#855-883) ignores return value by fixedPriceTokens.removeTokenDet(_tokenDet) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#878)
+BrokerV2.putSaleOff(uint256,address) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#855-883) ignores return value by auctionTokens.removeTokenDet(_tokenDet) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#880)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+ERC20Addresses.getIndexByERC20Token(ERC20Addresses.erc20Addresses,address).exists (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#167) shadows:
+	- ERC20Addresses.exists(ERC20Addresses.erc20Addresses,address) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#197-209) (function)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#local-variable-shadowing
+
+Storage.setBrokerage(uint16) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#370-372) should emit an event for: 
+	- brokerage = _brokerage (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#371) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+BrokerV2.collect(uint256,address).creator (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#594) lacks a zero-check on :
+		- creator.transfer(royality) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#606)
+BrokerV2.buy(uint256,address).creator (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#664) lacks a zero-check on :
+		- creator.transfer(royality) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#673)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in BrokerV2.buy(uint256,address) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#652-721):
+	External calls:
+	- erc20Token.transferFrom(msg.sender,creator,royality) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#685)
+	- erc20Token.transferFrom(msg.sender,address(this),brokerageAmount) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#687)
+	- erc20Token.transferFrom(msg.sender,lastOwner2,lastOwner_funds) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#689)
+	External calls sending eth:
+	- creator.transfer(royality) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#673)
+	- lastOwner2.transfer(lastOwner_funds) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#674)
+	State variables written after the call(s):
+	- brokerageBalance[_auction.erc20Token] += brokerageAmount (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#691)
+Reentrancy in BrokerV2.collect(uint256,address) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#580-650):
+	External calls:
+	- erc20Token.transfer(creator,royality) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#611)
+	- erc20Token.transfer(lastOwner2,lastOwner_funds) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#612)
+	External calls sending eth:
+	- creator.transfer(royality) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#606)
+	- lastOwner2.transfer(lastOwner_funds) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#607)
+	State variables written after the call(s):
+	- brokerageBalance[_auction.erc20Token] += brokerageAmount (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#614)
+	- tokenOpenForSale[_mintableToken][tokenID] = false (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#615)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in BrokerV2.bid(uint256,address,uint256) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#515-578):
+	External calls:
+	- erc20Token.transferFrom(msg.sender,address(this),amount) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#548)
+	- erc20Token.transfer(_auction.highestBidder,_auction.currentBid) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#551-554)
+	- Token.safeTransferFrom(Token.ownerOf(tokenID),address(this),tokenID) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#562)
+	External calls sending eth:
+	- _auction.highestBidder.transfer(_auction.currentBid) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#536)
+	Event emitted after the call(s):
+	- Bid(_mintableToken,tokenID,_auction.lastOwner,_auction.highestBidder,_auction.currentBid,block.timestamp,_auction.erc20Token) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#569-577)
+Reentrancy in BrokerV2.buy(uint256,address) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#652-721):
+	External calls:
+	- erc20Token.transferFrom(msg.sender,creator,royality) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#685)
+	- erc20Token.transferFrom(msg.sender,address(this),brokerageAmount) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#687)
+	- erc20Token.transferFrom(msg.sender,lastOwner2,lastOwner_funds) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#689)
+	- Token.safeTransferFrom(Token.ownerOf(_tokenDet.tokenID),msg.sender,_tokenDet.tokenID) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#698-703)
+	External calls sending eth:
+	- creator.transfer(royality) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#673)
+	- lastOwner2.transfer(lastOwner_funds) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#674)
+	Event emitted after the call(s):
+	- Buy(_tokenDet.NFTAddress,_tokenDet.tokenID,lastOwner2,msg.sender,_auction.buyPrice,block.timestamp,_auction.erc20Token) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#706-714)
+Reentrancy in BrokerV2.collect(uint256,address) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#580-650):
+	External calls:
+	- erc20Token.transfer(creator,royality) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#611)
+	- erc20Token.transfer(lastOwner2,lastOwner_funds) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#612)
+	- Token.safeTransferFrom(Token.ownerOf(tokenID),_auction.highestBidder,tokenID) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#616-620)
+	External calls sending eth:
+	- creator.transfer(royality) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#606)
+	- lastOwner2.transfer(lastOwner_funds) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#607)
+	Event emitted after the call(s):
+	- Buy(_tokenDet.NFTAddress,_tokenDet.tokenID,lastOwner2,_auction.highestBidder,_auction.currentBid,block.timestamp,_auction.erc20Token) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#623-631)
+	- Collect(_tokenDet.NFTAddress,_tokenDet.tokenID,lastOwner2,_auction.highestBidder,msg.sender,block.timestamp,_auction.erc20Token) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#635-643)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+BrokerV2.collect(uint256,address) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#580-650) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(block.timestamp > _auction.closingTime,Auction Not Over!) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#587-590)
+BrokerV2.putOnSale(uint256,uint256,uint256,uint256,uint256,address,address) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#738-810) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(_auction.auctionType == 2 && _auction.buyer == false && block.timestamp > _auction.closingTime,This NFT is already on sale.) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#762-767)
+	- newAuction.auctionType == 1 (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#801-809)
+BrokerV2.updatePrice(uint256,address,uint256,address) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#812-853) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(block.timestamp < _auction.closingTime,Auction Time Over!) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#827-830)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+TokenDetArrayLib.removeTokenDet(TokenDetArrayLib.TokenDets,TokenDetArrayLib.TokenDet) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#55-66) compares to a boolean constant:
+	-tokenExists == true (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#60)
+BrokerModifiers.onSaleOnly(uint256,address) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#390-396) compares to a boolean constant:
+	-require(bool,string)(tokenOpenForSale[_mintableToken][tokenID] == true,Token Not For Sale) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#391-394)
+BrokerV2.bid(uint256,address,uint256) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#515-578) compares to a boolean constant:
+	-_auction.buyer == true (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#550)
+BrokerV2.bid(uint256,address,uint256) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#515-578) compares to a boolean constant:
+	-_auction.buyer == true (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#535)
+BrokerV2.collect(uint256,address) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#580-650) compares to a boolean constant:
+	-_auction.buyer == true (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#604)
+BrokerV2.putOnSale(uint256,uint256,uint256,uint256,uint256,address,address) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#738-810) compares to a boolean constant:
+	-tokenOpenForSale[_mintableToken][_tokenID] == true (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#761)
+BrokerV2.putOnSale(uint256,uint256,uint256,uint256,uint256,address,address) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#738-810) compares to a boolean constant:
+	-tokenOpenForSale[_tokenDet.NFTAddress][_tokenDet.tokenID] == false (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#786)
+BrokerV2.putOnSale(uint256,uint256,uint256,uint256,uint256,address,address) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#738-810) compares to a boolean constant:
+	-require(bool,string)(_auction.auctionType == 2 && _auction.buyer == false && block.timestamp > _auction.closingTime,This NFT is already on sale.) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#762-767)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#boolean-equality
+
+Version constraint ^0.5.6 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- ABIEncoderV2CalldataStructsWithStaticallySizedAndDynamicallyEncodedMembers
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor
+	- IncorrectEventSignatureInLibraries
+	- ABIEncoderV2PackedStorage
+	- IncorrectByteInstructionOptimization.
+It is used by:
+	- ^0.5.6 (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#7)
+solc-0.5.6 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Parameter TokenDetArrayLib.addTokenDet(TokenDetArrayLib.TokenDets,TokenDetArrayLib.TokenDet)._tokenDet (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#27) is not in mixedCase
+Parameter TokenDetArrayLib.getIndexByTokenDet(TokenDetArrayLib.TokenDets,TokenDetArrayLib.TokenDet)._tokenDet (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#38) is not in mixedCase
+Parameter TokenDetArrayLib.removeTokenDet(TokenDetArrayLib.TokenDets,TokenDetArrayLib.TokenDet)._tokenDet (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#57) is not in mixedCase
+Parameter TokenDetArrayLib.exists(TokenDetArrayLib.TokenDets,TokenDetArrayLib.TokenDet)._tokenDet (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#70) is not in mixedCase
+Struct ERC20Addresses.erc20Addresses (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#152-154) is not in CapWords
+Parameter ERC20Addresses.getIndexByERC20Token(ERC20Addresses.erc20Addresses,address)._ercTokenAddress (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#164) is not in mixedCase
+Parameter ERC20Addresses.removeERC20Token(ERC20Addresses.erc20Addresses,address)._ercTokenAddress (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#182) is not in mixedCase
+Parameter ERC20Addresses.exists(ERC20Addresses.erc20Addresses,address)._ercTokenAddress (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#199) is not in mixedCase
+Struct Storage.auction (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#312-323) is not in CapWords
+Parameter Storage.getTokensForSalePerUser(address)._user (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#362) is not in mixedCase
+Parameter Storage.setBrokerage(uint16)._brokerage (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#370) is not in mixedCase
+Parameter BrokerV2.addERC20TokenPayment(address)._erc20Token (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#502) is not in mixedCase
+Parameter BrokerV2.removeERC20TokenPayment(address)._erc20Token (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#506) is not in mixedCase
+Parameter BrokerV2.bid(uint256,address,uint256)._mintableToken (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#517) is not in mixedCase
+Parameter BrokerV2.collect(uint256,address)._mintableToken (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#580) is not in mixedCase
+Parameter BrokerV2.buy(uint256,address)._mintableToken (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#652) is not in mixedCase
+Parameter BrokerV2.withdrawERC20(address)._erc20Token (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#728) is not in mixedCase
+Parameter BrokerV2.putOnSale(uint256,uint256,uint256,uint256,uint256,address,address)._tokenID (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#739) is not in mixedCase
+Parameter BrokerV2.putOnSale(uint256,uint256,uint256,uint256,uint256,address,address)._startingPrice (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#740) is not in mixedCase
+Parameter BrokerV2.putOnSale(uint256,uint256,uint256,uint256,uint256,address,address)._auctionType (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#741) is not in mixedCase
+Parameter BrokerV2.putOnSale(uint256,uint256,uint256,uint256,uint256,address,address)._buyPrice (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#742) is not in mixedCase
+Parameter BrokerV2.putOnSale(uint256,uint256,uint256,uint256,uint256,address,address)._duration (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#743) is not in mixedCase
+Parameter BrokerV2.putOnSale(uint256,uint256,uint256,uint256,uint256,address,address)._mintableToken (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#744) is not in mixedCase
+Parameter BrokerV2.putOnSale(uint256,uint256,uint256,uint256,uint256,address,address)._erc20Token (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#745) is not in mixedCase
+Parameter BrokerV2.updatePrice(uint256,address,uint256,address)._mintableToken (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#814) is not in mixedCase
+Parameter BrokerV2.updatePrice(uint256,address,uint256,address)._newPrice (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#815) is not in mixedCase
+Parameter BrokerV2.updatePrice(uint256,address,uint256,address)._erc20Token (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#816) is not in mixedCase
+Parameter BrokerV2.putSaleOff(uint256,address)._mintableToken (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#855) is not in mixedCase
+Parameter BrokerV2.getOnSaleStatus(address,uint256)._mintableToken (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#885) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in BrokerV2.bid(uint256,address,uint256) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#515-578):
+	External calls:
+	- _auction.highestBidder.transfer(_auction.currentBid) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#536)
+	State variables written after the call(s):
+	- auctions[_mintableToken][tokenID] = _auction (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#566)
+	Event emitted after the call(s):
+	- Bid(_mintableToken,tokenID,_auction.lastOwner,_auction.highestBidder,_auction.currentBid,block.timestamp,_auction.erc20Token) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#569-577)
+Reentrancy in BrokerV2.buy(uint256,address) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#652-721):
+	External calls:
+	- creator.transfer(royality) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#673)
+	- lastOwner2.transfer(lastOwner_funds) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#674)
+	State variables written after the call(s):
+	- delete auctions[_tokenDet.NFTAddress][_tokenDet.tokenID] (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#720)
+	- brokerageBalance[_auction.erc20Token] += brokerageAmount (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#691)
+	- tokenOpenForSale[_tokenDet.NFTAddress][_tokenDet.tokenID] = false (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#693)
+	Event emitted after the call(s):
+	- Buy(_tokenDet.NFTAddress,_tokenDet.tokenID,lastOwner2,msg.sender,_auction.buyPrice,block.timestamp,_auction.erc20Token) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#706-714)
+Reentrancy in BrokerV2.collect(uint256,address) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#580-650):
+	External calls:
+	- creator.transfer(royality) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#606)
+	- lastOwner2.transfer(lastOwner_funds) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#607)
+	State variables written after the call(s):
+	- delete auctions[_mintableToken][tokenID] (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#649)
+	- brokerageBalance[_auction.erc20Token] += brokerageAmount (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#614)
+	- tokenOpenForSale[_mintableToken][tokenID] = false (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#615)
+	Event emitted after the call(s):
+	- Buy(_tokenDet.NFTAddress,_tokenDet.tokenID,lastOwner2,_auction.highestBidder,_auction.currentBid,block.timestamp,_auction.erc20Token) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#623-631)
+	- Collect(_tokenDet.NFTAddress,_tokenDet.tokenID,lastOwner2,_auction.highestBidder,msg.sender,block.timestamp,_auction.erc20Token) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#635-643)
+Reentrancy in BrokerV2.withdraw() (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#723-726):
+	External calls:
+	- msg.sender.transfer(brokerageBalance[address(0)]) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#724)
+	State variables written after the call(s):
+	- brokerageBalance[address(0)] = 0 (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#725)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+onERC721Received(address,address,uint256,bytes) should be declared external:
+	- ERC721Holder.onERC721Received(address,address,uint256,bytes) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#256-263)
+Moreover, the following function parameters should change its data location:
+data location should be calldata
+	- IERC721Receiver.onERC721Received(address,address,uint256,bytes) (0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol#247-252)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#public-function-that-could-be-declared-external
+./0x03fb31bb6def4dd3a7ea3b0fa6bdecc940e75795.sol analyzed (10 contracts with 94 detectors), 86 result(s) found
+
+real	0m5.503s
+user	0m5.049s
+sys	0m0.455s

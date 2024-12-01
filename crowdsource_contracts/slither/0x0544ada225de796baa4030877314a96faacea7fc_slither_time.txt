@@ -1,0 +1,436 @@
+'solc --version' running
+'solc ./0x0544ada225de796baa4030877314a96faacea7fc.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+AdrenalineExclusive.sendEthDividends(uint256) (0x0544ada225de796baa4030877314a96faacea7fc.sol#853-858) sends eth to arbitrary user
+	Dangerous calls:
+	- (success,None) = address(dividendTracker).call{value: dividends}() (0x0544ada225de796baa4030877314a96faacea7fc.sol#854)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+Reentrancy in AdrenalineExclusive._transfer(address,address,uint256) (0x0544ada225de796baa4030877314a96faacea7fc.sol#788-817):
+	External calls:
+	- sellTaxTokens() (0x0544ada225de796baa4030877314a96faacea7fc.sol#807)
+		- (success,None) = address(dividendTracker).call{value: dividends}() (0x0544ada225de796baa4030877314a96faacea7fc.sol#854)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x0544ada225de796baa4030877314a96faacea7fc.sol#867-873)
+	- _tokenTransfer(from,to,amount,takeFees,isSell,true) (0x0544ada225de796baa4030877314a96faacea7fc.sol#816)
+		- dividendTracker.setTokenBalance(sender) (0x0544ada225de796baa4030877314a96faacea7fc.sol#895)
+		- dividendTracker.setTokenBalance(recipient) (0x0544ada225de796baa4030877314a96faacea7fc.sol#896)
+		- (iterations,claims,lastProcessedIndex) = dividendTracker.process(gasForProcessing) (0x0544ada225de796baa4030877314a96faacea7fc.sol#897-899)
+	External calls sending eth:
+	- sellTaxTokens() (0x0544ada225de796baa4030877314a96faacea7fc.sol#807)
+		- (success,None) = address(dividendTracker).call{value: dividends}() (0x0544ada225de796baa4030877314a96faacea7fc.sol#854)
+		- address(investmentAddress).transfer(investmentShare) (0x0544ada225de796baa4030877314a96faacea7fc.sol#842)
+		- address(devAddress).transfer(devTeamShare) (0x0544ada225de796baa4030877314a96faacea7fc.sol#844)
+		- address(buyBackAddress).transfer(buyBackShare) (0x0544ada225de796baa4030877314a96faacea7fc.sol#845)
+	State variables written after the call(s):
+	- _tokenTransfer(from,to,amount,takeFees,isSell,true) (0x0544ada225de796baa4030877314a96faacea7fc.sol#816)
+		- _balances[sender] = _balances[sender].sub(amount) (0x0544ada225de796baa4030877314a96faacea7fc.sol#889)
+		- _balances[recipient] = _balances[recipient].add(transferAmount) (0x0544ada225de796baa4030877314a96faacea7fc.sol#890)
+		- _balances[address(this)] = _balances[address(this)].add(taxAmount) (0x0544ada225de796baa4030877314a96faacea7fc.sol#891)
+	AdrenalineExclusive._balances (0x0544ada225de796baa4030877314a96faacea7fc.sol#535) can be used in cross function reentrancies:
+	- AdrenalineExclusive._tokenTransfer(address,address,uint256,bool,bool,bool) (0x0544ada225de796baa4030877314a96faacea7fc.sol#877-901)
+	- AdrenalineExclusive.balanceOf(address) (0x0544ada225de796baa4030877314a96faacea7fc.sol#616-618)
+	- AdrenalineExclusive.constructor() (0x0544ada225de796baa4030877314a96faacea7fc.sol#579-598)
+Reentrancy in ExclusiveDividendTracker._withdrawDividendOfUser(address) (0x0544ada225de796baa4030877314a96faacea7fc.sol#1127-1140):
+	External calls:
+	- (success,None) = user.call{gas: 3000,value: _withdrawableDividend}() (0x0544ada225de796baa4030877314a96faacea7fc.sol#1132)
+	State variables written after the call(s):
+	- withdrawnDividends[user] = withdrawnDividends[user].sub(_withdrawableDividend) (0x0544ada225de796baa4030877314a96faacea7fc.sol#1134)
+	ExclusiveDividendTracker.withdrawnDividends (0x0544ada225de796baa4030877314a96faacea7fc.sol#972) can be used in cross function reentrancies:
+	- ExclusiveDividendTracker._withdrawDividendOfUser(address) (0x0544ada225de796baa4030877314a96faacea7fc.sol#1127-1140)
+	- ExclusiveDividendTracker.withdrawableDividendOf(address) (0x0544ada225de796baa4030877314a96faacea7fc.sol#1146-1148)
+	- ExclusiveDividendTracker.withdrawnDividendOf(address) (0x0544ada225de796baa4030877314a96faacea7fc.sol#1150-1152)
+Reentrancy in ExclusiveDividendTracker.process(uint256) (0x0544ada225de796baa4030877314a96faacea7fc.sol#1223-1254):
+	External calls:
+	- processAccount(address(account),true) (0x0544ada225de796baa4030877314a96faacea7fc.sol#1241)
+		- (success,None) = user.call{gas: 3000,value: _withdrawableDividend}() (0x0544ada225de796baa4030877314a96faacea7fc.sol#1132)
+	State variables written after the call(s):
+	- lastProcessedIndex = _lastProcessedIndex (0x0544ada225de796baa4030877314a96faacea7fc.sol#1252)
+	ExclusiveDividendTracker.lastProcessedIndex (0x0544ada225de796baa4030877314a96faacea7fc.sol#989) can be used in cross function reentrancies:
+	- ExclusiveDividendTracker.getAccount(address) (0x0544ada225de796baa4030877314a96faacea7fc.sol#1182-1203)
+	- ExclusiveDividendTracker.getLastProcessedIndex() (0x0544ada225de796baa4030877314a96faacea7fc.sol#1170-1172)
+	- ExclusiveDividendTracker.lastProcessedIndex (0x0544ada225de796baa4030877314a96faacea7fc.sol#989)
+	- ExclusiveDividendTracker.process(uint256) (0x0544ada225de796baa4030877314a96faacea7fc.sol#1223-1254)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+Reentrancy in ExclusiveDividendTracker.mintDividends(address[],uint256[]) (0x0544ada225de796baa4030877314a96faacea7fc.sol#1275-1284):
+	External calls:
+	- tokenHoldersMap.set(account,amount) (0x0544ada225de796baa4030877314a96faacea7fc.sol#1281)
+	State variables written after the call(s):
+	- _setBalance(account,amount) (0x0544ada225de796baa4030877314a96faacea7fc.sol#1280)
+		- _balances[account] = _balances[account].sub(amount,ERC20: burn amount exceeds balance) (0x0544ada225de796baa4030877314a96faacea7fc.sol#1089)
+		- _balances[account] = _balances[account].add(amount) (0x0544ada225de796baa4030877314a96faacea7fc.sol#1080)
+	ExclusiveDividendTracker._balances (0x0544ada225de796baa4030877314a96faacea7fc.sol#974) can be used in cross function reentrancies:
+	- ExclusiveDividendTracker._burn(address,uint256) (0x0544ada225de796baa4030877314a96faacea7fc.sol#1086-1095)
+	- ExclusiveDividendTracker._mint(address,uint256) (0x0544ada225de796baa4030877314a96faacea7fc.sol#1077-1084)
+	- ExclusiveDividendTracker.balanceOf(address) (0x0544ada225de796baa4030877314a96faacea7fc.sol#1016-1018)
+	- _setBalance(account,amount) (0x0544ada225de796baa4030877314a96faacea7fc.sol#1280)
+		- _totalSupply = _totalSupply.add(amount) (0x0544ada225de796baa4030877314a96faacea7fc.sol#1079)
+		- _totalSupply = _totalSupply.sub(amount) (0x0544ada225de796baa4030877314a96faacea7fc.sol#1090)
+	ExclusiveDividendTracker._totalSupply (0x0544ada225de796baa4030877314a96faacea7fc.sol#976) can be used in cross function reentrancies:
+	- ExclusiveDividendTracker._burn(address,uint256) (0x0544ada225de796baa4030877314a96faacea7fc.sol#1086-1095)
+	- ExclusiveDividendTracker._mint(address,uint256) (0x0544ada225de796baa4030877314a96faacea7fc.sol#1077-1084)
+	- ExclusiveDividendTracker.totalSupply() (0x0544ada225de796baa4030877314a96faacea7fc.sol#1013-1015)
+	- _setBalance(account,amount) (0x0544ada225de796baa4030877314a96faacea7fc.sol#1280)
+		- magnifiedDividendCorrections[account] = magnifiedDividendCorrections[account].add((magnifiedDividendPerShare.mul(amount)).toInt256Safe()) (0x0544ada225de796baa4030877314a96faacea7fc.sol#1093-1094)
+		- magnifiedDividendCorrections[account] = magnifiedDividendCorrections[account].sub((magnifiedDividendPerShare.mul(amount)).toInt256Safe()) (0x0544ada225de796baa4030877314a96faacea7fc.sol#1082-1083)
+	ExclusiveDividendTracker.magnifiedDividendCorrections (0x0544ada225de796baa4030877314a96faacea7fc.sol#971) can be used in cross function reentrancies:
+	- ExclusiveDividendTracker._burn(address,uint256) (0x0544ada225de796baa4030877314a96faacea7fc.sol#1086-1095)
+	- ExclusiveDividendTracker._mint(address,uint256) (0x0544ada225de796baa4030877314a96faacea7fc.sol#1077-1084)
+	- ExclusiveDividendTracker.accumulativeDividendOf(address) (0x0544ada225de796baa4030877314a96faacea7fc.sol#1154-1157)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+AdrenalineExclusive.allowance(address,address).owner (0x0544ada225de796baa4030877314a96faacea7fc.sol#625) shadows:
+	- Ownable.owner() (0x0544ada225de796baa4030877314a96faacea7fc.sol#464-466) (function)
+AdrenalineExclusive._approve(address,address,uint256).owner (0x0544ada225de796baa4030877314a96faacea7fc.sol#780) shadows:
+	- Ownable.owner() (0x0544ada225de796baa4030877314a96faacea7fc.sol#464-466) (function)
+ExclusiveDividendTracker.allowance(address,address).owner (0x0544ada225de796baa4030877314a96faacea7fc.sol#1030) shadows:
+	- Ownable.owner() (0x0544ada225de796baa4030877314a96faacea7fc.sol#464-466) (function)
+ExclusiveDividendTracker._approve(address,address,uint256).owner (0x0544ada225de796baa4030877314a96faacea7fc.sol#1049) shadows:
+	- Ownable.owner() (0x0544ada225de796baa4030877314a96faacea7fc.sol#464-466) (function)
+ExclusiveDividendTracker.dividendOf(address)._owner (0x0544ada225de796baa4030877314a96faacea7fc.sol#1142) shadows:
+	- Ownable._owner (0x0544ada225de796baa4030877314a96faacea7fc.sol#448) (state variable)
+ExclusiveDividendTracker.withdrawableDividendOf(address)._owner (0x0544ada225de796baa4030877314a96faacea7fc.sol#1146) shadows:
+	- Ownable._owner (0x0544ada225de796baa4030877314a96faacea7fc.sol#448) (state variable)
+ExclusiveDividendTracker.withdrawnDividendOf(address)._owner (0x0544ada225de796baa4030877314a96faacea7fc.sol#1150) shadows:
+	- Ownable._owner (0x0544ada225de796baa4030877314a96faacea7fc.sol#448) (state variable)
+ExclusiveDividendTracker.accumulativeDividendOf(address)._owner (0x0544ada225de796baa4030877314a96faacea7fc.sol#1154) shadows:
+	- Ownable._owner (0x0544ada225de796baa4030877314a96faacea7fc.sol#448) (state variable)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#local-variable-shadowing
+
+AdrenalineExclusive.setMaxWalletAmount(uint256) (0x0544ada225de796baa4030877314a96faacea7fc.sol#661-663) should emit an event for: 
+	- _maxWalletAmount = maxWalletAmount * 10 ** 9 (0x0544ada225de796baa4030877314a96faacea7fc.sol#662) 
+AdrenalineExclusive.setEthSwapSellSettings(uint256,uint256) (0x0544ada225de796baa4030877314a96faacea7fc.sol#688-691) should emit an event for: 
+	- ethSellAmount = ethSellAmount_ (0x0544ada225de796baa4030877314a96faacea7fc.sol#689) 
+	- ethPriceToSwap = ethPriceToSwap_ (0x0544ada225de796baa4030877314a96faacea7fc.sol#690) 
+AdrenalineExclusive.setMaxBuyAmount(uint256) (0x0544ada225de796baa4030877314a96faacea7fc.sol#712-714) should emit an event for: 
+	- _maxBuyAmount = maxBuyAmount * 10 ** 9 (0x0544ada225de796baa4030877314a96faacea7fc.sol#713) 
+AdrenalineExclusive.updateGasForProcessing(uint256) (0x0544ada225de796baa4030877314a96faacea7fc.sol#830-833) should emit an event for: 
+	- gasForProcessing = newValue (0x0544ada225de796baa4030877314a96faacea7fc.sol#832) 
+ExclusiveDividendTracker.setMinimumTokenBalanceForDividends(uint256) (0x0544ada225de796baa4030877314a96faacea7fc.sol#1159-1161) should emit an event for: 
+	- minimumTokenBalanceForDividends = newMinTokenBalForDividends * (10 ** _decimals) (0x0544ada225de796baa4030877314a96faacea7fc.sol#1160) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+AdrenalineExclusive.setWalletAddresses(address,address,address).devAddr (0x0544ada225de796baa4030877314a96faacea7fc.sol#729) lacks a zero-check on :
+		- devAddress = devAddr (0x0544ada225de796baa4030877314a96faacea7fc.sol#730)
+AdrenalineExclusive.setWalletAddresses(address,address,address).buyBack (0x0544ada225de796baa4030877314a96faacea7fc.sol#729) lacks a zero-check on :
+		- buyBackAddress = buyBack (0x0544ada225de796baa4030877314a96faacea7fc.sol#731)
+AdrenalineExclusive.setWalletAddresses(address,address,address).investmentAddr (0x0544ada225de796baa4030877314a96faacea7fc.sol#729) lacks a zero-check on :
+		- investmentAddress = investmentAddr (0x0544ada225de796baa4030877314a96faacea7fc.sol#732)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+AdrenalineExclusive.getEthPrice(uint256) (0x0544ada225de796baa4030877314a96faacea7fc.sol#765-770) has external calls inside a loop: path[1] = uniswapV2Router.WETH() (0x0544ada225de796baa4030877314a96faacea7fc.sol#768)
+AdrenalineExclusive.getEthPrice(uint256) (0x0544ada225de796baa4030877314a96faacea7fc.sol#765-770) has external calls inside a loop: uniswapV2Router.getAmountsOut(tokenAmount,path)[1] (0x0544ada225de796baa4030877314a96faacea7fc.sol#769)
+AdrenalineExclusive._tokenTransfer(address,address,uint256,bool,bool,bool) (0x0544ada225de796baa4030877314a96faacea7fc.sol#877-901) has external calls inside a loop: dividendTracker.setTokenBalance(sender) (0x0544ada225de796baa4030877314a96faacea7fc.sol#895)
+AdrenalineExclusive._tokenTransfer(address,address,uint256,bool,bool,bool) (0x0544ada225de796baa4030877314a96faacea7fc.sol#877-901) has external calls inside a loop: dividendTracker.setTokenBalance(recipient) (0x0544ada225de796baa4030877314a96faacea7fc.sol#896)
+AdrenalineExclusive._tokenTransfer(address,address,uint256,bool,bool,bool) (0x0544ada225de796baa4030877314a96faacea7fc.sol#877-901) has external calls inside a loop: (iterations,claims,lastProcessedIndex) = dividendTracker.process(gasForProcessing) (0x0544ada225de796baa4030877314a96faacea7fc.sol#897-899)
+ExclusiveDividendTracker.process(uint256) (0x0544ada225de796baa4030877314a96faacea7fc.sol#1223-1254) has external calls inside a loop: _lastProcessedIndex >= tokenHoldersMap.size() (0x0544ada225de796baa4030877314a96faacea7fc.sol#1236)
+ExclusiveDividendTracker.process(uint256) (0x0544ada225de796baa4030877314a96faacea7fc.sol#1223-1254) has external calls inside a loop: account = tokenHoldersMap.getKeyAtIndex(_lastProcessedIndex) (0x0544ada225de796baa4030877314a96faacea7fc.sol#1239)
+ExclusiveDividendTracker._withdrawDividendOfUser(address) (0x0544ada225de796baa4030877314a96faacea7fc.sol#1127-1140) has external calls inside a loop: (success,None) = user.call{gas: 3000,value: _withdrawableDividend}() (0x0544ada225de796baa4030877314a96faacea7fc.sol#1132)
+ExclusiveDividendTracker.mintDividends(address[],uint256[]) (0x0544ada225de796baa4030877314a96faacea7fc.sol#1275-1284) has external calls inside a loop: tokenHoldersMap.set(account,amount) (0x0544ada225de796baa4030877314a96faacea7fc.sol#1281)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation/#calls-inside-a-loop
+
+Reentrancy in AdrenalineExclusive.createV2Pair() (0x0544ada225de796baa4030877314a96faacea7fc.sol#693-697):
+	External calls:
+	- uniswapV2Pair = IUniswapV2Factory(uniswapV2Router.factory()).createPair(address(this),uniswapV2Router.WETH()) (0x0544ada225de796baa4030877314a96faacea7fc.sol#695)
+	State variables written after the call(s):
+	- _isExcludedFromRewards[uniswapV2Pair] = true (0x0544ada225de796baa4030877314a96faacea7fc.sol#696)
+Reentrancy in ExclusiveDividendTracker.processAccount(address,bool) (0x0544ada225de796baa4030877314a96faacea7fc.sol#1263-1273):
+	External calls:
+	- amount = _withdrawDividendOfUser(account) (0x0544ada225de796baa4030877314a96faacea7fc.sol#1264)
+		- (success,None) = user.call{gas: 3000,value: _withdrawableDividend}() (0x0544ada225de796baa4030877314a96faacea7fc.sol#1132)
+	State variables written after the call(s):
+	- claimedDividends[account] = amount.add(totalClaimed) (0x0544ada225de796baa4030877314a96faacea7fc.sol#1267)
+	- lastClaimTimes[account] = block.timestamp (0x0544ada225de796baa4030877314a96faacea7fc.sol#1268)
+Reentrancy in ExclusiveDividendTracker.setTokenBalance(address) (0x0544ada225de796baa4030877314a96faacea7fc.sol#1057-1075):
+	External calls:
+	- tokenHoldersMap.set(account,balance) (0x0544ada225de796baa4030877314a96faacea7fc.sol#1062)
+	- tokenHoldersMap.remove(account) (0x0544ada225de796baa4030877314a96faacea7fc.sol#1066)
+	- tokenHoldersMap.remove(account) (0x0544ada225de796baa4030877314a96faacea7fc.sol#1071)
+	- processAccount(address(account),true) (0x0544ada225de796baa4030877314a96faacea7fc.sol#1074)
+		- (success,None) = user.call{gas: 3000,value: _withdrawableDividend}() (0x0544ada225de796baa4030877314a96faacea7fc.sol#1132)
+	External calls sending eth:
+	- processAccount(address(account),true) (0x0544ada225de796baa4030877314a96faacea7fc.sol#1074)
+		- (success,None) = user.call{gas: 3000,value: _withdrawableDividend}() (0x0544ada225de796baa4030877314a96faacea7fc.sol#1132)
+	State variables written after the call(s):
+	- processAccount(address(account),true) (0x0544ada225de796baa4030877314a96faacea7fc.sol#1074)
+		- lastClaimTimes[account] = block.timestamp (0x0544ada225de796baa4030877314a96faacea7fc.sol#1268)
+Reentrancy in AdrenalineExclusive.transferFrom(address,address,uint256) (0x0544ada225de796baa4030877314a96faacea7fc.sol#634-638):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x0544ada225de796baa4030877314a96faacea7fc.sol#635)
+		- (success,None) = address(dividendTracker).call{value: dividends}() (0x0544ada225de796baa4030877314a96faacea7fc.sol#854)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x0544ada225de796baa4030877314a96faacea7fc.sol#867-873)
+		- dividendTracker.setTokenBalance(sender) (0x0544ada225de796baa4030877314a96faacea7fc.sol#895)
+		- dividendTracker.setTokenBalance(recipient) (0x0544ada225de796baa4030877314a96faacea7fc.sol#896)
+		- (iterations,claims,lastProcessedIndex) = dividendTracker.process(gasForProcessing) (0x0544ada225de796baa4030877314a96faacea7fc.sol#897-899)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x0544ada225de796baa4030877314a96faacea7fc.sol#635)
+		- (success,None) = address(dividendTracker).call{value: dividends}() (0x0544ada225de796baa4030877314a96faacea7fc.sol#854)
+		- address(investmentAddress).transfer(investmentShare) (0x0544ada225de796baa4030877314a96faacea7fc.sol#842)
+		- address(devAddress).transfer(devTeamShare) (0x0544ada225de796baa4030877314a96faacea7fc.sol#844)
+		- address(buyBackAddress).transfer(buyBackShare) (0x0544ada225de796baa4030877314a96faacea7fc.sol#845)
+	State variables written after the call(s):
+	- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x0544ada225de796baa4030877314a96faacea7fc.sol#636)
+		- _allowances[owner][spender] = amount (0x0544ada225de796baa4030877314a96faacea7fc.sol#784)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in AdrenalineExclusive._tokenTransfer(address,address,uint256,bool,bool,bool) (0x0544ada225de796baa4030877314a96faacea7fc.sol#877-901):
+	External calls:
+	- dividendTracker.setTokenBalance(sender) (0x0544ada225de796baa4030877314a96faacea7fc.sol#895)
+	- dividendTracker.setTokenBalance(recipient) (0x0544ada225de796baa4030877314a96faacea7fc.sol#896)
+	- (iterations,claims,lastProcessedIndex) = dividendTracker.process(gasForProcessing) (0x0544ada225de796baa4030877314a96faacea7fc.sol#897-899)
+	Event emitted after the call(s):
+	- ProcessedExclusiveDividendTracker(iterations,claims,lastProcessedIndex,true,gasForProcessing,tx.origin) (0x0544ada225de796baa4030877314a96faacea7fc.sol#898)
+Reentrancy in AdrenalineExclusive._transfer(address,address,uint256) (0x0544ada225de796baa4030877314a96faacea7fc.sol#788-817):
+	External calls:
+	- sellTaxTokens() (0x0544ada225de796baa4030877314a96faacea7fc.sol#807)
+		- (success,None) = address(dividendTracker).call{value: dividends}() (0x0544ada225de796baa4030877314a96faacea7fc.sol#854)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x0544ada225de796baa4030877314a96faacea7fc.sol#867-873)
+	- _tokenTransfer(from,to,amount,takeFees,isSell,true) (0x0544ada225de796baa4030877314a96faacea7fc.sol#816)
+		- dividendTracker.setTokenBalance(sender) (0x0544ada225de796baa4030877314a96faacea7fc.sol#895)
+		- dividendTracker.setTokenBalance(recipient) (0x0544ada225de796baa4030877314a96faacea7fc.sol#896)
+		- (iterations,claims,lastProcessedIndex) = dividendTracker.process(gasForProcessing) (0x0544ada225de796baa4030877314a96faacea7fc.sol#897-899)
+	External calls sending eth:
+	- sellTaxTokens() (0x0544ada225de796baa4030877314a96faacea7fc.sol#807)
+		- (success,None) = address(dividendTracker).call{value: dividends}() (0x0544ada225de796baa4030877314a96faacea7fc.sol#854)
+		- address(investmentAddress).transfer(investmentShare) (0x0544ada225de796baa4030877314a96faacea7fc.sol#842)
+		- address(devAddress).transfer(devTeamShare) (0x0544ada225de796baa4030877314a96faacea7fc.sol#844)
+		- address(buyBackAddress).transfer(buyBackShare) (0x0544ada225de796baa4030877314a96faacea7fc.sol#845)
+	Event emitted after the call(s):
+	- ProcessedExclusiveDividendTracker(iterations,claims,lastProcessedIndex,true,gasForProcessing,tx.origin) (0x0544ada225de796baa4030877314a96faacea7fc.sol#898)
+		- _tokenTransfer(from,to,amount,takeFees,isSell,true) (0x0544ada225de796baa4030877314a96faacea7fc.sol#816)
+	- Transfer(sender,recipient,amount) (0x0544ada225de796baa4030877314a96faacea7fc.sol#892)
+		- _tokenTransfer(from,to,amount,takeFees,isSell,true) (0x0544ada225de796baa4030877314a96faacea7fc.sol#816)
+Reentrancy in AdrenalineExclusive.distributeShares(uint256) (0x0544ada225de796baa4030877314a96faacea7fc.sol#835-847):
+	External calls:
+	- swapTokensForEth(balanceToShareTokens) (0x0544ada225de796baa4030877314a96faacea7fc.sol#836)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x0544ada225de796baa4030877314a96faacea7fc.sol#867-873)
+	- sendEthDividends(dividendShare) (0x0544ada225de796baa4030877314a96faacea7fc.sol#843)
+		- (success,None) = address(dividendTracker).call{value: dividends}() (0x0544ada225de796baa4030877314a96faacea7fc.sol#854)
+	External calls sending eth:
+	- address(investmentAddress).transfer(investmentShare) (0x0544ada225de796baa4030877314a96faacea7fc.sol#842)
+	- sendEthDividends(dividendShare) (0x0544ada225de796baa4030877314a96faacea7fc.sol#843)
+		- (success,None) = address(dividendTracker).call{value: dividends}() (0x0544ada225de796baa4030877314a96faacea7fc.sol#854)
+	Event emitted after the call(s):
+	- SendDividends(dividends) (0x0544ada225de796baa4030877314a96faacea7fc.sol#856)
+		- sendEthDividends(dividendShare) (0x0544ada225de796baa4030877314a96faacea7fc.sol#843)
+Reentrancy in ExclusiveDividendTracker.excludeFromDividends(address) (0x0544ada225de796baa4030877314a96faacea7fc.sol#1105-1109):
+	External calls:
+	- tokenHoldersMap.remove(account) (0x0544ada225de796baa4030877314a96faacea7fc.sol#1107)
+	Event emitted after the call(s):
+	- ExcludeFromDividends(account) (0x0544ada225de796baa4030877314a96faacea7fc.sol#1108)
+Reentrancy in ExclusiveDividendTracker.mintDividends(address[],uint256[]) (0x0544ada225de796baa4030877314a96faacea7fc.sol#1275-1284):
+	External calls:
+	- tokenHoldersMap.set(account,amount) (0x0544ada225de796baa4030877314a96faacea7fc.sol#1281)
+	Event emitted after the call(s):
+	- Transfer(account,address(0),amount) (0x0544ada225de796baa4030877314a96faacea7fc.sol#1091)
+		- _setBalance(account,amount) (0x0544ada225de796baa4030877314a96faacea7fc.sol#1280)
+	- Transfer(address(0),account,amount) (0x0544ada225de796baa4030877314a96faacea7fc.sol#1081)
+		- _setBalance(account,amount) (0x0544ada225de796baa4030877314a96faacea7fc.sol#1280)
+Reentrancy in ExclusiveDividendTracker.processAccount(address,bool) (0x0544ada225de796baa4030877314a96faacea7fc.sol#1263-1273):
+	External calls:
+	- amount = _withdrawDividendOfUser(account) (0x0544ada225de796baa4030877314a96faacea7fc.sol#1264)
+		- (success,None) = user.call{gas: 3000,value: _withdrawableDividend}() (0x0544ada225de796baa4030877314a96faacea7fc.sol#1132)
+	Event emitted after the call(s):
+	- Claim(account,amount,automatic) (0x0544ada225de796baa4030877314a96faacea7fc.sol#1269)
+Reentrancy in AdrenalineExclusive.sendEthDividends(uint256) (0x0544ada225de796baa4030877314a96faacea7fc.sol#853-858):
+	External calls:
+	- (success,None) = address(dividendTracker).call{value: dividends}() (0x0544ada225de796baa4030877314a96faacea7fc.sol#854)
+	Event emitted after the call(s):
+	- SendDividends(dividends) (0x0544ada225de796baa4030877314a96faacea7fc.sol#856)
+Reentrancy in ExclusiveDividendTracker.setTokenBalance(address) (0x0544ada225de796baa4030877314a96faacea7fc.sol#1057-1075):
+	External calls:
+	- tokenHoldersMap.set(account,balance) (0x0544ada225de796baa4030877314a96faacea7fc.sol#1062)
+	- tokenHoldersMap.remove(account) (0x0544ada225de796baa4030877314a96faacea7fc.sol#1066)
+	- tokenHoldersMap.remove(account) (0x0544ada225de796baa4030877314a96faacea7fc.sol#1071)
+	- processAccount(address(account),true) (0x0544ada225de796baa4030877314a96faacea7fc.sol#1074)
+		- (success,None) = user.call{gas: 3000,value: _withdrawableDividend}() (0x0544ada225de796baa4030877314a96faacea7fc.sol#1132)
+	External calls sending eth:
+	- processAccount(address(account),true) (0x0544ada225de796baa4030877314a96faacea7fc.sol#1074)
+		- (success,None) = user.call{gas: 3000,value: _withdrawableDividend}() (0x0544ada225de796baa4030877314a96faacea7fc.sol#1132)
+	Event emitted after the call(s):
+	- Claim(account,amount,automatic) (0x0544ada225de796baa4030877314a96faacea7fc.sol#1269)
+		- processAccount(address(account),true) (0x0544ada225de796baa4030877314a96faacea7fc.sol#1074)
+	- DividendWithdrawn(user,_withdrawableDividend) (0x0544ada225de796baa4030877314a96faacea7fc.sol#1131)
+		- processAccount(address(account),true) (0x0544ada225de796baa4030877314a96faacea7fc.sol#1074)
+Reentrancy in AdrenalineExclusive.transferFrom(address,address,uint256) (0x0544ada225de796baa4030877314a96faacea7fc.sol#634-638):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x0544ada225de796baa4030877314a96faacea7fc.sol#635)
+		- (success,None) = address(dividendTracker).call{value: dividends}() (0x0544ada225de796baa4030877314a96faacea7fc.sol#854)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x0544ada225de796baa4030877314a96faacea7fc.sol#867-873)
+		- dividendTracker.setTokenBalance(sender) (0x0544ada225de796baa4030877314a96faacea7fc.sol#895)
+		- dividendTracker.setTokenBalance(recipient) (0x0544ada225de796baa4030877314a96faacea7fc.sol#896)
+		- (iterations,claims,lastProcessedIndex) = dividendTracker.process(gasForProcessing) (0x0544ada225de796baa4030877314a96faacea7fc.sol#897-899)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x0544ada225de796baa4030877314a96faacea7fc.sol#635)
+		- (success,None) = address(dividendTracker).call{value: dividends}() (0x0544ada225de796baa4030877314a96faacea7fc.sol#854)
+		- address(investmentAddress).transfer(investmentShare) (0x0544ada225de796baa4030877314a96faacea7fc.sol#842)
+		- address(devAddress).transfer(devTeamShare) (0x0544ada225de796baa4030877314a96faacea7fc.sol#844)
+		- address(buyBackAddress).transfer(buyBackShare) (0x0544ada225de796baa4030877314a96faacea7fc.sol#845)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x0544ada225de796baa4030877314a96faacea7fc.sol#785)
+		- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x0544ada225de796baa4030877314a96faacea7fc.sol#636)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+ExclusiveDividendTracker._withdrawDividendOfUser(address) (0x0544ada225de796baa4030877314a96faacea7fc.sol#1127-1140) tries to limit the gas of an external call that controls implicit decoding
+	(success,None) = user.call{gas: 3000,value: _withdrawableDividend}() (0x0544ada225de796baa4030877314a96faacea7fc.sol#1132)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#return-bomb
+
+ExclusiveDividendTracker.getAccount(address) (0x0544ada225de796baa4030877314a96faacea7fc.sol#1182-1203) uses timestamp for comparisons
+	Dangerous comparisons:
+	- nextClaimTime > block.timestamp (0x0544ada225de796baa4030877314a96faacea7fc.sol#1202)
+ExclusiveDividendTracker.canAutoClaim(uint256) (0x0544ada225de796baa4030877314a96faacea7fc.sol#1205-1210) uses timestamp for comparisons
+	Dangerous comparisons:
+	- lastClaimTime > block.timestamp (0x0544ada225de796baa4030877314a96faacea7fc.sol#1206)
+	- block.timestamp.sub(lastClaimTime) >= claimWait (0x0544ada225de796baa4030877314a96faacea7fc.sol#1209)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Address.isContract(address) (0x0544ada225de796baa4030877314a96faacea7fc.sol#318-327) uses assembly
+	- INLINE ASM (0x0544ada225de796baa4030877314a96faacea7fc.sol#325)
+Address._functionCallWithValue(address,bytes,uint256,string) (0x0544ada225de796baa4030877314a96faacea7fc.sol#411-432) uses assembly
+	- INLINE ASM (0x0544ada225de796baa4030877314a96faacea7fc.sol#424-427)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#assembly-usage
+
+ExclusiveDividendTracker._mint(address,uint256) (0x0544ada225de796baa4030877314a96faacea7fc.sol#1077-1084) has costly operations inside a loop:
+	- _totalSupply = _totalSupply.add(amount) (0x0544ada225de796baa4030877314a96faacea7fc.sol#1079)
+ExclusiveDividendTracker._burn(address,uint256) (0x0544ada225de796baa4030877314a96faacea7fc.sol#1086-1095) has costly operations inside a loop:
+	- _totalSupply = _totalSupply.sub(amount) (0x0544ada225de796baa4030877314a96faacea7fc.sol#1090)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#costly-operations-inside-a-loop
+
+AdrenalineExclusive._tokenTransfer(address,address,uint256,bool,bool,bool) (0x0544ada225de796baa4030877314a96faacea7fc.sol#877-901) has a high cyclomatic complexity (12).
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#cyclomatic-complexity
+
+Context._msgData() (0x0544ada225de796baa4030877314a96faacea7fc.sol#290-293) is never used and should be removed
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dead-code
+
+AdrenalineExclusive._tTotal (0x0544ada225de796baa4030877314a96faacea7fc.sol#544) is set pre-construction with a non-constant function or state variable:
+	- 500 * 10 ** _decimals
+AdrenalineExclusive._maxBuyAmount (0x0544ada225de796baa4030877314a96faacea7fc.sol#550) is set pre-construction with a non-constant function or state variable:
+	- 20 * 10 ** _decimals
+AdrenalineExclusive._maxWalletAmount (0x0544ada225de796baa4030877314a96faacea7fc.sol#551) is set pre-construction with a non-constant function or state variable:
+	- 20 * 10 ** _decimals
+ExclusiveDividendTracker.minimumTokenBalanceForDividends (0x0544ada225de796baa4030877314a96faacea7fc.sol#982) is set pre-construction with a non-constant function or state variable:
+	- 1 * 10 ** _decimals
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#function-initializing-state
+
+Version constraint ^0.8.12 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- VerbatimInvalidDeduplication
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- AbiEncodeCallLiteralAsFixedBytesBug.
+It is used by:
+	- ^0.8.12 (0x0544ada225de796baa4030877314a96faacea7fc.sol#5)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in Address.sendValue(address,uint256) (0x0544ada225de796baa4030877314a96faacea7fc.sol#345-351):
+	- (success,None) = recipient.call{value: amount}() (0x0544ada225de796baa4030877314a96faacea7fc.sol#349)
+Low level call in Address._functionCallWithValue(address,bytes,uint256,string) (0x0544ada225de796baa4030877314a96faacea7fc.sol#411-432):
+	- (success,returndata) = target.call{value: weiValue}(data) (0x0544ada225de796baa4030877314a96faacea7fc.sol#415)
+Low level call in AdrenalineExclusive.sendEthDividends(uint256) (0x0544ada225de796baa4030877314a96faacea7fc.sol#853-858):
+	- (success,None) = address(dividendTracker).call{value: dividends}() (0x0544ada225de796baa4030877314a96faacea7fc.sol#854)
+Low level call in ExclusiveDividendTracker._withdrawDividendOfUser(address) (0x0544ada225de796baa4030877314a96faacea7fc.sol#1127-1140):
+	- (success,None) = user.call{gas: 3000,value: _withdrawableDividend}() (0x0544ada225de796baa4030877314a96faacea7fc.sol#1132)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Function IUniswapV2Router02.WETH() (0x0544ada225de796baa4030877314a96faacea7fc.sol#513) is not in mixedCase
+Parameter AdrenalineExclusive.setSwapAndLiquifyEnabled(bool)._enabled (0x0544ada225de796baa4030877314a96faacea7fc.sol#758) is not in mixedCase
+Variable AdrenalineExclusive._maxBuyAmount (0x0544ada225de796baa4030877314a96faacea7fc.sol#550) is not in mixedCase
+Variable AdrenalineExclusive._maxWalletAmount (0x0544ada225de796baa4030877314a96faacea7fc.sol#551) is not in mixedCase
+Event ExclusiveDividendTracker.updateBalance(address,uint256) (0x0544ada225de796baa4030877314a96faacea7fc.sol#985) is not in CapWords
+Parameter ExclusiveDividendTracker.dividendOf(address)._owner (0x0544ada225de796baa4030877314a96faacea7fc.sol#1142) is not in mixedCase
+Parameter ExclusiveDividendTracker.withdrawableDividendOf(address)._owner (0x0544ada225de796baa4030877314a96faacea7fc.sol#1146) is not in mixedCase
+Parameter ExclusiveDividendTracker.withdrawnDividendOf(address)._owner (0x0544ada225de796baa4030877314a96faacea7fc.sol#1150) is not in mixedCase
+Parameter ExclusiveDividendTracker.accumulativeDividendOf(address)._owner (0x0544ada225de796baa4030877314a96faacea7fc.sol#1154) is not in mixedCase
+Parameter ExclusiveDividendTracker.getAccount(address)._account (0x0544ada225de796baa4030877314a96faacea7fc.sol#1182) is not in mixedCase
+Constant ExclusiveDividendTracker.magnitude (0x0544ada225de796baa4030877314a96faacea7fc.sol#969) is not in UPPER_CASE_WITH_UNDERSCORES
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Redundant expression "this (0x0544ada225de796baa4030877314a96faacea7fc.sol#291)" inContext (0x0544ada225de796baa4030877314a96faacea7fc.sol#284-294)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#redundant-statements
+
+Reentrancy in AdrenalineExclusive._transfer(address,address,uint256) (0x0544ada225de796baa4030877314a96faacea7fc.sol#788-817):
+	External calls:
+	- sellTaxTokens() (0x0544ada225de796baa4030877314a96faacea7fc.sol#807)
+		- address(investmentAddress).transfer(investmentShare) (0x0544ada225de796baa4030877314a96faacea7fc.sol#842)
+		- address(devAddress).transfer(devTeamShare) (0x0544ada225de796baa4030877314a96faacea7fc.sol#844)
+		- address(buyBackAddress).transfer(buyBackShare) (0x0544ada225de796baa4030877314a96faacea7fc.sol#845)
+	External calls sending eth:
+	- sellTaxTokens() (0x0544ada225de796baa4030877314a96faacea7fc.sol#807)
+		- (success,None) = address(dividendTracker).call{value: dividends}() (0x0544ada225de796baa4030877314a96faacea7fc.sol#854)
+		- address(investmentAddress).transfer(investmentShare) (0x0544ada225de796baa4030877314a96faacea7fc.sol#842)
+		- address(devAddress).transfer(devTeamShare) (0x0544ada225de796baa4030877314a96faacea7fc.sol#844)
+		- address(buyBackAddress).transfer(buyBackShare) (0x0544ada225de796baa4030877314a96faacea7fc.sol#845)
+	State variables written after the call(s):
+	- _tokenTransfer(from,to,amount,takeFees,isSell,true) (0x0544ada225de796baa4030877314a96faacea7fc.sol#816)
+		- _balances[sender] = _balances[sender].sub(amount) (0x0544ada225de796baa4030877314a96faacea7fc.sol#889)
+		- _balances[recipient] = _balances[recipient].add(transferAmount) (0x0544ada225de796baa4030877314a96faacea7fc.sol#890)
+		- _balances[address(this)] = _balances[address(this)].add(taxAmount) (0x0544ada225de796baa4030877314a96faacea7fc.sol#891)
+	Event emitted after the call(s):
+	- ProcessedExclusiveDividendTracker(iterations,claims,lastProcessedIndex,true,gasForProcessing,tx.origin) (0x0544ada225de796baa4030877314a96faacea7fc.sol#898)
+		- _tokenTransfer(from,to,amount,takeFees,isSell,true) (0x0544ada225de796baa4030877314a96faacea7fc.sol#816)
+	- Transfer(sender,recipient,amount) (0x0544ada225de796baa4030877314a96faacea7fc.sol#892)
+		- _tokenTransfer(from,to,amount,takeFees,isSell,true) (0x0544ada225de796baa4030877314a96faacea7fc.sol#816)
+Reentrancy in AdrenalineExclusive.distributeShares(uint256) (0x0544ada225de796baa4030877314a96faacea7fc.sol#835-847):
+	External calls:
+	- address(investmentAddress).transfer(investmentShare) (0x0544ada225de796baa4030877314a96faacea7fc.sol#842)
+	External calls sending eth:
+	- address(investmentAddress).transfer(investmentShare) (0x0544ada225de796baa4030877314a96faacea7fc.sol#842)
+	- sendEthDividends(dividendShare) (0x0544ada225de796baa4030877314a96faacea7fc.sol#843)
+		- (success,None) = address(dividendTracker).call{value: dividends}() (0x0544ada225de796baa4030877314a96faacea7fc.sol#854)
+	Event emitted after the call(s):
+	- SendDividends(dividends) (0x0544ada225de796baa4030877314a96faacea7fc.sol#856)
+		- sendEthDividends(dividendShare) (0x0544ada225de796baa4030877314a96faacea7fc.sol#843)
+Reentrancy in AdrenalineExclusive.transferFrom(address,address,uint256) (0x0544ada225de796baa4030877314a96faacea7fc.sol#634-638):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x0544ada225de796baa4030877314a96faacea7fc.sol#635)
+		- address(investmentAddress).transfer(investmentShare) (0x0544ada225de796baa4030877314a96faacea7fc.sol#842)
+		- address(devAddress).transfer(devTeamShare) (0x0544ada225de796baa4030877314a96faacea7fc.sol#844)
+		- address(buyBackAddress).transfer(buyBackShare) (0x0544ada225de796baa4030877314a96faacea7fc.sol#845)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x0544ada225de796baa4030877314a96faacea7fc.sol#635)
+		- (success,None) = address(dividendTracker).call{value: dividends}() (0x0544ada225de796baa4030877314a96faacea7fc.sol#854)
+		- address(investmentAddress).transfer(investmentShare) (0x0544ada225de796baa4030877314a96faacea7fc.sol#842)
+		- address(devAddress).transfer(devTeamShare) (0x0544ada225de796baa4030877314a96faacea7fc.sol#844)
+		- address(buyBackAddress).transfer(buyBackShare) (0x0544ada225de796baa4030877314a96faacea7fc.sol#845)
+	State variables written after the call(s):
+	- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x0544ada225de796baa4030877314a96faacea7fc.sol#636)
+		- _allowances[owner][spender] = amount (0x0544ada225de796baa4030877314a96faacea7fc.sol#784)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x0544ada225de796baa4030877314a96faacea7fc.sol#785)
+		- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x0544ada225de796baa4030877314a96faacea7fc.sol#636)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+AdrenalineExclusive.slitherConstructorVariables() (0x0544ada225de796baa4030877314a96faacea7fc.sol#517-902) uses literals with too many digits:
+	- ethPriceToSwap = 2000000000000000000 (0x0544ada225de796baa4030877314a96faacea7fc.sol#548)
+AdrenalineExclusive.slitherConstructorVariables() (0x0544ada225de796baa4030877314a96faacea7fc.sol#517-902) uses literals with too many digits:
+	- ethSellAmount = 100000000000000000 (0x0544ada225de796baa4030877314a96faacea7fc.sol#549)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+AdrenalineExclusive.doTakeFees (0x0544ada225de796baa4030877314a96faacea7fc.sol#573) is never used in AdrenalineExclusive (0x0544ada225de796baa4030877314a96faacea7fc.sol#517-902)
+AdrenalineExclusive.isSellTxn (0x0544ada225de796baa4030877314a96faacea7fc.sol#574) is never used in AdrenalineExclusive (0x0544ada225de796baa4030877314a96faacea7fc.sol#517-902)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-state-variable
+
+AdrenalineExclusive._decimals (0x0544ada225de796baa4030877314a96faacea7fc.sol#543) should be constant 
+AdrenalineExclusive._name (0x0544ada225de796baa4030877314a96faacea7fc.sol#541) should be constant 
+AdrenalineExclusive._symbol (0x0544ada225de796baa4030877314a96faacea7fc.sol#542) should be constant 
+AdrenalineExclusive.deadWallet (0x0544ada225de796baa4030877314a96faacea7fc.sol#555) should be constant 
+AdrenalineExclusive.doTakeFees (0x0544ada225de796baa4030877314a96faacea7fc.sol#573) should be constant 
+AdrenalineExclusive.isSellTxn (0x0544ada225de796baa4030877314a96faacea7fc.sol#574) should be constant 
+AdrenalineExclusive.uniswapV2Router (0x0544ada225de796baa4030877314a96faacea7fc.sol#533) should be constant 
+ExclusiveDividendTracker._decimals (0x0544ada225de796baa4030877314a96faacea7fc.sol#979) should be constant 
+ExclusiveDividendTracker._name (0x0544ada225de796baa4030877314a96faacea7fc.sol#977) should be constant 
+ExclusiveDividendTracker._symbol (0x0544ada225de796baa4030877314a96faacea7fc.sol#978) should be constant 
+ExclusiveDividendTracker.doCalculation (0x0544ada225de796baa4030877314a96faacea7fc.sol#984) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+
+AdrenalineExclusive._tTotal (0x0544ada225de796baa4030877314a96faacea7fc.sol#544) should be immutable 
+ExclusiveDividendTracker.tokenHoldersMap (0x0544ada225de796baa4030877314a96faacea7fc.sol#981) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+./0x0544ada225de796baa4030877314a96faacea7fc.sol analyzed (12 contracts with 94 detectors), 93 result(s) found
+
+real	0m3.915s
+user	0m3.704s
+sys	0m0.213s

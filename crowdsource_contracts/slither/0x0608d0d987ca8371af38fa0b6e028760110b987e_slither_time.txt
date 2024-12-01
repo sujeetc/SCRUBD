@@ -1,0 +1,92 @@
+'solc --version' running
+'solc ./0x0608d0d987ca8371af38fa0b6e028760110b987e.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+DeflatLottoBurn (0x0608d0d987ca8371af38fa0b6e028760110b987e.sol#8-46) contract sets array length with a user-controlled value:
+	- playerPool.push(msg.sender) (0x0608d0d987ca8371af38fa0b6e028760110b987e.sol#28)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#array-length-assignment
+
+Reentrancy in DeflatLottoBurn.fallback() (0x0608d0d987ca8371af38fa0b6e028760110b987e.sol#26-44):
+	External calls:
+	- tokenReward.balanceOf(address(this)) > 0 (0x0608d0d987ca8371af38fa0b6e028760110b987e.sol#36)
+	- tokenReward.transfer(burncontract,tokenReward.balanceOf(address(this))) (0x0608d0d987ca8371af38fa0b6e028760110b987e.sol#36)
+	External calls sending eth:
+	- winner.send(amount) (0x0608d0d987ca8371af38fa0b6e028760110b987e.sol#35)
+	State variables written after the call(s):
+	- playerPool.length = 0 (0x0608d0d987ca8371af38fa0b6e028760110b987e.sol#37)
+	DeflatLottoBurn.playerPool (0x0608d0d987ca8371af38fa0b6e028760110b987e.sol#19) can be used in cross function reentrancies:
+	- DeflatLottoBurn.fallback() (0x0608d0d987ca8371af38fa0b6e028760110b987e.sol#26-44)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+DeflatLottoBurn.fallback() (0x0608d0d987ca8371af38fa0b6e028760110b987e.sol#26-44) performs a multiplication on the result of a division:
+	- winidx = uint256(baserand) / 10 (0x0608d0d987ca8371af38fa0b6e028760110b987e.sol#31)
+	- winidx = baserand - (winidx * 10) (0x0608d0d987ca8371af38fa0b6e028760110b987e.sol#32)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+token (0x0608d0d987ca8371af38fa0b6e028760110b987e.sol#3-6) has incorrect ERC20 function interface:token.transfer(address,uint256) (0x0608d0d987ca8371af38fa0b6e028760110b987e.sol#4)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-erc20-interface
+
+Reentrancy in DeflatLottoBurn.fallback() (0x0608d0d987ca8371af38fa0b6e028760110b987e.sol#26-44):
+	External calls:
+	- maincontract.call.gas(200000).value(address(this).balance)() (0x0608d0d987ca8371af38fa0b6e028760110b987e.sol#41)
+	Event emitted after the call(s):
+	- Payout(this,maincontract,quota) (0x0608d0d987ca8371af38fa0b6e028760110b987e.sol#41)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+Version constraint ^0.4.23 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ABIEncoderV2PackedStorage_0.4.x
+	- ExpExponentCleanup
+	- EventStructWrongData.
+It is used by:
+	- ^0.4.23 (0x0608d0d987ca8371af38fa0b6e028760110b987e.sol#1)
+solc-0.4.23 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in DeflatLottoBurn.fallback() (0x0608d0d987ca8371af38fa0b6e028760110b987e.sol#26-44):
+	- maincontract.call.gas(200000).value(address(this).balance)() (0x0608d0d987ca8371af38fa0b6e028760110b987e.sol#41)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Contract token (0x0608d0d987ca8371af38fa0b6e028760110b987e.sol#3-6) is not in CapWords
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in DeflatLottoBurn.fallback() (0x0608d0d987ca8371af38fa0b6e028760110b987e.sol#26-44):
+	External calls:
+	- winner.send(amount) (0x0608d0d987ca8371af38fa0b6e028760110b987e.sol#35)
+	State variables written after the call(s):
+	- playerPool.length = 0 (0x0608d0d987ca8371af38fa0b6e028760110b987e.sol#37)
+	Event emitted after the call(s):
+	- Payout(this,winner,amount) (0x0608d0d987ca8371af38fa0b6e028760110b987e.sol#35)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+DeflatLottoBurn.fallback() (0x0608d0d987ca8371af38fa0b6e028760110b987e.sol#26-44) uses literals with too many digits:
+	- maincontract.call.gas(200000).value(address(this).balance)() (0x0608d0d987ca8371af38fa0b6e028760110b987e.sol#41)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+DeflatLottoBurn.burncontract (0x0608d0d987ca8371af38fa0b6e028760110b987e.sol#21) should be constant 
+DeflatLottoBurn.comment (0x0608d0d987ca8371af38fa0b6e028760110b987e.sol#13) should be constant 
+DeflatLottoBurn.maincontract (0x0608d0d987ca8371af38fa0b6e028760110b987e.sol#20) should be constant 
+DeflatLottoBurn.name (0x0608d0d987ca8371af38fa0b6e028760110b987e.sol#10) should be constant 
+DeflatLottoBurn.prob (0x0608d0d987ca8371af38fa0b6e028760110b987e.sol#12) should be constant 
+DeflatLottoBurn.quota (0x0608d0d987ca8371af38fa0b6e028760110b987e.sol#24) should be constant 
+DeflatLottoBurn.rounds (0x0608d0d987ca8371af38fa0b6e028760110b987e.sol#23) should be constant 
+DeflatLottoBurn.symbol (0x0608d0d987ca8371af38fa0b6e028760110b987e.sol#11) should be constant 
+DeflatLottoBurn.tokenReward (0x0608d0d987ca8371af38fa0b6e028760110b987e.sol#22) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+./0x0608d0d987ca8371af38fa0b6e028760110b987e.sol analyzed (2 contracts with 94 detectors), 20 result(s) found
+
+real	0m1.452s
+user	0m1.234s
+sys	0m0.221s

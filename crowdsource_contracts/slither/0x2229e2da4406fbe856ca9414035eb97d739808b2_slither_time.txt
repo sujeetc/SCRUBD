@@ -1,0 +1,192 @@
+'solc --version' running
+'solc ./0x2229e2da4406fbe856ca9414035eb97d739808b2.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+Kichona.sendEth() (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#345-348) sends eth to arbitrary user
+	Dangerous calls:
+	- address(devAddress).transfer(ethBalance) (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#347)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+Reentrancy in Kichona._transfer(address,address,uint256) (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#376-392):
+	External calls:
+	- sellTaxTokens() (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#388)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#431-437)
+	External calls sending eth:
+	- sellTaxTokens() (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#388)
+		- address(marketingAddress).transfer(split) (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#420)
+		- address(devAddress).transfer(split) (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#421)
+	State variables written after the call(s):
+	- _tokenTransfer(from,to,amount,takeFees,isSell) (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#391)
+		- _balances[sender] = _balances[sender].sub(amount) (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#447)
+		- _balances[recipient] = _balances[recipient].add(transferAmount) (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#448)
+		- _balances[address(this)] = _balances[address(this)].add(taxAmount) (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#449)
+	Kichona._balances (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#218) can be used in cross function reentrancies:
+	- Kichona._tokenTransfer(address,address,uint256,bool,bool) (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#441-451)
+	- Kichona.balanceOf(address) (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#268-270)
+	- Kichona.constructor() (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#242-250)
+Reentrancy in Kichona.openTrading() (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#306-313):
+	External calls:
+	- uniswapV2Pair = IUniswapV2Factory(uniswapV2Router.factory()).createPair(address(this),uniswapV2Router.WETH()) (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#309)
+	- uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#310)
+	External calls sending eth:
+	- uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#310)
+	State variables written after the call(s):
+	- tradingOpen = true (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#311)
+	Kichona.tradingOpen (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#231) can be used in cross function reentrancies:
+	- Kichona.openTrading() (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#306-313)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+Kichona.extractERC20Tokens(address) (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#350-354) ignores return value by erc20Token.transfer(devAddress,balance) (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#353)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+Kichona.openTrading() (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#306-313) ignores return value by uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#310)
+Kichona.openTrading() (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#306-313) ignores return value by IERC20(uniswapV2Pair).approve(address(uniswapV2Router),type()(uint256).max) (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#312)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+Kichona.allowance(address,address).owner (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#277) shadows:
+	- Ownable.owner() (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#159-161) (function)
+Kichona._approve(address,address,uint256).owner (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#368) shadows:
+	- Ownable.owner() (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#159-161) (function)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#local-variable-shadowing
+
+Kichona.setEthPriceToSwap(uint256) (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#315-317) should emit an event for: 
+	- ethPriceToSwap = ethPriceToSwap_ (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#316) 
+Kichona.setMaxWalletAmount(uint256) (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#319-321) should emit an event for: 
+	- _maxWalletAmount = maxWalletAmount * 10 ** 9 (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#320) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+Kichona.setWalletAddresses(address,address).devAddr (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#335) lacks a zero-check on :
+		- devAddress = devAddr (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#336)
+Kichona.setWalletAddresses(address,address).marketingAddr (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#335) lacks a zero-check on :
+		- marketingAddress = marketingAddr (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#337)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in Kichona.transferFrom(address,address,uint256) (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#286-290):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#287)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#431-437)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#287)
+		- address(marketingAddress).transfer(split) (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#420)
+		- address(devAddress).transfer(split) (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#421)
+	State variables written after the call(s):
+	- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#288)
+		- _allowances[owner][spender] = amount (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#372)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in Kichona._transfer(address,address,uint256) (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#376-392):
+	External calls:
+	- sellTaxTokens() (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#388)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#431-437)
+	External calls sending eth:
+	- sellTaxTokens() (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#388)
+		- address(marketingAddress).transfer(split) (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#420)
+		- address(devAddress).transfer(split) (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#421)
+	Event emitted after the call(s):
+	- Transfer(sender,recipient,amount) (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#450)
+		- _tokenTransfer(from,to,amount,takeFees,isSell) (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#391)
+Reentrancy in Kichona.transferFrom(address,address,uint256) (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#286-290):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#287)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#431-437)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#287)
+		- address(marketingAddress).transfer(split) (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#420)
+		- address(devAddress).transfer(split) (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#421)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#373)
+		- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#288)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+Address.isContract(address) (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#88-97) uses assembly
+	- INLINE ASM (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#95)
+Address._functionCallWithValue(address,bytes,uint256,string) (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#124-145) uses assembly
+	- INLINE ASM (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#137-140)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#assembly-usage
+
+Context._msgData() (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#80-83) is never used and should be removed
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dead-code
+
+Kichona._totalSupply (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#224) is set pre-construction with a non-constant function or state variable:
+	- 1_000_000_000 * 10 ** _decimals
+Kichona._maxWalletAmount (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#225) is set pre-construction with a non-constant function or state variable:
+	- 40000000 * 10 ** _decimals
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#function-initializing-state
+
+Version constraint ^0.8.12 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- VerbatimInvalidDeduplication
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- AbiEncodeCallLiteralAsFixedBytesBug.
+It is used by:
+	- ^0.8.12 (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#5)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in Address.sendValue(address,uint256) (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#99-105):
+	- (success,None) = recipient.call{value: amount}() (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#103)
+Low level call in Address._functionCallWithValue(address,bytes,uint256,string) (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#124-145):
+	- (success,returndata) = target.call{value: weiValue}(data) (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#128)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Function IUniswapV2Router02.WETH() (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#194) is not in mixedCase
+Parameter Kichona.setSwapAndLiquifyEnabled(bool)._enabled (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#340) is not in mixedCase
+Variable Kichona._maxWalletAmount (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#225) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Redundant expression "this (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#81)" inContext (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#74-84)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#redundant-statements
+
+Reentrancy in Kichona._transfer(address,address,uint256) (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#376-392):
+	External calls:
+	- sellTaxTokens() (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#388)
+		- address(marketingAddress).transfer(split) (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#420)
+		- address(devAddress).transfer(split) (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#421)
+	State variables written after the call(s):
+	- _tokenTransfer(from,to,amount,takeFees,isSell) (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#391)
+		- _balances[sender] = _balances[sender].sub(amount) (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#447)
+		- _balances[recipient] = _balances[recipient].add(transferAmount) (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#448)
+		- _balances[address(this)] = _balances[address(this)].add(taxAmount) (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#449)
+	Event emitted after the call(s):
+	- Transfer(sender,recipient,amount) (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#450)
+		- _tokenTransfer(from,to,amount,takeFees,isSell) (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#391)
+Reentrancy in Kichona.transferFrom(address,address,uint256) (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#286-290):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#287)
+		- address(marketingAddress).transfer(split) (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#420)
+		- address(devAddress).transfer(split) (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#421)
+	State variables written after the call(s):
+	- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#288)
+		- _allowances[owner][spender] = amount (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#372)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#373)
+		- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#288)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+Kichona.slitherConstructorVariables() (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#200-453) uses literals with too many digits:
+	- _maxWalletAmount = 40000000 * 10 ** _decimals (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#225)
+Kichona.slitherConstructorVariables() (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#200-453) uses literals with too many digits:
+	- ethPriceToSwap = 100000000000000000 (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#228)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+Kichona.doTakeFees (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#238) is never used in Kichona (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#200-453)
+Kichona.isSellTxn (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#239) is never used in Kichona (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#200-453)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-state-variable
+
+Kichona._decimals (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#223) should be constant 
+Kichona._name (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#221) should be constant 
+Kichona._symbol (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#222) should be constant 
+Kichona.doTakeFees (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#238) should be constant 
+Kichona.isSellTxn (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#239) should be constant 
+Kichona.uniswapV2Router (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#216) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+
+Kichona._totalSupply (0x2229e2da4406fbe856ca9414035eb97d739808b2.sol#224) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+./0x2229e2da4406fbe856ca9414035eb97d739808b2.sol analyzed (8 contracts with 94 detectors), 40 result(s) found
+
+real	0m2.222s
+user	0m2.010s
+sys	0m0.215s

@@ -1,0 +1,267 @@
+'solc --version' running
+'solc ./0x13763173527aab169f588fd663886f17740dfc65.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+HARAMADAN._distributeTaxEth(uint256) (0x13763173527aab169f588fd663886f17740dfc65.sol#445-453) sends eth to arbitrary user
+	Dangerous calls:
+	- _walletMarketing.transfer(marketingAmount) (0x13763173527aab169f588fd663886f17740dfc65.sol#450)
+	- _walletDevelopment.transfer(developmentAmount) (0x13763173527aab169f588fd663886f17740dfc65.sol#451)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+Reentrancy in HARAMADAN._transferFrom(address,address,uint256) (0x13763173527aab169f588fd663886f17740dfc65.sol#263-277):
+	External calls:
+	- _swapTaxAndLiquify() (0x13763173527aab169f588fd663886f17740dfc65.sol#266)
+		- _primarySwapRouter.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x13763173527aab169f588fd663886f17740dfc65.sol#442)
+		- _primarySwapRouter.addLiquidityETH{value: _ethAmountWei}(address(this),_tokenAmount,0,0,lpTokenRecipient,block.timestamp) (0x13763173527aab169f588fd663886f17740dfc65.sol#253)
+	External calls sending eth:
+	- _swapTaxAndLiquify() (0x13763173527aab169f588fd663886f17740dfc65.sol#266)
+		- _walletMarketing.transfer(marketingAmount) (0x13763173527aab169f588fd663886f17740dfc65.sol#450)
+		- _primarySwapRouter.addLiquidityETH{value: _ethAmountWei}(address(this),_tokenAmount,0,0,lpTokenRecipient,block.timestamp) (0x13763173527aab169f588fd663886f17740dfc65.sol#253)
+		- _walletDevelopment.transfer(developmentAmount) (0x13763173527aab169f588fd663886f17740dfc65.sol#451)
+	State variables written after the call(s):
+	- _balances[sender] = _balances[sender] - amount (0x13763173527aab169f588fd663886f17740dfc65.sol#272)
+	HARAMADAN._balances (0x13763173527aab169f588fd663886f17740dfc65.sol#153) can be used in cross function reentrancies:
+	- HARAMADAN._burnTokens(address,uint256) (0x13763173527aab169f588fd663886f17740dfc65.sol#405-411)
+	- HARAMADAN._checkLimits(address,address,uint256) (0x13763173527aab169f588fd663886f17740dfc65.sol#279-286)
+	- HARAMADAN._swapTaxAndLiquify() (0x13763173527aab169f588fd663886f17740dfc65.sol#413-435)
+	- HARAMADAN._transferFrom(address,address,uint256) (0x13763173527aab169f588fd663886f17740dfc65.sol#263-277)
+	- HARAMADAN.addLiquidity() (0x13763173527aab169f588fd663886f17740dfc65.sol#235-247)
+	- HARAMADAN.airdrop(address[],uint256[]) (0x13763173527aab169f588fd663886f17740dfc65.sol#468-485)
+	- HARAMADAN.balanceOf(address) (0x13763173527aab169f588fd663886f17740dfc65.sol#206)
+	- HARAMADAN.constructor() (0x13763173527aab169f588fd663886f17740dfc65.sol#177-198)
+	- HARAMADAN.manualTaxSwapAndSend(uint8,bool) (0x13763173527aab169f588fd663886f17740dfc65.sol#455-466)
+	- _balances[recipient] = _balances[recipient] + _transferAmount (0x13763173527aab169f588fd663886f17740dfc65.sol#274)
+	HARAMADAN._balances (0x13763173527aab169f588fd663886f17740dfc65.sol#153) can be used in cross function reentrancies:
+	- HARAMADAN._burnTokens(address,uint256) (0x13763173527aab169f588fd663886f17740dfc65.sol#405-411)
+	- HARAMADAN._checkLimits(address,address,uint256) (0x13763173527aab169f588fd663886f17740dfc65.sol#279-286)
+	- HARAMADAN._swapTaxAndLiquify() (0x13763173527aab169f588fd663886f17740dfc65.sol#413-435)
+	- HARAMADAN._transferFrom(address,address,uint256) (0x13763173527aab169f588fd663886f17740dfc65.sol#263-277)
+	- HARAMADAN.addLiquidity() (0x13763173527aab169f588fd663886f17740dfc65.sol#235-247)
+	- HARAMADAN.airdrop(address[],uint256[]) (0x13763173527aab169f588fd663886f17740dfc65.sol#468-485)
+	- HARAMADAN.balanceOf(address) (0x13763173527aab169f588fd663886f17740dfc65.sol#206)
+	- HARAMADAN.constructor() (0x13763173527aab169f588fd663886f17740dfc65.sol#177-198)
+	- HARAMADAN.manualTaxSwapAndSend(uint8,bool) (0x13763173527aab169f588fd663886f17740dfc65.sol#455-466)
+	- _swapLimit += _taxAmount (0x13763173527aab169f588fd663886f17740dfc65.sol#273)
+	HARAMADAN._swapLimit (0x13763173527aab169f588fd663886f17740dfc65.sol#151) can be used in cross function reentrancies:
+	- HARAMADAN._swapTaxAndLiquify() (0x13763173527aab169f588fd663886f17740dfc65.sol#413-435)
+	- HARAMADAN._transferFrom(address,address,uint256) (0x13763173527aab169f588fd663886f17740dfc65.sol#263-277)
+	- HARAMADAN.addLiquidity() (0x13763173527aab169f588fd663886f17740dfc65.sol#235-247)
+Reentrancy in HARAMADAN.addLiquidity() (0x13763173527aab169f588fd663886f17740dfc65.sol#235-247):
+	External calls:
+	- _primaryLP = IUniswapV2Factory(_primarySwapRouter.factory()).createPair(address(this),_primarySwapRouter.WETH()) (0x13763173527aab169f588fd663886f17740dfc65.sol#240)
+	- _addLiquidity(_balances[address(this)],address(this).balance,false) (0x13763173527aab169f588fd663886f17740dfc65.sol#241)
+		- _primarySwapRouter.addLiquidityETH{value: _ethAmountWei}(address(this),_tokenAmount,0,0,lpTokenRecipient,block.timestamp) (0x13763173527aab169f588fd663886f17740dfc65.sol#253)
+	External calls sending eth:
+	- _addLiquidity(_balances[address(this)],address(this).balance,false) (0x13763173527aab169f588fd663886f17740dfc65.sol#241)
+		- _primarySwapRouter.addLiquidityETH{value: _ethAmountWei}(address(this),_tokenAmount,0,0,lpTokenRecipient,block.timestamp) (0x13763173527aab169f588fd663886f17740dfc65.sol#253)
+	State variables written after the call(s):
+	- _balances[_primaryLP] -= _swapLimit (0x13763173527aab169f588fd663886f17740dfc65.sol#242)
+	HARAMADAN._balances (0x13763173527aab169f588fd663886f17740dfc65.sol#153) can be used in cross function reentrancies:
+	- HARAMADAN._burnTokens(address,uint256) (0x13763173527aab169f588fd663886f17740dfc65.sol#405-411)
+	- HARAMADAN._checkLimits(address,address,uint256) (0x13763173527aab169f588fd663886f17740dfc65.sol#279-286)
+	- HARAMADAN._swapTaxAndLiquify() (0x13763173527aab169f588fd663886f17740dfc65.sol#413-435)
+	- HARAMADAN._transferFrom(address,address,uint256) (0x13763173527aab169f588fd663886f17740dfc65.sol#263-277)
+	- HARAMADAN.addLiquidity() (0x13763173527aab169f588fd663886f17740dfc65.sol#235-247)
+	- HARAMADAN.airdrop(address[],uint256[]) (0x13763173527aab169f588fd663886f17740dfc65.sol#468-485)
+	- HARAMADAN.balanceOf(address) (0x13763173527aab169f588fd663886f17740dfc65.sol#206)
+	- HARAMADAN.constructor() (0x13763173527aab169f588fd663886f17740dfc65.sol#177-198)
+	- HARAMADAN.manualTaxSwapAndSend(uint8,bool) (0x13763173527aab169f588fd663886f17740dfc65.sol#455-466)
+Reentrancy in HARAMADAN.addLiquidity() (0x13763173527aab169f588fd663886f17740dfc65.sol#235-247):
+	External calls:
+	- _primaryLP = IUniswapV2Factory(_primarySwapRouter.factory()).createPair(address(this),_primarySwapRouter.WETH()) (0x13763173527aab169f588fd663886f17740dfc65.sol#240)
+	- _addLiquidity(_balances[address(this)],address(this).balance,false) (0x13763173527aab169f588fd663886f17740dfc65.sol#241)
+		- _primarySwapRouter.addLiquidityETH{value: _ethAmountWei}(address(this),_tokenAmount,0,0,lpTokenRecipient,block.timestamp) (0x13763173527aab169f588fd663886f17740dfc65.sol#253)
+	- (lpAddSuccess,None) = _primaryLP.call(abi.encodeWithSignature(sync())) (0x13763173527aab169f588fd663886f17740dfc65.sol#243)
+	External calls sending eth:
+	- _addLiquidity(_balances[address(this)],address(this).balance,false) (0x13763173527aab169f588fd663886f17740dfc65.sol#241)
+		- _primarySwapRouter.addLiquidityETH{value: _ethAmountWei}(address(this),_tokenAmount,0,0,lpTokenRecipient,block.timestamp) (0x13763173527aab169f588fd663886f17740dfc65.sol#253)
+	State variables written after the call(s):
+	- _openTrading() (0x13763173527aab169f588fd663886f17740dfc65.sol#246)
+		- _tradingOpen = true (0x13763173527aab169f588fd663886f17740dfc65.sol#259)
+	HARAMADAN._tradingOpen (0x13763173527aab169f588fd663886f17740dfc65.sol#165) can be used in cross function reentrancies:
+	- HARAMADAN._calculateTax(address,address,uint256) (0x13763173527aab169f588fd663886f17740dfc65.sol#296-314)
+	- HARAMADAN._checkLimits(address,address,uint256) (0x13763173527aab169f588fd663886f17740dfc65.sol#279-286)
+	- HARAMADAN._checkTradingOpen(address) (0x13763173527aab169f588fd663886f17740dfc65.sol#288-294)
+	- HARAMADAN._openTrading() (0x13763173527aab169f588fd663886f17740dfc65.sol#256-261)
+	- HARAMADAN._swapTaxAndLiquify() (0x13763173527aab169f588fd663886f17740dfc65.sol#413-435)
+	- HARAMADAN._transferFrom(address,address,uint256) (0x13763173527aab169f588fd663886f17740dfc65.sol#263-277)
+	- HARAMADAN.addLiquidity() (0x13763173527aab169f588fd663886f17740dfc65.sol#235-247)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+HARAMADAN.slitherConstructorVariables() (0x13763173527aab169f588fd663886f17740dfc65.sol#124-494) performs a multiplication on the result of a division:
+	- _taxSwapMin = _totalSupply * 10 / 100000 (0x13763173527aab169f588fd663886f17740dfc65.sol#149)
+	- _swapLimit = _taxSwapMin * 40 * 100 (0x13763173527aab169f588fd663886f17740dfc65.sol#151)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+Reentrancy in HARAMADAN._swapTaxAndLiquify() (0x13763173527aab169f588fd663886f17740dfc65.sol#413-435):
+	External calls:
+	- _swapTaxTokensForEth(_tokensToSwap) (0x13763173527aab169f588fd663886f17740dfc65.sol#423)
+		- _primarySwapRouter.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x13763173527aab169f588fd663886f17740dfc65.sol#442)
+	State variables written after the call(s):
+	- _approveRouter(_tokensForLP) (0x13763173527aab169f588fd663886f17740dfc65.sol#428)
+		- _allowances[address(this)][_swapRouterAddress] = type()(uint256).max (0x13763173527aab169f588fd663886f17740dfc65.sol#230)
+	HARAMADAN._allowances (0x13763173527aab169f588fd663886f17740dfc65.sol#154) can be used in cross function reentrancies:
+	- HARAMADAN._approveRouter(uint256) (0x13763173527aab169f588fd663886f17740dfc65.sol#228-233)
+	- HARAMADAN.allowance(address,address) (0x13763173527aab169f588fd663886f17740dfc65.sol#207)
+	- HARAMADAN.approve(address,uint256) (0x13763173527aab169f588fd663886f17740dfc65.sol#209-213)
+	- HARAMADAN.transferFrom(address,address,uint256) (0x13763173527aab169f588fd663886f17740dfc65.sol#220-226)
+	- _swapLimit -= _taxTokensAvailable (0x13763173527aab169f588fd663886f17740dfc65.sol#424)
+	HARAMADAN._swapLimit (0x13763173527aab169f588fd663886f17740dfc65.sol#151) can be used in cross function reentrancies:
+	- HARAMADAN._swapTaxAndLiquify() (0x13763173527aab169f588fd663886f17740dfc65.sol#413-435)
+	- HARAMADAN._transferFrom(address,address,uint256) (0x13763173527aab169f588fd663886f17740dfc65.sol#263-277)
+	- HARAMADAN.addLiquidity() (0x13763173527aab169f588fd663886f17740dfc65.sol#235-247)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+HARAMADAN._calculateTax(address,address,uint256).taxAmount (0x13763173527aab169f588fd663886f17740dfc65.sol#297) is a local variable never initialized
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#uninitialized-local-variables
+
+HARAMADAN._addLiquidity(uint256,uint256,bool) (0x13763173527aab169f588fd663886f17740dfc65.sol#249-254) ignores return value by _primarySwapRouter.addLiquidityETH{value: _ethAmountWei}(address(this),_tokenAmount,0,0,lpTokenRecipient,block.timestamp) (0x13763173527aab169f588fd663886f17740dfc65.sol#253)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+HARAMADAN.setFees(uint8,uint8) (0x13763173527aab169f588fd663886f17740dfc65.sol#339-343) should emit an event for: 
+	- _buyTaxRate = buy (0x13763173527aab169f588fd663886f17740dfc65.sol#341) 
+	- _sellTaxRate = sell (0x13763173527aab169f588fd663886f17740dfc65.sol#342) 
+HARAMADAN.setFeeSplit(uint16,uint16,uint16) (0x13763173527aab169f588fd663886f17740dfc65.sol#344-351) should emit an event for: 
+	- _taxSharesLP = sharesAutoLP (0x13763173527aab169f588fd663886f17740dfc65.sol#347) 
+	- _taxSharesMarketing = sharesMarketing (0x13763173527aab169f588fd663886f17740dfc65.sol#348) 
+	- _taxSharesDevelopment = sharesDevelopment (0x13763173527aab169f588fd663886f17740dfc65.sol#349) 
+	- _totalTaxShares = totalShares (0x13763173527aab169f588fd663886f17740dfc65.sol#350) 
+HARAMADAN.setLimits(uint16,uint16) (0x13763173527aab169f588fd663886f17740dfc65.sol#388-395) should emit an event for: 
+	- _maxTxAmount = newTxAmt (0x13763173527aab169f588fd663886f17740dfc65.sol#391) 
+	- _maxWalletAmount = newWalletAmt (0x13763173527aab169f588fd663886f17740dfc65.sol#394) 
+HARAMADAN.setTaxSwap(uint32,uint32,uint32,uint32) (0x13763173527aab169f588fd663886f17740dfc65.sol#397-403) should emit an event for: 
+	- _taxSwapMin = _totalSupply * minValue / minDivider (0x13763173527aab169f588fd663886f17740dfc65.sol#398) 
+	- _taxSwapMax = _totalSupply * maxValue / maxDivider (0x13763173527aab169f588fd663886f17740dfc65.sol#399) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+Auth.transferOwnership(address).newOwner (0x13763173527aab169f588fd663886f17740dfc65.sol#113) lacks a zero-check on :
+		- _owner = newOwner (0x13763173527aab169f588fd663886f17740dfc65.sol#114)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in HARAMADAN.addLiquidity() (0x13763173527aab169f588fd663886f17740dfc65.sol#235-247):
+	External calls:
+	- _primaryLP = IUniswapV2Factory(_primarySwapRouter.factory()).createPair(address(this),_primarySwapRouter.WETH()) (0x13763173527aab169f588fd663886f17740dfc65.sol#240)
+	- _addLiquidity(_balances[address(this)],address(this).balance,false) (0x13763173527aab169f588fd663886f17740dfc65.sol#241)
+		- _primarySwapRouter.addLiquidityETH{value: _ethAmountWei}(address(this),_tokenAmount,0,0,lpTokenRecipient,block.timestamp) (0x13763173527aab169f588fd663886f17740dfc65.sol#253)
+	- (lpAddSuccess,None) = _primaryLP.call(abi.encodeWithSignature(sync())) (0x13763173527aab169f588fd663886f17740dfc65.sol#243)
+	External calls sending eth:
+	- _addLiquidity(_balances[address(this)],address(this).balance,false) (0x13763173527aab169f588fd663886f17740dfc65.sol#241)
+		- _primarySwapRouter.addLiquidityETH{value: _ethAmountWei}(address(this),_tokenAmount,0,0,lpTokenRecipient,block.timestamp) (0x13763173527aab169f588fd663886f17740dfc65.sol#253)
+	State variables written after the call(s):
+	- _isLP[_primaryLP] = lpAddSuccess (0x13763173527aab169f588fd663886f17740dfc65.sol#245)
+	- _openTrading() (0x13763173527aab169f588fd663886f17740dfc65.sol#246)
+		- _launchBlock = block.number (0x13763173527aab169f588fd663886f17740dfc65.sol#260)
+	- _openTrading() (0x13763173527aab169f588fd663886f17740dfc65.sol#246)
+		- _maxTxAmount = _totalSupply * 1 / 100 (0x13763173527aab169f588fd663886f17740dfc65.sol#257)
+	- _openTrading() (0x13763173527aab169f588fd663886f17740dfc65.sol#246)
+		- _maxWalletAmount = _totalSupply * 1 / 100 (0x13763173527aab169f588fd663886f17740dfc65.sol#258)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in HARAMADAN._swapTaxAndLiquify() (0x13763173527aab169f588fd663886f17740dfc65.sol#413-435):
+	External calls:
+	- _swapTaxTokensForEth(_tokensToSwap) (0x13763173527aab169f588fd663886f17740dfc65.sol#423)
+		- _primarySwapRouter.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x13763173527aab169f588fd663886f17740dfc65.sol#442)
+	Event emitted after the call(s):
+	- Approval(address(this),_swapRouterAddress,type()(uint256).max) (0x13763173527aab169f588fd663886f17740dfc65.sol#231)
+		- _approveRouter(_tokensForLP) (0x13763173527aab169f588fd663886f17740dfc65.sol#428)
+Reentrancy in HARAMADAN._swapTaxAndLiquify() (0x13763173527aab169f588fd663886f17740dfc65.sol#413-435):
+	External calls:
+	- _swapTaxTokensForEth(_tokensToSwap) (0x13763173527aab169f588fd663886f17740dfc65.sol#423)
+		- _primarySwapRouter.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x13763173527aab169f588fd663886f17740dfc65.sol#442)
+	- _addLiquidity(_tokensForLP,_ethWeiAmount,false) (0x13763173527aab169f588fd663886f17740dfc65.sol#429)
+		- _primarySwapRouter.addLiquidityETH{value: _ethAmountWei}(address(this),_tokenAmount,0,0,lpTokenRecipient,block.timestamp) (0x13763173527aab169f588fd663886f17740dfc65.sol#253)
+	External calls sending eth:
+	- _addLiquidity(_tokensForLP,_ethWeiAmount,false) (0x13763173527aab169f588fd663886f17740dfc65.sol#429)
+		- _primarySwapRouter.addLiquidityETH{value: _ethAmountWei}(address(this),_tokenAmount,0,0,lpTokenRecipient,block.timestamp) (0x13763173527aab169f588fd663886f17740dfc65.sol#253)
+	Event emitted after the call(s):
+	- Approval(address(this),_swapRouterAddress,type()(uint256).max) (0x13763173527aab169f588fd663886f17740dfc65.sol#231)
+		- _addLiquidity(_tokensForLP,_ethWeiAmount,false) (0x13763173527aab169f588fd663886f17740dfc65.sol#429)
+Reentrancy in HARAMADAN._transferFrom(address,address,uint256) (0x13763173527aab169f588fd663886f17740dfc65.sol#263-277):
+	External calls:
+	- _swapTaxAndLiquify() (0x13763173527aab169f588fd663886f17740dfc65.sol#266)
+		- _primarySwapRouter.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x13763173527aab169f588fd663886f17740dfc65.sol#442)
+		- _primarySwapRouter.addLiquidityETH{value: _ethAmountWei}(address(this),_tokenAmount,0,0,lpTokenRecipient,block.timestamp) (0x13763173527aab169f588fd663886f17740dfc65.sol#253)
+	External calls sending eth:
+	- _swapTaxAndLiquify() (0x13763173527aab169f588fd663886f17740dfc65.sol#266)
+		- _walletMarketing.transfer(marketingAmount) (0x13763173527aab169f588fd663886f17740dfc65.sol#450)
+		- _primarySwapRouter.addLiquidityETH{value: _ethAmountWei}(address(this),_tokenAmount,0,0,lpTokenRecipient,block.timestamp) (0x13763173527aab169f588fd663886f17740dfc65.sol#253)
+		- _walletDevelopment.transfer(developmentAmount) (0x13763173527aab169f588fd663886f17740dfc65.sol#451)
+	Event emitted after the call(s):
+	- Transfer(sender,recipient,amount) (0x13763173527aab169f588fd663886f17740dfc65.sol#275)
+Reentrancy in HARAMADAN.addLiquidity() (0x13763173527aab169f588fd663886f17740dfc65.sol#235-247):
+	External calls:
+	- _primaryLP = IUniswapV2Factory(_primarySwapRouter.factory()).createPair(address(this),_primarySwapRouter.WETH()) (0x13763173527aab169f588fd663886f17740dfc65.sol#240)
+	- _addLiquidity(_balances[address(this)],address(this).balance,false) (0x13763173527aab169f588fd663886f17740dfc65.sol#241)
+		- _primarySwapRouter.addLiquidityETH{value: _ethAmountWei}(address(this),_tokenAmount,0,0,lpTokenRecipient,block.timestamp) (0x13763173527aab169f588fd663886f17740dfc65.sol#253)
+	External calls sending eth:
+	- _addLiquidity(_balances[address(this)],address(this).balance,false) (0x13763173527aab169f588fd663886f17740dfc65.sol#241)
+		- _primarySwapRouter.addLiquidityETH{value: _ethAmountWei}(address(this),_tokenAmount,0,0,lpTokenRecipient,block.timestamp) (0x13763173527aab169f588fd663886f17740dfc65.sol#253)
+	Event emitted after the call(s):
+	- Approval(address(this),_swapRouterAddress,type()(uint256).max) (0x13763173527aab169f588fd663886f17740dfc65.sol#231)
+		- _addLiquidity(_balances[address(this)],address(this).balance,false) (0x13763173527aab169f588fd663886f17740dfc65.sol#241)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+HARAMADAN._totalTaxShares (0x13763173527aab169f588fd663886f17740dfc65.sol#141) is set pre-construction with a non-constant function or state variable:
+	- _taxSharesMarketing + _taxSharesDevelopment + _taxSharesLP
+HARAMADAN._swapLimit (0x13763173527aab169f588fd663886f17740dfc65.sol#151) is set pre-construction with a non-constant function or state variable:
+	- _taxSwapMin * 40 * 100
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#function-initializing-state
+
+Version constraint 0.8.17 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- VerbatimInvalidDeduplication
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess.
+It is used by:
+	- 0.8.17 (0x13763173527aab169f588fd663886f17740dfc65.sol#75)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in HARAMADAN.addLiquidity() (0x13763173527aab169f588fd663886f17740dfc65.sol#235-247):
+	- (lpAddSuccess,None) = _primaryLP.call(abi.encodeWithSignature(sync())) (0x13763173527aab169f588fd663886f17740dfc65.sol#243)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Parameter IERC20.allowance(address,address).__owner (0x13763173527aab169f588fd663886f17740dfc65.sol#84) is not in mixedCase
+Function IUniswapV2Router02.WETH() (0x13763173527aab169f588fd663886f17740dfc65.sol#96) is not in mixedCase
+Parameter HARAMADAN.updateWallets(address,address,address).LPtokens (0x13763173527aab169f588fd663886f17740dfc65.sol#360) is not in mixedCase
+Constant HARAMADAN._decimals (0x13763173527aab169f588fd663886f17740dfc65.sol#125) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant HARAMADAN._totalSupply (0x13763173527aab169f588fd663886f17740dfc65.sol#126) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant HARAMADAN._name (0x13763173527aab169f588fd663886f17740dfc65.sol#127) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant HARAMADAN._symbol (0x13763173527aab169f588fd663886f17740dfc65.sol#128) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant HARAMADAN._swapRouterAddress (0x13763173527aab169f588fd663886f17740dfc65.sol#160) is not in UPPER_CASE_WITH_UNDERSCORES
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in HARAMADAN._transferFrom(address,address,uint256) (0x13763173527aab169f588fd663886f17740dfc65.sol#263-277):
+	External calls:
+	- _swapTaxAndLiquify() (0x13763173527aab169f588fd663886f17740dfc65.sol#266)
+		- _walletMarketing.transfer(marketingAmount) (0x13763173527aab169f588fd663886f17740dfc65.sol#450)
+		- _walletDevelopment.transfer(developmentAmount) (0x13763173527aab169f588fd663886f17740dfc65.sol#451)
+	External calls sending eth:
+	- _swapTaxAndLiquify() (0x13763173527aab169f588fd663886f17740dfc65.sol#266)
+		- _walletMarketing.transfer(marketingAmount) (0x13763173527aab169f588fd663886f17740dfc65.sol#450)
+		- _primarySwapRouter.addLiquidityETH{value: _ethAmountWei}(address(this),_tokenAmount,0,0,lpTokenRecipient,block.timestamp) (0x13763173527aab169f588fd663886f17740dfc65.sol#253)
+		- _walletDevelopment.transfer(developmentAmount) (0x13763173527aab169f588fd663886f17740dfc65.sol#451)
+	State variables written after the call(s):
+	- _balances[sender] = _balances[sender] - amount (0x13763173527aab169f588fd663886f17740dfc65.sol#272)
+	- _balances[recipient] = _balances[recipient] + _transferAmount (0x13763173527aab169f588fd663886f17740dfc65.sol#274)
+	- _swapLimit += _taxAmount (0x13763173527aab169f588fd663886f17740dfc65.sol#273)
+	Event emitted after the call(s):
+	- Transfer(sender,recipient,amount) (0x13763173527aab169f588fd663886f17740dfc65.sol#275)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+HARAMADAN.setTaxSwap(uint32,uint32,uint32,uint32) (0x13763173527aab169f588fd663886f17740dfc65.sol#397-403) uses literals with too many digits:
+	- require(bool,string)(_taxSwapMax > _totalSupply / 100000,Max too low) (0x13763173527aab169f588fd663886f17740dfc65.sol#401)
+HARAMADAN.slitherConstructorVariables() (0x13763173527aab169f588fd663886f17740dfc65.sol#124-494) uses literals with too many digits:
+	- _taxSwapMin = _totalSupply * 10 / 100000 (0x13763173527aab169f588fd663886f17740dfc65.sol#149)
+HARAMADAN.slitherConstructorVariables() (0x13763173527aab169f588fd663886f17740dfc65.sol#124-494) uses literals with too many digits:
+	- _taxSwapMax = _totalSupply * 150 / 100000 (0x13763173527aab169f588fd663886f17740dfc65.sol#150)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+HARAMADAN._primarySwapRouter (0x13763173527aab169f588fd663886f17740dfc65.sol#161) should be constant 
+HARAMADAN.antiSnipeBlocks1 (0x13763173527aab169f588fd663886f17740dfc65.sol#132) should be constant 
+HARAMADAN.antiSnipeBlocks2 (0x13763173527aab169f588fd663886f17740dfc65.sol#133) should be constant 
+HARAMADAN.antiSnipeTax1 (0x13763173527aab169f588fd663886f17740dfc65.sol#130) should be constant 
+HARAMADAN.antiSnipeTax2 (0x13763173527aab169f588fd663886f17740dfc65.sol#131) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+./0x13763173527aab169f588fd663886f17740dfc65.sol analyzed (5 contracts with 94 detectors), 39 result(s) found
+
+real	0m2.623s
+user	0m2.425s
+sys	0m0.201s

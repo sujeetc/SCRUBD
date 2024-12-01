@@ -1,0 +1,86 @@
+'solc --version' running
+'solc ./0x0acbcc45dde258b18c11b16b06bdc64fd91913ac.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+TokenTimelock.release() (0x0acbcc45dde258b18c11b16b06bdc64fd91913ac.sol#273-280) ignores return value by token.transfer(beneficiary,amount) (0x0acbcc45dde258b18c11b16b06bdc64fd91913ac.sol#279)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+Reentrancy in Crowdsale.setState(Crowdsale.State) (0x0acbcc45dde258b18c11b16b06bdc64fd91913ac.sol#131-147):
+	External calls:
+	- _finish() (0x0acbcc45dde258b18c11b16b06bdc64fd91913ac.sol#144)
+		- IToken(token).start() (0x0acbcc45dde258b18c11b16b06bdc64fd91913ac.sol#193)
+	State variables written after the call(s):
+	- currentState = _newState (0x0acbcc45dde258b18c11b16b06bdc64fd91913ac.sol#146)
+	Crowdsale.currentState (0x0acbcc45dde258b18c11b16b06bdc64fd91913ac.sol#69) can be used in cross function reentrancies:
+	- Crowdsale.currentState (0x0acbcc45dde258b18c11b16b06bdc64fd91913ac.sol#69)
+	- Crowdsale.inState(Crowdsale.State) (0x0acbcc45dde258b18c11b16b06bdc64fd91913ac.sol#81-84)
+	- Crowdsale.notClosed() (0x0acbcc45dde258b18c11b16b06bdc64fd91913ac.sol#91-94)
+	- Crowdsale.salesRunning() (0x0acbcc45dde258b18c11b16b06bdc64fd91913ac.sol#86-89)
+	- Crowdsale.setState(Crowdsale.State) (0x0acbcc45dde258b18c11b16b06bdc64fd91913ac.sol#131-147)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+Crowdsale._mint(address,uint256) (0x0acbcc45dde258b18c11b16b06bdc64fd91913ac.sol#180-187) ignores return value by IToken(token).mint(_to,_amount) (0x0acbcc45dde258b18c11b16b06bdc64fd91913ac.sol#185)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+Owned.transferOwnership(address)._newOwner (0x0acbcc45dde258b18c11b16b06bdc64fd91913ac.sol#47) lacks a zero-check on :
+		- newOwner = _newOwner (0x0acbcc45dde258b18c11b16b06bdc64fd91913ac.sol#48)
+Crowdsale.Crowdsale(address)._beneficiary (0x0acbcc45dde258b18c11b16b06bdc64fd91913ac.sol#96) lacks a zero-check on :
+		- beneficiary = _beneficiary (0x0acbcc45dde258b18c11b16b06bdc64fd91913ac.sol#97)
+TokenTimelock.TokenTimelock(address,address,uint64)._beneficiary (0x0acbcc45dde258b18c11b16b06bdc64fd91913ac.sol#266) lacks a zero-check on :
+		- beneficiary = _beneficiary (0x0acbcc45dde258b18c11b16b06bdc64fd91913ac.sol#269)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in Crowdsale._mint(address,uint256) (0x0acbcc45dde258b18c11b16b06bdc64fd91913ac.sol#180-187):
+	External calls:
+	- IToken(token).mint(_to,_amount) (0x0acbcc45dde258b18c11b16b06bdc64fd91913ac.sol#185)
+	Event emitted after the call(s):
+	- Transfer(_to,_amount) (0x0acbcc45dde258b18c11b16b06bdc64fd91913ac.sol#186)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+TokenTimelock.TokenTimelock(address,address,uint64) (0x0acbcc45dde258b18c11b16b06bdc64fd91913ac.sol#266-271) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(_releaseTime > now) (0x0acbcc45dde258b18c11b16b06bdc64fd91913ac.sol#267)
+TokenTimelock.release() (0x0acbcc45dde258b18c11b16b06bdc64fd91913ac.sol#273-280) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(now >= releaseTime) (0x0acbcc45dde258b18c11b16b06bdc64fd91913ac.sol#274)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Version constraint ^0.4.13 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ExpExponentCleanup
+	- NestedArrayFunctionCallDecoder
+	- ZeroFunctionSelector
+	- DelegateCallReturnValue
+	- ECRecoverMalformedInput.
+It is used by:
+	- ^0.4.13 (0x0acbcc45dde258b18c11b16b06bdc64fd91913ac.sol#1)
+solc-0.4.13 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Parameter Owned.transferOwnership(address)._newOwner (0x0acbcc45dde258b18c11b16b06bdc64fd91913ac.sol#47) is not in mixedCase
+Parameter Crowdsale.initialize(address)._token (0x0acbcc45dde258b18c11b16b06bdc64fd91913ac.sol#108) is not in mixedCase
+Parameter Crowdsale.setTokenPrice(uint256)._tokenPrice (0x0acbcc45dde258b18c11b16b06bdc64fd91913ac.sol#117) is not in mixedCase
+Parameter Crowdsale.setTokenPriceAsRatio(uint256)._tokenCount (0x0acbcc45dde258b18c11b16b06bdc64fd91913ac.sol#124) is not in mixedCase
+Parameter Crowdsale.setState(Crowdsale.State)._newState (0x0acbcc45dde258b18c11b16b06bdc64fd91913ac.sol#131) is not in mixedCase
+Parameter Crowdsale.withdraw(uint256)._amount (0x0acbcc45dde258b18c11b16b06bdc64fd91913ac.sol#150) is not in mixedCase
+Parameter Crowdsale.sendToken(address,uint256)._to (0x0acbcc45dde258b18c11b16b06bdc64fd91913ac.sol#159) is not in mixedCase
+Parameter Crowdsale.sendToken(address,uint256)._amount (0x0acbcc45dde258b18c11b16b06bdc64fd91913ac.sol#159) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Crowdsale.slitherConstructorConstantVariables() (0x0acbcc45dde258b18c11b16b06bdc64fd91913ac.sol#59-225) uses literals with too many digits:
+	- MAX_SUPPLY = 3400000000 * DECIMALS (0x0acbcc45dde258b18c11b16b06bdc64fd91913ac.sol#66)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+./0x0acbcc45dde258b18c11b16b06bdc64fd91913ac.sol analyzed (6 contracts with 94 detectors), 20 result(s) found
+
+real	0m1.566s
+user	0m1.386s
+sys	0m0.182s

@@ -1,0 +1,325 @@
+'solc --version' running
+'solc ./0x190956a704fbb70f0acce8338870771d17654952.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+MessierAnonymity.withdraw(bytes,bytes32,bytes32,address,address,uint256,uint256) (0x190956a704fbb70f0acce8338870771d17654952.sol#540-574) sends eth to arbitrary user
+	Dangerous calls:
+	- (success,None) = _relayer.call.value(_relayerFee)() (0x190956a704fbb70f0acce8338870771d17654952.sol#564)
+	- (success_scope_0,None) = _recipient.call.value(cd)() (0x190956a704fbb70f0acce8338870771d17654952.sol#569)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+MerkleTreeWithHistory (0x190956a704fbb70f0acce8338870771d17654952.sol#228-328) contract sets array length with a user-controlled value:
+	- filledSubtrees.push(currentZero) (0x190956a704fbb70f0acce8338870771d17654952.sol#248)
+MerkleTreeWithHistory (0x190956a704fbb70f0acce8338870771d17654952.sol#228-328) contract sets array length with a user-controlled value:
+	- zeros.push(currentZero) (0x190956a704fbb70f0acce8338870771d17654952.sol#247)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#array-length-assignment
+
+Reentrancy in MessierAnonymity.deposit(bytes32) (0x190956a704fbb70f0acce8338870771d17654952.sol#501-538):
+	External calls:
+	- require(bool,string)(M87Token.transferFrom(msg.sender,address(this),M87Deno.add(fee)),insufficient M87 allowance) (0x190956a704fbb70f0acce8338870771d17654952.sol#513)
+	- safeTransfer(M87Token,t,fee) (0x190956a704fbb70f0acce8338870771d17654952.sol#517)
+		- _token.safeTransfer(_to,balance) (0x190956a704fbb70f0acce8338870771d17654952.sol#601)
+		- _token.safeTransfer(_to,_amount) (0x190956a704fbb70f0acce8338870771d17654952.sol#603)
+		- (success,returndata) = address(token).call(data) (0x190956a704fbb70f0acce8338870771d17654952.sol#210)
+	- token.safeTransferFrom(msg.sender,address(this),td) (0x190956a704fbb70f0acce8338870771d17654952.sol#521)
+	- (success,None) = msg.sender.call.value(refund)() (0x190956a704fbb70f0acce8338870771d17654952.sol#526)
+	- swapAndShare() (0x190956a704fbb70f0acce8338870771d17654952.sol#532)
+		- uniswapV2Router.swapExactETHForTokensSupportingFeeOnTransferTokens.value(collectedFee)(0,path,address(this),block.timestamp.mul(2)) (0x190956a704fbb70f0acce8338870771d17654952.sol#629-635)
+		- M87Token.transfer(address(0x000000000000000000000000000000000000dEaD),newBalance.mul(shareOfReward[0]).div(100)) (0x190956a704fbb70f0acce8338870771d17654952.sol#643)
+		- M87Token.transfer(poolList[0],newBalance.mul(shareOfReward[1]).div(100)) (0x190956a704fbb70f0acce8338870771d17654952.sol#647)
+		- M87Token.transfer(poolList[1],newBalance.mul(shareOfReward[2]).div(100)) (0x190956a704fbb70f0acce8338870771d17654952.sol#651)
+		- M87Token.transfer(poolList[2],newBalance.mul(shareOfReward[3]).div(100)) (0x190956a704fbb70f0acce8338870771d17654952.sol#655)
+		- M87Token.transfer(poolList[3],newBalance.mul(shareOfReward[4]).div(100)) (0x190956a704fbb70f0acce8338870771d17654952.sol#659)
+	External calls sending eth:
+	- (success,None) = msg.sender.call.value(refund)() (0x190956a704fbb70f0acce8338870771d17654952.sol#526)
+	- swapAndShare() (0x190956a704fbb70f0acce8338870771d17654952.sol#532)
+		- uniswapV2Router.swapExactETHForTokensSupportingFeeOnTransferTokens.value(collectedFee)(0,path,address(this),block.timestamp.mul(2)) (0x190956a704fbb70f0acce8338870771d17654952.sol#629-635)
+	State variables written after the call(s):
+	- updateBlockReward() (0x190956a704fbb70f0acce8338870771d17654952.sol#535)
+		- accumulateM87 = calcAccumulateM87() (0x190956a704fbb70f0acce8338870771d17654952.sol#472)
+	MessierAnonymity.accumulateM87 (0x190956a704fbb70f0acce8338870771d17654952.sol#415) can be used in cross function reentrancies:
+	- MessierAnonymity.accumulateM87 (0x190956a704fbb70f0acce8338870771d17654952.sol#415)
+	- MessierAnonymity.getAccumulateM87() (0x190956a704fbb70f0acce8338870771d17654952.sol#478-483)
+	- MessierAnonymity.updateBlockReward() (0x190956a704fbb70f0acce8338870771d17654952.sol#465-476)
+	- updateBlockReward() (0x190956a704fbb70f0acce8338870771d17654952.sol#535)
+		- lastRewardBlock = blockNumber (0x190956a704fbb70f0acce8338870771d17654952.sol#475)
+	MessierAnonymity.lastRewardBlock (0x190956a704fbb70f0acce8338870771d17654952.sol#413) can be used in cross function reentrancies:
+	- MessierAnonymity.M87Denomination() (0x190956a704fbb70f0acce8338870771d17654952.sol#485-495)
+	- MessierAnonymity.calcAccumulateM87() (0x190956a704fbb70f0acce8338870771d17654952.sol#456-463)
+	- MessierAnonymity.constructor() (0x190956a704fbb70f0acce8338870771d17654952.sol#437-454)
+	- MessierAnonymity.lastRewardBlock (0x190956a704fbb70f0acce8338870771d17654952.sol#413)
+	- MessierAnonymity.updateBlockReward() (0x190956a704fbb70f0acce8338870771d17654952.sol#465-476)
+	- updateBlockReward() (0x190956a704fbb70f0acce8338870771d17654952.sol#535)
+		- rewardPerBlock = M87Token.balanceOf(address(this)).div(numDurationBlocks) (0x190956a704fbb70f0acce8338870771d17654952.sol#470)
+	MessierAnonymity.rewardPerBlock (0x190956a704fbb70f0acce8338870771d17654952.sol#414) can be used in cross function reentrancies:
+	- MessierAnonymity.M87Denomination() (0x190956a704fbb70f0acce8338870771d17654952.sol#485-495)
+	- MessierAnonymity.calcAccumulateM87() (0x190956a704fbb70f0acce8338870771d17654952.sol#456-463)
+	- MessierAnonymity.rewardPerBlock (0x190956a704fbb70f0acce8338870771d17654952.sol#414)
+	- MessierAnonymity.updateBlockReward() (0x190956a704fbb70f0acce8338870771d17654952.sol#465-476)
+Reentrancy in MessierAnonymity.swapAndShare() (0x190956a704fbb70f0acce8338870771d17654952.sol#621-661):
+	External calls:
+	- uniswapV2Router.swapExactETHForTokensSupportingFeeOnTransferTokens.value(collectedFee)(0,path,address(this),block.timestamp.mul(2)) (0x190956a704fbb70f0acce8338870771d17654952.sol#629-635)
+	State variables written after the call(s):
+	- collectedFee = 0 (0x190956a704fbb70f0acce8338870771d17654952.sol#638)
+	MessierAnonymity.collectedFee (0x190956a704fbb70f0acce8338870771d17654952.sol#421) can be used in cross function reentrancies:
+	- MessierAnonymity.collectedFee (0x190956a704fbb70f0acce8338870771d17654952.sol#421)
+	- MessierAnonymity.constructor() (0x190956a704fbb70f0acce8338870771d17654952.sol#437-454)
+	- MessierAnonymity.swapAndShare() (0x190956a704fbb70f0acce8338870771d17654952.sol#621-661)
+Reentrancy in MessierAnonymity.withdraw(bytes,bytes32,bytes32,address,address,uint256,uint256) (0x190956a704fbb70f0acce8338870771d17654952.sol#540-574):
+	External calls:
+	- require(bool,string)(verifier.verifyProof(_proof,(uint256(_root),uint256(_nullifierHash),uint256(_recipient),uint256(_relayer),_relayerFee,_refund)),Invalid withdraw proof) (0x190956a704fbb70f0acce8338870771d17654952.sol#544)
+	- verifier.verifyNullifier(_nullifierHash) (0x190956a704fbb70f0acce8338870771d17654952.sol#546)
+	- safeTransfer(token,_recipient,td) (0x190956a704fbb70f0acce8338870771d17654952.sol#549)
+		- _token.safeTransfer(_to,balance) (0x190956a704fbb70f0acce8338870771d17654952.sol#601)
+		- _token.safeTransfer(_to,_amount) (0x190956a704fbb70f0acce8338870771d17654952.sol#603)
+		- (success,returndata) = address(token).call(data) (0x190956a704fbb70f0acce8338870771d17654952.sol#210)
+	- safeTransfer(M87Token,_recipient,M87Deno) (0x190956a704fbb70f0acce8338870771d17654952.sol#557)
+		- _token.safeTransfer(_to,balance) (0x190956a704fbb70f0acce8338870771d17654952.sol#601)
+		- _token.safeTransfer(_to,_amount) (0x190956a704fbb70f0acce8338870771d17654952.sol#603)
+		- (success,returndata) = address(token).call(data) (0x190956a704fbb70f0acce8338870771d17654952.sol#210)
+	- (success,None) = _relayer.call.value(_relayerFee)() (0x190956a704fbb70f0acce8338870771d17654952.sol#564)
+	- (success_scope_0,None) = _recipient.call.value(cd)() (0x190956a704fbb70f0acce8338870771d17654952.sol#569)
+	External calls sending eth:
+	- (success,None) = _relayer.call.value(_relayerFee)() (0x190956a704fbb70f0acce8338870771d17654952.sol#564)
+	- (success_scope_0,None) = _recipient.call.value(cd)() (0x190956a704fbb70f0acce8338870771d17654952.sol#569)
+	State variables written after the call(s):
+	- numOfShares -= 1 (0x190956a704fbb70f0acce8338870771d17654952.sol#572)
+	MessierAnonymity.numOfShares (0x190956a704fbb70f0acce8338870771d17654952.sol#412) can be used in cross function reentrancies:
+	- MessierAnonymity.M87Denomination() (0x190956a704fbb70f0acce8338870771d17654952.sol#485-495)
+	- MessierAnonymity.constructor() (0x190956a704fbb70f0acce8338870771d17654952.sol#437-454)
+	- MessierAnonymity.numOfShares (0x190956a704fbb70f0acce8338870771d17654952.sol#412)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+MessierAnonymity.swapAndShare() (0x190956a704fbb70f0acce8338870771d17654952.sol#621-661) ignores return value by M87Token.transfer(address(0x000000000000000000000000000000000000dEaD),newBalance.mul(shareOfReward[0]).div(100)) (0x190956a704fbb70f0acce8338870771d17654952.sol#643)
+MessierAnonymity.swapAndShare() (0x190956a704fbb70f0acce8338870771d17654952.sol#621-661) ignores return value by M87Token.transfer(poolList[0],newBalance.mul(shareOfReward[1]).div(100)) (0x190956a704fbb70f0acce8338870771d17654952.sol#647)
+MessierAnonymity.swapAndShare() (0x190956a704fbb70f0acce8338870771d17654952.sol#621-661) ignores return value by M87Token.transfer(poolList[1],newBalance.mul(shareOfReward[2]).div(100)) (0x190956a704fbb70f0acce8338870771d17654952.sol#651)
+MessierAnonymity.swapAndShare() (0x190956a704fbb70f0acce8338870771d17654952.sol#621-661) ignores return value by M87Token.transfer(poolList[2],newBalance.mul(shareOfReward[3]).div(100)) (0x190956a704fbb70f0acce8338870771d17654952.sol#655)
+MessierAnonymity.swapAndShare() (0x190956a704fbb70f0acce8338870771d17654952.sol#621-661) ignores return value by M87Token.transfer(poolList[3],newBalance.mul(shareOfReward[4]).div(100)) (0x190956a704fbb70f0acce8338870771d17654952.sol#659)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+Reentrancy in MessierAnonymity.deposit(bytes32) (0x190956a704fbb70f0acce8338870771d17654952.sol#501-538):
+	External calls:
+	- require(bool,string)(M87Token.transferFrom(msg.sender,address(this),M87Deno.add(fee)),insufficient M87 allowance) (0x190956a704fbb70f0acce8338870771d17654952.sol#513)
+	- safeTransfer(M87Token,t,fee) (0x190956a704fbb70f0acce8338870771d17654952.sol#517)
+		- _token.safeTransfer(_to,balance) (0x190956a704fbb70f0acce8338870771d17654952.sol#601)
+		- _token.safeTransfer(_to,_amount) (0x190956a704fbb70f0acce8338870771d17654952.sol#603)
+		- (success,returndata) = address(token).call(data) (0x190956a704fbb70f0acce8338870771d17654952.sol#210)
+	- token.safeTransferFrom(msg.sender,address(this),td) (0x190956a704fbb70f0acce8338870771d17654952.sol#521)
+	State variables written after the call(s):
+	- accumulateM87 += M87Deno (0x190956a704fbb70f0acce8338870771d17654952.sol#523)
+	MessierAnonymity.accumulateM87 (0x190956a704fbb70f0acce8338870771d17654952.sol#415) can be used in cross function reentrancies:
+	- MessierAnonymity.accumulateM87 (0x190956a704fbb70f0acce8338870771d17654952.sol#415)
+	- MessierAnonymity.getAccumulateM87() (0x190956a704fbb70f0acce8338870771d17654952.sol#478-483)
+	- MessierAnonymity.updateBlockReward() (0x190956a704fbb70f0acce8338870771d17654952.sol#465-476)
+	- numOfShares += 1 (0x190956a704fbb70f0acce8338870771d17654952.sol#524)
+	MessierAnonymity.numOfShares (0x190956a704fbb70f0acce8338870771d17654952.sol#412) can be used in cross function reentrancies:
+	- MessierAnonymity.M87Denomination() (0x190956a704fbb70f0acce8338870771d17654952.sol#485-495)
+	- MessierAnonymity.constructor() (0x190956a704fbb70f0acce8338870771d17654952.sol#437-454)
+	- MessierAnonymity.numOfShares (0x190956a704fbb70f0acce8338870771d17654952.sol#412)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+MessierAnonymity.constructor() (0x190956a704fbb70f0acce8338870771d17654952.sol#437-454) ignores return value by M87Token.approve(messier_owner,MAX) (0x190956a704fbb70f0acce8338870771d17654952.sol#453)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+MessierAnonymity.changeMessierOwner(address) (0x190956a704fbb70f0acce8338870771d17654952.sol#584-586) should emit an event for: 
+	- messier_owner = _newOwner (0x190956a704fbb70f0acce8338870771d17654952.sol#585) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-access-control
+
+MessierAnonymity.setOverMinETH(uint256) (0x190956a704fbb70f0acce8338870771d17654952.sol#617-619) should emit an event for: 
+	- overMinEth = _overMinEth (0x190956a704fbb70f0acce8338870771d17654952.sol#618) 
+MessierAnonymity.setDuration(uint256) (0x190956a704fbb70f0acce8338870771d17654952.sol#667-670) should emit an event for: 
+	- duration = _duration (0x190956a704fbb70f0acce8338870771d17654952.sol#668) 
+	- numDurationBlocks = duration * 24 * 60 * 4 (0x190956a704fbb70f0acce8338870771d17654952.sol#669) 
+MessierAnonymity.setFeePercent(uint256) (0x190956a704fbb70f0acce8338870771d17654952.sol#672-676) should emit an event for: 
+	- feeToCollectAmount = coinDenomination * feeToCollectPercent / uint256(1000) (0x190956a704fbb70f0acce8338870771d17654952.sol#675) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+MessierAnonymity.changeMessierOwner(address)._newOwner (0x190956a704fbb70f0acce8338870771d17654952.sol#584) lacks a zero-check on :
+		- messier_owner = _newOwner (0x190956a704fbb70f0acce8338870771d17654952.sol#585)
+MessierAnonymity.changeTreasury(address)._newTreasury (0x190956a704fbb70f0acce8338870771d17654952.sol#588) lacks a zero-check on :
+		- treasury = _newTreasury (0x190956a704fbb70f0acce8338870771d17654952.sol#589)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in MessierAnonymity.deposit(bytes32) (0x190956a704fbb70f0acce8338870771d17654952.sol#501-538):
+	External calls:
+	- require(bool,string)(M87Token.transferFrom(msg.sender,address(this),M87Deno.add(fee)),insufficient M87 allowance) (0x190956a704fbb70f0acce8338870771d17654952.sol#513)
+	- safeTransfer(M87Token,t,fee) (0x190956a704fbb70f0acce8338870771d17654952.sol#517)
+		- _token.safeTransfer(_to,balance) (0x190956a704fbb70f0acce8338870771d17654952.sol#601)
+		- _token.safeTransfer(_to,_amount) (0x190956a704fbb70f0acce8338870771d17654952.sol#603)
+		- (success,returndata) = address(token).call(data) (0x190956a704fbb70f0acce8338870771d17654952.sol#210)
+	- token.safeTransferFrom(msg.sender,address(this),td) (0x190956a704fbb70f0acce8338870771d17654952.sol#521)
+	- (success,None) = msg.sender.call.value(refund)() (0x190956a704fbb70f0acce8338870771d17654952.sol#526)
+	External calls sending eth:
+	- (success,None) = msg.sender.call.value(refund)() (0x190956a704fbb70f0acce8338870771d17654952.sol#526)
+	State variables written after the call(s):
+	- collectedFee += feeToCollectAmount (0x190956a704fbb70f0acce8338870771d17654952.sol#530)
+Reentrancy in MessierAnonymity.withdraw(bytes,bytes32,bytes32,address,address,uint256,uint256) (0x190956a704fbb70f0acce8338870771d17654952.sol#540-574):
+	External calls:
+	- require(bool,string)(verifier.verifyProof(_proof,(uint256(_root),uint256(_nullifierHash),uint256(_recipient),uint256(_relayer),_relayerFee,_refund)),Invalid withdraw proof) (0x190956a704fbb70f0acce8338870771d17654952.sol#544)
+	- verifier.verifyNullifier(_nullifierHash) (0x190956a704fbb70f0acce8338870771d17654952.sol#546)
+	- safeTransfer(token,_recipient,td) (0x190956a704fbb70f0acce8338870771d17654952.sol#549)
+		- _token.safeTransfer(_to,balance) (0x190956a704fbb70f0acce8338870771d17654952.sol#601)
+		- _token.safeTransfer(_to,_amount) (0x190956a704fbb70f0acce8338870771d17654952.sol#603)
+		- (success,returndata) = address(token).call(data) (0x190956a704fbb70f0acce8338870771d17654952.sol#210)
+	State variables written after the call(s):
+	- updateBlockReward() (0x190956a704fbb70f0acce8338870771d17654952.sol#551)
+		- accumulateM87 = calcAccumulateM87() (0x190956a704fbb70f0acce8338870771d17654952.sol#472)
+	- accumulateM87 -= M87Deno (0x190956a704fbb70f0acce8338870771d17654952.sol#556)
+	- updateBlockReward() (0x190956a704fbb70f0acce8338870771d17654952.sol#551)
+		- lastRewardBlock = blockNumber (0x190956a704fbb70f0acce8338870771d17654952.sol#475)
+	- updateBlockReward() (0x190956a704fbb70f0acce8338870771d17654952.sol#551)
+		- rewardPerBlock = M87Token.balanceOf(address(this)).div(numDurationBlocks) (0x190956a704fbb70f0acce8338870771d17654952.sol#470)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Address.isContract(address) (0x190956a704fbb70f0acce8338870771d17654952.sol#133-142) uses assembly
+	- INLINE ASM (0x190956a704fbb70f0acce8338870771d17654952.sol#140)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#assembly-usage
+
+4 different versions of Solidity are used:
+	- Version constraint <0.6>=0.4.21 is used by:
+		-<0.6>=0.4.21 (0x190956a704fbb70f0acce8338870771d17654952.sol#3)
+		-<0.6>=0.4.21 (0x190956a704fbb70f0acce8338870771d17654952.sol#83)
+		-<0.6>=0.4.21 (0x190956a704fbb70f0acce8338870771d17654952.sol#100)
+	- Version constraint ^0.5.0 is used by:
+		-^0.5.0 (0x190956a704fbb70f0acce8338870771d17654952.sol#117)
+		-^0.5.0 (0x190956a704fbb70f0acce8338870771d17654952.sol#147)
+		-^0.5.0 (0x190956a704fbb70f0acce8338870771d17654952.sol#341)
+	- Version constraint <0.6>=0.4.24 is used by:
+		-<0.6>=0.4.24 (0x190956a704fbb70f0acce8338870771d17654952.sol#222)
+		-<0.6>=0.4.24 (0x190956a704fbb70f0acce8338870771d17654952.sol#332)
+		-<0.6>=0.4.24 (0x190956a704fbb70f0acce8338870771d17654952.sol#394)
+	- Version constraint >=0.5.0<0.8.0 is used by:
+		->=0.5.0<0.8.0 (0x190956a704fbb70f0acce8338870771d17654952.sol#381)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#different-pragma-directives-are-used
+
+MessierAnonymity.numDurationBlocks (0x190956a704fbb70f0acce8338870771d17654952.sol#418) is set pre-construction with a non-constant function or state variable:
+	- duration * 24 * 60 * 4
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#function-initializing-state
+
+Version constraint <0.6>=0.4.21 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ABIEncoderV2PackedStorage_0.4.x
+	- ExpExponentCleanup
+	- EventStructWrongData
+	- NestedArrayFunctionCallDecoder.
+It is used by:
+	- <0.6>=0.4.21 (0x190956a704fbb70f0acce8338870771d17654952.sol#3)
+	- <0.6>=0.4.21 (0x190956a704fbb70f0acce8338870771d17654952.sol#83)
+	- <0.6>=0.4.21 (0x190956a704fbb70f0acce8338870771d17654952.sol#100)
+Version constraint ^0.5.0 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor
+	- IncorrectEventSignatureInLibraries
+	- ABIEncoderV2PackedStorage.
+It is used by:
+	- ^0.5.0 (0x190956a704fbb70f0acce8338870771d17654952.sol#117)
+	- ^0.5.0 (0x190956a704fbb70f0acce8338870771d17654952.sol#147)
+	- ^0.5.0 (0x190956a704fbb70f0acce8338870771d17654952.sol#341)
+Version constraint <0.6>=0.4.24 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ABIEncoderV2PackedStorage_0.4.x
+	- ExpExponentCleanup
+	- EventStructWrongData.
+It is used by:
+	- <0.6>=0.4.24 (0x190956a704fbb70f0acce8338870771d17654952.sol#222)
+	- <0.6>=0.4.24 (0x190956a704fbb70f0acce8338870771d17654952.sol#332)
+	- <0.6>=0.4.24 (0x190956a704fbb70f0acce8338870771d17654952.sol#394)
+Version constraint >=0.5.0<0.8.0 is too complex.
+It is used by:
+	- >=0.5.0<0.8.0 (0x190956a704fbb70f0acce8338870771d17654952.sol#381)
+solc-0.5.12 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in SafeERC20.callOptionalReturn(IERC20,bytes) (0x190956a704fbb70f0acce8338870771d17654952.sol#198-217):
+	- (success,returndata) = address(token).call(data) (0x190956a704fbb70f0acce8338870771d17654952.sol#210)
+Low level call in MessierAnonymity.deposit(bytes32) (0x190956a704fbb70f0acce8338870771d17654952.sol#501-538):
+	- (success,None) = msg.sender.call.value(refund)() (0x190956a704fbb70f0acce8338870771d17654952.sol#526)
+Low level call in MessierAnonymity.withdraw(bytes,bytes32,bytes32,address,address,uint256,uint256) (0x190956a704fbb70f0acce8338870771d17654952.sol#540-574):
+	- (success,None) = _relayer.call.value(_relayerFee)() (0x190956a704fbb70f0acce8338870771d17654952.sol#564)
+	- (success_scope_0,None) = _recipient.call.value(cd)() (0x190956a704fbb70f0acce8338870771d17654952.sol#569)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Function Hasher.MiMCSponge(uint256,uint256) (0x190956a704fbb70f0acce8338870771d17654952.sol#225) is not in mixedCase
+Parameter Hasher.MiMCSponge(uint256,uint256).in_xL (0x190956a704fbb70f0acce8338870771d17654952.sol#225) is not in mixedCase
+Parameter Hasher.MiMCSponge(uint256,uint256).in_xR (0x190956a704fbb70f0acce8338870771d17654952.sol#225) is not in mixedCase
+Parameter MerkleTreeWithHistory.hashLeftRight(bytes32,bytes32)._left (0x190956a704fbb70f0acce8338870771d17654952.sol#262) is not in mixedCase
+Parameter MerkleTreeWithHistory.hashLeftRight(bytes32,bytes32)._right (0x190956a704fbb70f0acce8338870771d17654952.sol#262) is not in mixedCase
+Parameter MerkleTreeWithHistory.isKnownRoot(bytes32)._root (0x190956a704fbb70f0acce8338870771d17654952.sol#305) is not in mixedCase
+Function IUniswapV2Router02.WETH() (0x190956a704fbb70f0acce8338870771d17654952.sol#384) is not in mixedCase
+Function MessierAnonymity.M87Denomination() (0x190956a704fbb70f0acce8338870771d17654952.sol#485-495) is not in mixedCase
+Parameter MessierAnonymity.deposit(bytes32)._commitment (0x190956a704fbb70f0acce8338870771d17654952.sol#501) is not in mixedCase
+Parameter MessierAnonymity.withdraw(bytes,bytes32,bytes32,address,address,uint256,uint256)._proof (0x190956a704fbb70f0acce8338870771d17654952.sol#540) is not in mixedCase
+Parameter MessierAnonymity.withdraw(bytes,bytes32,bytes32,address,address,uint256,uint256)._root (0x190956a704fbb70f0acce8338870771d17654952.sol#540) is not in mixedCase
+Parameter MessierAnonymity.withdraw(bytes,bytes32,bytes32,address,address,uint256,uint256)._nullifierHash (0x190956a704fbb70f0acce8338870771d17654952.sol#540) is not in mixedCase
+Parameter MessierAnonymity.withdraw(bytes,bytes32,bytes32,address,address,uint256,uint256)._recipient (0x190956a704fbb70f0acce8338870771d17654952.sol#540) is not in mixedCase
+Parameter MessierAnonymity.withdraw(bytes,bytes32,bytes32,address,address,uint256,uint256)._relayer (0x190956a704fbb70f0acce8338870771d17654952.sol#540) is not in mixedCase
+Parameter MessierAnonymity.withdraw(bytes,bytes32,bytes32,address,address,uint256,uint256)._relayerFee (0x190956a704fbb70f0acce8338870771d17654952.sol#540) is not in mixedCase
+Parameter MessierAnonymity.withdraw(bytes,bytes32,bytes32,address,address,uint256,uint256)._refund (0x190956a704fbb70f0acce8338870771d17654952.sol#540) is not in mixedCase
+Parameter MessierAnonymity.updateVerifier(address)._newVerifier (0x190956a704fbb70f0acce8338870771d17654952.sol#576) is not in mixedCase
+Parameter MessierAnonymity.updateM87Token(address)._newToken (0x190956a704fbb70f0acce8338870771d17654952.sol#580) is not in mixedCase
+Parameter MessierAnonymity.changeMessierOwner(address)._newOwner (0x190956a704fbb70f0acce8338870771d17654952.sol#584) is not in mixedCase
+Parameter MessierAnonymity.changeTreasury(address)._newTreasury (0x190956a704fbb70f0acce8338870771d17654952.sol#588) is not in mixedCase
+Parameter MessierAnonymity.setAnonymityFee(uint256)._fee (0x190956a704fbb70f0acce8338870771d17654952.sol#592) is not in mixedCase
+Parameter MessierAnonymity.safeTransfer(IERC20,address,uint256)._token (0x190956a704fbb70f0acce8338870771d17654952.sol#598) is not in mixedCase
+Parameter MessierAnonymity.safeTransfer(IERC20,address,uint256)._to (0x190956a704fbb70f0acce8338870771d17654952.sol#598) is not in mixedCase
+Parameter MessierAnonymity.safeTransfer(IERC20,address,uint256)._amount (0x190956a704fbb70f0acce8338870771d17654952.sol#598) is not in mixedCase
+Parameter MessierAnonymity.setOverMinETH(uint256)._overMinEth (0x190956a704fbb70f0acce8338870771d17654952.sol#617) is not in mixedCase
+Parameter MessierAnonymity.setDuration(uint256)._duration (0x190956a704fbb70f0acce8338870771d17654952.sol#667) is not in mixedCase
+Parameter MessierAnonymity.setFeePercent(uint256)._fee (0x190956a704fbb70f0acce8338870771d17654952.sol#672) is not in mixedCase
+Variable MessierAnonymity.M87Token (0x190956a704fbb70f0acce8338870771d17654952.sol#409) is not in mixedCase
+Variable MessierAnonymity.messier_owner (0x190956a704fbb70f0acce8338870771d17654952.sol#411) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+MessierAnonymity.constructor() (0x190956a704fbb70f0acce8338870771d17654952.sol#437-454) uses literals with too many digits:
+	- coinDenomination = 1000000000000000000 (0x190956a704fbb70f0acce8338870771d17654952.sol#445)
+MessierAnonymity.slitherConstructorVariables() (0x190956a704fbb70f0acce8338870771d17654952.sol#396-682) uses literals with too many digits:
+	- overMinEth = 250000000000000000 (0x190956a704fbb70f0acce8338870771d17654952.sol#424)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+verifyProof(bytes,uint256[6]) should be declared external:
+	- IVerifier.verifyProof(bytes,uint256[6]) (0x190956a704fbb70f0acce8338870771d17654952.sol#335)
+Moreover, the following function parameters should change its data location:
+_proof location should be calldata
+_input location should be calldata
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#public-function-that-could-be-declared-external
+./0x190956a704fbb70f0acce8338870771d17654952.sol analyzed (11 contracts with 94 detectors), 64 result(s) found
+
+real	0m3.866s
+user	0m3.526s
+sys	0m0.340s

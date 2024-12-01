@@ -1,0 +1,172 @@
+'solc --version' running
+'solc ./0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol:
+Warning: Unused function parameter. Remove or comment out the variable name to silence this warning.
+   --> ./0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol:577:29:
+    |
+577 |     function tokensReceived(address operator, address from, address to, uint256 ...
+    |                             ^^^^^^^^^^^^^^^^
+
+Warning: Unused function parameter. Remove or comment out the variable name to silence this warning.
+   --> ./0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol:577:61:
+    |
+577 |  ... ed(address operator, address from, address to, uint256 amount, bytes calldata us ...
+    |                                         ^^^^^^^^^^
+
+Warning: Unused function parameter. Remove or comment out the variable name to silence this warning.
+   --> ./0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol:577:89:
+    |
+577 |  ...  from, address to, uint256 amount, bytes calldata userData, bytes calldata operatorData) exte ...
+    |                                         ^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: Unused function parameter. Remove or comment out the variable name to silence this warning.
+   --> ./0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol:577:114:
+    |
+577 |  ... 6 amount, bytes calldata userData, bytes calldata operatorData) external {
+    |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: Contract code size exceeds 24576 bytes (a limit introduced in Spurious Dragon). This contract may not be deployable on mainnet. Consider enabling the optimizer (with a low "runs" value!), turning off revert strings, or using libraries.
+   --> ./0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol:431:1:
+    |
+431 | contract EtherRolling is Ownable {
+    | ^ (Relevant source part starts here and spans across multiple lines).
+
+
+
+Reentrancy in EtherRolling.withdraw(uint8) (0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol#771-874):
+	External calls:
+	- _token.send(msg.sender,to_payout,Token Withdrawed) (0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol#866)
+	External calls sending eth:
+	- address(msg.sender).transfer(to_payout) (0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol#863)
+	State variables written after the call(s):
+	- users[msg.sender].isWithdrawActive = false (0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol#871)
+	EtherRolling.users (0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol#467) can be used in cross function reentrancies:
+	- EtherRolling._deposit(address,uint256,uint8) (0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol#583-642)
+	- EtherRolling._drawPool() (0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol#724-749)
+	- EtherRolling._poolDeposits(address,uint256) (0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol#644-680)
+	- EtherRolling._refPayout(address,uint256) (0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol#706-722)
+	- EtherRolling._setUpline(address,address) (0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol#543-558)
+	- EtherRolling._teamLeaderBonus(address,uint256) (0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol#682-704)
+	- EtherRolling.emergencyWithdraw() (0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol#876-897)
+	- EtherRolling.payoutOf(address) (0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol#913-927)
+	- EtherRolling.userInfo(address) (0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol#929-931)
+	- EtherRolling.userInfoTotals(address) (0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol#933-935)
+	- EtherRolling.users (0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol#467)
+	- EtherRolling.withdraw(uint8) (0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol#771-874)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+EtherRolling.payoutOf(address) (0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol#913-927) performs a multiplication on the result of a division:
+	- payout = (users[_addr].deposit_amount * ((block.timestamp - users[_addr].deposit_time) / 86400).mul(DAILY).div(1000)) - users[_addr].deposit_payouts (0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol#918)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+EtherRolling.setDaily(uint8) (0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol#901-903) should emit an event for: 
+	- DAILY = perc (0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol#902) 
+EtherRolling.setMinDeposit(uint256) (0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol#904-906) should emit an event for: 
+	- minDeposit = amount (0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol#905) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+Reentrancy in EtherRolling.withdraw(uint8) (0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol#771-874):
+	External calls:
+	- _token.send(msg.sender,to_payout,Token Withdrawed) (0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol#866)
+	External calls sending eth:
+	- address(msg.sender).transfer(to_payout) (0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol#863)
+	Event emitted after the call(s):
+	- LimitReached(msg.sender,users[msg.sender].payouts) (0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol#872)
+	- Withdraw(msg.sender,to_payout) (0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol#868)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+EtherRolling._deposit(address,uint256,uint8) (0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol#583-642) uses timestamp for comparisons
+	Dangerous comparisons:
+	- last_draw + 604800 < block.timestamp (0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol#630)
+EtherRolling._teamLeaderBonus(address,uint256) (0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol#682-704) uses timestamp for comparisons
+	Dangerous comparisons:
+	- (volume >= 1000000000000000000000 && matrixUser[upline].first_deposit_time + 2592000 <= now) || (volume >= 10000000000000000000000) (0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol#698)
+EtherRolling.payoutOf(address) (0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol#913-927) uses timestamp for comparisons
+	Dangerous comparisons:
+	- users[_addr].deposit_payouts + payout > max_payout (0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol#920)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+EtherRolling._deposit(address,uint256,uint8) (0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol#583-642) has a high cyclomatic complexity (12).
+EtherRolling.withdraw(uint8) (0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol#771-874) has a high cyclomatic complexity (17).
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#cyclomatic-complexity
+
+Context._msgData() (0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol#398-401) is never used and should be removed
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dead-code
+
+Version constraint 0.6.9 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- SignedImmutables
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- UsingForCalldata.
+It is used by:
+	- 0.6.9 (0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol#12)
+solc-0.6.9 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+EtherRolling (0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol#431-957) should inherit from IERC777Recipient (0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol#372-391)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-inheritance
+
+Struct EtherRolling.matrixInfo (0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol#450-462) is not in CapWords
+Parameter EtherRolling.maxPayoutOf(uint256)._amount (0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol#910) is not in mixedCase
+Parameter EtherRolling.payoutOf(address)._addr (0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol#913) is not in mixedCase
+Parameter EtherRolling.userInfo(address)._addr (0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol#929) is not in mixedCase
+Parameter EtherRolling.userInfoTotals(address)._addr (0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol#933) is not in mixedCase
+Function EtherRolling.TeamLeaderInfo() (0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol#954-956) is not in mixedCase
+Variable EtherRolling.DAILY (0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol#473) is not in mixedCase
+Variable EtherRolling.ref_bonuses (0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol#475) is not in mixedCase
+Variable EtherRolling.pool_bonuses (0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol#477) is not in mixedCase
+Variable EtherRolling.last_draw (0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol#478) is not in mixedCase
+Variable EtherRolling.pool_cycle (0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol#479) is not in mixedCase
+Variable EtherRolling.pool_balance (0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol#480) is not in mixedCase
+Variable EtherRolling.leader_pool (0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol#481) is not in mixedCase
+Variable EtherRolling.level_bonuses (0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol#482) is not in mixedCase
+Variable EtherRolling.pool_users_refs_deposits_sum (0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol#490) is not in mixedCase
+Variable EtherRolling.pool_top (0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol#491) is not in mixedCase
+Variable EtherRolling.total_withdraw (0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol#493) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Redundant expression "this (0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol#399)" inContext (0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol#393-402)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#redundant-statements
+
+Reentrancy in EtherRolling.emergencyWithdraw() (0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol#876-897):
+	External calls:
+	- address(msg.sender).transfer(to_payout) (0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol#890)
+	State variables written after the call(s):
+	- users[msg.sender].isWithdrawActive = false (0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol#893)
+	Event emitted after the call(s):
+	- EmergencyWithdraw(msg.sender,to_payout) (0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol#891)
+	- LimitReached(msg.sender,users[msg.sender].payouts) (0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol#894)
+Reentrancy in EtherRolling.withdraw(uint8) (0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol#771-874):
+	External calls:
+	- address(msg.sender).transfer(to_payout) (0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol#863)
+	State variables written after the call(s):
+	- users[msg.sender].isWithdrawActive = false (0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol#871)
+	Event emitted after the call(s):
+	- LimitReached(msg.sender,users[msg.sender].payouts) (0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol#872)
+	- Withdraw(msg.sender,to_payout) (0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol#868)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+EtherRolling._erc1820 (0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol#463) should be constant 
+EtherRolling.admin1 (0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol#488) should be constant 
+EtherRolling.admin2 (0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol#489) should be constant 
+EtherRolling.firstPool (0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol#483) should be constant 
+EtherRolling.fourthPool (0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol#486) should be constant 
+EtherRolling.secondPool (0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol#484) should be constant 
+EtherRolling.thirdPool (0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol#485) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+
+EtherRolling._token (0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol#465) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+./0x00b6358d1ac8d3731defd6b4d593b6ba04f9b8ea.sol analyzed (7 contracts with 94 detectors), 42 result(s) found
+
+real	0m2.657s
+user	0m2.466s
+sys	0m0.194s

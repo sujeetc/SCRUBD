@@ -1,0 +1,243 @@
+'solc --version' running
+'solc ./0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol:
+./0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol:33:43: Warning: This looks like an address but has an invalid checksum. If this is not used as an address, please prepend '00'.
+    address public CrypteloERC20Address = 0x7123027d76a5135e66b3a365efaba2b55de18a62;
+                                          ^----------------------------------------^
+./0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol:92:9: Warning: Failure condition of 'send' ignored. Consider using 'transfer' instead.
+        forwardFundsWallet.send(_amountEthWei);  //find balance
+        ^------------------------------------^
+./0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol:141:9: Warning: Failure condition of 'send' ignored. Consider using 'transfer' instead.
+        _sender.send(_amountWei);
+        ^----------------------^
+./0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol:168:13: Warning: Failure condition of 'send' ignored. Consider using 'transfer' instead.
+            msg.sender.send(this.balance);
+            ^---------------------------^
+./0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol:53:9: Warning: Unused local variable
+        uint totalAmountWei;
+        ^-----------------^
+./0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol:103:74: Warning: Unused local variable
+    function vestTokens(address _addr, uint _amountCRL) private returns (bool _success){
+                                                                         ^-----------^
+./0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol:109:72: Warning: Unused local variable
+    function sendTokens(address _to, uint _amountCRL) private returns (address _addr, uint _amount){
+                                                                       ^-----------^
+./0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol:109:87: Warning: Unused local variable
+    function sendTokens(address _to, uint _amountCRL) private returns (address _addr, uint _amount){
+                                                                                      ^----------^
+./0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol:182:3: Warning: Function is marked pure. Be careful, pureness is not enforced yet.
+  function mul(uint256 a, uint256 b) internal pure returns (uint256) {
+  ^
+Spanning multiple lines.
+./0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol:194:3: Warning: Function is marked pure. Be careful, pureness is not enforced yet.
+  function div(uint256 a, uint256 b) internal pure returns (uint256) {
+  ^
+Spanning multiple lines.
+./0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol:204:3: Warning: Function is marked pure. Be careful, pureness is not enforced yet.
+  function sub(uint256 a, uint256 b) internal pure returns (uint256) {
+  ^
+Spanning multiple lines.
+./0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol:212:3: Warning: Function is marked pure. Be careful, pureness is not enforced yet.
+  function add(uint256 a, uint256 b) internal pure returns (uint256) {
+  ^
+Spanning multiple lines.
+
+
+Reentrancy in CrypteloPreSale.fallback() (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#50-88):
+	External calls:
+	- sendTokens(sender,tokensToSend) (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#71)
+		- _crypteloerc20.transfer(_to,_amountCRL) (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#113)
+	External calls sending eth:
+	- forwardFunds(amountEthWei) (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#74)
+		- forwardFundsWallet.send(_amountEthWei) (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#92)
+	State variables written after the call(s):
+	- weiLeft = weiLeft.sub(amountEthWei) (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#77)
+	CrypteloPreSale.weiLeft (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#23) can be used in cross function reentrancies:
+	- CrypteloPreSale.fallback() (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#50-88)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+CrypteloPreSale.fallback() (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#50-88) performs a multiplication on the result of a division:
+	- amountMicroEther = amountEthWei.div(1000000000000) (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#67)
+	- tokensToSend = amountMicroEther.mul(CRLperMicroEther) (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#68)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+CrypteloERC20 (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#3-5) has incorrect ERC20 function interface:CrypteloERC20.transfer(address,uint256) (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#4)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-erc20-interface
+
+Reentrancy in CrypteloPreSale.fallback() (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#50-88):
+	External calls:
+	- sendTokens(sender,tokensToSend) (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#71)
+		- _crypteloerc20.transfer(_to,_amountCRL) (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#113)
+	State variables written after the call(s):
+	- totalCRLDistributed = totalCRLDistributed.add(tokensToSend) (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#72)
+	CrypteloPreSale.totalCRLDistributed (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#27) can be used in cross function reentrancies:
+	- CrypteloPreSale.fallback() (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#50-88)
+	- CrypteloPreSale.getTotalDistributed() (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#99-101)
+	- CrypteloPreSale.withdrawDistributionCRL() (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#159-164)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+CrypteloPreSale.forwardFunds(uint256) (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#91-93) ignores return value by forwardFundsWallet.send(_amountEthWei) (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#92)
+CrypteloPreSale.refund(address,uint256) (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#139-142) ignores return value by _sender.send(_amountWei) (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#141)
+CrypteloPreSale.withdrawAllEther() (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#166-170) ignores return value by msg.sender.send(this.balance) (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#168)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-send
+
+Reentrancy in CrypteloPreSale.claimTokens(address) (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#125-137):
+	External calls:
+	- sendTokens(msg.sender,amount) (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#133)
+		- _crypteloerc20.transfer(_to,_amountCRL) (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#113)
+	State variables written after the call(s):
+	- totalVesting = totalVesting.sub(amount) (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#134)
+Reentrancy in CrypteloPreSale.fallback() (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#50-88):
+	External calls:
+	- sendTokens(sender,tokensToSend) (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#71)
+		- _crypteloerc20.transfer(_to,_amountCRL) (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#113)
+	State variables written after the call(s):
+	- vestTokens(sender,tokensToSend) (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#73)
+		- dateInvested[_addr] = now (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#106)
+	- vestTokens(sender,tokensToSend) (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#73)
+		- firstDeadline[_addr] = now.add(firstTimeOffset) (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#107)
+	- vestTokens(sender,tokensToSend) (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#73)
+		- totalVesting = totalVesting.add(_amountCRL) (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#104)
+	- vestTokens(sender,tokensToSend) (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#73)
+		- vestedTokens[_addr] = _amountCRL (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#105)
+Reentrancy in CrypteloPreSale.fallback() (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#50-88):
+	External calls:
+	- sendTokens(sender,tokensToSend) (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#71)
+		- _crypteloerc20.transfer(_to,_amountCRL) (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#113)
+	External calls sending eth:
+	- forwardFunds(amountEthWei) (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#74)
+		- forwardFundsWallet.send(_amountEthWei) (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#92)
+	State variables written after the call(s):
+	- weiRaised = weiRaised.add(amountEthWei) (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#75)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in CrypteloPreSale.sendTokens(address,uint256) (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#109-115):
+	External calls:
+	- _crypteloerc20.transfer(_to,_amountCRL) (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#113)
+	Event emitted after the call(s):
+	- eSendTokens(_to,_amountCRL) (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#114)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+CrypteloPreSale.claimTokens(address) (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#125-137) uses timestamp for comparisons
+	Dangerous comparisons:
+	- dateInvested[_addr] > 0 && vestedTokens[_addr] > 0 && now > firstDeadline[_addr] (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#128)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+CrypteloPreSale.weiLeft (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#23) is set pre-construction with a non-constant function or state variable:
+	- weiHardCap
+CrypteloPreSale.CRLToSell (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#25) is set pre-construction with a non-constant function or state variable:
+	- CRLTotal.div(2)
+CrypteloPreSale.CRLLeft (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#28) is set pre-construction with a non-constant function or state variable:
+	- CRLTotal
+CrypteloPreSale.CRLperMicroEther (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#30) is set pre-construction with a non-constant function or state variable:
+	- CRLperEther.div(1000000)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#function-initializing-state
+
+Version constraint ^0.4.0 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ExpExponentCleanup
+	- NestedArrayFunctionCallDecoder
+	- ZeroFunctionSelector
+	- DelegateCallReturnValue
+	- ECRecoverMalformedInput
+	- SkipEmptyStringLiteral
+	- ConstantOptimizerSubtraction
+	- IdentityPrecompileReturnIgnored
+	- HighOrderByteCleanStorage
+	- OptimizerStaleKnowledgeAboutSHA3
+	- LibrariesNotCallableFromPayableFunctions.
+It is used by:
+	- ^0.4.0 (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#1)
+solc-0.4.16 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Event CrypteloPreSale.eRefund(address,uint256,string) (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#40) is not in CapWords
+Event CrypteloPreSale.eTokensToSend(address,uint256) (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#41) is not in CapWords
+Event CrypteloPreSale.eSendTokens(address,uint256) (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#42) is not in CapWords
+Parameter CrypteloPreSale.forwardFunds(uint256)._amountEthWei (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#91) is not in mixedCase
+Parameter CrypteloPreSale.vestTokens(address,uint256)._addr (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#103) is not in mixedCase
+Parameter CrypteloPreSale.vestTokens(address,uint256)._amountCRL (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#103) is not in mixedCase
+Parameter CrypteloPreSale.sendTokens(address,uint256)._to (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#109) is not in mixedCase
+Parameter CrypteloPreSale.sendTokens(address,uint256)._amountCRL (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#109) is not in mixedCase
+Parameter CrypteloPreSale.claimTokens(address)._addr (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#125) is not in mixedCase
+Parameter CrypteloPreSale.refund(address,uint256)._sender (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#139) is not in mixedCase
+Parameter CrypteloPreSale.refund(address,uint256)._amountWei (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#139) is not in mixedCase
+Parameter CrypteloPreSale.addWhiteList(address,uint256)._addr (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#143) is not in mixedCase
+Parameter CrypteloPreSale.removeWhiteList(address)._addr (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#149) is not in mixedCase
+Parameter CrypteloPreSale.isWhiteList(address)._addr (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#155) is not in mixedCase
+Variable CrypteloPreSale.WhiteListed (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#10) is not in mixedCase
+Variable CrypteloPreSale.CRLTotal (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#24) is not in mixedCase
+Variable CrypteloPreSale.CRLToSell (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#25) is not in mixedCase
+Variable CrypteloPreSale.CRLLeft (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#28) is not in mixedCase
+Variable CrypteloPreSale.CRLperEther (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#29) is not in mixedCase
+Variable CrypteloPreSale.CRLperMicroEther (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#30) is not in mixedCase
+Variable CrypteloPreSale.CrypteloERC20Address (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#33) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in CrypteloPreSale.fallback() (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#50-88):
+	External calls:
+	- refund(sender,amountEthWei) (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#58)
+		- _sender.send(_amountWei) (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#141)
+	Event emitted after the call(s):
+	- eRefund(sender,amountEthWei,L 58) (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#59)
+Reentrancy in CrypteloPreSale.fallback() (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#50-88):
+	External calls:
+	- forwardFunds(amountEthWei) (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#74)
+		- forwardFundsWallet.send(_amountEthWei) (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#92)
+	State variables written after the call(s):
+	- weiLeft = weiLeft.sub(amountEthWei) (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#77)
+	- weiRaised = weiRaised.add(amountEthWei) (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#75)
+Reentrancy in CrypteloPreSale.fallback() (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#50-88):
+	External calls:
+	- refund(sender,amountEthWei) (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#79)
+		- _sender.send(_amountWei) (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#141)
+	Event emitted after the call(s):
+	- eRefund(sender,amountEthWei,L 84) (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#80)
+Reentrancy in CrypteloPreSale.fallback() (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#50-88):
+	External calls:
+	- refund(sender,amountEthWei) (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#84)
+		- _sender.send(_amountWei) (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#141)
+	Event emitted after the call(s):
+	- eRefund(sender,amountEthWei,L 75) (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#85)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+CrypteloPreSale.fallback() (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#50-88) uses literals with too many digits:
+	- amountMicroEther = amountEthWei.div(1000000000000) (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#67)
+CrypteloPreSale.slitherConstructorVariables() (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#7-171) uses literals with too many digits:
+	- firstGminimumWeiAmount = 100000000000000000 (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#19)
+CrypteloPreSale.slitherConstructorVariables() (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#7-171) uses literals with too many digits:
+	- secondGminimumWeiAmount = 40000000000000000000 (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#20)
+CrypteloPreSale.slitherConstructorVariables() (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#7-171) uses literals with too many digits:
+	- weiHardCap = 3625000000000000000000 (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#21)
+CrypteloPreSale.slitherConstructorVariables() (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#7-171) uses literals with too many digits:
+	- CRLTotal = 9062500000000000 (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#24)
+CrypteloPreSale.slitherConstructorVariables() (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#7-171) uses literals with too many digits:
+	- CRLperEther = 1250000000000 (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#29)
+CrypteloPreSale.slitherConstructorVariables() (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#7-171) uses literals with too many digits:
+	- CRLperMicroEther = CRLperEther.div(1000000) (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#30)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+CrypteloPreSale.CRLLeft (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#28) is never used in CrypteloPreSale (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#7-171)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-state-variable
+
+CrypteloPreSale.CRLTotal (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#24) should be constant 
+CrypteloPreSale.CRLperEther (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#29) should be constant 
+CrypteloPreSale.CrypteloERC20Address (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#33) should be constant 
+CrypteloPreSale.firstGminimumWeiAmount (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#19) should be constant 
+CrypteloPreSale.firstTimeOffset (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#37) should be constant 
+CrypteloPreSale.forwardFundsWallet (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#34) should be constant 
+CrypteloPreSale.secondGminimumWeiAmount (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#20) should be constant 
+CrypteloPreSale.weiHardCap (0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol#21) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+./0xefcc5dcaba4a93046b5f5c24c1281c685154214c.sol analyzed (3 contracts with 94 detectors), 59 result(s) found
+
+real	0m1.749s
+user	0m1.567s
+sys	0m0.183s

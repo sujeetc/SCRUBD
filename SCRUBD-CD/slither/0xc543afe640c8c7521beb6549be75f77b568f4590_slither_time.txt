@@ -1,0 +1,79 @@
+'solc --version' running
+'solc ./0xc543afe640c8c7521beb6549be75f77b568f4590.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0xc543afe640c8c7521beb6549be75f77b568f4590.sol:
+./0xc543afe640c8c7521beb6549be75f77b568f4590.sol:72:13: Warning: Failure condition of 'send' ignored. Consider using 'transfer' instead.
+            ADMIN.send(admin);
+            ^---------------^
+./0xc543afe640c8c7521beb6549be75f77b568f4590.sol:90:17: Warning: Failure condition of 'send' ignored. Consider using 'transfer' instead.
+                dep.depositor.send(dep.expect);
+                ^----------------------------^
+./0xc543afe640c8c7521beb6549be75f77b568f4590.sol:97:17: Warning: Failure condition of 'send' ignored. Consider using 'transfer' instead.
+                dep.depositor.send(money);
+                ^-----------------------^
+
+
+GET111 (0xc543afe640c8c7521beb6549be75f77b568f4590.sol#47-149) contract sets array length with a user-controlled value:
+	- queue.push(Deposit(msg.sender,uint128(msg.value),uint128(msg.value * PROFIT / 100))) (0xc543afe640c8c7521beb6549be75f77b568f4590.sol#68)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#array-length-assignment
+
+GET111.fallback() (0xc543afe640c8c7521beb6549be75f77b568f4590.sol#62-77) ignores return value by ADMIN.send(admin) (0xc543afe640c8c7521beb6549be75f77b568f4590.sol#72)
+GET111.pay() (0xc543afe640c8c7521beb6549be75f77b568f4590.sol#80-107) ignores return value by dep.depositor.send(dep.expect) (0xc543afe640c8c7521beb6549be75f77b568f4590.sol#90)
+GET111.pay() (0xc543afe640c8c7521beb6549be75f77b568f4590.sol#80-107) ignores return value by dep.depositor.send(money) (0xc543afe640c8c7521beb6549be75f77b568f4590.sol#97)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-send
+
+Version constraint ^0.4.25 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ABIEncoderV2PackedStorage_0.4.x.
+It is used by:
+	- ^0.4.25 (0xc543afe640c8c7521beb6549be75f77b568f4590.sol#1)
+solc-0.4.25 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Reentrancy in GET111.fallback() (0xc543afe640c8c7521beb6549be75f77b568f4590.sol#62-77):
+	External calls:
+	- ADMIN.send(admin) (0xc543afe640c8c7521beb6549be75f77b568f4590.sol#72)
+	- pay() (0xc543afe640c8c7521beb6549be75f77b568f4590.sol#75)
+		- dep.depositor.send(dep.expect) (0xc543afe640c8c7521beb6549be75f77b568f4590.sol#90)
+		- dep.depositor.send(money) (0xc543afe640c8c7521beb6549be75f77b568f4590.sol#97)
+	State variables written after the call(s):
+	- pay() (0xc543afe640c8c7521beb6549be75f77b568f4590.sol#75)
+		- currentReceiverIndex += i (0xc543afe640c8c7521beb6549be75f77b568f4590.sol#106)
+	- pay() (0xc543afe640c8c7521beb6549be75f77b568f4590.sol#75)
+		- delete queue[idx] (0xc543afe640c8c7521beb6549be75f77b568f4590.sol#94)
+		- dep.expect -= money (0xc543afe640c8c7521beb6549be75f77b568f4590.sol#98)
+Reentrancy in GET111.pay() (0xc543afe640c8c7521beb6549be75f77b568f4590.sol#80-107):
+	External calls:
+	- dep.depositor.send(dep.expect) (0xc543afe640c8c7521beb6549be75f77b568f4590.sol#90)
+	State variables written after the call(s):
+	- delete queue[idx] (0xc543afe640c8c7521beb6549be75f77b568f4590.sol#94)
+Reentrancy in GET111.pay() (0xc543afe640c8c7521beb6549be75f77b568f4590.sol#80-107):
+	External calls:
+	- dep.depositor.send(dep.expect) (0xc543afe640c8c7521beb6549be75f77b568f4590.sol#90)
+	- dep.depositor.send(money) (0xc543afe640c8c7521beb6549be75f77b568f4590.sol#97)
+	State variables written after the call(s):
+	- currentReceiverIndex += i (0xc543afe640c8c7521beb6549be75f77b568f4590.sol#106)
+	- dep.expect -= money (0xc543afe640c8c7521beb6549be75f77b568f4590.sol#98)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+Loop condition i < queue.length (0xc543afe640c8c7521beb6549be75f77b568f4590.sol#116) should use cached array length instead of referencing `length` member of the storage array.
+ Loop condition i < queue.length (0xc543afe640c8c7521beb6549be75f77b568f4590.sol#132) should use cached array length instead of referencing `length` member of the storage array.
+ Loop condition i < queue.length (0xc543afe640c8c7521beb6549be75f77b568f4590.sol#83) should use cached array length instead of referencing `length` member of the storage array.
+ Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#cache-array-length
+./0xc543afe640c8c7521beb6549be75f77b568f4590.sol analyzed (1 contracts with 94 detectors), 12 result(s) found
+
+real	0m1.521s
+user	0m1.291s
+sys	0m0.233s

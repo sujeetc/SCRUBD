@@ -1,0 +1,380 @@
+'solc --version' running
+'solc ./0x06012c8cf97bead5deae237070f9587f8e7a266d.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x06012c8cf97bead5deae237070f9587f8e7a266d.sol:
+./0x06012c8cf97bead5deae237070f9587f8e7a266d.sol:1059:9: Warning: Failure condition of 'send' ignored. Consider using 'transfer' instead.
+        msg.sender.send(autoBirthFee);
+        ^---------------------------^
+./0x06012c8cf97bead5deae237070f9587f8e7a266d.sol:2006:13: Warning: Failure condition of 'send' ignored. Consider using 'transfer' instead.
+            cfoAddress.send(balance - subtractFees);
+            ^-------------------------------------^
+./0x06012c8cf97bead5deae237070f9587f8e7a266d.sol:85:5: Warning: Function is marked pure. Be careful, pureness is not enforced yet.
+    function isGeneScience() public pure returns (bool);
+    ^--------------------------------------------------^
+./0x06012c8cf97bead5deae237070f9587f8e7a266d.sol:1265:5: Warning: Function is marked pure. Be careful, pureness is not enforced yet.
+    function _computeCurrentPrice(
+    ^
+Spanning multiple lines.
+./0x06012c8cf97bead5deae237070f9587f8e7a266d.sol:1404:9: Warning: Unused local variable
+        bool res = nftAddress.send(this.balance);
+        ^------^
+
+
+KittyBreeding.giveBirth(uint256) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1020-1063) sends eth to arbitrary user
+	Dangerous calls:
+	- msg.sender.send(autoBirthFee) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1059)
+ClockAuctionBase._bid(uint256,uint256) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1162-1221) sends eth to arbitrary user
+	Dangerous calls:
+	- msg.sender.transfer(bidExcess) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1215)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+Reentrancy in KittyAuction.bidOnSiringAuction(uint256,uint256) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1769-1789):
+	External calls:
+	- currentPrice = siringAuction.getCurrentPrice(_sireId) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1783)
+	- siringAuction.bid.value(msg.value - autoBirthFee)(_sireId) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1787)
+	External calls sending eth:
+	- siringAuction.bid.value(msg.value - autoBirthFee)(_sireId) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1787)
+	State variables written after the call(s):
+	- _breedWith(uint32(_matronId),uint32(_sireId)) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1788)
+		- matron.siringWithId = uint32(_sireId) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#938)
+	KittyBase.kitties (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#317) can be used in cross function reentrancies:
+	- KittyBreeding._breedWith(uint256,uint256) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#932-954)
+	- KittyBreeding._canBreedWithViaAuction(uint256,uint256) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#901-909)
+	- KittyBase._createKitty(uint256,uint256,uint256,uint256,address) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#374-428)
+	- KittyBreeding.breedWithAuto(uint256,uint256) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#961-1010)
+	- KittyBreeding.canBreedWith(uint256,uint256) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#917-928)
+	- KittyBreeding.giveBirth(uint256) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1020-1063)
+	- KittyBreeding.isPregnant(uint256) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#842-850)
+	- KittyBreeding.isReadyToBreed(uint256) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#830-838)
+	- KittyOwnership.totalSupply() (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#629-631)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+KittyOwnership._memcpy(uint256,uint256,uint256) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#680-697) is declared view but contains assembly code
+KittyOwnership._toString(bytes32[4],uint256) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#702-715) is declared view but contains assembly code
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#constant-functions-using-assembly-code
+
+Reentrancy in KittyMinting.createGen0Auction(uint256) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1832-1847):
+	External calls:
+	- saleAuction.createAuction(kittyId,_computeNextGen0Price(),0,GEN0_AUCTION_DURATION,address(this)) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1838-1844)
+		- avePrice = saleAuction.averageGen0SalePrice() (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1852)
+	State variables written after the call(s):
+	- gen0CreatedCount ++ (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1846)
+	KittyMinting.gen0CreatedCount (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1814) can be used in cross function reentrancies:
+	- KittyMinting.createGen0Auction(uint256) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1832-1847)
+	- KittyMinting.gen0CreatedCount (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1814)
+Reentrancy in KittyBreeding.giveBirth(uint256) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1020-1063):
+	External calls:
+	- childGenes = geneScience.mixGenes(matron.genes,sire.genes,matron.cooldownEndBlock - 1) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1045)
+	State variables written after the call(s):
+	- kittenId = _createKitty(_matronId,matron.siringWithId,parentGen + 1,childGenes,owner) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1049)
+		- newKittenId = kitties.push(_kitty) - 1 (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#408)
+	KittyBase.kitties (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#317) can be used in cross function reentrancies:
+	- KittyBreeding._breedWith(uint256,uint256) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#932-954)
+	- KittyBase._createKitty(uint256,uint256,uint256,uint256,address) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#374-428)
+	- KittyBreeding.breedWithAuto(uint256,uint256) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#961-1010)
+	- KittyBreeding.canBreedWith(uint256,uint256) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#917-928)
+	- KittyBreeding.giveBirth(uint256) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1020-1063)
+	- KittyBreeding.isPregnant(uint256) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#842-850)
+	- KittyBreeding.isReadyToBreed(uint256) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#830-838)
+	- KittyOwnership.totalSupply() (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#629-631)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+KittyBreeding.giveBirth(uint256) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1020-1063) ignores return value by msg.sender.send(autoBirthFee) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1059)
+KittyCore.withdrawBalance() (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#2000-2008) ignores return value by cfoAddress.send(balance - subtractFees) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#2006)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-send
+
+Ownable.transferOwnership(address) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#35-39) should emit an event for: 
+	- owner = newOwner (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#37) 
+KittyAccessControl.setCEO(address) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#161-165) should emit an event for: 
+	- ceoAddress = _newCEO (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#164) 
+	- ceoAddress = _newCEO (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#164) 
+KittyAccessControl.setCFO(address) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#169-173) should emit an event for: 
+	- cfoAddress = _newCFO (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#172) 
+	- cfoAddress = _newCFO (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#172) 
+KittyAccessControl.setCOO(address) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#177-181) should emit an event for: 
+	- cooAddress = _newCOO (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#180) 
+	- cooAddress = _newCOO (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#180) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-access-control
+
+KittyCore.setNewAddress(address)._v2Address (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1936) lacks a zero-check on :
+		- newContractAddress = _v2Address (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1938)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in SaleClockAuction.bid(uint256) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1643-1658):
+	External calls:
+	- _transfer(msg.sender,_tokenId) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1650)
+		- nonFungibleContract.transfer(_receiver,_tokenId) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1131)
+	External calls sending eth:
+	- price = _bid(_tokenId,msg.value) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1649)
+		- seller.transfer(sellerProceeds) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1203)
+		- msg.sender.transfer(bidExcess) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1215)
+	State variables written after the call(s):
+	- gen0SaleCount ++ (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1656)
+	- lastGen0SalePrices[gen0SaleCount % 5] = price (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1655)
+Reentrancy in KittyAuction.bidOnSiringAuction(uint256,uint256) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1769-1789):
+	External calls:
+	- currentPrice = siringAuction.getCurrentPrice(_sireId) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1783)
+	- siringAuction.bid.value(msg.value - autoBirthFee)(_sireId) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1787)
+	External calls sending eth:
+	- siringAuction.bid.value(msg.value - autoBirthFee)(_sireId) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1787)
+	State variables written after the call(s):
+	- _breedWith(uint32(_matronId),uint32(_sireId)) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1788)
+		- pregnantKitties ++ (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#950)
+	- _breedWith(uint32(_matronId),uint32(_sireId)) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1788)
+		- delete sireAllowedToAddress[_matronId] (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#946)
+		- delete sireAllowedToAddress[_sireId] (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#947)
+Reentrancy in ClockAuction.createAuction(uint256,uint256,uint256,uint256,address) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1414-1440):
+	External calls:
+	- require(bool)(_owns(msg.sender,_tokenId)) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1430)
+		- (nonFungibleContract.ownerOf(_tokenId) == _claimant) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1113)
+	- _escrow(msg.sender,_tokenId) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1431)
+		- nonFungibleContract.transferFrom(_owner,this,_tokenId) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1122)
+	State variables written after the call(s):
+	- _addAuction(_tokenId,auction) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1439)
+		- tokenIdToAuction[_tokenId] = _auction (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1143)
+Reentrancy in SiringClockAuction.createAuction(uint256,uint256,uint256,uint256,address) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1542-1567):
+	External calls:
+	- _escrow(_seller,_tokenId) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1558)
+		- nonFungibleContract.transferFrom(_owner,this,_tokenId) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1122)
+	State variables written after the call(s):
+	- _addAuction(_tokenId,auction) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1566)
+		- tokenIdToAuction[_tokenId] = _auction (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1143)
+Reentrancy in SaleClockAuction.createAuction(uint256,uint256,uint256,uint256,address) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1614-1639):
+	External calls:
+	- _escrow(_seller,_tokenId) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1630)
+		- nonFungibleContract.transferFrom(_owner,this,_tokenId) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1122)
+	State variables written after the call(s):
+	- _addAuction(_tokenId,auction) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1638)
+		- tokenIdToAuction[_tokenId] = _auction (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1143)
+Reentrancy in KittyBreeding.giveBirth(uint256) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1020-1063):
+	External calls:
+	- childGenes = geneScience.mixGenes(matron.genes,sire.genes,matron.cooldownEndBlock - 1) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1045)
+	State variables written after the call(s):
+	- kittenId = _createKitty(_matronId,matron.siringWithId,parentGen + 1,childGenes,owner) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1049)
+		- delete kittyIndexToApproved[_tokenId] (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#359)
+	- kittenId = _createKitty(_matronId,matron.siringWithId,parentGen + 1,childGenes,owner) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1049)
+		- kittyIndexToOwner[_tokenId] = _to (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#352)
+	- kittenId = _createKitty(_matronId,matron.siringWithId,parentGen + 1,childGenes,owner) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1049)
+		- ownershipTokenCount[_to] ++ (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#350)
+		- ownershipTokenCount[_from] -- (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#355)
+	- pregnantKitties -- (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1056)
+	- kittenId = _createKitty(_matronId,matron.siringWithId,parentGen + 1,childGenes,owner) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1049)
+		- delete sireAllowedToAddress[_tokenId] (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#357)
+Reentrancy in KittyBreeding.setGeneScienceAddress(address) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#755-763):
+	External calls:
+	- require(bool)(candidateContract.isGeneScience()) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#759)
+	State variables written after the call(s):
+	- geneScience = candidateContract (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#762)
+Reentrancy in KittyAuction.setSaleAuctionAddress(address) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1683-1691):
+	External calls:
+	- require(bool)(candidateContract.isSaleClockAuction()) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1687)
+	State variables written after the call(s):
+	- saleAuction = candidateContract (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1690)
+Reentrancy in KittyAuction.setSiringAuctionAddress(address) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1695-1703):
+	External calls:
+	- require(bool)(candidateContract.isSiringClockAuction()) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1699)
+	State variables written after the call(s):
+	- siringAuction = candidateContract (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1702)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in ClockAuctionBase._cancelAuction(uint256,address) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1154-1158):
+	External calls:
+	- _transfer(_seller,_tokenId) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1156)
+		- nonFungibleContract.transfer(_receiver,_tokenId) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1131)
+	Event emitted after the call(s):
+	- AuctionCancelled(_tokenId) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1157)
+Reentrancy in KittyAuction.bidOnSiringAuction(uint256,uint256) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1769-1789):
+	External calls:
+	- currentPrice = siringAuction.getCurrentPrice(_sireId) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1783)
+	- siringAuction.bid.value(msg.value - autoBirthFee)(_sireId) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1787)
+	External calls sending eth:
+	- siringAuction.bid.value(msg.value - autoBirthFee)(_sireId) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1787)
+	Event emitted after the call(s):
+	- Pregnant(kittyIndexToOwner[_matronId],_matronId,_sireId,matron.cooldownEndBlock) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#953)
+		- _breedWith(uint32(_matronId),uint32(_sireId)) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1788)
+Reentrancy in ClockAuction.createAuction(uint256,uint256,uint256,uint256,address) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1414-1440):
+	External calls:
+	- require(bool)(_owns(msg.sender,_tokenId)) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1430)
+		- (nonFungibleContract.ownerOf(_tokenId) == _claimant) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1113)
+	- _escrow(msg.sender,_tokenId) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1431)
+		- nonFungibleContract.transferFrom(_owner,this,_tokenId) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1122)
+	Event emitted after the call(s):
+	- AuctionCreated(uint256(_tokenId),uint256(_auction.startingPrice),uint256(_auction.endingPrice),uint256(_auction.duration)) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1145-1150)
+		- _addAuction(_tokenId,auction) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1439)
+Reentrancy in SiringClockAuction.createAuction(uint256,uint256,uint256,uint256,address) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1542-1567):
+	External calls:
+	- _escrow(_seller,_tokenId) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1558)
+		- nonFungibleContract.transferFrom(_owner,this,_tokenId) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1122)
+	Event emitted after the call(s):
+	- AuctionCreated(uint256(_tokenId),uint256(_auction.startingPrice),uint256(_auction.endingPrice),uint256(_auction.duration)) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1145-1150)
+		- _addAuction(_tokenId,auction) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1566)
+Reentrancy in SaleClockAuction.createAuction(uint256,uint256,uint256,uint256,address) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1614-1639):
+	External calls:
+	- _escrow(_seller,_tokenId) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1630)
+		- nonFungibleContract.transferFrom(_owner,this,_tokenId) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1122)
+	Event emitted after the call(s):
+	- AuctionCreated(uint256(_tokenId),uint256(_auction.startingPrice),uint256(_auction.endingPrice),uint256(_auction.duration)) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1145-1150)
+		- _addAuction(_tokenId,auction) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1638)
+Reentrancy in KittyBreeding.giveBirth(uint256) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1020-1063):
+	External calls:
+	- childGenes = geneScience.mixGenes(matron.genes,sire.genes,matron.cooldownEndBlock - 1) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1045)
+	Event emitted after the call(s):
+	- Birth(_owner,newKittenId,uint256(_kitty.matronId),uint256(_kitty.sireId),_kitty.genes) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#415-421)
+		- kittenId = _createKitty(_matronId,matron.siringWithId,parentGen + 1,childGenes,owner) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1049)
+	- Transfer(_from,_to,_tokenId) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#362)
+		- kittenId = _createKitty(_matronId,matron.siringWithId,parentGen + 1,childGenes,owner) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1049)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+KittyOwnership.tokensOfOwner(address) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#651-675) uses timestamp for comparisons
+	Dangerous comparisons:
+	- catId <= totalCats (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#666)
+KittyBreeding.isPregnant(uint256) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#842-850) uses timestamp for comparisons
+	Dangerous comparisons:
+	- kitties[_kittyId].siringWithId != 0 (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#849)
+ClockAuctionBase._bid(uint256,uint256) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1162-1221) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(_bidAmount >= price) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1177)
+	- price > 0 (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1188)
+ClockAuctionBase._currentPrice(ClockAuctionBase.Auction) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1239-1259) uses timestamp for comparisons
+	Dangerous comparisons:
+	- now > _auction.startedAt (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1249)
+ClockAuctionBase._computeCurrentPrice(uint256,uint256,uint256,uint256) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1265-1300) uses timestamp for comparisons
+	Dangerous comparisons:
+	- _secondsPassed >= _duration (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1280)
+SaleClockAuction.bid(uint256) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1643-1658) uses timestamp for comparisons
+	Dangerous comparisons:
+	- seller == address(nonFungibleContract) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1653)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+KittyOwnership._memcpy(uint256,uint256,uint256) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#680-697) uses assembly
+	- INLINE ASM (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#683-686)
+	- INLINE ASM (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#692-697)
+KittyOwnership._toString(bytes32[4],uint256) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#702-715) uses assembly
+	- INLINE ASM (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#707-712)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#assembly-usage
+
+ClockAuctionBase._owns(address,uint256) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1112-1114) is never used and should be removed
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dead-code
+
+Version constraint ^0.4.11 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ExpExponentCleanup
+	- NestedArrayFunctionCallDecoder
+	- ZeroFunctionSelector
+	- DelegateCallReturnValue
+	- ECRecoverMalformedInput
+	- SkipEmptyStringLiteral.
+It is used by:
+	- ^0.4.11 (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1)
+solc-0.4.16 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Parameter KittyAccessControl.setCEO(address)._newCEO (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#161) is not in mixedCase
+Parameter KittyAccessControl.setCFO(address)._newCFO (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#169) is not in mixedCase
+Parameter KittyAccessControl.setCOO(address)._newCOO (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#177) is not in mixedCase
+Parameter ERC721Metadata.getMetadata(uint256,string)._tokenId (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#445) is not in mixedCase
+Parameter KittyOwnership.supportsInterface(bytes4)._interfaceID (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#495) is not in mixedCase
+Parameter KittyOwnership.setMetadataAddress(address)._contractAddress (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#505) is not in mixedCase
+Parameter KittyOwnership.balanceOf(address)._owner (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#539) is not in mixedCase
+Parameter KittyOwnership.transfer(address,uint256)._to (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#550) is not in mixedCase
+Parameter KittyOwnership.transfer(address,uint256)._tokenId (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#551) is not in mixedCase
+Parameter KittyOwnership.approve(address,uint256)._to (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#582) is not in mixedCase
+Parameter KittyOwnership.approve(address,uint256)._tokenId (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#583) is not in mixedCase
+Parameter KittyOwnership.transferFrom(address,address,uint256)._from (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#606) is not in mixedCase
+Parameter KittyOwnership.transferFrom(address,address,uint256)._to (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#607) is not in mixedCase
+Parameter KittyOwnership.transferFrom(address,address,uint256)._tokenId (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#608) is not in mixedCase
+Parameter KittyOwnership.ownerOf(uint256)._tokenId (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#635) is not in mixedCase
+Parameter KittyOwnership.tokensOfOwner(address)._owner (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#651) is not in mixedCase
+Parameter KittyOwnership.tokenMetadata(uint256,string)._tokenId (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#720) is not in mixedCase
+Parameter KittyOwnership.tokenMetadata(uint256,string)._preferredTransport (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#720) is not in mixedCase
+Constant KittyOwnership.InterfaceSignature_ERC165 (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#477-478) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant KittyOwnership.InterfaceSignature_ERC721 (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#480-490) is not in UPPER_CASE_WITH_UNDERSCORES
+Parameter KittyBreeding.setGeneScienceAddress(address)._address (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#755) is not in mixedCase
+Parameter KittyBreeding.approveSiring(address,uint256)._addr (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#806) is not in mixedCase
+Parameter KittyBreeding.approveSiring(address,uint256)._sireId (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#806) is not in mixedCase
+Parameter KittyBreeding.isReadyToBreed(uint256)._kittyId (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#830) is not in mixedCase
+Parameter KittyBreeding.isPregnant(uint256)._kittyId (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#842) is not in mixedCase
+Parameter KittyBreeding.canBreedWith(uint256,uint256)._matronId (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#917) is not in mixedCase
+Parameter KittyBreeding.canBreedWith(uint256,uint256)._sireId (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#917) is not in mixedCase
+Parameter KittyBreeding.breedWithAuto(uint256,uint256)._matronId (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#961) is not in mixedCase
+Parameter KittyBreeding.breedWithAuto(uint256,uint256)._sireId (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#961) is not in mixedCase
+Parameter KittyBreeding.giveBirth(uint256)._matronId (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1020) is not in mixedCase
+Parameter ClockAuction.createAuction(uint256,uint256,uint256,uint256,address)._tokenId (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1415) is not in mixedCase
+Parameter ClockAuction.createAuction(uint256,uint256,uint256,uint256,address)._startingPrice (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1416) is not in mixedCase
+Parameter ClockAuction.createAuction(uint256,uint256,uint256,uint256,address)._endingPrice (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1417) is not in mixedCase
+Parameter ClockAuction.createAuction(uint256,uint256,uint256,uint256,address)._duration (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1418) is not in mixedCase
+Parameter ClockAuction.createAuction(uint256,uint256,uint256,uint256,address)._seller (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1419) is not in mixedCase
+Parameter ClockAuction.bid(uint256)._tokenId (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1445) is not in mixedCase
+Parameter ClockAuction.cancelAuction(uint256)._tokenId (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1460) is not in mixedCase
+Parameter ClockAuction.cancelAuctionWhenPaused(uint256)._tokenId (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1474) is not in mixedCase
+Parameter ClockAuction.getAuction(uint256)._tokenId (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1486) is not in mixedCase
+Parameter ClockAuction.getCurrentPrice(uint256)._tokenId (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1510) is not in mixedCase
+Constant ClockAuction.InterfaceSignature_ERC721 (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1375) is not in UPPER_CASE_WITH_UNDERSCORES
+Parameter SiringClockAuction.createAuction(uint256,uint256,uint256,uint256,address)._tokenId (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1543) is not in mixedCase
+Parameter SiringClockAuction.createAuction(uint256,uint256,uint256,uint256,address)._startingPrice (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1544) is not in mixedCase
+Parameter SiringClockAuction.createAuction(uint256,uint256,uint256,uint256,address)._endingPrice (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1545) is not in mixedCase
+Parameter SiringClockAuction.createAuction(uint256,uint256,uint256,uint256,address)._duration (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1546) is not in mixedCase
+Parameter SiringClockAuction.createAuction(uint256,uint256,uint256,uint256,address)._seller (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1547) is not in mixedCase
+Parameter SiringClockAuction.bid(uint256)._tokenId (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1573) is not in mixedCase
+Parameter SaleClockAuction.createAuction(uint256,uint256,uint256,uint256,address)._tokenId (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1615) is not in mixedCase
+Parameter SaleClockAuction.createAuction(uint256,uint256,uint256,uint256,address)._startingPrice (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1616) is not in mixedCase
+Parameter SaleClockAuction.createAuction(uint256,uint256,uint256,uint256,address)._endingPrice (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1617) is not in mixedCase
+Parameter SaleClockAuction.createAuction(uint256,uint256,uint256,uint256,address)._duration (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1618) is not in mixedCase
+Parameter SaleClockAuction.createAuction(uint256,uint256,uint256,uint256,address)._seller (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1619) is not in mixedCase
+Parameter SaleClockAuction.bid(uint256)._tokenId (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1643) is not in mixedCase
+Parameter KittyAuction.setSaleAuctionAddress(address)._address (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1683) is not in mixedCase
+Parameter KittyAuction.setSiringAuctionAddress(address)._address (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1695) is not in mixedCase
+Parameter KittyAuction.createSaleAuction(uint256,uint256,uint256,uint256)._kittyId (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1708) is not in mixedCase
+Parameter KittyAuction.createSaleAuction(uint256,uint256,uint256,uint256)._startingPrice (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1709) is not in mixedCase
+Parameter KittyAuction.createSaleAuction(uint256,uint256,uint256,uint256)._endingPrice (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1710) is not in mixedCase
+Parameter KittyAuction.createSaleAuction(uint256,uint256,uint256,uint256)._duration (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1711) is not in mixedCase
+Parameter KittyAuction.createSiringAuction(uint256,uint256,uint256,uint256)._kittyId (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1740) is not in mixedCase
+Parameter KittyAuction.createSiringAuction(uint256,uint256,uint256,uint256)._startingPrice (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1741) is not in mixedCase
+Parameter KittyAuction.createSiringAuction(uint256,uint256,uint256,uint256)._endingPrice (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1742) is not in mixedCase
+Parameter KittyAuction.createSiringAuction(uint256,uint256,uint256,uint256)._duration (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1743) is not in mixedCase
+Parameter KittyAuction.bidOnSiringAuction(uint256,uint256)._sireId (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1770) is not in mixedCase
+Parameter KittyAuction.bidOnSiringAuction(uint256,uint256)._matronId (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1771) is not in mixedCase
+Parameter KittyMinting.createPromoKitty(uint256,address)._genes (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1819) is not in mixedCase
+Parameter KittyMinting.createPromoKitty(uint256,address)._owner (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1819) is not in mixedCase
+Parameter KittyMinting.createGen0Auction(uint256)._genes (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1832) is not in mixedCase
+Parameter KittyCore.setNewAddress(address)._v2Address (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1936) is not in mixedCase
+Parameter KittyCore.getKitty(uint256)._id (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1954) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in ClockAuctionBase._bid(uint256,uint256) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1162-1221):
+	External calls:
+	- seller.transfer(sellerProceeds) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1203)
+	- msg.sender.transfer(bidExcess) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1215)
+	Event emitted after the call(s):
+	- AuctionSuccessful(_tokenId,price,msg.sender) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1218)
+Reentrancy in SaleClockAuction.bid(uint256) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1643-1658):
+	External calls:
+	- price = _bid(_tokenId,msg.value) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1649)
+		- seller.transfer(sellerProceeds) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1203)
+		- msg.sender.transfer(bidExcess) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1215)
+	State variables written after the call(s):
+	- gen0SaleCount ++ (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1656)
+	- lastGen0SalePrices[gen0SaleCount % 5] = price (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1655)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+SaleClockAuction.isSaleClockAuction (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1598) should be constant 
+SiringClockAuction.isSiringClockAuction (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#1529) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+
+getMetadata(uint256,string) should be declared external:
+	- ERC721Metadata.getMetadata(uint256,string) (0x06012c8cf97bead5deae237070f9587f8e7a266d.sol#445-460)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#public-function-that-could-be-declared-external
+./0x06012c8cf97bead5deae237070f9587f8e7a266d.sol analyzed (16 contracts with 94 detectors), 115 result(s) found
+
+real	0m7.497s
+user	0m7.173s
+sys	0m0.322s

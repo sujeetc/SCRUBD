@@ -1,0 +1,318 @@
+'solc --version' running
+'solc ./0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+SminemToken.sendETHToFee(uint256) (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#806-815) sends eth to arbitrary user
+	Dangerous calls:
+	- (success,None) = _sminemAddress.call{value: split1}() (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#809)
+	- (success,None) = _marketingAddress.call{value: split2}() (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#811)
+	- (success,None) = _devAddress.call{value: split3}() (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#813)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+Reentrancy in SminemToken._transfer(address,address,uint256) (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#713-756):
+	External calls:
+	- swapTokensForEth(contractTokenBalance) (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#738)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#797-803)
+	- sendETHToFee(address(this).balance.sub(_floor)) (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#742)
+		- (success,None) = _sminemAddress.call{value: split1}() (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#809)
+		- (success,None) = _marketingAddress.call{value: split2}() (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#811)
+		- (success,None) = _devAddress.call{value: split3}() (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#813)
+	External calls sending eth:
+	- sendETHToFee(address(this).balance.sub(_floor)) (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#742)
+		- (success,None) = _sminemAddress.call{value: split1}() (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#809)
+		- (success,None) = _marketingAddress.call{value: split2}() (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#811)
+		- (success,None) = _devAddress.call{value: split3}() (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#813)
+	State variables written after the call(s):
+	- _transferRegular(sender,recipient,amount) (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#753)
+		- _balanceOf[sender] = _balanceOf[sender].sub(amount) (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#759)
+		- _balanceOf[recipient] = _balanceOf[recipient].add(amount).sub(fee) (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#761)
+		- _balanceOf[address(this)] = _balanceOf[address(this)].add(fee) (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#762)
+	SminemToken._balanceOf (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#615) can be used in cross function reentrancies:
+	- SminemToken._transferRegular(address,address,uint256) (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#758-765)
+	- SminemToken.balanceOf(address) (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#705-707)
+	- SminemToken.constructor(address,address,address) (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#632-646)
+	- removeAllFee() (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#752)
+		- _devFee = 0 (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#872)
+	SminemToken._devFee (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#598) can be used in cross function reentrancies:
+	- SminemToken._getTotalFeePercent() (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#772-774)
+	- SminemToken.removeAllFee() (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#866-876)
+	- SminemToken.restoreAllFee() (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#858-864)
+	- SminemToken.setDevFee(uint256) (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#853-856)
+	- SminemToken.splitFee(uint256) (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#776-781)
+	- restoreAllFee() (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#755)
+		- _devFee = _previousDevFee (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#860)
+	SminemToken._devFee (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#598) can be used in cross function reentrancies:
+	- SminemToken._getTotalFeePercent() (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#772-774)
+	- SminemToken.removeAllFee() (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#866-876)
+	- SminemToken.restoreAllFee() (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#858-864)
+	- SminemToken.setDevFee(uint256) (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#853-856)
+	- SminemToken.splitFee(uint256) (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#776-781)
+	- removeAllFee() (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#752)
+		- _marketingFee = 0 (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#871)
+	SminemToken._marketingFee (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#596) can be used in cross function reentrancies:
+	- SminemToken._getTotalFeePercent() (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#772-774)
+	- SminemToken.removeAllFee() (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#866-876)
+	- SminemToken.restoreAllFee() (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#858-864)
+	- SminemToken.setMarketingFee(uint256) (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#843-846)
+	- SminemToken.splitFee(uint256) (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#776-781)
+	- restoreAllFee() (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#755)
+		- _marketingFee = _previousMarketingFee (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#859)
+	SminemToken._marketingFee (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#596) can be used in cross function reentrancies:
+	- SminemToken._getTotalFeePercent() (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#772-774)
+	- SminemToken.removeAllFee() (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#866-876)
+	- SminemToken.restoreAllFee() (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#858-864)
+	- SminemToken.setMarketingFee(uint256) (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#843-846)
+	- SminemToken.splitFee(uint256) (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#776-781)
+	- removeAllFee() (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#752)
+		- _sminemFee = 0 (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#873)
+	SminemToken._sminemFee (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#597) can be used in cross function reentrancies:
+	- SminemToken._getTotalFeePercent() (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#772-774)
+	- SminemToken.removeAllFee() (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#866-876)
+	- SminemToken.restoreAllFee() (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#858-864)
+	- SminemToken.setSminemFee(uint256) (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#848-851)
+	- SminemToken.splitFee(uint256) (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#776-781)
+	- restoreAllFee() (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#755)
+		- _sminemFee = _previousSminemFee (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#861)
+	SminemToken._sminemFee (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#597) can be used in cross function reentrancies:
+	- SminemToken._getTotalFeePercent() (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#772-774)
+	- SminemToken.removeAllFee() (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#866-876)
+	- SminemToken.restoreAllFee() (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#858-864)
+	- SminemToken.setSminemFee(uint256) (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#848-851)
+	- SminemToken.splitFee(uint256) (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#776-781)
+	- removeAllFee() (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#752)
+		- _totalFeePercent = _getTotalFeePercent() (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#875)
+	SminemToken._totalFeePercent (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#599) can be used in cross function reentrancies:
+	- SminemToken.getFee(uint256) (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#767-770)
+	- SminemToken.removeAllFee() (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#866-876)
+	- SminemToken.restoreAllFee() (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#858-864)
+	- SminemToken.setDevFee(uint256) (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#853-856)
+	- SminemToken.setMarketingFee(uint256) (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#843-846)
+	- SminemToken.setSminemFee(uint256) (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#848-851)
+	- SminemToken.splitFee(uint256) (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#776-781)
+	- restoreAllFee() (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#755)
+		- _totalFeePercent = _getTotalFeePercent() (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#863)
+	SminemToken._totalFeePercent (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#599) can be used in cross function reentrancies:
+	- SminemToken.getFee(uint256) (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#767-770)
+	- SminemToken.removeAllFee() (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#866-876)
+	- SminemToken.restoreAllFee() (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#858-864)
+	- SminemToken.setDevFee(uint256) (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#853-856)
+	- SminemToken.setMarketingFee(uint256) (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#843-846)
+	- SminemToken.setSminemFee(uint256) (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#848-851)
+	- SminemToken.splitFee(uint256) (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#776-781)
+Reentrancy in SminemToken.open() (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#648-664):
+	External calls:
+	- uniswapV2Pair = IUniswapV2Factory(_uniswapV2Router.factory()).createPair(address(this),_uniswapV2Router.WETH()) (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#653)
+	- uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#654-660)
+	- IERC20(uniswapV2Pair).approve(address(uniswapV2Router),type()(uint256).max) (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#661)
+	External calls sending eth:
+	- uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#654-660)
+	State variables written after the call(s):
+	- isOpen = true (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#663)
+	SminemToken.isOpen (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#622) can be used in cross function reentrancies:
+	- SminemToken._transfer(address,address,uint256) (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#713-756)
+	- SminemToken.open() (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#648-664)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+SminemToken.open() (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#648-664) ignores return value by uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#654-660)
+SminemToken.open() (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#648-664) ignores return value by IERC20(uniswapV2Pair).approve(address(uniswapV2Router),type()(uint256).max) (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#661)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+SminemToken.allowance(address,address).owner (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#709) shadows:
+	- Ownable.owner() (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#373-375) (function)
+SminemToken._approve(address,address,uint256).owner (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#783) shadows:
+	- Ownable.owner() (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#373-375) (function)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#local-variable-shadowing
+
+SminemToken.setMarketingFee(uint256) (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#843-846) should emit an event for: 
+	- _marketingFee = fee (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#844) 
+SminemToken.setSminemFee(uint256) (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#848-851) should emit an event for: 
+	- _sminemFee = fee (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#849) 
+SminemToken.setDevFee(uint256) (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#853-856) should emit an event for: 
+	- _devFee = fee (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#854) 
+SminemToken.setMaxTxPercent(uint256) (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#896-898) should emit an event for: 
+	- _maxAmountInTx = val (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#897) 
+SminemToken.setMaxOwnedPercent(uint256) (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#900-902) should emit an event for: 
+	- _maxOwnedTokensPercent = per (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#901) 
+SminemToken.setTokensInWalletPercent(uint256) (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#904-906) should emit an event for: 
+	- _maxTokensInWalletPercent = per (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#905) 
+SminemToken.setFloor(uint256) (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#908-910) should emit an event for: 
+	- _floor = floor (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#909) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+SminemToken.constructor(address,address,address).marketingAddress (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#632) lacks a zero-check on :
+		- _marketingAddress = marketingAddress (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#635)
+SminemToken.constructor(address,address,address).sminemAddress (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#632) lacks a zero-check on :
+		- _sminemAddress = sminemAddress (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#636)
+SminemToken.constructor(address,address,address).devAddress (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#632) lacks a zero-check on :
+		- _devAddress = devAddress (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#637)
+SminemToken.setMarketingWallet(address).marketingWalletAddress (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#825) lacks a zero-check on :
+		- _marketingAddress = marketingWalletAddress (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#827)
+SminemToken.setSminemWallet(address).sminemWalletAddress (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#831) lacks a zero-check on :
+		- _sminemAddress = sminemWalletAddress (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#833)
+SminemToken.setDevWallet(address).devWalletAddress (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#837) lacks a zero-check on :
+		- _devAddress = devWalletAddress (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#839)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in SminemToken._transfer(address,address,uint256) (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#713-756):
+	External calls:
+	- swapTokensForEth(contractTokenBalance) (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#738)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#797-803)
+	- sendETHToFee(address(this).balance.sub(_floor)) (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#742)
+		- (success,None) = _sminemAddress.call{value: split1}() (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#809)
+		- (success,None) = _marketingAddress.call{value: split2}() (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#811)
+		- (success,None) = _devAddress.call{value: split3}() (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#813)
+	External calls sending eth:
+	- sendETHToFee(address(this).balance.sub(_floor)) (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#742)
+		- (success,None) = _sminemAddress.call{value: split1}() (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#809)
+		- (success,None) = _marketingAddress.call{value: split2}() (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#811)
+		- (success,None) = _devAddress.call{value: split3}() (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#813)
+	State variables written after the call(s):
+	- removeAllFee() (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#752)
+		- _previousDevFee = _devFee (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#868)
+	- removeAllFee() (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#752)
+		- _previousMarketingFee = _marketingFee (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#867)
+	- removeAllFee() (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#752)
+		- _previousSminemFee = _sminemFee (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#869)
+Reentrancy in SminemToken.transferFrom(address,address,uint256) (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#697-703):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#700)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#797-803)
+		- (success,None) = _sminemAddress.call{value: split1}() (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#809)
+		- (success,None) = _marketingAddress.call{value: split2}() (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#811)
+		- (success,None) = _devAddress.call{value: split3}() (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#813)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#700)
+		- (success,None) = _sminemAddress.call{value: split1}() (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#809)
+		- (success,None) = _marketingAddress.call{value: split2}() (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#811)
+		- (success,None) = _devAddress.call{value: split3}() (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#813)
+	State variables written after the call(s):
+	- _allowance[sender][_msgSender()] = _allowance[sender][_msgSender()].sub(amount) (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#701)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in SminemToken._transfer(address,address,uint256) (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#713-756):
+	External calls:
+	- swapTokensForEth(contractTokenBalance) (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#738)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#797-803)
+	- sendETHToFee(address(this).balance.sub(_floor)) (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#742)
+		- (success,None) = _sminemAddress.call{value: split1}() (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#809)
+		- (success,None) = _marketingAddress.call{value: split2}() (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#811)
+		- (success,None) = _devAddress.call{value: split3}() (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#813)
+	External calls sending eth:
+	- sendETHToFee(address(this).balance.sub(_floor)) (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#742)
+		- (success,None) = _sminemAddress.call{value: split1}() (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#809)
+		- (success,None) = _marketingAddress.call{value: split2}() (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#811)
+		- (success,None) = _devAddress.call{value: split3}() (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#813)
+	Event emitted after the call(s):
+	- Transfer(sender,recipient,amount) (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#764)
+		- _transferRegular(sender,recipient,amount) (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#753)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+4 different versions of Solidity are used:
+	- Version constraint ^0.8.0 is used by:
+		-^0.8.0 (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#5)
+		-^0.8.0 (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#89)
+		-^0.8.0 (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#318)
+		-^0.8.0 (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#344)
+	- Version constraint >=0.6.2 is used by:
+		->=0.6.2 (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#418)
+		->=0.6.2 (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#516)
+	- Version constraint >=0.5.0 is used by:
+		->=0.5.0 (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#561)
+	- Version constraint ^0.8.12 is used by:
+		-^0.8.12 (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#582)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#different-pragma-directives-are-used
+
+Context._msgData() (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#335-337) is never used and should be removed
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dead-code
+
+SminemToken._totalFeePercent (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#599) is set pre-construction with a non-constant function or state variable:
+	- _getTotalFeePercent()
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#function-initializing-state
+
+Version constraint ^0.8.0 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- SignedImmutables
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching.
+It is used by:
+	- ^0.8.0 (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#5)
+	- ^0.8.0 (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#89)
+	- ^0.8.0 (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#318)
+	- ^0.8.0 (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#344)
+Version constraint >=0.6.2 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- MissingEscapingInFormatting
+	- ArraySliceDynamicallyEncodedBaseType
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow.
+It is used by:
+	- >=0.6.2 (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#418)
+	- >=0.6.2 (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#516)
+Version constraint >=0.5.0 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor
+	- IncorrectEventSignatureInLibraries
+	- ABIEncoderV2PackedStorage.
+It is used by:
+	- >=0.5.0 (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#561)
+Version constraint ^0.8.12 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- VerbatimInvalidDeduplication
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- AbiEncodeCallLiteralAsFixedBytesBug.
+It is used by:
+	- ^0.8.12 (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#582)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in SminemToken.sendETHToFee(uint256) (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#806-815):
+	- (success,None) = _sminemAddress.call{value: split1}() (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#809)
+	- (success,None) = _marketingAddress.call{value: split2}() (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#811)
+	- (success,None) = _devAddress.call{value: split3}() (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#813)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Function IUniswapV2Router01.WETH() (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#422) is not in mixedCase
+Constant SminemToken._name (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#591) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant SminemToken._symbol (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#592) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant SminemToken._decimals (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#593) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant SminemToken._totalSupply (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#595) is not in UPPER_CASE_WITH_UNDERSCORES
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+SminemToken.slitherConstructorVariables() (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#588-923) uses literals with too many digits:
+	- _marketingFee = 35000000000 * 1e18 (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#596)
+SminemToken.slitherConstructorVariables() (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#588-923) uses literals with too many digits:
+	- _sminemFee = 13000000000 * 1e18 (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#597)
+SminemToken.slitherConstructorVariables() (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#588-923) uses literals with too many digits:
+	- _devFee = 35000000000 * 1e18 (0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol#598)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+./0x04e52df738e0c13bc58d6d75f964381f8d18b1b7.sol analyzed (8 contracts with 94 detectors), 39 result(s) found
+
+real	0m2.755s
+user	0m2.578s
+sys	0m0.178s

@@ -1,0 +1,79 @@
+'solc --version' running
+'solc ./0x43212915c5c01d9ec111d0672e37cc4c4d6f023c.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x43212915c5c01d9ec111d0672e37cc4c4d6f023c.sol:
+./0x43212915c5c01d9ec111d0672e37cc4c4d6f023c.sol:31:13: Warning: Return value of low-level calls not used.
+            contractAddr.call(methodId, _addrs[i], _isFrozen);
+            ^-----------------------------------------------^
+./0x43212915c5c01d9ec111d0672e37cc4c4d6f023c.sol:36:3: Warning: Return value of low-level calls not used.
+		contractAddr.call(_newController);
+		^-------------------------------^
+./0x43212915c5c01d9ec111d0672e37cc4c4d6f023c.sol:35:9: Warning: Unused local variable.
+        bytes4 methodId = bytes4(keccak256("changeController(address)"));
+        ^-------------^
+
+
+CallContract.callFrozen(address,address[],bool) (0x43212915c5c01d9ec111d0672e37cc4c4d6f023c.sol#28-32) ignores return value by contractAddr.call(methodId,_addrs[i],_isFrozen) (0x43212915c5c01d9ec111d0672e37cc4c4d6f023c.sol#31)
+CallContract.changeContractController(address,address) (0x43212915c5c01d9ec111d0672e37cc4c4d6f023c.sol#34-37) ignores return value by contractAddr.call(_newController) (0x43212915c5c01d9ec111d0672e37cc4c4d6f023c.sol#36)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-low-level-calls
+
+Controlled.changeController(address) (0x43212915c5c01d9ec111d0672e37cc4c4d6f023c.sol#12-14) should emit an event for: 
+	- controller = _newController (0x43212915c5c01d9ec111d0672e37cc4c4d6f023c.sol#13) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-access-control
+
+Controlled.changeController(address)._newController (0x43212915c5c01d9ec111d0672e37cc4c4d6f023c.sol#12) lacks a zero-check on :
+		- controller = _newController (0x43212915c5c01d9ec111d0672e37cc4c4d6f023c.sol#13)
+CallContract.callFrozen(address,address[],bool).contractAddr (0x43212915c5c01d9ec111d0672e37cc4c4d6f023c.sol#28) lacks a zero-check on :
+		- contractAddr.call(methodId,_addrs[i],_isFrozen) (0x43212915c5c01d9ec111d0672e37cc4c4d6f023c.sol#31)
+CallContract.changeContractController(address,address).contractAddr (0x43212915c5c01d9ec111d0672e37cc4c4d6f023c.sol#34) lacks a zero-check on :
+		- contractAddr.call(_newController) (0x43212915c5c01d9ec111d0672e37cc4c4d6f023c.sol#36)
+CallContract.changeContractController(address,address)._newController (0x43212915c5c01d9ec111d0672e37cc4c4d6f023c.sol#34) lacks a zero-check on :
+		- contractAddr.call(_newController) (0x43212915c5c01d9ec111d0672e37cc4c4d6f023c.sol#36)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+CallContract.callFrozen(address,address[],bool) (0x43212915c5c01d9ec111d0672e37cc4c4d6f023c.sol#28-32) has external calls inside a loop: contractAddr.call(methodId,_addrs[i],_isFrozen) (0x43212915c5c01d9ec111d0672e37cc4c4d6f023c.sol#31)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation/#calls-inside-a-loop
+
+Version constraint ^0.4.24 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ABIEncoderV2PackedStorage_0.4.x
+	- ExpExponentCleanup
+	- EventStructWrongData.
+It is used by:
+	- ^0.4.24 (0x43212915c5c01d9ec111d0672e37cc4c4d6f023c.sol#1)
+solc-0.4.24 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in CallContract.callFrozen(address,address[],bool) (0x43212915c5c01d9ec111d0672e37cc4c4d6f023c.sol#28-32):
+	- contractAddr.call(methodId,_addrs[i],_isFrozen) (0x43212915c5c01d9ec111d0672e37cc4c4d6f023c.sol#31)
+Low level call in CallContract.changeContractController(address,address) (0x43212915c5c01d9ec111d0672e37cc4c4d6f023c.sol#34-37):
+	- contractAddr.call(_newController) (0x43212915c5c01d9ec111d0672e37cc4c4d6f023c.sol#36)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Parameter Controlled.changeController(address)._newController (0x43212915c5c01d9ec111d0672e37cc4c4d6f023c.sol#12) is not in mixedCase
+Modifier Controlled.only_controller() (0x43212915c5c01d9ec111d0672e37cc4c4d6f023c.sol#20-23) is not in mixedCase
+Parameter CallContract.callFrozen(address,address[],bool)._addrs (0x43212915c5c01d9ec111d0672e37cc4c4d6f023c.sol#28) is not in mixedCase
+Parameter CallContract.callFrozen(address,address[],bool)._isFrozen (0x43212915c5c01d9ec111d0672e37cc4c4d6f023c.sol#28) is not in mixedCase
+Parameter CallContract.changeContractController(address,address)._newController (0x43212915c5c01d9ec111d0672e37cc4c4d6f023c.sol#34) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+callFrozen(address,address[],bool) should be declared external:
+	- CallContract.callFrozen(address,address[],bool) (0x43212915c5c01d9ec111d0672e37cc4c4d6f023c.sol#28-32)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#public-function-that-could-be-declared-external
+./0x43212915c5c01d9ec111d0672e37cc4c4d6f023c.sol analyzed (2 contracts with 94 detectors), 18 result(s) found
+
+real	0m1.311s
+user	0m1.087s
+sys	0m0.224s

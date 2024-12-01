@@ -1,0 +1,271 @@
+'solc --version' running
+'solc ./0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol:
+./0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol:77:39: Warning: This looks like an address but has an invalid checksum. If this is not used as an address, please prepend '00'. Correct checksummed address: '0x6C3E879BDD20e9686cfD9BBD1bfD4B2Dd6d47079'. For more information please see https://solidity.readthedocs.io/en/develop/types.html#address-literals
+  address public ceoAddress = address(0x6c3e879bdd20e9686cfd9bbd1bfd4b2dd6d47079);
+                                      ^----------------------------------------^
+./0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol:78:42: Warning: This looks like an address but has an invalid checksum. If this is not used as an address, please prepend '00'. Correct checksummed address: '0x06012c8cf97BEaD5deAe237070F9587f8E7A266d'. For more information please see https://solidity.readthedocs.io/en/develop/types.html#address-literals
+  IERC721 public erc721Address = IERC721(0x06012c8cf97bead5deae237070f9587f8e7a266d);
+                                         ^----------------------------------------^
+./0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol:79:62: Warning: This looks like an address but has an invalid checksum. If this is not used as an address, please prepend '00'. Correct checksummed address: '0x315F396592C3C8a2D96D62fb597E2BF4Fa7734Ab'. For more information please see https://solidity.readthedocs.io/en/develop/types.html#address-literals
+  ERC20BasicInterface public usdtToken = ERC20BasicInterface(0x315f396592c3c8a2d96d62fb597e2bf4fa7734ab);
+                                                             ^----------------------------------------^
+./0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol:134:36: Warning: Unused function parameter. Remove or comment out the variable name to silence this warning.
+  function setPriceFeeHBWALLETTest(uint256 _tokenId, uint256 _ethPrice) public view returns (uint256, uint256){
+                                   ^--------------^
+./0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol:169:12: Warning: Function declared as view, but this expression (potentially) modifies the state and thus requires non-payable (the default) or payable.
+           resetPrice(tokenId);
+           ^-----------------^
+./0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol:177:9: Warning: Function declared as view, but this expression (potentially) modifies the state and thus requires non-payable (the default) or payable.
+        ETHFee = _ethFee;
+        ^----^
+./0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol:178:9: Warning: Function declared as view, but this expression (potentially) modifies the state and thus requires non-payable (the default) or payable.
+        HBWALLETExchange = _HBWALLETExchange;
+        ^--------------^
+./0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol:183:9: Warning: Function declared as view, but this expression (potentially) modifies the state and thus requires non-payable (the default) or payable.
+        limitETHFee = _ethlimitFee;
+        ^---------^
+./0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol:184:9: Warning: Function declared as view, but this expression (potentially) modifies the state and thus requires non-payable (the default) or payable.
+        limitHBWALLETFee = _hbWalletlimitFee;
+        ^--------------^
+
+
+Bussiness.buy(uint256) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#196-202) uses arbitrary from in transferFrom: erc721Address.transferFrom(prices[tokenId].tokenOwner,msg.sender,tokenId) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#199)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#arbitrary-from-in-transferfrom
+
+Reentrancy in Bussiness.buy(uint256) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#196-202):
+	External calls:
+	- require(bool)(getApproved(tokenId) == address(this)) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#197)
+		- erc721Address.getApproved(_tokenId) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#112)
+	- erc721Address.transferFrom(prices[tokenId].tokenOwner,msg.sender,tokenId) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#199)
+	External calls sending eth:
+	- prices[tokenId].tokenOwner.transfer(msg.value) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#200)
+	State variables written after the call(s):
+	- resetPrice(tokenId) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#201)
+		- prices[tokenId] = Price(address(0),0,0,0) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#212)
+	Bussiness.prices (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#95) can be used in cross function reentrancies:
+	- Bussiness.buy(uint256) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#196-202)
+	- Bussiness.getPrice(uint256) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#166-173)
+	- Bussiness.prices (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#95)
+	- Bussiness.removePrice(uint256) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#158-164)
+	- Bussiness.resetPrice(uint256) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#211-214)
+	- Bussiness.setPrice(uint256,uint256,uint256) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#115-119)
+	- Bussiness.setPriceFeeEth(uint256,uint256) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#120-133)
+	- Bussiness.setPriceFeeHBWALLET(uint256,uint256) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#138-157)
+Reentrancy in Bussiness.removePrice(uint256) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#158-164):
+	External calls:
+	- require(bool)(erc721Address.ownerOf(tokenId) == msg.sender) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#159)
+	- hbwalletToken.transfer(msg.sender,prices[tokenId].hbfee) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#161)
+	External calls sending eth:
+	- msg.sender.transfer(prices[tokenId].fee) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#160)
+	State variables written after the call(s):
+	- resetPrice(tokenId) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#162)
+		- prices[tokenId] = Price(address(0),0,0,0) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#212)
+	Bussiness.prices (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#95) can be used in cross function reentrancies:
+	- Bussiness.buy(uint256) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#196-202)
+	- Bussiness.getPrice(uint256) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#166-173)
+	- Bussiness.prices (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#95)
+	- Bussiness.removePrice(uint256) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#158-164)
+	- Bussiness.resetPrice(uint256) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#211-214)
+	- Bussiness.setPrice(uint256,uint256,uint256) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#115-119)
+	- Bussiness.setPriceFeeEth(uint256,uint256) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#120-133)
+	- Bussiness.setPriceFeeHBWALLET(uint256,uint256) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#138-157)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+Bussiness.removePrice(uint256) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#158-164) ignores return value by hbwalletToken.transfer(msg.sender,prices[tokenId].hbfee) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#161)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+Bussiness.getPrice(uint256) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#166-173) is declared view but changes state variables:
+	- Bussiness.usdtPrices (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#96)
+	- Bussiness.prices (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#95)
+Bussiness.setFee(uint256,uint256) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#175-180) is declared view but changes state variables:
+	- Bussiness.HBWALLETExchange (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#83)
+	- Bussiness.ETHFee (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#81)
+Bussiness.setLimitFee(uint256,uint256) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#181-186) is declared view but changes state variables:
+	- Bussiness.limitETHFee (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#85)
+	- Bussiness.limitHBWALLETFee (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#86)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#constant-functions-changing-the-state
+
+Bussiness.setPriceFeeHBWALLETTest(uint256,uint256) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#134-137) performs a multiplication on the result of a division:
+	- ethfee = _ethPrice * ETHFee / Percen (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#135)
+	- (ethfee,ethfee * HBWALLETExchange / 2 / (10 ** 16)) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#136)
+Bussiness.setPriceFeeHBWALLET(uint256,uint256) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#138-157) performs a multiplication on the result of a division:
+	- ethfee = _ethPrice * ETHFee / Percen (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#152)
+	- fee = ethfee * HBWALLETExchange / 2 / (10 ** 16) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#153)
+Bussiness.setPriceFeeHBWALLET(uint256,uint256) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#138-157) performs a multiplication on the result of a division:
+	- ethfee = (_ethPrice - prices[_tokenId].price) * ETHFee / Percen (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#143)
+	- fee = ethfee * HBWALLETExchange / 2 / (10 ** 16) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#144)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+Reentrancy in Bussiness.buyByUsdt(uint256) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#203-210):
+	External calls:
+	- require(bool)(usdtPrices[tokenId].price > 0 && erc721Address.getApproved(tokenId) == address(this)) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#204)
+	- require(bool)(usdtToken.transferFrom(msg.sender,usdtPrices[tokenId].tokenOwner,usdtPrices[tokenId].price)) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#205)
+	- erc721Address.transferFrom(usdtPrices[tokenId].tokenOwner,msg.sender,tokenId) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#207)
+	State variables written after the call(s):
+	- resetPrice(tokenId) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#208)
+		- usdtPrices[tokenId] = Price(address(0),0,0,0) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#213)
+	Bussiness.usdtPrices (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#96) can be used in cross function reentrancies:
+	- Bussiness.buyByUsdt(uint256) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#203-210)
+	- Bussiness.getPrice(uint256) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#166-173)
+	- Bussiness.resetPrice(uint256) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#211-214)
+	- Bussiness.setPrice(uint256,uint256,uint256) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#115-119)
+	- Bussiness.usdtPrices (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#96)
+Reentrancy in Bussiness.setPriceFeeEth(uint256,uint256) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#120-133):
+	External calls:
+	- require(bool)(erc721Address.ownerOf(_tokenId) == msg.sender && prices[_tokenId].price != _ethPrice) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#121)
+	State variables written after the call(s):
+	- prices[_tokenId] = Price(msg.sender,_ethPrice,ethfee,0) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#132)
+	Bussiness.prices (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#95) can be used in cross function reentrancies:
+	- Bussiness.buy(uint256) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#196-202)
+	- Bussiness.getPrice(uint256) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#166-173)
+	- Bussiness.prices (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#95)
+	- Bussiness.removePrice(uint256) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#158-164)
+	- Bussiness.resetPrice(uint256) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#211-214)
+	- Bussiness.setPrice(uint256,uint256,uint256) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#115-119)
+	- Bussiness.setPriceFeeEth(uint256,uint256) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#120-133)
+	- Bussiness.setPriceFeeHBWALLET(uint256,uint256) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#138-157)
+Reentrancy in Bussiness.setPriceFeeHBWALLET(uint256,uint256) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#138-157):
+	External calls:
+	- require(bool)(erc721Address.ownerOf(_tokenId) == msg.sender && prices[_tokenId].price != _ethPrice) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#139)
+	- require(bool)(hbwalletToken.transferFrom(msg.sender,address(this),fee)) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#146)
+	- require(bool)(hbwalletToken.transferFrom(msg.sender,address(this),limitHBWALLETFee)) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#148)
+	State variables written after the call(s):
+	- prices[_tokenId] = Price(msg.sender,_ethPrice,0,fee) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#155)
+	Bussiness.prices (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#95) can be used in cross function reentrancies:
+	- Bussiness.buy(uint256) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#196-202)
+	- Bussiness.getPrice(uint256) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#166-173)
+	- Bussiness.prices (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#95)
+	- Bussiness.removePrice(uint256) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#158-164)
+	- Bussiness.resetPrice(uint256) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#211-214)
+	- Bussiness.setPrice(uint256,uint256,uint256) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#115-119)
+	- Bussiness.setPriceFeeEth(uint256,uint256) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#120-133)
+	- Bussiness.setPriceFeeHBWALLET(uint256,uint256) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#138-157)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+Bussiness.setFee(uint256,uint256) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#175-180) should emit an event for: 
+	- ETHFee = _ethFee (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#177) 
+	- HBWALLETExchange = _HBWALLETExchange (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#178) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+Reentrancy in Bussiness.buy(uint256) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#196-202):
+	External calls:
+	- require(bool)(getApproved(tokenId) == address(this)) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#197)
+		- erc721Address.getApproved(_tokenId) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#112)
+	- erc721Address.transferFrom(prices[tokenId].tokenOwner,msg.sender,tokenId) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#199)
+	External calls sending eth:
+	- prices[tokenId].tokenOwner.transfer(msg.value) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#200)
+	State variables written after the call(s):
+	- resetPrice(tokenId) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#201)
+		- usdtPrices[tokenId] = Price(address(0),0,0,0) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#213)
+Reentrancy in Bussiness.buyByUsdt(uint256) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#203-210):
+	External calls:
+	- require(bool)(usdtPrices[tokenId].price > 0 && erc721Address.getApproved(tokenId) == address(this)) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#204)
+	- require(bool)(usdtToken.transferFrom(msg.sender,usdtPrices[tokenId].tokenOwner,usdtPrices[tokenId].price)) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#205)
+	- erc721Address.transferFrom(usdtPrices[tokenId].tokenOwner,msg.sender,tokenId) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#207)
+	State variables written after the call(s):
+	- resetPrice(tokenId) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#208)
+		- prices[tokenId] = Price(address(0),0,0,0) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#212)
+Reentrancy in Bussiness.getPrice(uint256) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#166-173):
+	External calls:
+	- currentOwner = erc721Address.ownerOf(tokenId) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#167)
+	State variables written after the call(s):
+	- resetPrice(tokenId) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#169)
+		- prices[tokenId] = Price(address(0),0,0,0) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#212)
+	- resetPrice(tokenId) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#169)
+		- usdtPrices[tokenId] = Price(address(0),0,0,0) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#213)
+Reentrancy in Bussiness.removePrice(uint256) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#158-164):
+	External calls:
+	- require(bool)(erc721Address.ownerOf(tokenId) == msg.sender) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#159)
+	- hbwalletToken.transfer(msg.sender,prices[tokenId].hbfee) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#161)
+	External calls sending eth:
+	- msg.sender.transfer(prices[tokenId].fee) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#160)
+	State variables written after the call(s):
+	- resetPrice(tokenId) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#162)
+		- usdtPrices[tokenId] = Price(address(0),0,0,0) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#213)
+Reentrancy in Bussiness.setPrice(uint256,uint256,uint256) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#115-119):
+	External calls:
+	- require(bool)(erc721Address.ownerOf(_tokenId) == msg.sender) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#116)
+	State variables written after the call(s):
+	- prices[_tokenId] = Price(msg.sender,_ethPrice,0,0) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#117)
+	- usdtPrices[_tokenId] = Price(msg.sender,_usdtPrice,0,0) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#118)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Version constraint ^0.4.25 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ABIEncoderV2PackedStorage_0.4.x.
+It is used by:
+	- ^0.4.25 (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#1)
+solc-0.4.25 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Parameter Bussiness.ownerOf(uint256)._tokenId (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#105) is not in mixedCase
+Parameter Bussiness.getApproved(uint256)._tokenId (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#111) is not in mixedCase
+Parameter Bussiness.setPrice(uint256,uint256,uint256)._tokenId (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#115) is not in mixedCase
+Parameter Bussiness.setPrice(uint256,uint256,uint256)._ethPrice (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#115) is not in mixedCase
+Parameter Bussiness.setPrice(uint256,uint256,uint256)._usdtPrice (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#115) is not in mixedCase
+Parameter Bussiness.setPriceFeeEth(uint256,uint256)._tokenId (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#120) is not in mixedCase
+Parameter Bussiness.setPriceFeeEth(uint256,uint256)._ethPrice (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#120) is not in mixedCase
+Parameter Bussiness.setPriceFeeHBWALLETTest(uint256,uint256)._ethPrice (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#134) is not in mixedCase
+Parameter Bussiness.setPriceFeeHBWALLET(uint256,uint256)._tokenId (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#138) is not in mixedCase
+Parameter Bussiness.setPriceFeeHBWALLET(uint256,uint256)._ethPrice (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#138) is not in mixedCase
+Parameter Bussiness.setFee(uint256,uint256)._ethFee (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#175) is not in mixedCase
+Parameter Bussiness.setFee(uint256,uint256)._HBWALLETExchange (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#175) is not in mixedCase
+Parameter Bussiness.setLimitFee(uint256,uint256)._ethlimitFee (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#181) is not in mixedCase
+Parameter Bussiness.setLimitFee(uint256,uint256)._hbWalletlimitFee (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#181) is not in mixedCase
+Parameter Bussiness.withdraw(address,uint256)._address (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#191) is not in mixedCase
+Variable Bussiness.ETHFee (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#81) is not in mixedCase
+Variable Bussiness.Percen (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#82) is not in mixedCase
+Variable Bussiness.HBWALLETExchange (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#83) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in Bussiness.buy(uint256) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#196-202):
+	External calls:
+	- prices[tokenId].tokenOwner.transfer(msg.value) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#200)
+	State variables written after the call(s):
+	- resetPrice(tokenId) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#201)
+		- prices[tokenId] = Price(address(0),0,0,0) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#212)
+	- resetPrice(tokenId) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#201)
+		- usdtPrices[tokenId] = Price(address(0),0,0,0) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#213)
+Reentrancy in Bussiness.removePrice(uint256) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#158-164):
+	External calls:
+	- msg.sender.transfer(prices[tokenId].fee) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#160)
+	State variables written after the call(s):
+	- resetPrice(tokenId) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#162)
+		- prices[tokenId] = Price(address(0),0,0,0) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#212)
+	- resetPrice(tokenId) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#162)
+		- usdtPrices[tokenId] = Price(address(0),0,0,0) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#213)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+Bussiness.slitherConstructorVariables() (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#76-216) uses literals with too many digits:
+	- limitETHFee = 2000000000000000 (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#85)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+Bussiness.Percen (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#82) should be constant 
+Bussiness.ceoAddress (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#77) should be constant 
+Bussiness.erc721Address (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#78) should be constant 
+Bussiness.hbwalletToken (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#80) should be constant 
+Bussiness.usdtToken (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#79) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+
+safeTransferFrom(address,address,uint256,bytes) should be declared external:
+	- IERC721.safeTransferFrom(address,address,uint256,bytes) (0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol#60)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#public-function-that-could-be-declared-external
+./0x2c125240e472e752bcfd1627ff7632b6c5265b2e.sol analyzed (4 contracts with 94 detectors), 48 result(s) found
+
+real	0m2.267s
+user	0m2.067s
+sys	0m0.202s

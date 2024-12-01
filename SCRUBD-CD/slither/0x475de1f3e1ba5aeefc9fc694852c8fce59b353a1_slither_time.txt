@@ -1,0 +1,74 @@
+'solc --version' running
+'solc ./0x475de1f3e1ba5aeefc9fc694852c8fce59b353a1.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x475de1f3e1ba5aeefc9fc694852c8fce59b353a1.sol:
+./0x475de1f3e1ba5aeefc9fc694852c8fce59b353a1.sol:4:5: Warning: No visibility specified. Defaulting to "public".
+    function NewShare(string nickname, bool AllowUpdated, string content);
+    ^--------------------------------------------------------------------^
+./0x475de1f3e1ba5aeefc9fc694852c8fce59b353a1.sol:4:5: Warning: Functions in interfaces should be declared external.
+    function NewShare(string nickname, bool AllowUpdated, string content);
+    ^--------------------------------------------------------------------^
+./0x475de1f3e1ba5aeefc9fc694852c8fce59b353a1.sol:10:32: Warning: This looks like an address but has an invalid checksum. If this is not used as an address, please prepend '00'. Correct checksummed address: '0xc86bDf9661c62646194ef29b1b8f5Fe226E8C97E'. For more information please see https://solidity.readthedocs.io/en/develop/types.html#address-literals
+    EtherShare ES = EtherShare(0xc86bdf9661c62646194ef29b1b8f5fe226e8c97e);
+                               ^----------------------------------------^
+./0x475de1f3e1ba5aeefc9fc694852c8fce59b353a1.sol:27:9: Warning: Failure condition of 'send' ignored. Consider using 'transfer' instead.
+        msg.sender.send( tx.gasprice*(startGasLeft-endGasLeft+35000) );	//return the fee of NewShare, 35000 gas for other transaction fee.
+        ^------------------------------------------------------------^
+
+
+EtherShareDonation.FreeShare(string,string) (0x475de1f3e1ba5aeefc9fc694852c8fce59b353a1.sol#23-28) sends eth to arbitrary user
+	Dangerous calls:
+	- msg.sender.send(tx.gasprice * (startGasLeft - endGasLeft + 35000)) (0x475de1f3e1ba5aeefc9fc694852c8fce59b353a1.sol#27)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+EtherShareDonation (0x475de1f3e1ba5aeefc9fc694852c8fce59b353a1.sol#8-32) contract sets array length with a user-controlled value:
+	- donations.push(oneDonation(msg.sender,nickname,msg.value)) (0x475de1f3e1ba5aeefc9fc694852c8fce59b353a1.sol#20)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#array-length-assignment
+
+EtherShareDonation.FreeShare(string,string) (0x475de1f3e1ba5aeefc9fc694852c8fce59b353a1.sol#23-28) ignores return value by msg.sender.send(tx.gasprice * (startGasLeft - endGasLeft + 35000)) (0x475de1f3e1ba5aeefc9fc694852c8fce59b353a1.sol#27)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-send
+
+Version constraint ^0.4.13 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ExpExponentCleanup
+	- NestedArrayFunctionCallDecoder
+	- ZeroFunctionSelector
+	- DelegateCallReturnValue
+	- ECRecoverMalformedInput.
+It is used by:
+	- ^0.4.13 (0x475de1f3e1ba5aeefc9fc694852c8fce59b353a1.sol#1)
+solc-0.4.21 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Function EtherShare.NewShare(string,bool,string) (0x475de1f3e1ba5aeefc9fc694852c8fce59b353a1.sol#4) is not in mixedCase
+Parameter EtherShare.NewShare(string,bool,string).AllowUpdated (0x475de1f3e1ba5aeefc9fc694852c8fce59b353a1.sol#4) is not in mixedCase
+Struct EtherShareDonation.oneDonation (0x475de1f3e1ba5aeefc9fc694852c8fce59b353a1.sol#12-16) is not in CapWords
+Function EtherShareDonation.Donate(string) (0x475de1f3e1ba5aeefc9fc694852c8fce59b353a1.sol#19-21) is not in mixedCase
+Function EtherShareDonation.FreeShare(string,string) (0x475de1f3e1ba5aeefc9fc694852c8fce59b353a1.sol#23-28) is not in mixedCase
+Variable EtherShareDonation.ES (0x475de1f3e1ba5aeefc9fc694852c8fce59b353a1.sol#10) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+EtherShareDonation.ES (0x475de1f3e1ba5aeefc9fc694852c8fce59b353a1.sol#10) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+
+NewShare(string,bool,string) should be declared external:
+	- EtherShare.NewShare(string,bool,string) (0x475de1f3e1ba5aeefc9fc694852c8fce59b353a1.sol#4)
+Donate(string) should be declared external:
+	- EtherShareDonation.Donate(string) (0x475de1f3e1ba5aeefc9fc694852c8fce59b353a1.sol#19-21)
+FreeShare(string,string) should be declared external:
+	- EtherShareDonation.FreeShare(string,string) (0x475de1f3e1ba5aeefc9fc694852c8fce59b353a1.sol#23-28)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#public-function-that-could-be-declared-external
+./0x475de1f3e1ba5aeefc9fc694852c8fce59b353a1.sol analyzed (2 contracts with 94 detectors), 15 result(s) found
+
+real	0m1.469s
+user	0m1.270s
+sys	0m0.202s

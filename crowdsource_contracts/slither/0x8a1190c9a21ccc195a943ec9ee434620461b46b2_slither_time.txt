@@ -1,0 +1,380 @@
+'solc --version' running
+'solc ./0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol:
+./0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol:68:1: Warning: No visibility specified. Defaulting to "public".
+function balanceOf(address who) constant returns (uint256);
+^---------------------------------------------------------^
+./0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol:70:1: Warning: No visibility specified. Defaulting to "public".
+function transfer(address _to, uint256 _value) returns (bool);
+^------------------------------------------------------------^
+./0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol:72:1: Warning: No visibility specified. Defaulting to "public".
+function transferFrom(address _from, address _to, uint256 _value) returns (bool);
+^-------------------------------------------------------------------------------^
+./0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol:74:1: Warning: No visibility specified. Defaulting to "public".
+function approve(address _spender, uint256 _value) returns (bool);
+^----------------------------------------------------------------^
+./0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol:76:1: Warning: No visibility specified. Defaulting to "public".
+function allowance(address _owner, address _spender) constant returns (uint256);
+^------------------------------------------------------------------------------^
+
+
+HeroLedger.withdrawERC20Balance(uint256) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#125-131) ignores return value by erc20.transfer(leaderAddress,amount) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#128)
+HeroLedger.withdrawOtherERC20Balance(uint256,address) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#134-141) ignores return value by candidateContract.transfer(leaderAddress,amount) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#140)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+Reentrancy in HeroFighting._fight(uint32,uint32) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#395-420):
+	External calls:
+	- (flag,childTalent,belongings1,belongings2) = masterRecruitment.fightMix(yin.belongings,yang.belongings) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#407)
+	State variables written after the call(s):
+	- yin.belongings = belongings1 (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#408)
+	HeroBase.heroes (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#185) can be used in cross function reentrancies:
+	- HeroFighting.isReadyToFight(uint256) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#385-393)
+	- HeroFighting.reduceCDFee(uint256) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#425-435)
+	- HeroOwnership.totalSupply() (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#329-331)
+	- yang.belongings = belongings2 (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#409)
+	HeroBase.heroes (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#185) can be used in cross function reentrancies:
+	- HeroFighting.isReadyToFight(uint256) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#385-393)
+	- HeroFighting.reduceCDFee(uint256) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#425-435)
+	- HeroOwnership.totalSupply() (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#329-331)
+	- newHeroId = _createHero(_yinId,_yangId,parentGen + 1,childTalent,owner) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#416)
+		- newHeroId = heroes.push(_hero) - 1 (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#231)
+	HeroBase.heroes (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#185) can be used in cross function reentrancies:
+	- HeroFighting.isReadyToFight(uint256) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#385-393)
+	- HeroFighting.reduceCDFee(uint256) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#425-435)
+	- HeroOwnership.totalSupply() (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#329-331)
+Reentrancy in HeroLedger.collect(uint256) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#117-123):
+	External calls:
+	- erc20.transfer(msg.sender,amount) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#119)
+	State variables written after the call(s):
+	- ownerIndexToERC20Balance[msg.sender] -= amount (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#120)
+	HeroLedger.ownerIndexToERC20Balance (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#84) can be used in cross function reentrancies:
+	- HeroLedger.charge(uint256) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#110-115)
+	- HeroLedger.collect(uint256) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#117-123)
+	- HeroLedger.ownerIndexToERC20Balance (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#84)
+Reentrancy in HeroMinting.createGen0Auction(uint256,uint256) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#660-681):
+	External calls:
+	- price = _computeNextGen0Price() (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#667)
+		- avePrice = saleAuction.averageGen0SalePrice() (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#684)
+	- saleAuction.createAuction(heroId,price * 1000,0,price,0,gen0AuctionDuration,address(this)) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#670-678)
+	State variables written after the call(s):
+	- gen0CreatedCount ++ (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#680)
+	HeroMinting.gen0CreatedCount (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#646) can be used in cross function reentrancies:
+	- HeroMinting.createGen0Auction(uint256,uint256) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#660-681)
+	- HeroMinting.createPromoHero(uint256,address) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#648-658)
+	- HeroMinting.gen0CreatedCount (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#646)
+Reentrancy in HeroAuction.orderOnFightAuction(uint256,uint256,uint256) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#578-610):
+	External calls:
+	- saller = fightAuction.getSeller(_yangId) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#591)
+	- price = fightAuction.getCurrentPrice(_yangId,1) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#592)
+	- fightAuction.order(_yangId,orderAmount,msg.sender) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#596)
+	- _fight(uint32(_yinId),uint32(_yangId)) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#597)
+		- (flag,childTalent,belongings1,belongings2) = masterRecruitment.fightMix(yin.belongings,yang.belongings) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#407)
+	State variables written after the call(s):
+	- _fight(uint32(_yinId),uint32(_yangId)) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#597)
+		- heroIndexToOwner[_tokenId] = _to (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#195)
+	HeroBase.heroIndexToOwner (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#186) can be used in cross function reentrancies:
+	- HeroFighting._fight(uint32,uint32) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#395-420)
+	- HeroOwnership._owns(address,uint256) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#273-275)
+	- HeroBase._transfer(address,address,uint256) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#193-201)
+	- HeroBase.heroIndexToOwner (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#186)
+	- HeroOwnership.ownerOf(uint256) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#333-341)
+	- HeroOwnership.tokensOfOwnerByIndex(address,uint256) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#343-359)
+	- _fight(uint32(_yinId),uint32(_yangId)) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#597)
+		- newHeroId = heroes.push(_hero) - 1 (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#231)
+		- yin.belongings = belongings1 (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#408)
+		- yang.belongings = belongings2 (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#409)
+	HeroBase.heroes (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#185) can be used in cross function reentrancies:
+	- HeroBase._createHero(uint256,uint256,uint256,uint256,address) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#203-243)
+	- HeroFighting._fight(uint32,uint32) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#395-420)
+	- HeroFighting.isReadyToFight(uint256) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#385-393)
+	- HeroFighting.reduceCDFee(uint256) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#425-435)
+	- HeroOwnership.totalSupply() (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#329-331)
+	- ownerIndexToERC20Balance[msg.sender] -= orderAmount (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#598)
+	HeroLedger.ownerIndexToERC20Balance (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#84) can be used in cross function reentrancies:
+	- HeroLedger.charge(uint256) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#110-115)
+	- HeroLedger.collect(uint256) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#117-123)
+	- HeroAuction.orderOnFightAuction(uint256,uint256,uint256) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#578-610)
+	- HeroAuction.orderOnSaleAuction(uint256,uint256) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#526-552)
+	- HeroLedger.ownerIndexToERC20Balance (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#84)
+	- HeroAuction.promoBun(address) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#627-633)
+	- ownerIndexToERC20Balance[saller] += price - cut (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#606)
+	HeroLedger.ownerIndexToERC20Balance (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#84) can be used in cross function reentrancies:
+	- HeroLedger.charge(uint256) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#110-115)
+	- HeroLedger.collect(uint256) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#117-123)
+	- HeroAuction.orderOnFightAuction(uint256,uint256,uint256) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#578-610)
+	- HeroAuction.orderOnSaleAuction(uint256,uint256) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#526-552)
+	- HeroLedger.ownerIndexToERC20Balance (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#84)
+	- HeroAuction.promoBun(address) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#627-633)
+Reentrancy in HeroAuction.orderOnSaleAuction(uint256,uint256) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#526-552):
+	External calls:
+	- saller = saleAuction.getSeller(_heroId) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#533)
+	- price = saleAuction.getCurrentPrice(_heroId,1) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#534)
+	- saleAuction.order(_heroId,orderAmount,msg.sender) && orderAmount > 0 (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#537)
+	State variables written after the call(s):
+	- ownerIndexToERC20Balance[msg.sender] -= orderAmount (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#539)
+	HeroLedger.ownerIndexToERC20Balance (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#84) can be used in cross function reentrancies:
+	- HeroLedger.charge(uint256) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#110-115)
+	- HeroLedger.collect(uint256) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#117-123)
+	- HeroAuction.orderOnFightAuction(uint256,uint256,uint256) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#578-610)
+	- HeroAuction.orderOnSaleAuction(uint256,uint256) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#526-552)
+	- HeroLedger.ownerIndexToERC20Balance (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#84)
+	- HeroAuction.promoBun(address) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#627-633)
+	- ownerIndexToERC20Balance[saller] += price - cut (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#547)
+	HeroLedger.ownerIndexToERC20Balance (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#84) can be used in cross function reentrancies:
+	- HeroLedger.charge(uint256) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#110-115)
+	- HeroLedger.collect(uint256) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#117-123)
+	- HeroAuction.orderOnFightAuction(uint256,uint256,uint256) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#578-610)
+	- HeroAuction.orderOnSaleAuction(uint256,uint256) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#526-552)
+	- HeroLedger.ownerIndexToERC20Balance (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#84)
+	- HeroAuction.promoBun(address) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#627-633)
+Reentrancy in HeroLedger.withdrawERC20Balance(uint256) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#125-131):
+	External calls:
+	- realTotal = erc20.balanceOf(this) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#126)
+	- erc20.transfer(leaderAddress,amount) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#128)
+	State variables written after the call(s):
+	- totalBalance -= amount (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#129)
+	HeroLedger.totalBalance (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#86) can be used in cross function reentrancies:
+	- HeroLedger.charge(uint256) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#110-115)
+	- HeroLedger.collect(uint256) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#117-123)
+	- HeroLedger.setERC20TotalPromo(uint256,uint256) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#102-108)
+	- HeroLedger.totalBalance (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#86)
+	- HeroLedger.withdrawERC20Balance(uint256) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#125-131)
+	- totalUsed -= amount (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#130)
+	HeroLedger.totalUsed (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#87) can be used in cross function reentrancies:
+	- HeroLedger.totalUsed (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#87)
+	- HeroLedger.withdrawERC20Balance(uint256) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#125-131)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+HeroAccessControl.setLeader(address) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#27-30) should emit an event for: 
+	- leaderAddress = _newLeader (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#29) 
+	- leaderAddress = _newLeader (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#29) 
+HeroAccessControl.setOPM(address) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#32-35) should emit an event for: 
+	- opmAddress = _newOPM (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#34) 
+	- opmAddress = _newOPM (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#34) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-access-control
+
+HeroAuction.orderOnFightAuction(uint256,uint256,uint256) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#578-610) should emit an event for: 
+	- totalUsed += orderAmount (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#602) 
+	- totalUsed += (orderAmount - price + cut) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#605) 
+HeroLedger.withdrawERC20Balance(uint256) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#125-131) should emit an event for: 
+	- totalUsed -= amount (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#130) 
+HeroCore.setNewCdFee(uint128) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#766-768) should emit an event for: 
+	- cdFee = _cdFee (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#767) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+HeroBase.setMagicStore(address)._address (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#245) lacks a zero-check on :
+		- magicStore = _address (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#246)
+HeroCore.setNewAddress(address)._v2Address (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#715) lacks a zero-check on :
+		- newContractAddress = _v2Address (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#716)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in HeroFighting._fight(uint32,uint32) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#395-420):
+	External calls:
+	- (flag,childTalent,belongings1,belongings2) = masterRecruitment.fightMix(yin.belongings,yang.belongings) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#407)
+	State variables written after the call(s):
+	- newHeroId = _createHero(_yinId,_yangId,parentGen + 1,childTalent,owner) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#416)
+		- delete heroIndexToApproved[_tokenId] (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#198)
+	- heroIndexToLoss[_yangId] += 1 (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#415)
+	- newHeroId = _createHero(_yinId,_yangId,parentGen + 1,childTalent,owner) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#416)
+		- heroIndexToOwner[_tokenId] = _to (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#195)
+	- heroIndexToWin[_yinId] += 1 (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#414)
+	- newHeroId = _createHero(_yinId,_yangId,parentGen + 1,childTalent,owner) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#416)
+		- ownershipTokenCount[_to] ++ (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#194)
+		- ownershipTokenCount[_from] -- (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#197)
+Reentrancy in HeroLedger.charge(uint256) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#110-115):
+	External calls:
+	- erc20.transferFrom(msg.sender,this,amount) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#111)
+	State variables written after the call(s):
+	- ownerIndexToERC20Balance[msg.sender] += amount (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#112)
+	- totalBalance += amount (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#113)
+Reentrancy in HeroLedger.collect(uint256) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#117-123):
+	External calls:
+	- erc20.transfer(msg.sender,amount) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#119)
+	State variables written after the call(s):
+	- totalBalance -= amount (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#121)
+Reentrancy in HeroAuction.orderOnFightAuction(uint256,uint256,uint256) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#578-610):
+	External calls:
+	- saller = fightAuction.getSeller(_yangId) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#591)
+	- price = fightAuction.getCurrentPrice(_yangId,1) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#592)
+	- fightAuction.order(_yangId,orderAmount,msg.sender) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#596)
+	- _fight(uint32(_yinId),uint32(_yangId)) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#597)
+		- (flag,childTalent,belongings1,belongings2) = masterRecruitment.fightMix(yin.belongings,yang.belongings) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#407)
+	State variables written after the call(s):
+	- ownerIndexToERC20Used[msg.sender] += orderAmount (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#599)
+	- totalUsed += orderAmount (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#602)
+	- totalUsed += (orderAmount - price + cut) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#605)
+Reentrancy in HeroAuction.orderOnSaleAuction(uint256,uint256) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#526-552):
+	External calls:
+	- saller = saleAuction.getSeller(_heroId) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#533)
+	- price = saleAuction.getCurrentPrice(_heroId,1) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#534)
+	- saleAuction.order(_heroId,orderAmount,msg.sender) && orderAmount > 0 (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#537)
+	State variables written after the call(s):
+	- ownerIndexToERC20Used[msg.sender] += orderAmount (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#540)
+	- totalUsed += orderAmount (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#543)
+	- totalUsed += (orderAmount - price + cut) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#546)
+Reentrancy in HeroLedger.setERC20Address(address,uint256,uint256) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#92-100):
+	External calls:
+	- require(bool)(candidateContract.isERC20()) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#94)
+	State variables written after the call(s):
+	- erc20 = candidateContract (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#95)
+Reentrancy in HeroLedger.setERC20Address(address,uint256,uint256) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#92-100):
+	External calls:
+	- require(bool)(candidateContract.isERC20()) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#94)
+	- realTotal = erc20.balanceOf(this) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#96)
+	State variables written after the call(s):
+	- candy = _candy (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#99)
+	- totalPromo = _totalPromo (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#98)
+Reentrancy in HeroLedger.setERC20TotalPromo(uint256,uint256) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#102-108):
+	External calls:
+	- realTotal = erc20.balanceOf(this) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#103)
+	State variables written after the call(s):
+	- candy = _candy (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#107)
+	- totalPromo += _totalPromo (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#104)
+Reentrancy in HeroAuction.setFightAuctionAddress(address) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#496-500):
+	External calls:
+	- require(bool)(candidateContract.isFightClockAuction()) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#498)
+	State variables written after the call(s):
+	- fightAuction = candidateContract (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#499)
+Reentrancy in HeroFighting.setMasterRecruitmentAddress(address) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#372-376):
+	External calls:
+	- require(bool)(candidateContract.isMasterRecruitment()) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#374)
+	State variables written after the call(s):
+	- masterRecruitment = candidateContract (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#375)
+Reentrancy in HeroAuction.setSaleAuctionAddress(address) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#490-494):
+	External calls:
+	- require(bool)(candidateContract.isSaleClockAuction()) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#492)
+	State variables written after the call(s):
+	- saleAuction = candidateContract (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#493)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in HeroFighting._fight(uint32,uint32) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#395-420):
+	External calls:
+	- (flag,childTalent,belongings1,belongings2) = masterRecruitment.fightMix(yin.belongings,yang.belongings) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#407)
+	Event emitted after the call(s):
+	- Recruitment(_owner,newHeroId,uint256(_hero.yinId),uint256(_hero.yangId),_hero.talent) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#233-239)
+		- newHeroId = _createHero(_yinId,_yangId,parentGen + 1,childTalent,owner) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#416)
+	- Transfer(_from,_to,_tokenId) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#200)
+		- newHeroId = _createHero(_yinId,_yangId,parentGen + 1,childTalent,owner) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#416)
+Reentrancy in HeroAuction.orderOnFightAuction(uint256,uint256,uint256) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#578-610):
+	External calls:
+	- saller = fightAuction.getSeller(_yangId) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#591)
+	- price = fightAuction.getCurrentPrice(_yangId,1) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#592)
+	- fightAuction.order(_yangId,orderAmount,msg.sender) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#596)
+	- _fight(uint32(_yinId),uint32(_yangId)) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#597)
+		- (flag,childTalent,belongings1,belongings2) = masterRecruitment.fightMix(yin.belongings,yang.belongings) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#407)
+	Event emitted after the call(s):
+	- Recruitment(_owner,newHeroId,uint256(_hero.yinId),uint256(_hero.yangId),_hero.talent) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#233-239)
+		- _fight(uint32(_yinId),uint32(_yangId)) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#597)
+	- Transfer(_from,_to,_tokenId) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#200)
+		- _fight(uint32(_yinId),uint32(_yangId)) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#597)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+HeroOwnership.tokensOfOwnerByIndex(address,uint256) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#343-359) uses timestamp for comparisons
+	Dangerous comparisons:
+	- i <= totalSupply() (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#349)
+HeroFighting._triggerCooldown(HeroBase.Hero) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#378-383) uses timestamp for comparisons
+	Dangerous comparisons:
+	- _newHero.cooldownIndex < 13 (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#380)
+HeroFighting.isReadyToFight(uint256) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#385-393) uses timestamp for comparisons
+	Dangerous comparisons:
+	- (hero.cooldownEndTime <= now) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#392)
+HeroFighting.reduceCDFee(uint256) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#425-435) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(hero.cooldownEndTime > now) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#431)
+HeroCore.getHero(uint256) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#726-753) uses timestamp for comparisons
+	Dangerous comparisons:
+	- isReady = (her.cooldownEndTime <= now) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#743)
+HeroCore.reduceCD(uint256,uint256) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#770-785) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(hero.cooldownEndTime > now) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#775)
+	- require(bool)(reduceAmount >= uint256(cdTime * cdFee * (hero.cooldownIndex + 1))) (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#779)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Version constraint ^0.4.18 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ExpExponentCleanup
+	- EventStructWrongData
+	- NestedArrayFunctionCallDecoder.
+It is used by:
+	- ^0.4.18 (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#1)
+solc-0.4.18 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Parameter HeroAccessControl.setLeader(address)._newLeader (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#27) is not in mixedCase
+Parameter HeroAccessControl.setOPM(address)._newOPM (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#32) is not in mixedCase
+Parameter HeroLedger.setERC20Address(address,uint256,uint256)._address (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#92) is not in mixedCase
+Parameter HeroLedger.setERC20Address(address,uint256,uint256)._totalPromo (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#92) is not in mixedCase
+Parameter HeroLedger.setERC20Address(address,uint256,uint256)._candy (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#92) is not in mixedCase
+Parameter HeroLedger.setERC20TotalPromo(uint256,uint256)._totalPromo (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#102) is not in mixedCase
+Parameter HeroLedger.setERC20TotalPromo(uint256,uint256)._candy (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#102) is not in mixedCase
+Parameter HeroLedger.withdrawOtherERC20Balance(uint256,address)._address (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#134) is not in mixedCase
+Parameter HeroBase.setMagicStore(address)._address (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#245) is not in mixedCase
+Parameter HeroOwnership.rescueLostHero(uint256,address)._heroId (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#285) is not in mixedCase
+Parameter HeroOwnership.rescueLostHero(uint256,address)._recipient (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#285) is not in mixedCase
+Parameter HeroOwnership.balanceOf(address)._owner (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#290) is not in mixedCase
+Parameter HeroOwnership.transfer(address,uint256)._to (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#295) is not in mixedCase
+Parameter HeroOwnership.transfer(address,uint256)._tokenId (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#296) is not in mixedCase
+Parameter HeroOwnership.approve(address,uint256)._to (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#306) is not in mixedCase
+Parameter HeroOwnership.approve(address,uint256)._tokenId (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#307) is not in mixedCase
+Parameter HeroOwnership.transferFrom(address,address,uint256)._from (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#318) is not in mixedCase
+Parameter HeroOwnership.transferFrom(address,address,uint256)._to (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#319) is not in mixedCase
+Parameter HeroOwnership.transferFrom(address,address,uint256)._tokenId (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#320) is not in mixedCase
+Parameter HeroOwnership.ownerOf(uint256)._tokenId (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#333) is not in mixedCase
+Parameter HeroOwnership.tokensOfOwnerByIndex(address,uint256)._owner (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#343) is not in mixedCase
+Parameter HeroOwnership.tokensOfOwnerByIndex(address,uint256)._index (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#343) is not in mixedCase
+Parameter HeroFighting.setMasterRecruitmentAddress(address)._address (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#372) is not in mixedCase
+Parameter HeroFighting.isReadyToFight(uint256)._heroId (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#385) is not in mixedCase
+Parameter HeroAuction.setSaleAuctionAddress(address)._address (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#490) is not in mixedCase
+Parameter HeroAuction.setFightAuctionAddress(address)._address (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#496) is not in mixedCase
+Parameter HeroAuction.createSaleAuction(uint256,uint256,uint256,uint256,uint256,uint256)._heroId (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#504) is not in mixedCase
+Parameter HeroAuction.createSaleAuction(uint256,uint256,uint256,uint256,uint256,uint256)._startingPrice (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#505) is not in mixedCase
+Parameter HeroAuction.createSaleAuction(uint256,uint256,uint256,uint256,uint256,uint256)._endingPrice (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#506) is not in mixedCase
+Parameter HeroAuction.createSaleAuction(uint256,uint256,uint256,uint256,uint256,uint256)._startingPriceEth (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#507) is not in mixedCase
+Parameter HeroAuction.createSaleAuction(uint256,uint256,uint256,uint256,uint256,uint256)._endingPriceEth (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#508) is not in mixedCase
+Parameter HeroAuction.createSaleAuction(uint256,uint256,uint256,uint256,uint256,uint256)._duration (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#509) is not in mixedCase
+Parameter HeroAuction.orderOnSaleAuction(uint256,uint256)._heroId (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#527) is not in mixedCase
+Parameter HeroAuction.createFightAuction(uint256,uint256,uint256,uint256)._heroId (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#556) is not in mixedCase
+Parameter HeroAuction.createFightAuction(uint256,uint256,uint256,uint256)._startingPrice (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#557) is not in mixedCase
+Parameter HeroAuction.createFightAuction(uint256,uint256,uint256,uint256)._endingPrice (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#558) is not in mixedCase
+Parameter HeroAuction.createFightAuction(uint256,uint256,uint256,uint256)._duration (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#559) is not in mixedCase
+Parameter HeroAuction.orderOnFightAuction(uint256,uint256,uint256)._yangId (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#579) is not in mixedCase
+Parameter HeroAuction.orderOnFightAuction(uint256,uint256,uint256)._yinId (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#580) is not in mixedCase
+Parameter HeroAuction.promoBun(address)._address (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#627) is not in mixedCase
+Parameter HeroMinting.createPromoHero(uint256,address)._talent (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#648) is not in mixedCase
+Parameter HeroMinting.createPromoHero(uint256,address)._owner (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#648) is not in mixedCase
+Parameter HeroMinting.createGen0Auction(uint256,uint256)._talent (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#660) is not in mixedCase
+Parameter HeroCore.setNewAddress(address)._v2Address (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#715) is not in mixedCase
+Parameter HeroCore.getHero(uint256)._id (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#726) is not in mixedCase
+Parameter HeroCore.setNewCdFee(uint128)._cdFee (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#766) is not in mixedCase
+Parameter HeroCore.useItems(uint32,uint256,address,uint256)._items (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#787) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+HeroCore.slitherConstructorVariables() (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#700-800) uses literals with too many digits:
+	- gen0StartingPrice = 100000000000000000 (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#642)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+HeroMinting.gen0AuctionDuration (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#643) should be constant 
+HeroMinting.gen0CreationLimit (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#640) should be constant 
+HeroMinting.gen0StartingPrice (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#642) should be constant 
+HeroMinting.promoCreationLimit (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#639) should be constant 
+HeroOwnership.name (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#265) should be constant 
+HeroOwnership.symbol (0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol#266) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+./0x8a1190c9a21ccc195a943ec9ee434620461b46b2.sol analyzed (14 contracts with 94 detectors), 90 result(s) found
+
+real	0m7.111s
+user	0m6.784s
+sys	0m0.327s

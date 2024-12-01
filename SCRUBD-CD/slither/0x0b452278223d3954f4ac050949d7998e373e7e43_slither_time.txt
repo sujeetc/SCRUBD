@@ -1,0 +1,540 @@
+'solc --version' running
+'solc ./0x0b452278223d3954f4ac050949d7998e373e7e43.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x0b452278223d3954f4ac050949d7998e373e7e43.sol:
+Warning: Contract code size exceeds 24576 bytes (a limit introduced in Spurious Dragon). This contract may not be deployable on mainnet. Consider enabling the optimizer (with a low "runs" value!), turning off revert strings, or using libraries.
+   --> ./0x0b452278223d3954f4ac050949d7998e373e7e43.sol:219:1:
+    |
+219 | contract SUZUME is Context, IERC20Upgradeable {
+    | ^ (Relevant source part starts here and spans across multiple lines).
+
+
+
+SUZUME.swapAndLiquify(uint256) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#696-738) sends eth to arbitrary user
+	Dangerous calls:
+	- dexRouter.addLiquidityETH{value: liquidityBalance}(address(this),toLiquify,0,0,DEAD,block.timestamp) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#719-726)
+	- _marketWallet.transfer(marketFee) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#734)
+	- _devWallet.transfer(devfeeshare) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#735)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+Reentrancy in SUZUME._transfer(address,address,uint256) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#655-694):
+	External calls:
+	- swapAndLiquify(contractTokenBalance) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#689)
+		- dexRouter.swapExactTokensForETHSupportingFeeOnTransferTokens(toSwapForEth,0,path,address(this),block.timestamp) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#707-713)
+		- dexRouter.addLiquidityETH{value: liquidityBalance}(address(this),toLiquify,0,0,DEAD,block.timestamp) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#719-726)
+	External calls sending eth:
+	- swapAndLiquify(contractTokenBalance) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#689)
+		- dexRouter.addLiquidityETH{value: liquidityBalance}(address(this),toLiquify,0,0,DEAD,block.timestamp) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#719-726)
+		- _marketWallet.transfer(marketFee) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#734)
+		- _devWallet.transfer(devfeeshare) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#735)
+	State variables written after the call(s):
+	- _finalizeTransfer(from,to,amount,takeFee) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#693)
+		- _liquidityHolders[from] = true (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#745)
+	SUZUME._liquidityHolders (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#233) can be used in cross function reentrancies:
+	- SUZUME._checkLiquidityAdd(address,address) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#742-752)
+	- SUZUME._hasLimits(address,address) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#631-639)
+	- SUZUME.constructor() (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#331-352)
+	- _finalizeTransfer(from,to,amount,takeFee) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#693)
+		- _rOwned[address(this)] = _rOwned[address(this)] + rLiquidity (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#873)
+		- _rOwned[from] = _rOwned[from] - values.rAmount (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#785)
+		- _rOwned[to] = _rOwned[to] + values.rTransferAmount (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#786)
+	SUZUME._rOwned (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#223) can be used in cross function reentrancies:
+	- SUZUME._finalizeTransfer(address,address,uint256,bool) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#773-804)
+	- SUZUME._getCurrentSupply() (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#849-859)
+	- SUZUME._takeLiquidity(address,uint256) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#870-877)
+	- SUZUME.balanceOf(address) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#456-459)
+	- SUZUME.intializeContract(address,address,string,string) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#356-409)
+	- SUZUME.setExcludedFromReward(address,bool) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#605-625)
+	- _finalizeTransfer(from,to,amount,takeFee) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#693)
+		- _rTotal = _rTotal - rFee (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#862)
+	SUZUME._rTotal (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#273) can be used in cross function reentrancies:
+	- SUZUME._getCurrentSupply() (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#849-859)
+	- SUZUME._takeReflect(uint256,uint256) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#861-864)
+	- SUZUME.intializeContract(address,address,string,string) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#356-409)
+	- SUZUME.tokenFromReflection(uint256) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#641-645)
+	- _finalizeTransfer(from,to,amount,takeFee) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#693)
+		- _tOwned[address(this)] = _tOwned[address(this)] + tLiquidity (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#875)
+		- _tOwned[from] = _tOwned[from] - tAmount (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#789)
+		- _tOwned[to] = _tOwned[to] + values.tTransferAmount (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#791)
+		- _tOwned[from] = _tOwned[from] - tAmount (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#793)
+		- _tOwned[to] = _tOwned[to] + values.tTransferAmount (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#794)
+	SUZUME._tOwned (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#224) can be used in cross function reentrancies:
+	- SUZUME._finalizeTransfer(address,address,uint256,bool) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#773-804)
+	- SUZUME._getCurrentSupply() (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#849-859)
+	- SUZUME._takeLiquidity(address,uint256) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#870-877)
+	- SUZUME.balanceOf(address) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#456-459)
+	- SUZUME.setExcludedFromReward(address,bool) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#605-625)
+	- _finalizeTransfer(from,to,amount,takeFee) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#693)
+		- swapAndLiquifyEnabled = true (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#749)
+	SUZUME.swapAndLiquifyEnabled (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#288) can be used in cross function reentrancies:
+	- SUZUME._checkLiquidityAdd(address,address) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#742-752)
+	- SUZUME._transfer(address,address,uint256) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#655-694)
+	- SUZUME.enableTrading() (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#754-761)
+	- SUZUME.setSwapAndLiquifyEnabled(bool) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#596-599)
+	- SUZUME.swapAndLiquifyEnabled (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#288)
+Reentrancy in SUZUME.transferOwner(address) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#420-438):
+	External calls:
+	- _transfer(_owner,newOwner,balanceOf(_owner)) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#432)
+		- dexRouter.swapExactTokensForETHSupportingFeeOnTransferTokens(toSwapForEth,0,path,address(this),block.timestamp) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#707-713)
+		- dexRouter.addLiquidityETH{value: liquidityBalance}(address(this),toLiquify,0,0,DEAD,block.timestamp) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#719-726)
+	External calls sending eth:
+	- _transfer(_owner,newOwner,balanceOf(_owner)) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#432)
+		- dexRouter.addLiquidityETH{value: liquidityBalance}(address(this),toLiquify,0,0,DEAD,block.timestamp) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#719-726)
+		- _marketWallet.transfer(marketFee) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#734)
+		- _devWallet.transfer(devfeeshare) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#735)
+	State variables written after the call(s):
+	- _owner = newOwner (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#435)
+	SUZUME._owner (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#221) can be used in cross function reentrancies:
+	- SUZUME.constructor() (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#331-352)
+	- SUZUME.onlyOwner() (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#326-329)
+	- SUZUME.owner() (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#416-418)
+	- SUZUME.renounceOwnership() (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#440-444)
+	- SUZUME.transferOwner(address) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#420-438)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+SUZUME.swapAndLiquify(uint256) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#696-738) performs a multiplication on the result of a division:
+	- marketFee = OperationsFee / (ValueDivisor) * (MarketShare) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#732)
+SUZUME.swapAndLiquify(uint256) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#696-738) performs a multiplication on the result of a division:
+	- devfeeshare = OperationsFee / (ValueDivisor) * (DevShare) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#733)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+Reentrancy in SUZUME.intializeContract(address,address,string,string) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#356-409):
+	External calls:
+	- lpPair = IUniswapV2Factory(dexRouter.factory()).createPair(dexRouter.WETH(),address(this)) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#376)
+	State variables written after the call(s):
+	- contractInitialized = true (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#389)
+	SUZUME.contractInitialized (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#318) can be used in cross function reentrancies:
+	- SUZUME.intializeContract(address,address,string,string) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#356-409)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+SUZUME._getValues(address,address,uint256,bool).values (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#807) is a local variable never initialized
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#uninitialized-local-variables
+
+SUZUME.intializeContract(address,address,string,string) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#356-409) ignores return value by dexRouter.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#400-407)
+SUZUME.swapAndLiquify(uint256) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#696-738) ignores return value by dexRouter.addLiquidityETH{value: liquidityBalance}(address(this),toLiquify,0,0,DEAD,block.timestamp) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#719-726)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+SUZUME.setTaxesBuy(uint256,uint256,uint256) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#524-533) should emit an event for: 
+	- _buyReflectFee = reflect (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#530) 
+	- _buyLiquidityFee = liquidity (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#531) 
+	- _buyMarketingFee = marketing (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#532) 
+SUZUME.setTaxesSell(uint256,uint256,uint256) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#535-544) should emit an event for: 
+	- _sellReflectFee = reflect (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#541) 
+	- _sellLiquidityFee = liquidity (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#542) 
+	- _sellMarketingFee = marketing (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#543) 
+SUZUME.setTaxesTransfer(uint256,uint256,uint256) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#546-555) should emit an event for: 
+	- _transferReflectFee = reflect (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#552) 
+	- _transferLiquidityFee = liquidity (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#553) 
+	- _transferMarketingFee = marketing (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#554) 
+SUZUME.setValues(uint256,uint256,uint256) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#557-561) should emit an event for: 
+	- MarketShare = ms (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#558) 
+	- DevShare = ds (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#559) 
+	- ValueDivisor = vd (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#560) 
+SUZUME.setRatios(uint256,uint256) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#563-566) should emit an event for: 
+	- _liquidityRatio = liquidity (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#564) 
+	- _marketingRatio = marketing (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#565) 
+SUZUME.MaxTx(uint256,uint256) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#568-573) should emit an event for: 
+	- _maxTxAmount = check (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#571) 
+SUZUME.WalletSize(uint256,uint256) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#575-580) should emit an event for: 
+	- _maxWalletSize = check (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#578) 
+SUZUME.setSwapSettings(uint256,uint256,uint256,uint256) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#582-585) should emit an event for: 
+	- swapThreshold = (_tTotal * thresholdPercent) / thresholdDivisor (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#583) 
+	- swapAmount = (_tTotal * amountPercent) / amountDivisor (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#584) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+SUZUME.intializeContract(address,address,string,string).setMarketWallet (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#356) lacks a zero-check on :
+		- _marketWallet = address(setMarketWallet) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#359)
+SUZUME.intializeContract(address,address,string,string).setDevWallet (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#356) lacks a zero-check on :
+		- _devWallet = address(setDevWallet) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#360)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in SUZUME._transfer(address,address,uint256) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#655-694):
+	External calls:
+	- swapAndLiquify(contractTokenBalance) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#689)
+		- dexRouter.swapExactTokensForETHSupportingFeeOnTransferTokens(toSwapForEth,0,path,address(this),block.timestamp) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#707-713)
+		- dexRouter.addLiquidityETH{value: liquidityBalance}(address(this),toLiquify,0,0,DEAD,block.timestamp) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#719-726)
+	External calls sending eth:
+	- swapAndLiquify(contractTokenBalance) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#689)
+		- dexRouter.addLiquidityETH{value: liquidityBalance}(address(this),toLiquify,0,0,DEAD,block.timestamp) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#719-726)
+		- _marketWallet.transfer(marketFee) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#734)
+		- _devWallet.transfer(devfeeshare) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#735)
+	State variables written after the call(s):
+	- _finalizeTransfer(from,to,amount,takeFee) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#693)
+		- _hasLiqBeenAdded = true (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#746)
+	- _finalizeTransfer(from,to,amount,takeFee) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#693)
+		- _liqAddStamp = block.timestamp (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#747)
+	- _finalizeTransfer(from,to,amount,takeFee) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#693)
+		- _liquidityFee = _sellLiquidityFee (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#815)
+		- _liquidityFee = _buyLiquidityFee (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#819)
+		- _liquidityFee = _transferLiquidityFee (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#823)
+	- _finalizeTransfer(from,to,amount,takeFee) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#693)
+		- _marketingFee = _sellMarketingFee (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#816)
+		- _marketingFee = _buyMarketingFee (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#820)
+		- _marketingFee = _transferMarketingFee (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#824)
+	- _finalizeTransfer(from,to,amount,takeFee) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#693)
+		- _reflectFee = _sellReflectFee (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#814)
+		- _reflectFee = _buyReflectFee (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#818)
+		- _reflectFee = _transferReflectFee (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#822)
+	- _finalizeTransfer(from,to,amount,takeFee) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#693)
+		- _tFeeTotal = _tFeeTotal + tFee (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#863)
+Reentrancy in SUZUME.intializeContract(address,address,string,string) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#356-409):
+	External calls:
+	- lpPair = IUniswapV2Factory(dexRouter.factory()).createPair(dexRouter.WETH(),address(this)) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#376)
+	State variables written after the call(s):
+	- _allowances[address(this)][address(dexRouter)] = type()(uint256).max (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#378)
+	- approve(_routerAddress,type()(uint256).max) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#387)
+		- _allowances[sender][spender] = amount (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#651)
+	- _approve(address(this),address(dexRouter),type()(uint256).max) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#393)
+		- _allowances[sender][spender] = amount (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#651)
+	- _maxTxAmount = (_tTotal * 100) / 100 (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#380)
+	- _maxWalletSize = (_tTotal * 100) / 100 (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#382)
+	- _rOwned[owner()] = _rTotal (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#390)
+	- lpPairs[lpPair] = true (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#377)
+	- maxTxAmountUI = (startingSupply * 1000) / 100000 (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#381)
+	- maxWalletSizeUI = (startingSupply * 10) / 1000 (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#383)
+	- swapAmount = (_tTotal * 5) / 1000 (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#385)
+	- swapThreshold = (_tTotal * 5) / 10000 (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#384)
+Reentrancy in SUZUME.intializeContract(address,address,string,string) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#356-409):
+	External calls:
+	- lpPair = IUniswapV2Factory(dexRouter.factory()).createPair(dexRouter.WETH(),address(this)) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#376)
+	- _transfer(owner(),address(this),balanceOf(owner())) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#395)
+		- dexRouter.swapExactTokensForETHSupportingFeeOnTransferTokens(toSwapForEth,0,path,address(this),block.timestamp) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#707-713)
+		- dexRouter.addLiquidityETH{value: liquidityBalance}(address(this),toLiquify,0,0,DEAD,block.timestamp) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#719-726)
+	External calls sending eth:
+	- _transfer(owner(),address(this),balanceOf(owner())) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#395)
+		- dexRouter.addLiquidityETH{value: liquidityBalance}(address(this),toLiquify,0,0,DEAD,block.timestamp) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#719-726)
+		- _marketWallet.transfer(marketFee) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#734)
+		- _devWallet.transfer(devfeeshare) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#735)
+	State variables written after the call(s):
+	- _transfer(owner(),address(this),balanceOf(owner())) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#395)
+		- _liqAddStamp = block.timestamp (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#747)
+Reentrancy in SUZUME.intializeContract(address,address,string,string) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#356-409):
+	External calls:
+	- lpPair = IUniswapV2Factory(dexRouter.factory()).createPair(dexRouter.WETH(),address(this)) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#376)
+	- _transfer(owner(),address(this),balanceOf(owner())) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#395)
+		- dexRouter.swapExactTokensForETHSupportingFeeOnTransferTokens(toSwapForEth,0,path,address(this),block.timestamp) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#707-713)
+		- dexRouter.addLiquidityETH{value: liquidityBalance}(address(this),toLiquify,0,0,DEAD,block.timestamp) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#719-726)
+	- dexRouter.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#400-407)
+	External calls sending eth:
+	- _transfer(owner(),address(this),balanceOf(owner())) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#395)
+		- dexRouter.addLiquidityETH{value: liquidityBalance}(address(this),toLiquify,0,0,DEAD,block.timestamp) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#719-726)
+		- _marketWallet.transfer(marketFee) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#734)
+		- _devWallet.transfer(devfeeshare) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#735)
+	- dexRouter.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#400-407)
+	State variables written after the call(s):
+	- Planted = block.number (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#408)
+Reentrancy in SUZUME.setNewRouter(address) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#491-502):
+	External calls:
+	- lpPair = IUniswapV2Factory(_newRouter.factory()).createPair(address(this),_newRouter.WETH()) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#495)
+	State variables written after the call(s):
+	- _approve(address(this),newRouter,MAX) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#501)
+		- _allowances[sender][spender] = amount (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#651)
+	- dexRouter = _newRouter (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#500)
+Reentrancy in SUZUME.transferFrom(address,address,uint256) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#475-479):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#476)
+		- dexRouter.swapExactTokensForETHSupportingFeeOnTransferTokens(toSwapForEth,0,path,address(this),block.timestamp) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#707-713)
+		- dexRouter.addLiquidityETH{value: liquidityBalance}(address(this),toLiquify,0,0,DEAD,block.timestamp) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#719-726)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#476)
+		- dexRouter.addLiquidityETH{value: liquidityBalance}(address(this),toLiquify,0,0,DEAD,block.timestamp) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#719-726)
+		- _marketWallet.transfer(marketFee) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#734)
+		- _devWallet.transfer(devfeeshare) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#735)
+	State variables written after the call(s):
+	- _approve(sender,_msgSender(),_allowances[sender][_msgSender()] - amount) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#477)
+		- _allowances[sender][spender] = amount (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#651)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in SUZUME._transfer(address,address,uint256) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#655-694):
+	External calls:
+	- swapAndLiquify(contractTokenBalance) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#689)
+		- dexRouter.swapExactTokensForETHSupportingFeeOnTransferTokens(toSwapForEth,0,path,address(this),block.timestamp) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#707-713)
+		- dexRouter.addLiquidityETH{value: liquidityBalance}(address(this),toLiquify,0,0,DEAD,block.timestamp) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#719-726)
+	External calls sending eth:
+	- swapAndLiquify(contractTokenBalance) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#689)
+		- dexRouter.addLiquidityETH{value: liquidityBalance}(address(this),toLiquify,0,0,DEAD,block.timestamp) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#719-726)
+		- _marketWallet.transfer(marketFee) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#734)
+		- _devWallet.transfer(devfeeshare) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#735)
+	Event emitted after the call(s):
+	- SwapAndLiquifyEnabledUpdated(true) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#750)
+		- _finalizeTransfer(from,to,amount,takeFee) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#693)
+	- Transfer(sender,address(this),tLiquidity) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#876)
+		- _finalizeTransfer(from,to,amount,takeFee) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#693)
+	- Transfer(from,to,values.tTransferAmount) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#802)
+		- _finalizeTransfer(from,to,amount,takeFee) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#693)
+Reentrancy in SUZUME.intializeContract(address,address,string,string) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#356-409):
+	External calls:
+	- lpPair = IUniswapV2Factory(dexRouter.factory()).createPair(dexRouter.WETH(),address(this)) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#376)
+	Event emitted after the call(s):
+	- Approval(sender,spender,amount) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#652)
+		- _approve(address(this),address(dexRouter),type()(uint256).max) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#393)
+	- Approval(sender,spender,amount) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#652)
+		- approve(_routerAddress,type()(uint256).max) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#387)
+	- Transfer(ZERO,owner(),_tTotal) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#391)
+Reentrancy in SUZUME.intializeContract(address,address,string,string) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#356-409):
+	External calls:
+	- lpPair = IUniswapV2Factory(dexRouter.factory()).createPair(dexRouter.WETH(),address(this)) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#376)
+	- _transfer(owner(),address(this),balanceOf(owner())) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#395)
+		- dexRouter.swapExactTokensForETHSupportingFeeOnTransferTokens(toSwapForEth,0,path,address(this),block.timestamp) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#707-713)
+		- dexRouter.addLiquidityETH{value: liquidityBalance}(address(this),toLiquify,0,0,DEAD,block.timestamp) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#719-726)
+	External calls sending eth:
+	- _transfer(owner(),address(this),balanceOf(owner())) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#395)
+		- dexRouter.addLiquidityETH{value: liquidityBalance}(address(this),toLiquify,0,0,DEAD,block.timestamp) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#719-726)
+		- _marketWallet.transfer(marketFee) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#734)
+		- _devWallet.transfer(devfeeshare) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#735)
+	Event emitted after the call(s):
+	- SwapAndLiquify(toLiquify,liquidityBalance,toLiquify) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#727)
+		- _transfer(owner(),address(this),balanceOf(owner())) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#395)
+	- SwapAndLiquifyEnabledUpdated(true) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#750)
+		- _transfer(owner(),address(this),balanceOf(owner())) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#395)
+	- Transfer(sender,address(this),tLiquidity) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#876)
+		- _transfer(owner(),address(this),balanceOf(owner())) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#395)
+	- Transfer(from,to,values.tTransferAmount) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#802)
+		- _transfer(owner(),address(this),balanceOf(owner())) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#395)
+Reentrancy in SUZUME.setNewRouter(address) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#491-502):
+	External calls:
+	- lpPair = IUniswapV2Factory(_newRouter.factory()).createPair(address(this),_newRouter.WETH()) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#495)
+	Event emitted after the call(s):
+	- Approval(sender,spender,amount) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#652)
+		- _approve(address(this),newRouter,MAX) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#501)
+Reentrancy in SUZUME.swapAndLiquify(uint256) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#696-738):
+	External calls:
+	- dexRouter.swapExactTokensForETHSupportingFeeOnTransferTokens(toSwapForEth,0,path,address(this),block.timestamp) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#707-713)
+	- dexRouter.addLiquidityETH{value: liquidityBalance}(address(this),toLiquify,0,0,DEAD,block.timestamp) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#719-726)
+	External calls sending eth:
+	- dexRouter.addLiquidityETH{value: liquidityBalance}(address(this),toLiquify,0,0,DEAD,block.timestamp) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#719-726)
+	Event emitted after the call(s):
+	- SwapAndLiquify(toLiquify,liquidityBalance,toLiquify) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#727)
+Reentrancy in SUZUME.transferFrom(address,address,uint256) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#475-479):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#476)
+		- dexRouter.swapExactTokensForETHSupportingFeeOnTransferTokens(toSwapForEth,0,path,address(this),block.timestamp) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#707-713)
+		- dexRouter.addLiquidityETH{value: liquidityBalance}(address(this),toLiquify,0,0,DEAD,block.timestamp) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#719-726)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#476)
+		- dexRouter.addLiquidityETH{value: liquidityBalance}(address(this),toLiquify,0,0,DEAD,block.timestamp) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#719-726)
+		- _marketWallet.transfer(marketFee) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#734)
+		- _devWallet.transfer(devfeeshare) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#735)
+	Event emitted after the call(s):
+	- Approval(sender,spender,amount) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#652)
+		- _approve(sender,_msgSender(),_allowances[sender][_msgSender()] - amount) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#477)
+Reentrancy in SUZUME.transferOwner(address) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#420-438):
+	External calls:
+	- _transfer(_owner,newOwner,balanceOf(_owner)) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#432)
+		- dexRouter.swapExactTokensForETHSupportingFeeOnTransferTokens(toSwapForEth,0,path,address(this),block.timestamp) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#707-713)
+		- dexRouter.addLiquidityETH{value: liquidityBalance}(address(this),toLiquify,0,0,DEAD,block.timestamp) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#719-726)
+	External calls sending eth:
+	- _transfer(_owner,newOwner,balanceOf(_owner)) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#432)
+		- dexRouter.addLiquidityETH{value: liquidityBalance}(address(this),toLiquify,0,0,DEAD,block.timestamp) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#719-726)
+		- _marketWallet.transfer(marketFee) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#734)
+		- _devWallet.transfer(devfeeshare) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#735)
+	Event emitted after the call(s):
+	- OwnershipTransferred(_owner,newOwner) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#436)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+SUZUME.setLpPair(address,bool) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#504-514) uses timestamp for comparisons
+	Dangerous comparisons:
+	- timeSinceLastPair != 0 (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#508)
+	- require(bool,string)(block.timestamp - timeSinceLastPair > 604800,Cannot set a new pair this week!) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#509)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Address.isContract(address) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#98-107) uses assembly
+	- INLINE ASM (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#105)
+Address._functionCallWithValue(address,bytes,uint256,string) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#135-156) uses assembly
+	- INLINE ASM (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#148-151)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#assembly-usage
+
+SUZUME.setLpPair(address,bool) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#504-514) compares to a boolean constant:
+	-enabled == false (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#505)
+SUZUME.setExcludedFromReward(address,bool) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#605-625) compares to a boolean constant:
+	-enabled == true (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#606)
+SUZUME.setExcludedFromReward(address,bool) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#605-625) compares to a boolean constant:
+	-enabled == false (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#613)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#boolean-equality
+
+SUZUME.setExcludedFromReward(address,bool) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#605-625) has costly operations inside a loop:
+	- _excluded.pop() (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#620)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#costly-operations-inside-a-loop
+
+Context._msgData() (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#12-15) is never used and should be removed
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dead-code
+
+SUZUME._buyReflectFee (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#244) is set pre-construction with a non-constant function or state variable:
+	- _reflectFee
+SUZUME._buyLiquidityFee (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#245) is set pre-construction with a non-constant function or state variable:
+	- _liquidityFee
+SUZUME._buyMarketingFee (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#246) is set pre-construction with a non-constant function or state variable:
+	- _marketingFee
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#function-initializing-state
+
+Version constraint >=0.6.0<0.9.0 is too complex.
+It is used by:
+	- >=0.6.0<0.9.0 (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#5)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in Address.sendValue(address,uint256) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#109-115):
+	- (success,None) = recipient.call{value: amount}() (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#113)
+Low level call in Address._functionCallWithValue(address,bytes,uint256,string) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#135-156):
+	- (success,returndata) = target.call{value: weiValue}(data) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#139)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Function IUniswapV2Router01.WETH() (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#167) is not in mixedCase
+Parameter SUZUME.intializeContract(address,address,string,string)._tokenname (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#356) is not in mixedCase
+Parameter SUZUME.intializeContract(address,address,string,string)._tokensymbol (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#356) is not in mixedCase
+Function SUZUME.MaxTx(uint256,uint256) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#568-573) is not in mixedCase
+Function SUZUME.WalletSize(uint256,uint256) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#575-580) is not in mixedCase
+Function SUZUME.NewMarketWallet(address) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#587-590) is not in mixedCase
+Function SUZUME.NewDevWallet(address) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#592-595) is not in mixedCase
+Parameter SUZUME.setSwapAndLiquifyEnabled(bool)._enabled (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#596) is not in mixedCase
+Variable SUZUME._reflectFee (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#240) is not in mixedCase
+Variable SUZUME._liquidityFee (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#241) is not in mixedCase
+Variable SUZUME._marketingFee (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#242) is not in mixedCase
+Variable SUZUME._buyReflectFee (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#244) is not in mixedCase
+Variable SUZUME._buyLiquidityFee (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#245) is not in mixedCase
+Variable SUZUME._buyMarketingFee (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#246) is not in mixedCase
+Variable SUZUME._sellReflectFee (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#248) is not in mixedCase
+Variable SUZUME._sellLiquidityFee (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#249) is not in mixedCase
+Variable SUZUME._sellMarketingFee (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#250) is not in mixedCase
+Variable SUZUME._transferReflectFee (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#252) is not in mixedCase
+Variable SUZUME._transferLiquidityFee (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#253) is not in mixedCase
+Variable SUZUME._transferMarketingFee (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#254) is not in mixedCase
+Variable SUZUME._liquidityRatio (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#260) is not in mixedCase
+Variable SUZUME._marketingRatio (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#261) is not in mixedCase
+Variable SUZUME.MarketShare (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#265) is not in mixedCase
+Variable SUZUME.DevShare (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#266) is not in mixedCase
+Variable SUZUME.ValueDivisor (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#267) is not in mixedCase
+Variable SUZUME._routerAddress (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#280) is not in mixedCase
+Variable SUZUME.DEAD (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#282) is not in mixedCase
+Variable SUZUME.ZERO (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#283) is not in mixedCase
+Variable SUZUME._hasLiqBeenAdded (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#301) is not in mixedCase
+Variable SUZUME.Planted (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#316) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Redundant expression "this (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#13)" inContext (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#7-16)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#redundant-statements
+
+Reentrancy in SUZUME._transfer(address,address,uint256) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#655-694):
+	External calls:
+	- swapAndLiquify(contractTokenBalance) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#689)
+		- _marketWallet.transfer(marketFee) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#734)
+		- _devWallet.transfer(devfeeshare) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#735)
+	External calls sending eth:
+	- swapAndLiquify(contractTokenBalance) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#689)
+		- dexRouter.addLiquidityETH{value: liquidityBalance}(address(this),toLiquify,0,0,DEAD,block.timestamp) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#719-726)
+		- _marketWallet.transfer(marketFee) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#734)
+		- _devWallet.transfer(devfeeshare) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#735)
+	State variables written after the call(s):
+	- _finalizeTransfer(from,to,amount,takeFee) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#693)
+		- _hasLiqBeenAdded = true (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#746)
+	- _finalizeTransfer(from,to,amount,takeFee) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#693)
+		- _liqAddStamp = block.timestamp (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#747)
+	- _finalizeTransfer(from,to,amount,takeFee) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#693)
+		- _liquidityFee = _sellLiquidityFee (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#815)
+		- _liquidityFee = _buyLiquidityFee (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#819)
+		- _liquidityFee = _transferLiquidityFee (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#823)
+	- _finalizeTransfer(from,to,amount,takeFee) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#693)
+		- _liquidityHolders[from] = true (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#745)
+	- _finalizeTransfer(from,to,amount,takeFee) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#693)
+		- _marketingFee = _sellMarketingFee (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#816)
+		- _marketingFee = _buyMarketingFee (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#820)
+		- _marketingFee = _transferMarketingFee (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#824)
+	- _finalizeTransfer(from,to,amount,takeFee) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#693)
+		- _rOwned[address(this)] = _rOwned[address(this)] + rLiquidity (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#873)
+		- _rOwned[from] = _rOwned[from] - values.rAmount (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#785)
+		- _rOwned[to] = _rOwned[to] + values.rTransferAmount (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#786)
+	- _finalizeTransfer(from,to,amount,takeFee) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#693)
+		- _rTotal = _rTotal - rFee (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#862)
+	- _finalizeTransfer(from,to,amount,takeFee) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#693)
+		- _reflectFee = _sellReflectFee (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#814)
+		- _reflectFee = _buyReflectFee (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#818)
+		- _reflectFee = _transferReflectFee (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#822)
+	- _finalizeTransfer(from,to,amount,takeFee) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#693)
+		- _tFeeTotal = _tFeeTotal + tFee (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#863)
+	- _finalizeTransfer(from,to,amount,takeFee) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#693)
+		- _tOwned[address(this)] = _tOwned[address(this)] + tLiquidity (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#875)
+		- _tOwned[from] = _tOwned[from] - tAmount (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#789)
+		- _tOwned[to] = _tOwned[to] + values.tTransferAmount (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#791)
+		- _tOwned[from] = _tOwned[from] - tAmount (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#793)
+		- _tOwned[to] = _tOwned[to] + values.tTransferAmount (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#794)
+	- _finalizeTransfer(from,to,amount,takeFee) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#693)
+		- swapAndLiquifyEnabled = true (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#749)
+	Event emitted after the call(s):
+	- SwapAndLiquifyEnabledUpdated(true) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#750)
+		- _finalizeTransfer(from,to,amount,takeFee) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#693)
+	- Transfer(sender,address(this),tLiquidity) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#876)
+		- _finalizeTransfer(from,to,amount,takeFee) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#693)
+	- Transfer(from,to,values.tTransferAmount) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#802)
+		- _finalizeTransfer(from,to,amount,takeFee) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#693)
+Reentrancy in SUZUME.intializeContract(address,address,string,string) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#356-409):
+	External calls:
+	- _transfer(owner(),address(this),balanceOf(owner())) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#395)
+		- _marketWallet.transfer(marketFee) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#734)
+		- _devWallet.transfer(devfeeshare) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#735)
+	External calls sending eth:
+	- _transfer(owner(),address(this),balanceOf(owner())) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#395)
+		- dexRouter.addLiquidityETH{value: liquidityBalance}(address(this),toLiquify,0,0,DEAD,block.timestamp) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#719-726)
+		- _marketWallet.transfer(marketFee) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#734)
+		- _devWallet.transfer(devfeeshare) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#735)
+	- dexRouter.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#400-407)
+	State variables written after the call(s):
+	- Planted = block.number (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#408)
+Reentrancy in SUZUME.transferFrom(address,address,uint256) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#475-479):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#476)
+		- _marketWallet.transfer(marketFee) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#734)
+		- _devWallet.transfer(devfeeshare) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#735)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#476)
+		- dexRouter.addLiquidityETH{value: liquidityBalance}(address(this),toLiquify,0,0,DEAD,block.timestamp) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#719-726)
+		- _marketWallet.transfer(marketFee) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#734)
+		- _devWallet.transfer(devfeeshare) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#735)
+	State variables written after the call(s):
+	- _approve(sender,_msgSender(),_allowances[sender][_msgSender()] - amount) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#477)
+		- _allowances[sender][spender] = amount (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#651)
+	Event emitted after the call(s):
+	- Approval(sender,spender,amount) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#652)
+		- _approve(sender,_msgSender(),_allowances[sender][_msgSender()] - amount) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#477)
+Reentrancy in SUZUME.transferOwner(address) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#420-438):
+	External calls:
+	- _transfer(_owner,newOwner,balanceOf(_owner)) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#432)
+		- _marketWallet.transfer(marketFee) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#734)
+		- _devWallet.transfer(devfeeshare) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#735)
+	External calls sending eth:
+	- _transfer(_owner,newOwner,balanceOf(_owner)) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#432)
+		- dexRouter.addLiquidityETH{value: liquidityBalance}(address(this),toLiquify,0,0,DEAD,block.timestamp) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#719-726)
+		- _marketWallet.transfer(marketFee) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#734)
+		- _devWallet.transfer(devfeeshare) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#735)
+	State variables written after the call(s):
+	- _owner = newOwner (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#435)
+	Event emitted after the call(s):
+	- OwnershipTransferred(_owner,newOwner) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#436)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+SUZUME.intializeContract(address,address,string,string) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#356-409) uses literals with too many digits:
+	- startingSupply < 10000000000000 (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#365)
+SUZUME.intializeContract(address,address,string,string) (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#356-409) uses literals with too many digits:
+	- maxTxAmountUI = (startingSupply * 1000) / 100000 (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#381)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+SUZUME._liqAddBlock (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#302) is never used in SUZUME (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#219-879)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-state-variable
+
+Loop condition i < _excluded.length (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#852) should use cached array length instead of referencing `length` member of the storage array.
+ Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#cache-array-length
+
+SUZUME.DEAD (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#282) should be constant 
+SUZUME.ZERO (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#283) should be constant 
+SUZUME._liqAddBlock (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#302) should be constant 
+SUZUME.masterTaxDivisor (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#263) should be constant 
+SUZUME.maxLiquidityFee (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#257) should be constant 
+SUZUME.maxMarketingFee (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#258) should be constant 
+SUZUME.maxReflectFee (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#256) should be constant 
+SUZUME.sameBlockActive (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#304) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+
+SUZUME._routerAddress (0x0b452278223d3954f4ac050949d7998e373e7e43.sol#280) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+./0x0b452278223d3954f4ac050949d7998e373e7e43.sol analyzed (7 contracts with 94 detectors), 94 result(s) found
+
+real	0m5.021s
+user	0m4.828s
+sys	0m0.195s

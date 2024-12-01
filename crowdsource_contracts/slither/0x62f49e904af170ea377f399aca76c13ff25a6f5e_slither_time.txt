@@ -1,0 +1,111 @@
+'solc --version' running
+'solc ./0x62f49e904af170ea377f399aca76c13ff25a6f5e.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+TrustlessOTC.reclaimToken(Token) (0x62f49e904af170ea377f399aca76c13ff25a6f5e.sol#155-160) ignores return value by _token.transfer(owner,excess) (0x62f49e904af170ea377f399aca76c13ff25a6f5e.sol#159)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+Reentrancy in TrustlessOTC.cancelTrade(uint256) (0x62f49e904af170ea377f399aca76c13ff25a6f5e.sol#116-124):
+	External calls:
+	- require(bool)(Token(o.tokenFrom).transfer(o.creator,o.amountFrom)) (0x62f49e904af170ea377f399aca76c13ff25a6f5e.sol#119)
+	State variables written after the call(s):
+	- o.active = false (0x62f49e904af170ea377f399aca76c13ff25a6f5e.sol#121)
+	TrustlessOTC.offers (0x62f49e904af170ea377f399aca76c13ff25a6f5e.sol#93) can be used in cross function reentrancies:
+	- TrustlessOTC.cancelTrade(uint256) (0x62f49e904af170ea377f399aca76c13ff25a6f5e.sol#116-124)
+	- TrustlessOTC.getOfferDetails(uint256) (0x62f49e904af170ea377f399aca76c13ff25a6f5e.sol#137-152)
+	- TrustlessOTC.initiateTrade(address,address,uint256,uint256) (0x62f49e904af170ea377f399aca76c13ff25a6f5e.sol#95-114)
+	- TrustlessOTC.offers (0x62f49e904af170ea377f399aca76c13ff25a6f5e.sol#93)
+	- TrustlessOTC.take(uint256) (0x62f49e904af170ea377f399aca76c13ff25a6f5e.sol#126-135)
+Reentrancy in TrustlessOTC.take(uint256) (0x62f49e904af170ea377f399aca76c13ff25a6f5e.sol#126-135):
+	External calls:
+	- require(bool)(Token(o.tokenFrom).transfer(msg.sender,o.amountFrom)) (0x62f49e904af170ea377f399aca76c13ff25a6f5e.sol#129)
+	- require(bool)(Token(o.tokenTo).transferFrom(msg.sender,o.creator,o.amountTo)) (0x62f49e904af170ea377f399aca76c13ff25a6f5e.sol#131)
+	State variables written after the call(s):
+	- o.active = false (0x62f49e904af170ea377f399aca76c13ff25a6f5e.sol#132)
+	TrustlessOTC.offers (0x62f49e904af170ea377f399aca76c13ff25a6f5e.sol#93) can be used in cross function reentrancies:
+	- TrustlessOTC.cancelTrade(uint256) (0x62f49e904af170ea377f399aca76c13ff25a6f5e.sol#116-124)
+	- TrustlessOTC.getOfferDetails(uint256) (0x62f49e904af170ea377f399aca76c13ff25a6f5e.sol#137-152)
+	- TrustlessOTC.initiateTrade(address,address,uint256,uint256) (0x62f49e904af170ea377f399aca76c13ff25a6f5e.sol#95-114)
+	- TrustlessOTC.offers (0x62f49e904af170ea377f399aca76c13ff25a6f5e.sol#93)
+	- TrustlessOTC.take(uint256) (0x62f49e904af170ea377f399aca76c13ff25a6f5e.sol#126-135)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+Reentrancy in TrustlessOTC.cancelTrade(uint256) (0x62f49e904af170ea377f399aca76c13ff25a6f5e.sol#116-124):
+	External calls:
+	- require(bool)(Token(o.tokenFrom).transfer(o.creator,o.amountFrom)) (0x62f49e904af170ea377f399aca76c13ff25a6f5e.sol#119)
+	State variables written after the call(s):
+	- balanceTracker[o.tokenFrom] -= o.amountFrom (0x62f49e904af170ea377f399aca76c13ff25a6f5e.sol#120)
+Reentrancy in TrustlessOTC.initiateTrade(address,address,uint256,uint256) (0x62f49e904af170ea377f399aca76c13ff25a6f5e.sol#95-114):
+	External calls:
+	- require(bool)(Token(_tokenFrom).transferFrom(msg.sender,address(this),_amountFrom)) (0x62f49e904af170ea377f399aca76c13ff25a6f5e.sol#101)
+	State variables written after the call(s):
+	- balanceTracker[_tokenFrom] += _amountFrom (0x62f49e904af170ea377f399aca76c13ff25a6f5e.sol#105)
+	- offers.length ++ (0x62f49e904af170ea377f399aca76c13ff25a6f5e.sol#103)
+	- o.tokenFrom = _tokenFrom (0x62f49e904af170ea377f399aca76c13ff25a6f5e.sol#106)
+	- o.tokenTo = _tokenTo (0x62f49e904af170ea377f399aca76c13ff25a6f5e.sol#107)
+	- o.amountFrom = _amountFrom (0x62f49e904af170ea377f399aca76c13ff25a6f5e.sol#108)
+	- o.amountTo = _amountTo (0x62f49e904af170ea377f399aca76c13ff25a6f5e.sol#109)
+	- o.creator = msg.sender (0x62f49e904af170ea377f399aca76c13ff25a6f5e.sol#110)
+	- o.active = true (0x62f49e904af170ea377f399aca76c13ff25a6f5e.sol#111)
+	- o.tradeID = newTradeID (0x62f49e904af170ea377f399aca76c13ff25a6f5e.sol#112)
+Reentrancy in TrustlessOTC.take(uint256) (0x62f49e904af170ea377f399aca76c13ff25a6f5e.sol#126-135):
+	External calls:
+	- require(bool)(Token(o.tokenFrom).transfer(msg.sender,o.amountFrom)) (0x62f49e904af170ea377f399aca76c13ff25a6f5e.sol#129)
+	State variables written after the call(s):
+	- balanceTracker[o.tokenFrom] -= o.amountFrom (0x62f49e904af170ea377f399aca76c13ff25a6f5e.sol#130)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in TrustlessOTC.cancelTrade(uint256) (0x62f49e904af170ea377f399aca76c13ff25a6f5e.sol#116-124):
+	External calls:
+	- require(bool)(Token(o.tokenFrom).transfer(o.creator,o.amountFrom)) (0x62f49e904af170ea377f399aca76c13ff25a6f5e.sol#119)
+	Event emitted after the call(s):
+	- OfferCancelled(tradeID) (0x62f49e904af170ea377f399aca76c13ff25a6f5e.sol#122)
+Reentrancy in TrustlessOTC.initiateTrade(address,address,uint256,uint256) (0x62f49e904af170ea377f399aca76c13ff25a6f5e.sol#95-114):
+	External calls:
+	- require(bool)(Token(_tokenFrom).transferFrom(msg.sender,address(this),_amountFrom)) (0x62f49e904af170ea377f399aca76c13ff25a6f5e.sol#101)
+	Event emitted after the call(s):
+	- OfferCreated(newTradeID) (0x62f49e904af170ea377f399aca76c13ff25a6f5e.sol#113)
+Reentrancy in TrustlessOTC.take(uint256) (0x62f49e904af170ea377f399aca76c13ff25a6f5e.sol#126-135):
+	External calls:
+	- require(bool)(Token(o.tokenFrom).transfer(msg.sender,o.amountFrom)) (0x62f49e904af170ea377f399aca76c13ff25a6f5e.sol#129)
+	- require(bool)(Token(o.tokenTo).transferFrom(msg.sender,o.creator,o.amountTo)) (0x62f49e904af170ea377f399aca76c13ff25a6f5e.sol#131)
+	Event emitted after the call(s):
+	- OfferTaken(tradeID) (0x62f49e904af170ea377f399aca76c13ff25a6f5e.sol#133)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+TrustlessOTC.take(uint256) (0x62f49e904af170ea377f399aca76c13ff25a6f5e.sol#126-135) compares to a boolean constant:
+	-require(bool)(o.active == true) (0x62f49e904af170ea377f399aca76c13ff25a6f5e.sol#128)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#boolean-equality
+
+Version constraint ^0.5.0 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor
+	- IncorrectEventSignatureInLibraries
+	- ABIEncoderV2PackedStorage.
+It is used by:
+	- ^0.5.0 (0x62f49e904af170ea377f399aca76c13ff25a6f5e.sol#1)
+solc-0.5.0 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Parameter Ownable.transferOwnership(address)._newOwner (0x62f49e904af170ea377f399aca76c13ff25a6f5e.sol#47) is not in mixedCase
+Parameter TrustlessOTC.initiateTrade(address,address,uint256,uint256)._tokenFrom (0x62f49e904af170ea377f399aca76c13ff25a6f5e.sol#96) is not in mixedCase
+Parameter TrustlessOTC.initiateTrade(address,address,uint256,uint256)._tokenTo (0x62f49e904af170ea377f399aca76c13ff25a6f5e.sol#97) is not in mixedCase
+Parameter TrustlessOTC.initiateTrade(address,address,uint256,uint256)._amountFrom (0x62f49e904af170ea377f399aca76c13ff25a6f5e.sol#98) is not in mixedCase
+Parameter TrustlessOTC.initiateTrade(address,address,uint256,uint256)._amountTo (0x62f49e904af170ea377f399aca76c13ff25a6f5e.sol#99) is not in mixedCase
+Parameter TrustlessOTC.reclaimToken(Token)._token (0x62f49e904af170ea377f399aca76c13ff25a6f5e.sol#155) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+./0x62f49e904af170ea377f399aca76c13ff25a6f5e.sol analyzed (3 contracts with 94 detectors), 18 result(s) found
+
+real	0m1.624s
+user	0m1.371s
+sys	0m0.254s

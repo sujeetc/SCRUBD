@@ -1,0 +1,112 @@
+'solc --version' running
+'solc ./0x0a42ef719ee77820993b27369089ae2c6bd6ced5.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+dapMultisig (0x0a42ef719ee77820993b27369089ae2c6bd6ced5.sol#8-274) contract sets array length with a user-controlled value:
+	- transactions[newTxId].confirmed.push(msg.sender) (0x0a42ef719ee77820993b27369089ae2c6bd6ced5.sol#155)
+dapMultisig (0x0a42ef719ee77820993b27369089ae2c6bd6ced5.sol#8-274) contract sets array length with a user-controlled value:
+	- txn.confirmed.push(msg.sender) (0x0a42ef719ee77820993b27369089ae2c6bd6ced5.sol#239)
+dapMultisig (0x0a42ef719ee77820993b27369089ae2c6bd6ced5.sol#8-274) contract sets array length with a user-controlled value:
+	- txn.confirmed.push(msg.sender) (0x0a42ef719ee77820993b27369089ae2c6bd6ced5.sol#175)
+dapMultisig (0x0a42ef719ee77820993b27369089ae2c6bd6ced5.sol#8-274) contract sets array length with a user-controlled value:
+	- tokenTransactions[newTxId].confirmed.push(msg.sender) (0x0a42ef719ee77820993b27369089ae2c6bd6ced5.sol#219)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#array-length-assignment
+
+Reentrancy in dapMultisig.executeTxn(uint256) (0x0a42ef719ee77820993b27369089ae2c6bd6ced5.sol#187-211):
+	External calls:
+	- assert(bool)(dest.call.value(val)(dat)) (0x0a42ef719ee77820993b27369089ae2c6bd6ced5.sol#201)
+	State variables written after the call(s):
+	- allowance = allowance - txn.value (0x0a42ef719ee77820993b27369089ae2c6bd6ced5.sol#207)
+	dapMultisig.allowance (0x0a42ef719ee77820993b27369089ae2c6bd6ced5.sol#69) can be used in cross function reentrancies:
+	- dapMultisig.allowance (0x0a42ef719ee77820993b27369089ae2c6bd6ced5.sol#69)
+	- dapMultisig.constructor(uint256,address[],bytes32) (0x0a42ef719ee77820993b27369089ae2c6bd6ced5.sol#79-92)
+	- dapMultisig.executeTxn(uint256) (0x0a42ef719ee77820993b27369089ae2c6bd6ced5.sol#187-211)
+	- dapMultisig.fallback() (0x0a42ef719ee77820993b27369089ae2c6bd6ced5.sol#95-97)
+	- dapMultisig.topBalance() (0x0a42ef719ee77820993b27369089ae2c6bd6ced5.sol#137-146)
+	- txn.status = TxnStatus.Executed (0x0a42ef719ee77820993b27369089ae2c6bd6ced5.sol#204)
+	dapMultisig.transactions (0x0a42ef719ee77820993b27369089ae2c6bd6ced5.sol#72) can be used in cross function reentrancies:
+	- dapMultisig.confirmTransaction(uint256) (0x0a42ef719ee77820993b27369089ae2c6bd6ced5.sol#163-185)
+	- dapMultisig.executeTxn(uint256) (0x0a42ef719ee77820993b27369089ae2c6bd6ced5.sol#187-211)
+	- dapMultisig.getTxn(uint256) (0x0a42ef719ee77820993b27369089ae2c6bd6ced5.sol#111-114)
+	- dapMultisig.getTxnNum() (0x0a42ef719ee77820993b27369089ae2c6bd6ced5.sol#107-109)
+	- dapMultisig.submitTransaction(address,uint256,bytes) (0x0a42ef719ee77820993b27369089ae2c6bd6ced5.sol#148-161)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+tokenInterface (0x0a42ef719ee77820993b27369089ae2c6bd6ced5.sol#3-6) has incorrect ERC20 function interface:tokenInterface.transfer(address,uint256) (0x0a42ef719ee77820993b27369089ae2c6bd6ced5.sol#4)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-erc20-interface
+
+Reentrancy in dapMultisig.executeTokenTxn(uint256) (0x0a42ef719ee77820993b27369089ae2c6bd6ced5.sol#251-272):
+	External calls:
+	- balance = txn.token.balanceOf(address(this)) (0x0a42ef719ee77820993b27369089ae2c6bd6ced5.sol#259)
+	- txn.token.transfer(txn.reciever,txn.value) (0x0a42ef719ee77820993b27369089ae2c6bd6ced5.sol#263)
+	State variables written after the call(s):
+	- txn.status = TxnStatus.Executed (0x0a42ef719ee77820993b27369089ae2c6bd6ced5.sol#266)
+	dapMultisig.tokenTransactions (0x0a42ef719ee77820993b27369089ae2c6bd6ced5.sol#73) can be used in cross function reentrancies:
+	- dapMultisig.confirmTokenTransaction(uint256) (0x0a42ef719ee77820993b27369089ae2c6bd6ced5.sol#227-249)
+	- dapMultisig.executeTokenTxn(uint256) (0x0a42ef719ee77820993b27369089ae2c6bd6ced5.sol#251-272)
+	- dapMultisig.getTokenTxn(uint256) (0x0a42ef719ee77820993b27369089ae2c6bd6ced5.sol#128-131)
+	- dapMultisig.getTokenTxnNum() (0x0a42ef719ee77820993b27369089ae2c6bd6ced5.sol#124-126)
+	- dapMultisig.submitTokenTransaction(address,address,uint256) (0x0a42ef719ee77820993b27369089ae2c6bd6ced5.sol#213-225)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+dapMultisig.confirmTransaction(uint256).f (0x0a42ef719ee77820993b27369089ae2c6bd6ced5.sol#167) is a local variable never initialized
+dapMultisig.confirmTokenTransaction(uint256).f (0x0a42ef719ee77820993b27369089ae2c6bd6ced5.sol#231) is a local variable never initialized
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#uninitialized-local-variables
+
+Modifier dapMultisig.onlyOwner() (0x0a42ef719ee77820993b27369089ae2c6bd6ced5.sol#43-53) does not always execute _; or revert
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-modifier
+
+Reentrancy in dapMultisig.executeTokenTxn(uint256) (0x0a42ef719ee77820993b27369089ae2c6bd6ced5.sol#251-272):
+	External calls:
+	- balance = txn.token.balanceOf(address(this)) (0x0a42ef719ee77820993b27369089ae2c6bd6ced5.sol#259)
+	- txn.token.transfer(txn.reciever,txn.value) (0x0a42ef719ee77820993b27369089ae2c6bd6ced5.sol#263)
+	Event emitted after the call(s):
+	- tokenTxnExecuted(address(txn.token),txn.value,txn.reciever) (0x0a42ef719ee77820993b27369089ae2c6bd6ced5.sol#269)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+Version constraint 0.4.24 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ABIEncoderV2PackedStorage_0.4.x
+	- ExpExponentCleanup
+	- EventStructWrongData.
+It is used by:
+	- 0.4.24 (0x0a42ef719ee77820993b27369089ae2c6bd6ced5.sol#1)
+solc-0.4.24 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in dapMultisig.executeTxn(uint256) (0x0a42ef719ee77820993b27369089ae2c6bd6ced5.sol#187-211):
+	- assert(bool)(dest.call.value(val)(dat)) (0x0a42ef719ee77820993b27369089ae2c6bd6ced5.sol#201)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Contract tokenInterface (0x0a42ef719ee77820993b27369089ae2c6bd6ced5.sol#3-6) is not in CapWords
+Contract dapMultisig (0x0a42ef719ee77820993b27369089ae2c6bd6ced5.sol#8-274) is not in CapWords
+Struct dapMultisig.tokenTransaction (0x0a42ef719ee77820993b27369089ae2c6bd6ced5.sol#23-31) is not in CapWords
+Event dapMultisig.topUpBalance(uint256) (0x0a42ef719ee77820993b27369089ae2c6bd6ced5.sol#61) is not in CapWords
+Event dapMultisig.tokenTxnConfirmed(uint256,address) (0x0a42ef719ee77820993b27369089ae2c6bd6ced5.sol#62) is not in CapWords
+Event dapMultisig.tokenTxnExecuted(address,uint256,address) (0x0a42ef719ee77820993b27369089ae2c6bd6ced5.sol#63) is not in CapWords
+Parameter dapMultisig.getTxn(uint256)._id (0x0a42ef719ee77820993b27369089ae2c6bd6ced5.sol#111) is not in mixedCase
+Parameter dapMultisig.getTokenTxn(uint256)._id (0x0a42ef719ee77820993b27369089ae2c6bd6ced5.sol#128) is not in mixedCase
+Parameter dapMultisig.submitTransaction(address,uint256,bytes)._destination (0x0a42ef719ee77820993b27369089ae2c6bd6ced5.sol#148) is not in mixedCase
+Parameter dapMultisig.submitTransaction(address,uint256,bytes)._value (0x0a42ef719ee77820993b27369089ae2c6bd6ced5.sol#148) is not in mixedCase
+Parameter dapMultisig.submitTransaction(address,uint256,bytes)._data (0x0a42ef719ee77820993b27369089ae2c6bd6ced5.sol#148) is not in mixedCase
+Parameter dapMultisig.submitTokenTransaction(address,address,uint256)._tokenAddress (0x0a42ef719ee77820993b27369089ae2c6bd6ced5.sol#213) is not in mixedCase
+Parameter dapMultisig.submitTokenTransaction(address,address,uint256)._receiever (0x0a42ef719ee77820993b27369089ae2c6bd6ced5.sol#213) is not in mixedCase
+Parameter dapMultisig.submitTokenTransaction(address,address,uint256)._value (0x0a42ef719ee77820993b27369089ae2c6bd6ced5.sol#213) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+./0x0a42ef719ee77820993b27369089ae2c6bd6ced5.sol analyzed (2 contracts with 94 detectors), 28 result(s) found
+
+real	0m1.678s
+user	0m1.440s
+sys	0m0.241s

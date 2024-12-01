@@ -1,0 +1,191 @@
+'solc --version' running
+'solc ./0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol:
+Warning: Return value of low-level calls not used.
+   --> 0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol:355:13:
+    |
+355 |             payable(treasury).call{value: _net * 7000 / 10000}("");
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: Return value of low-level calls not used.
+   --> 0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol:405:9:
+    |
+405 |         payable(msg.sender).call{value: address(this).balance}("");
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+
+IGLOO._payTreasury() (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#347-359) sends eth to arbitrary user
+	Dangerous calls:
+	- address(treasury).call{value: _net * 7000 / 10000}() (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#355)
+	- staking.deposit{value: _net * 3000 / 10000}() (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#356)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+Reentrancy in IGLOO._transferFrom(address,address,uint256) (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#303-321):
+	External calls:
+	- _payTreasury() (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#309)
+		- router.swapExactTokensForETHSupportingFeeOnTransferTokens(balanceOf(address(this)),0,path,address(this),block.timestamp) (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#352)
+		- address(treasury).call{value: _net * 7000 / 10000}() (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#355)
+		- staking.deposit{value: _net * 3000 / 10000}() (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#356)
+	External calls sending eth:
+	- _payTreasury() (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#309)
+		- address(treasury).call{value: _net * 7000 / 10000}() (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#355)
+		- staking.deposit{value: _net * 3000 / 10000}() (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#356)
+	State variables written after the call(s):
+	- _balances[sender] = _balances[sender] - amount (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#313)
+	IGLOO._balances (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#206) can be used in cross function reentrancies:
+	- IGLOO._balances (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#206)
+	- IGLOO._basicTransfer(address,address,uint256) (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#323-329)
+	- IGLOO._calcAmount(address,address,uint256) (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#331-345)
+	- IGLOO._transferFrom(address,address,uint256) (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#303-321)
+	- IGLOO.balanceOf(address) (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#272-274)
+	- IGLOO.constructor(address) (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#227-240)
+	- IGLOO.mint(address,uint256) (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#242-250)
+	- _balances[recipient] = _balances[recipient] + amountReceived (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#317)
+	IGLOO._balances (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#206) can be used in cross function reentrancies:
+	- IGLOO._balances (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#206)
+	- IGLOO._basicTransfer(address,address,uint256) (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#323-329)
+	- IGLOO._calcAmount(address,address,uint256) (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#331-345)
+	- IGLOO._transferFrom(address,address,uint256) (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#303-321)
+	- IGLOO.balanceOf(address) (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#272-274)
+	- IGLOO.constructor(address) (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#227-240)
+	- IGLOO.mint(address,uint256) (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#242-250)
+	- amountReceived = _calcAmount(sender,recipient,amount) (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#315)
+		- _balances[address(this)] = _balances[address(this)] + _tax (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#341)
+	IGLOO._balances (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#206) can be used in cross function reentrancies:
+	- IGLOO._balances (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#206)
+	- IGLOO._basicTransfer(address,address,uint256) (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#323-329)
+	- IGLOO._calcAmount(address,address,uint256) (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#331-345)
+	- IGLOO._transferFrom(address,address,uint256) (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#303-321)
+	- IGLOO.balanceOf(address) (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#272-274)
+	- IGLOO.constructor(address) (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#227-240)
+	- IGLOO.mint(address,uint256) (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#242-250)
+	- amountReceived = _calcAmount(sender,recipient,amount) (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#315)
+		- _tokens += _tax (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#340)
+	IGLOO._tokens (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#215) can be used in cross function reentrancies:
+	- IGLOO._calcAmount(address,address,uint256) (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#331-345)
+	- IGLOO._payTreasury() (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#347-359)
+	- IGLOO._transferFrom(address,address,uint256) (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#303-321)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+IGLOO.transferERC(address) (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#408-411) ignores return value by Token.transfer(msg.sender,Token.balanceOf(address(this))) (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#410)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+IGLOO.reqSellTax(address) (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#381-390) performs a multiplication on the result of a division:
+	- _sellFee = 9000 - (100 * ((block.timestamp - _lastFreeze[_wallet]) / 86400)) (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#384)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+IGLOO._payTreasury() (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#347-359) ignores return value by address(treasury).call{value: _net * 7000 / 10000}() (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#355)
+IGLOO.transferETH() (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#404-406) ignores return value by address(msg.sender).call{value: address(this).balance}() (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#405)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-low-level-calls
+
+IGLOO.constructor(address)._treasury (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#227) lacks a zero-check on :
+		- treasury = _treasury (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#228)
+IGLOO.setTreasury(address)._treasury (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#361) lacks a zero-check on :
+		- treasury = _treasury (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#362)
+IGLOO.setIcebox(address)._icebox (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#369) lacks a zero-check on :
+		- icebox = _icebox (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#370)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in IGLOO._payTreasury() (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#347-359):
+	External calls:
+	- router.swapExactTokensForETHSupportingFeeOnTransferTokens(balanceOf(address(this)),0,path,address(this),block.timestamp) (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#352)
+	- address(treasury).call{value: _net * 7000 / 10000}() (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#355)
+	- staking.deposit{value: _net * 3000 / 10000}() (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#356)
+	External calls sending eth:
+	- address(treasury).call{value: _net * 7000 / 10000}() (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#355)
+	- staking.deposit{value: _net * 3000 / 10000}() (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#356)
+	State variables written after the call(s):
+	- _tokens = 0 (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#358)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in IGLOO._transferFrom(address,address,uint256) (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#303-321):
+	External calls:
+	- _payTreasury() (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#309)
+		- router.swapExactTokensForETHSupportingFeeOnTransferTokens(balanceOf(address(this)),0,path,address(this),block.timestamp) (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#352)
+		- address(treasury).call{value: _net * 7000 / 10000}() (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#355)
+		- staking.deposit{value: _net * 3000 / 10000}() (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#356)
+	External calls sending eth:
+	- _payTreasury() (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#309)
+		- address(treasury).call{value: _net * 7000 / 10000}() (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#355)
+		- staking.deposit{value: _net * 3000 / 10000}() (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#356)
+	Event emitted after the call(s):
+	- Transfer(sender,address(this),_tax) (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#342)
+		- amountReceived = _calcAmount(sender,recipient,amount) (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#315)
+	- Transfer(sender,recipient,amountReceived) (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#319)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+IGLOO._transferFrom(address,address,uint256) (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#303-321) uses timestamp for comparisons
+	Dangerous comparisons:
+	- msg.sender != dexPair && ! _swapping && _tokens > 0 (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#309)
+	- require(bool,string)(_balances[sender] >= amount,Insufficient balance) (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#312)
+IGLOO._basicTransfer(address,address,uint256) (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#323-329) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(_balances[sender] >= amount,Insufficient balance) (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#324)
+IGLOO._calcAmount(address,address,uint256) (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#331-345) uses timestamp for comparisons
+	Dangerous comparisons:
+	- _fee > 0 (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#339)
+IGLOO.reqSellTax(address) (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#381-390) uses timestamp for comparisons
+	Dangerous comparisons:
+	- _lastFreeze[_wallet] > 0 (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#383)
+	- _sellFee < 1500 (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#385)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Context._msgData() (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#104-106) is never used and should be removed
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dead-code
+
+Version constraint ^0.8.13 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- VerbatimInvalidDeduplication
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- StorageWriteRemovalBeforeConditionalTermination
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- InlineAssemblyMemorySideEffects
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation.
+It is used by:
+	- ^0.8.13 (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#15)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in IGLOO._payTreasury() (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#347-359):
+	- address(treasury).call{value: _net * 7000 / 10000}() (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#355)
+Low level call in IGLOO.transferETH() (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#404-406):
+	- address(msg.sender).call{value: address(this).balance}() (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#405)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Parameter IGLOO.mint(address,uint256)._to (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#242) is not in mixedCase
+Parameter IGLOO.mint(address,uint256)._amount (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#242) is not in mixedCase
+Parameter IGLOO.setTreasury(address)._treasury (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#361) is not in mixedCase
+Parameter IGLOO.setStaking(address)._xigloo (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#365) is not in mixedCase
+Parameter IGLOO.setIcebox(address)._icebox (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#369) is not in mixedCase
+Parameter IGLOO.setNoTax(address,bool)._wallet (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#373) is not in mixedCase
+Parameter IGLOO.setNoTax(address,bool)._value (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#373) is not in mixedCase
+Parameter IGLOO.reqNoTax(address)._wallet (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#377) is not in mixedCase
+Parameter IGLOO.reqSellTax(address)._wallet (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#381) is not in mixedCase
+Parameter IGLOO.reqLastFreeze(address)._wallet (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#392) is not in mixedCase
+Variable IGLOO._totalSupply (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#205) is not in mixedCase
+Variable IGLOO._balances (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#206) is not in mixedCase
+Variable IGLOO._allowances (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#207) is not in mixedCase
+Variable IGLOO._lastFreeze (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#209) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+IGLOO.constructor(address) (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#227-240) uses literals with too many digits:
+	- _totalSupply = 10000000 * (10 ** 18) (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#237)
+IGLOO.constructor(address) (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#227-240) uses literals with too many digits:
+	- _balances[msg.sender] = 10000000 * (10 ** 18) (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#238)
+IGLOO.constructor(address) (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#227-240) uses literals with too many digits:
+	- Transfer(address(0),msg.sender,10000000 * (10 ** 18)) (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#239)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+IGLOO.router (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#216) should be constant 
+IGLOO.sellFee (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#214) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+
+IGLOO.dexPair (0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol#213) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+./0x0cb0a2136f2e80662eb5c50b96bfa3de85f335ce.sol analyzed (8 contracts with 94 detectors), 39 result(s) found
+
+real	0m2.497s
+user	0m2.279s
+sys	0m0.220s

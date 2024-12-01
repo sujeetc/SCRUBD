@@ -1,0 +1,100 @@
+'solc --version' running
+'solc ./0x627fa62ccbb1c1b04ffaecd72a53e37fc0e17839.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x627fa62ccbb1c1b04ffaecd72a53e37fc0e17839.sol:
+./0x627fa62ccbb1c1b04ffaecd72a53e37fc0e17839.sol:54:5: Warning: No visibility specified. Defaulting to "public".
+    function()
+    ^
+Spanning multiple lines.
+./0x627fa62ccbb1c1b04ffaecd72a53e37fc0e17839.sol:60:5: Warning: No visibility specified. Defaulting to "public".
+    function Deposit() 
+    ^
+Spanning multiple lines.
+./0x627fa62ccbb1c1b04ffaecd72a53e37fc0e17839.sol:37:27: Warning: "sha3" has been deprecated in favour of "keccak256"
+        token.call(bytes4(sha3("transfer(address,uint256)")),to,amount); 
+                          ^-------------------------------^
+./0x627fa62ccbb1c1b04ffaecd72a53e37fc0e17839.sol:37:9: Warning: Return value of low-level calls not used.
+        token.call(bytes4(sha3("transfer(address,uint256)")),to,amount); 
+        ^-------------------------------------------------------------^
+
+
+Reentrancy in TokenBank.WithdrawToHolder(address,uint256) (0x627fa62ccbb1c1b04ffaecd72a53e37fc0e17839.sol#80-92):
+	External calls:
+	- _addr.call.value(_wei)() (0x627fa62ccbb1c1b04ffaecd72a53e37fc0e17839.sol#87)
+	State variables written after the call(s):
+	- Holders[_addr] -= _wei (0x627fa62ccbb1c1b04ffaecd72a53e37fc0e17839.sol#89)
+	TokenBank.Holders (0x627fa62ccbb1c1b04ffaecd72a53e37fc0e17839.sol#44) can be used in cross function reentrancies:
+	- TokenBank.Deposit() (0x627fa62ccbb1c1b04ffaecd72a53e37fc0e17839.sol#60-67)
+	- TokenBank.Holders (0x627fa62ccbb1c1b04ffaecd72a53e37fc0e17839.sol#44)
+	- TokenBank.WitdrawTokenToHolder(address,address,uint256) (0x627fa62ccbb1c1b04ffaecd72a53e37fc0e17839.sol#69-78)
+	- TokenBank.WithdrawToHolder(address,uint256) (0x627fa62ccbb1c1b04ffaecd72a53e37fc0e17839.sol#80-92)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+Token.owner (0x627fa62ccbb1c1b04ffaecd72a53e37fc0e17839.sol#32) shadows:
+	- Ownable.owner (0x627fa62ccbb1c1b04ffaecd72a53e37fc0e17839.sol#6)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variable-shadowing
+
+Token.WithdrawToken(address,uint256,address) (0x627fa62ccbb1c1b04ffaecd72a53e37fc0e17839.sol#33-38) ignores return value by token.call(bytes4(sha3()(transfer(address,uint256))),to,amount) (0x627fa62ccbb1c1b04ffaecd72a53e37fc0e17839.sol#37)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-low-level-calls
+
+Token.WithdrawToken(address,uint256,address).token (0x627fa62ccbb1c1b04ffaecd72a53e37fc0e17839.sol#33) lacks a zero-check on :
+		- token.call(bytes4(sha3()(transfer(address,uint256))),to,amount) (0x627fa62ccbb1c1b04ffaecd72a53e37fc0e17839.sol#37)
+Token.WithdrawToken(address,uint256,address).to (0x627fa62ccbb1c1b04ffaecd72a53e37fc0e17839.sol#33) lacks a zero-check on :
+		- token.call(bytes4(sha3()(transfer(address,uint256))),to,amount) (0x627fa62ccbb1c1b04ffaecd72a53e37fc0e17839.sol#37)
+Ownable.changeOwner(address).addr (0x627fa62ccbb1c1b04ffaecd72a53e37fc0e17839.sol#8) lacks a zero-check on :
+		- newOwner = addr (0x627fa62ccbb1c1b04ffaecd72a53e37fc0e17839.sol#12)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Modifier Ownable.onlyOwner() (0x627fa62ccbb1c1b04ffaecd72a53e37fc0e17839.sol#24-27) does not always execute _; or revert
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-modifier
+
+Deprecated standard detected token.call(bytes4(sha3()(transfer(address,uint256))),to,amount) (0x627fa62ccbb1c1b04ffaecd72a53e37fc0e17839.sol#37):
+	- Usage of "sha3()" should be replaced with "keccak256()"
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#deprecated-standards
+
+Version constraint ^0.4.19 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ABIEncoderV2PackedStorage_0.4.x
+	- ExpExponentCleanup
+	- EventStructWrongData
+	- NestedArrayFunctionCallDecoder.
+It is used by:
+	- ^0.4.19 (0x627fa62ccbb1c1b04ffaecd72a53e37fc0e17839.sol#1)
+solc-0.4.19 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in Token.WithdrawToken(address,uint256,address) (0x627fa62ccbb1c1b04ffaecd72a53e37fc0e17839.sol#33-38):
+	- token.call(bytes4(sha3()(transfer(address,uint256))),to,amount) (0x627fa62ccbb1c1b04ffaecd72a53e37fc0e17839.sol#37)
+Low level call in TokenBank.WithdrawToHolder(address,uint256) (0x627fa62ccbb1c1b04ffaecd72a53e37fc0e17839.sol#80-92):
+	- _addr.call.value(_wei)() (0x627fa62ccbb1c1b04ffaecd72a53e37fc0e17839.sol#87)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Function Token.WithdrawToken(address,uint256,address) (0x627fa62ccbb1c1b04ffaecd72a53e37fc0e17839.sol#33-38) is not in mixedCase
+Function TokenBank.Deposit() (0x627fa62ccbb1c1b04ffaecd72a53e37fc0e17839.sol#60-67) is not in mixedCase
+Function TokenBank.WitdrawTokenToHolder(address,address,uint256) (0x627fa62ccbb1c1b04ffaecd72a53e37fc0e17839.sol#69-78) is not in mixedCase
+Parameter TokenBank.WitdrawTokenToHolder(address,address,uint256)._to (0x627fa62ccbb1c1b04ffaecd72a53e37fc0e17839.sol#69) is not in mixedCase
+Parameter TokenBank.WitdrawTokenToHolder(address,address,uint256)._token (0x627fa62ccbb1c1b04ffaecd72a53e37fc0e17839.sol#69) is not in mixedCase
+Parameter TokenBank.WitdrawTokenToHolder(address,address,uint256)._amount (0x627fa62ccbb1c1b04ffaecd72a53e37fc0e17839.sol#69) is not in mixedCase
+Function TokenBank.WithdrawToHolder(address,uint256) (0x627fa62ccbb1c1b04ffaecd72a53e37fc0e17839.sol#80-92) is not in mixedCase
+Parameter TokenBank.WithdrawToHolder(address,uint256)._addr (0x627fa62ccbb1c1b04ffaecd72a53e37fc0e17839.sol#80) is not in mixedCase
+Parameter TokenBank.WithdrawToHolder(address,uint256)._wei (0x627fa62ccbb1c1b04ffaecd72a53e37fc0e17839.sol#80) is not in mixedCase
+Variable TokenBank.MinDeposit (0x627fa62ccbb1c1b04ffaecd72a53e37fc0e17839.sol#43) is not in mixedCase
+Variable TokenBank.Holders (0x627fa62ccbb1c1b04ffaecd72a53e37fc0e17839.sol#44) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+./0x627fa62ccbb1c1b04ffaecd72a53e37fc0e17839.sol analyzed (3 contracts with 94 detectors), 23 result(s) found
+
+real	0m1.480s
+user	0m1.198s
+sys	0m0.284s

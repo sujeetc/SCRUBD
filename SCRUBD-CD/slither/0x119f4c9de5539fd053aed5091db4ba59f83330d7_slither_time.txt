@@ -1,0 +1,302 @@
+'solc --version' running
+'solc ./0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+Reentrancy in PENGU._transfer(address,address,uint256) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1730-1826):
+	External calls:
+	- swapAndSendToDev(swapTokens) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1788)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1872-1878)
+	- swapAndSendDividends(sellTokens) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1791)
+		- (success,None) = address(dividendTracker).call{value: dividends}() (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1885)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1872-1878)
+	External calls sending eth:
+	- swapAndSendToDev(swapTokens) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1788)
+		- _buyBackAddress.transfer(amount.div(3)) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1853)
+		- _marketingAddress.transfer(amount.div(3)) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1854)
+		- _oppAddress.transfer(oppFee) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1859)
+		- _teamFeeAddress.transfer(teamFee) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1860)
+	- swapAndSendDividends(sellTokens) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1791)
+		- (success,None) = address(dividendTracker).call{value: dividends}() (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1885)
+	State variables written after the call(s):
+	- super._transfer(from,address(this),fees) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1807)
+		- _balances[sender] = _balances[sender].sub(amount,ERC20: transfer amount exceeds balance) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1008)
+		- _balances[recipient] = _balances[recipient].add(amount) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1009)
+	ERC20._balances (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#824) can be used in cross function reentrancies:
+	- ERC20._mint(address,uint256) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1022-1030)
+	- ERC20._transfer(address,address,uint256) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#998-1011)
+	- ERC20.balanceOf(address) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#889-891)
+	- super._transfer(from,to,amount) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1810)
+		- _balances[sender] = _balances[sender].sub(amount,ERC20: transfer amount exceeds balance) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1008)
+		- _balances[recipient] = _balances[recipient].add(amount) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1009)
+	ERC20._balances (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#824) can be used in cross function reentrancies:
+	- ERC20._mint(address,uint256) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1022-1030)
+	- ERC20._transfer(address,address,uint256) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#998-1011)
+	- ERC20.balanceOf(address) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#889-891)
+	- liquidating = false (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1793)
+	PENGU.liquidating (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1485) can be used in cross function reentrancies:
+	- PENGU._transfer(address,address,uint256) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1730-1826)
+Reentrancy in DividendPayingToken._withdrawDividendOfUser(address) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1180-1196):
+	External calls:
+	- (success,None) = user.call{gas: gasForTransfer,value: _withdrawableDividend}() (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1185)
+	State variables written after the call(s):
+	- withdrawnDividends[user] = withdrawnDividends[user].sub(_withdrawableDividend) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1188)
+	DividendPayingToken.withdrawnDividends (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1130) can be used in cross function reentrancies:
+	- DividendPayingToken._withdrawDividendOfUser(address) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1180-1196)
+	- DividendPayingToken.withdrawableDividendOf(address) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1209-1211)
+	- DividendPayingToken.withdrawnDividendOf(address) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1216-1218)
+Reentrancy in PENGUDividendTracker.process(uint256) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1419-1463):
+	External calls:
+	- processAccount(address(account),true) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1444)
+		- (success,None) = user.call{gas: gasForTransfer,value: _withdrawableDividend}() (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1185)
+	State variables written after the call(s):
+	- lastProcessedIndex = _lastProcessedIndex (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1460)
+	PENGUDividendTracker.lastProcessedIndex (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1286) can be used in cross function reentrancies:
+	- PENGUDividendTracker.getAccount(address) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1345-1376)
+	- PENGUDividendTracker.getLastProcessedIndex() (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1337-1339)
+	- PENGUDividendTracker.lastProcessedIndex (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1286)
+	- PENGUDividendTracker.process(uint256) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1419-1463)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+PENGU.getAccountDividendsInfo(address) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1686-1697) ignores return value by dividendTracker.getAccount(account) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1696)
+PENGU.getAccountDividendsInfoAtIndex(uint256) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1699-1710) ignores return value by dividendTracker.getAccountAtIndex(index) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1709)
+PENGU.claim() (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1717-1719) ignores return value by dividendTracker.processAccount(address(msg.sender),false) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1718)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+DividendPayingToken.constructor(string,string)._name (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1137) shadows:
+	- ERC20._name (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#830) (state variable)
+DividendPayingToken.constructor(string,string)._symbol (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1137) shadows:
+	- ERC20._symbol (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#831) (state variable)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#local-variable-shadowing
+
+DividendPayingToken._withdrawDividendOfUser(address) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1180-1196) has external calls inside a loop: (success,None) = user.call{gas: gasForTransfer,value: _withdrawableDividend}() (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1185)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation/#calls-inside-a-loop
+
+Reentrancy in PENGU._transfer(address,address,uint256) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1730-1826):
+	External calls:
+	- swapAndSendToDev(swapTokens) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1788)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1872-1878)
+	- swapAndSendDividends(sellTokens) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1791)
+		- (success,None) = address(dividendTracker).call{value: dividends}() (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1885)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1872-1878)
+	External calls sending eth:
+	- swapAndSendToDev(swapTokens) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1788)
+		- _buyBackAddress.transfer(amount.div(3)) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1853)
+		- _marketingAddress.transfer(amount.div(3)) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1854)
+		- _oppAddress.transfer(oppFee) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1859)
+		- _teamFeeAddress.transfer(teamFee) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1860)
+	- swapAndSendDividends(sellTokens) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1791)
+		- (success,None) = address(dividendTracker).call{value: dividends}() (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1885)
+	State variables written after the call(s):
+	- swapAndSendDividends(sellTokens) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1791)
+		- _allowances[owner][spender] = amount (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1074)
+Reentrancy in PENGUDividendTracker.processAccount(address,bool) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1465-1475):
+	External calls:
+	- amount = _withdrawDividendOfUser(account) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1466)
+		- (success,None) = user.call{gas: gasForTransfer,value: _withdrawableDividend}() (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1185)
+	State variables written after the call(s):
+	- lastClaimTimes[account] = block.timestamp (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1469)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in PENGU._setAutomatedMarketMakerPair(address,bool) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1613-1622):
+	External calls:
+	- dividendTracker.excludeFromDividends(pair) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1618)
+	Event emitted after the call(s):
+	- SetAutomatedMarketMakerPair(pair,value) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1621)
+Reentrancy in PENGU._transfer(address,address,uint256) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1730-1826):
+	External calls:
+	- swapAndSendToDev(swapTokens) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1788)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1872-1878)
+	- swapAndSendDividends(sellTokens) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1791)
+		- (success,None) = address(dividendTracker).call{value: dividends}() (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1885)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1872-1878)
+	External calls sending eth:
+	- swapAndSendToDev(swapTokens) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1788)
+		- _buyBackAddress.transfer(amount.div(3)) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1853)
+		- _marketingAddress.transfer(amount.div(3)) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1854)
+		- _oppAddress.transfer(oppFee) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1859)
+		- _teamFeeAddress.transfer(teamFee) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1860)
+	- swapAndSendDividends(sellTokens) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1791)
+		- (success,None) = address(dividendTracker).call{value: dividends}() (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1885)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1075)
+		- swapAndSendDividends(sellTokens) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1791)
+	- SentDividends(tokens,dividends) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1887)
+		- swapAndSendDividends(sellTokens) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1791)
+	- Transfer(sender,recipient,amount) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1010)
+		- super._transfer(from,address(this),fees) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1807)
+	- Transfer(sender,recipient,amount) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1010)
+		- super._transfer(from,to,amount) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1810)
+Reentrancy in PENGU._transfer(address,address,uint256) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1730-1826):
+	External calls:
+	- swapAndSendToDev(swapTokens) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1788)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1872-1878)
+	- swapAndSendDividends(sellTokens) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1791)
+		- (success,None) = address(dividendTracker).call{value: dividends}() (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1885)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1872-1878)
+	- dividendTracker.setBalance(address(from),balanceOf(from)) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1812)
+	- dividendTracker.setBalance(address(to),balanceOf(to)) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1813-1815)
+	- (iterations,claims,lastProcessedIndex) = dividendTracker.process(gas) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1820-1824)
+	External calls sending eth:
+	- swapAndSendToDev(swapTokens) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1788)
+		- _buyBackAddress.transfer(amount.div(3)) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1853)
+		- _marketingAddress.transfer(amount.div(3)) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1854)
+		- _oppAddress.transfer(oppFee) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1859)
+		- _teamFeeAddress.transfer(teamFee) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1860)
+	- swapAndSendDividends(sellTokens) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1791)
+		- (success,None) = address(dividendTracker).call{value: dividends}() (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1885)
+	Event emitted after the call(s):
+	- ProcessedDividendTracker(iterations,claims,lastProcessedIndex,true,gas,tx.origin) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1821)
+Reentrancy in PENGUDividendTracker.processAccount(address,bool) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1465-1475):
+	External calls:
+	- amount = _withdrawDividendOfUser(account) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1466)
+		- (success,None) = user.call{gas: gasForTransfer,value: _withdrawableDividend}() (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1185)
+	Event emitted after the call(s):
+	- Claim(account,amount,automatic) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1470)
+Reentrancy in PENGU.processDividendTracker(uint256) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1712-1715):
+	External calls:
+	- (iterations,claims,lastProcessedIndex) = dividendTracker.process(gas) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1713)
+	Event emitted after the call(s):
+	- ProcessedDividendTracker(iterations,claims,lastProcessedIndex,false,gas,tx.origin) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1714)
+Reentrancy in PENGU.swapAndSendDividends(uint256) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1881-1889):
+	External calls:
+	- swapTokensForEth(tokens) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1882)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1872-1878)
+	- (success,None) = address(dividendTracker).call{value: dividends}() (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1885)
+	External calls sending eth:
+	- (success,None) = address(dividendTracker).call{value: dividends}() (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1885)
+	Event emitted after the call(s):
+	- SentDividends(tokens,dividends) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1887)
+Reentrancy in PENGU.swapAndSendToDev(uint256) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1828-1845):
+	External calls:
+	- swapTokensForEth(tokenBalance) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1838)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1872-1878)
+	External calls sending eth:
+	- sendEthToDev(newBalance) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1842)
+		- _buyBackAddress.transfer(amount.div(3)) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1853)
+		- _marketingAddress.transfer(amount.div(3)) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1854)
+		- _oppAddress.transfer(oppFee) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1859)
+		- _teamFeeAddress.transfer(teamFee) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1860)
+	Event emitted after the call(s):
+	- SwapAndSendToDev(tokens,newBalance) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1844)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+DividendPayingToken._withdrawDividendOfUser(address) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1180-1196) tries to limit the gas of an external call that controls implicit decoding
+	(success,None) = user.call{gas: gasForTransfer,value: _withdrawableDividend}() (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1185)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#return-bomb
+
+PENGUDividendTracker.getAccount(address) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1345-1376) uses timestamp for comparisons
+	Dangerous comparisons:
+	- nextClaimTime > block.timestamp (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1375)
+PENGUDividendTracker.canAutoClaim(uint256) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1396-1401) uses timestamp for comparisons
+	Dangerous comparisons:
+	- lastClaimTime > block.timestamp (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1397)
+	- block.timestamp.sub(lastClaimTime) >= claimWait (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1400)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+PENGU._transfer(address,address,uint256) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1730-1826) has a high cyclomatic complexity (16).
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#cyclomatic-complexity
+
+Context._msgData() (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#629-631) is never used and should be removed
+DividendPayingToken._transfer(address,address,uint256) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1236-1242) is never used and should be removed
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dead-code
+
+PENGU.TOTAL_FEES (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1495) is set pre-construction with a non-constant function or state variable:
+	- ETH_REWARDS_FEE + LIQUIDITY_FEE
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#function-initializing-state
+
+Version constraint ^0.8.4 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- SignedImmutables.
+It is used by:
+	- ^0.8.4 (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#22)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in DividendPayingToken._withdrawDividendOfUser(address) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1180-1196):
+	- (success,None) = user.call{gas: gasForTransfer,value: _withdrawableDividend}() (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1185)
+Low level call in PENGU.swapAndSendDividends(uint256) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1881-1889):
+	- (success,None) = address(dividendTracker).call{value: dividends}() (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1885)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Function IUniswapV2Router01.WETH() (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#26) is not in mixedCase
+Function IUniswapV2Pair.DOMAIN_SEPARATOR() (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#195) is not in mixedCase
+Function IUniswapV2Pair.PERMIT_TYPEHASH() (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#196) is not in mixedCase
+Function IUniswapV2Pair.MINIMUM_LIQUIDITY() (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#213) is not in mixedCase
+Parameter DividendPayingToken.dividendOf(address)._owner (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1202) is not in mixedCase
+Parameter DividendPayingToken.withdrawableDividendOf(address)._owner (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1209) is not in mixedCase
+Parameter DividendPayingToken.withdrawnDividendOf(address)._owner (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1216) is not in mixedCase
+Parameter DividendPayingToken.accumulativeDividendOf(address)._owner (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1226) is not in mixedCase
+Constant DividendPayingToken.magnitude (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1114) is not in UPPER_CASE_WITH_UNDERSCORES
+Parameter PENGUDividendTracker.getAccount(address)._account (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1345) is not in mixedCase
+Parameter PENGU.enableDisableDevFee(bool)._devFeeEnabled (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1655) is not in mixedCase
+Variable PENGU.LIQUIDITY_FEE (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1494) is not in mixedCase
+Variable PENGU.TOTAL_FEES (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1495) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in PENGU._transfer(address,address,uint256) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1730-1826):
+	External calls:
+	- swapAndSendToDev(swapTokens) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1788)
+		- _buyBackAddress.transfer(amount.div(3)) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1853)
+		- _marketingAddress.transfer(amount.div(3)) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1854)
+		- _oppAddress.transfer(oppFee) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1859)
+		- _teamFeeAddress.transfer(teamFee) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1860)
+	External calls sending eth:
+	- swapAndSendToDev(swapTokens) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1788)
+		- _buyBackAddress.transfer(amount.div(3)) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1853)
+		- _marketingAddress.transfer(amount.div(3)) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1854)
+		- _oppAddress.transfer(oppFee) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1859)
+		- _teamFeeAddress.transfer(teamFee) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1860)
+	- swapAndSendDividends(sellTokens) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1791)
+		- (success,None) = address(dividendTracker).call{value: dividends}() (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1885)
+	State variables written after the call(s):
+	- swapAndSendDividends(sellTokens) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1791)
+		- _allowances[owner][spender] = amount (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1074)
+	- super._transfer(from,address(this),fees) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1807)
+		- _balances[sender] = _balances[sender].sub(amount,ERC20: transfer amount exceeds balance) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1008)
+		- _balances[recipient] = _balances[recipient].add(amount) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1009)
+	- super._transfer(from,to,amount) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1810)
+		- _balances[sender] = _balances[sender].sub(amount,ERC20: transfer amount exceeds balance) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1008)
+		- _balances[recipient] = _balances[recipient].add(amount) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1009)
+	- liquidating = false (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1793)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1075)
+		- swapAndSendDividends(sellTokens) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1791)
+	- ProcessedDividendTracker(iterations,claims,lastProcessedIndex,true,gas,tx.origin) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1821)
+	- SentDividends(tokens,dividends) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1887)
+		- swapAndSendDividends(sellTokens) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1791)
+	- Transfer(sender,recipient,amount) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1010)
+		- super._transfer(from,address(this),fees) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1807)
+	- Transfer(sender,recipient,amount) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1010)
+		- super._transfer(from,to,amount) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1810)
+Reentrancy in PENGU.swapAndSendToDev(uint256) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1828-1845):
+	External calls:
+	- sendEthToDev(newBalance) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1842)
+		- _buyBackAddress.transfer(amount.div(3)) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1853)
+		- _marketingAddress.transfer(amount.div(3)) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1854)
+		- _oppAddress.transfer(oppFee) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1859)
+		- _teamFeeAddress.transfer(teamFee) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1860)
+	Event emitted after the call(s):
+	- SwapAndSendToDev(tokens,newBalance) (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1844)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+PENGU._devWallet (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1499) is never used in PENGU (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1479-1891)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-state-variable
+
+PENGU.LIQUIDITY_FEE (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1494) should be constant 
+PENGU._devWallet (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1499) should be constant 
+PENGU.liquidateTokensAtAmount (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1505) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+
+PENGU.TOTAL_FEES (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1495) should be immutable 
+PENGU.dividendTracker (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1487) should be immutable 
+PENGU.liquidityWallet (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1489) should be immutable 
+PENGU.uniswapV2Router (0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol#1482) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+./0x119f4c9de5539fd053aed5091db4ba59f83330d7.sol analyzed (18 contracts with 94 detectors), 51 result(s) found
+
+real	0m4.496s
+user	0m4.182s
+sys	0m0.314s

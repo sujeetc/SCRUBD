@@ -1,0 +1,156 @@
+'solc --version' running
+'solc ./0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol:
+./0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol:89:9: Warning: Failure condition of 'send' ignored. Consider using 'transfer' instead.
+        oldNorseAddr.send(_toRefund);
+        ^--------------------------^
+./0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol:90:9: Warning: Failure condition of 'send' ignored. Consider using 'transfer' instead.
+        actualNorse.send(diffFivePct);
+        ^---------------------------^
+./0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol:92:13: Warning: Failure condition of 'send' ignored. Consider using 'transfer' instead.
+            msg.sender.send(excess);
+            ^---------------------^
+./0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol:143:9: Warning: Failure condition of 'send' ignored. Consider using 'transfer' instead.
+        currentNorsefire.send(fee);
+        ^------------------------^
+./0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol:144:9: Warning: Failure condition of 'send' ignored. Consider using 'transfer' instead.
+        _caller.send(ideaValue.sub(fee));
+        ^------------------------------^
+./0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol:154:9: Warning: Failure condition of 'send' ignored. Consider using 'transfer' instead.
+        currentNorsefire.send(devFee(_sent));
+        ^----------------------------------^
+./0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol:190:9: Warning: Failure condition of 'send' ignored. Consider using 'transfer' instead.
+        currentNorsefire.send(msg.value); // The current Norsefire gets this regitration
+        ^------------------------------^
+
+
+CloneFarmFarmer.becomeNorsefire() (0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol#73-96) sends eth to arbitrary user
+	Dangerous calls:
+	- oldNorseAddr.send(_toRefund) (0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol#89)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+CloneFarmFarmer.becomeNorsefire() (0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol#73-96) performs a multiplication on the result of a division:
+	- diffFivePct = (norsefirePrice.sub(oldNorsePrice)).div(20) (0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol#82)
+	- flipPrize = diffFivePct.mul(10) (0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol#84)
+CloneFarmFarmer.becomeNorsefire() (0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol#73-96) performs a multiplication on the result of a division:
+	- diffFivePct = (norsefirePrice.sub(oldNorsePrice)).div(20) (0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol#82)
+	- marketBoost = diffFivePct.mul(9) (0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol#85)
+CloneFarmFarmer.sellIdeas() (0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol#130-146) performs a multiplication on the result of a division:
+	- arrayOfClones[_caller] = (arrayOfClones[msg.sender].div(4)).mul(3) (0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol#139)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+CloneFarmFarmer.hijackClones() (0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol#186-194) uses a dangerous strict equality:
+	- require(bool)(arrayOfClones[_caller] == 0) (0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol#191)
+CloneFarmFarmer.releaseTheOriginal(uint256) (0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol#178-184) uses a dangerous strict equality:
+	- require(bool)(marketIdeas == 0) (0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol#180)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-strict-equalities
+
+CloneFarmFarmer.becomeNorsefire() (0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol#73-96) ignores return value by oldNorseAddr.send(_toRefund) (0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol#89)
+CloneFarmFarmer.becomeNorsefire() (0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol#73-96) ignores return value by actualNorse.send(diffFivePct) (0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol#90)
+CloneFarmFarmer.becomeNorsefire() (0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol#73-96) ignores return value by msg.sender.send(excess) (0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol#92)
+CloneFarmFarmer.sellIdeas() (0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol#130-146) ignores return value by currentNorsefire.send(fee) (0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol#143)
+CloneFarmFarmer.sellIdeas() (0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol#130-146) ignores return value by _caller.send(ideaValue.sub(fee)) (0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol#144)
+CloneFarmFarmer.buyIdeas() (0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol#148-157) ignores return value by currentNorsefire.send(devFee(_sent)) (0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol#154)
+CloneFarmFarmer.hijackClones() (0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol#186-194) ignores return value by currentNorsefire.send(msg.value) (0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol#190)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-send
+
+CloneFarmFarmer.releaseTheOriginal(uint256) (0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol#178-184) should emit an event for: 
+	- marketIdeas = _ideas (0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol#182) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+CloneFarmFarmer.becomeNorsefire()._newNorse (0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol#86) lacks a zero-check on :
+		- currentNorsefire = _newNorse (0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol#88)
+CloneFarmFarmer.becomeNorsefire().oldNorseAddr (0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol#75) lacks a zero-check on :
+		- oldNorseAddr.send(_toRefund) (0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol#89)
+CloneFarmFarmer.sellIdeas()._caller (0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol#133) lacks a zero-check on :
+		- _caller.send(ideaValue.sub(fee)) (0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol#144)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+CloneFarmFarmer.deployIdeas(address) (0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol#103-128) uses timestamp for comparisons
+	Dangerous comparisons:
+	- arrayOfClones[referrals[_deployer]] > 0 (0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol#120)
+CloneFarmFarmer.releaseTheOriginal(uint256) (0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol#178-184) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(marketIdeas == 0) (0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol#180)
+CloneFarmFarmer.hijackClones() (0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol#186-194) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(arrayOfClones[_caller] == 0) (0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol#191)
+CloneFarmFarmer.min(uint256,uint256) (0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol#217-219) uses timestamp for comparisons
+	Dangerous comparisons:
+	- a < b (0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol#218)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Version constraint ^0.4.24 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ABIEncoderV2PackedStorage_0.4.x
+	- ExpExponentCleanup
+	- EventStructWrongData.
+It is used by:
+	- ^0.4.24 (0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol#1)
+solc-0.4.24 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Parameter CloneFarmFarmer.boostCloneMarket(uint256)._eth (0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol#98) is not in mixedCase
+Parameter CloneFarmFarmer.calculateIdeaSell(uint256)._ideas (0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol#163) is not in mixedCase
+Parameter CloneFarmFarmer.calculateIdeaBuy(uint256,uint256)._balance (0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol#167) is not in mixedCase
+Parameter CloneFarmFarmer.releaseTheOriginal(uint256)._ideas (0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol#178) is not in mixedCase
+Variable CloneFarmFarmer.clones_to_create_one_idea (0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol#51) is not in mixedCase
+Variable CloneFarmFarmer.starting_clones (0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol#52) is not in mixedCase
+Variable CloneFarmFarmer.PSN (0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol#53) is not in mixedCase
+Variable CloneFarmFarmer.PSNH (0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol#54) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in CloneFarmFarmer.becomeNorsefire() (0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol#73-96):
+	External calls:
+	- oldNorseAddr.send(_toRefund) (0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol#89)
+	- actualNorse.send(diffFivePct) (0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol#90)
+	- msg.sender.send(excess) (0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol#92)
+	Event emitted after the call(s):
+	- MarketBoost(_eth) (0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol#100)
+		- boostCloneMarket(marketBoost) (0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol#94)
+	- NorsefireSwitch(oldNorseAddr,_newNorse,norsefirePrice,_toRefund,flipPrize,diffFivePct) (0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol#95)
+Reentrancy in CloneFarmFarmer.buyIdeas() (0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol#148-157):
+	External calls:
+	- currentNorsefire.send(devFee(_sent)) (0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol#154)
+	State variables written after the call(s):
+	- claimedIdeas[_buyer] = claimedIdeas[_buyer].add(ideasBought) (0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol#155)
+	Event emitted after the call(s):
+	- IdeasBought(_buyer,ideasBought) (0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol#156)
+Reentrancy in CloneFarmFarmer.hijackClones() (0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol#186-194):
+	External calls:
+	- currentNorsefire.send(msg.value) (0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol#190)
+	State variables written after the call(s):
+	- arrayOfClones[_caller] = starting_clones (0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol#193)
+	- lastDeploy[_caller] = now (0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol#192)
+Reentrancy in CloneFarmFarmer.sellIdeas() (0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol#130-146):
+	External calls:
+	- currentNorsefire.send(fee) (0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol#143)
+	- _caller.send(ideaValue.sub(fee)) (0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol#144)
+	Event emitted after the call(s):
+	- IdeasSold(_caller,hasIdeas) (0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol#145)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+CloneFarmFarmer.PSN (0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol#53) should be constant 
+CloneFarmFarmer.PSNH (0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol#54) should be constant 
+CloneFarmFarmer.actualNorse (0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol#55) should be constant 
+CloneFarmFarmer.clones_to_create_one_idea (0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol#51) should be constant 
+CloneFarmFarmer.starting_clones (0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol#52) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+./0x3ab4a46beae2a0b025eeed54db05819814ff287a.sol analyzed (2 contracts with 94 detectors), 40 result(s) found
+
+real	0m2.042s
+user	0m1.794s
+sys	0m0.249s

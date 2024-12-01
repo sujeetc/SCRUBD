@@ -1,0 +1,99 @@
+'solc --version' running
+'solc ./0xd67aa6a98e99f979f23bf0da772d113fe6dbe50a.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+Reentrancy in Crowdsale.fallback() (0xd67aa6a98e99f979f23bf0da772d113fe6dbe50a.sol#106-125):
+	External calls:
+	- tokenReward.transfer(msg.sender,amount / price) (0xd67aa6a98e99f979f23bf0da772d113fe6dbe50a.sol#114)
+	External calls sending eth:
+	- beneficiary.send(amountRaised) (0xd67aa6a98e99f979f23bf0da772d113fe6dbe50a.sol#119)
+	State variables written after the call(s):
+	- amountRaised = 0 (0xd67aa6a98e99f979f23bf0da772d113fe6dbe50a.sol#121)
+	Crowdsale.amountRaised (0xd67aa6a98e99f979f23bf0da772d113fe6dbe50a.sol#9) can be used in cross function reentrancies:
+	- Crowdsale.amountRaised (0xd67aa6a98e99f979f23bf0da772d113fe6dbe50a.sol#9)
+	- Crowdsale.fallback() (0xd67aa6a98e99f979f23bf0da772d113fe6dbe50a.sol#106-125)
+	- Crowdsale.sendToBeneficiary() (0xd67aa6a98e99f979f23bf0da772d113fe6dbe50a.sol#92-99)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+token (0xd67aa6a98e99f979f23bf0da772d113fe6dbe50a.sol#3-5) has incorrect ERC20 function interface:token.transfer(address,uint256) (0xd67aa6a98e99f979f23bf0da772d113fe6dbe50a.sol#4)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-erc20-interface
+
+Crowdsale.changeDeadline(uint256) (0xd67aa6a98e99f979f23bf0da772d113fe6dbe50a.sol#50-54) should emit an event for: 
+	- deadline = now + durationInMinutes * 60 (0xd67aa6a98e99f979f23bf0da772d113fe6dbe50a.sol#53) 
+Crowdsale.changePrice(uint256) (0xd67aa6a98e99f979f23bf0da772d113fe6dbe50a.sol#61-64) should emit an event for: 
+	- price = _price (0xd67aa6a98e99f979f23bf0da772d113fe6dbe50a.sol#63) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+Crowdsale.Crowdsale(address,uint256,uint256,uint256,address).ifSuccessfulSendTo (0xd67aa6a98e99f979f23bf0da772d113fe6dbe50a.sol#32) lacks a zero-check on :
+		- beneficiary = ifSuccessfulSendTo (0xd67aa6a98e99f979f23bf0da772d113fe6dbe50a.sol#38)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in Crowdsale.fallback() (0xd67aa6a98e99f979f23bf0da772d113fe6dbe50a.sol#106-125):
+	External calls:
+	- tokenReward.transfer(msg.sender,amount / price) (0xd67aa6a98e99f979f23bf0da772d113fe6dbe50a.sol#114)
+	Event emitted after the call(s):
+	- FundTransfer(msg.sender,amount,true) (0xd67aa6a98e99f979f23bf0da772d113fe6dbe50a.sol#115)
+Reentrancy in Crowdsale.fallback() (0xd67aa6a98e99f979f23bf0da772d113fe6dbe50a.sol#106-125):
+	External calls:
+	- tokenReward.transfer(msg.sender,amount / price) (0xd67aa6a98e99f979f23bf0da772d113fe6dbe50a.sol#114)
+	External calls sending eth:
+	- beneficiary.send(amountRaised) (0xd67aa6a98e99f979f23bf0da772d113fe6dbe50a.sol#119)
+	Event emitted after the call(s):
+	- FundTransfer(beneficiary,amountRaised,false) (0xd67aa6a98e99f979f23bf0da772d113fe6dbe50a.sol#122)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+Crowdsale.runCrowdsale() (0xd67aa6a98e99f979f23bf0da772d113fe6dbe50a.sol#80-85) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(now <= deadline) (0xd67aa6a98e99f979f23bf0da772d113fe6dbe50a.sol#82)
+Crowdsale.fallback() (0xd67aa6a98e99f979f23bf0da772d113fe6dbe50a.sol#106-125) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(now <= deadline) (0xd67aa6a98e99f979f23bf0da772d113fe6dbe50a.sol#109)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Version constraint ^0.4.21 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ABIEncoderV2PackedStorage_0.4.x
+	- ExpExponentCleanup
+	- EventStructWrongData
+	- NestedArrayFunctionCallDecoder.
+It is used by:
+	- ^0.4.21 (0xd67aa6a98e99f979f23bf0da772d113fe6dbe50a.sol#1)
+solc-0.4.21 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Contract token (0xd67aa6a98e99f979f23bf0da772d113fe6dbe50a.sol#3-5) is not in CapWords
+Parameter Crowdsale.changePrice(uint256)._price (0xd67aa6a98e99f979f23bf0da772d113fe6dbe50a.sol#61) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in Crowdsale.fallback() (0xd67aa6a98e99f979f23bf0da772d113fe6dbe50a.sol#106-125):
+	External calls:
+	- beneficiary.send(amountRaised) (0xd67aa6a98e99f979f23bf0da772d113fe6dbe50a.sol#119)
+	State variables written after the call(s):
+	- amountRaised = 0 (0xd67aa6a98e99f979f23bf0da772d113fe6dbe50a.sol#121)
+	Event emitted after the call(s):
+	- FundTransfer(beneficiary,amountRaised,false) (0xd67aa6a98e99f979f23bf0da772d113fe6dbe50a.sol#122)
+Reentrancy in Crowdsale.sendToBeneficiary() (0xd67aa6a98e99f979f23bf0da772d113fe6dbe50a.sol#92-99):
+	External calls:
+	- beneficiary.send(amountRaised) (0xd67aa6a98e99f979f23bf0da772d113fe6dbe50a.sol#94)
+	State variables written after the call(s):
+	- amountRaised = 0 (0xd67aa6a98e99f979f23bf0da772d113fe6dbe50a.sol#96)
+	Event emitted after the call(s):
+	- FundTransfer(beneficiary,amountRaised,false) (0xd67aa6a98e99f979f23bf0da772d113fe6dbe50a.sol#97)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+./0xd67aa6a98e99f979f23bf0da772d113fe6dbe50a.sol analyzed (2 contracts with 94 detectors), 15 result(s) found
+
+real	0m1.550s
+user	0m1.297s
+sys	0m0.256s

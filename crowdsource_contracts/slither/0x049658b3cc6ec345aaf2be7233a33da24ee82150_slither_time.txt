@@ -1,0 +1,386 @@
+'solc --version' running
+'solc ./0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol:
+Warning: Contract code size exceeds 24576 bytes (a limit introduced in Spurious Dragon). This contract may not be deployable on mainnet. Consider enabling the optimizer (with a low "runs" value!), turning off revert strings, or using libraries.
+   --> 0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol:454:1:
+    |
+454 | contract Bozu is Context, IERC20, ERC20Ownable {
+    | ^ (Relevant source part starts here and spans across multiple lines).
+
+
+
+Reentrancy in Bozu.GoLive() (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#587-609):
+	External calls:
+	- uniV2Pair = IUniswapV2Factory(_uniV2Router.factory()).createPair(address(this),_uniV2Router.WETH()) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#598)
+	- addLiquidity(balanceOf(address(this)),address(this).balance) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#602)
+		- uniV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#705-712)
+	External calls sending eth:
+	- addLiquidity(balanceOf(address(this)),address(this).balance) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#602)
+		- uniV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#705-712)
+	State variables written after the call(s):
+	- launchSetLiquidityAddress(dead) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#603)
+		- liquidityAddress = address(LPAddress) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#737)
+	Bozu.liquidityAddress (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#471) can be used in cross function reentrancies:
+	- Bozu.addLiquidity(uint256,uint256) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#703-713)
+	- Bozu.constructor() (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#508-536)
+	- Bozu.launchSetLiquidityAddress(address) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#736-739)
+	- live = true (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#607)
+	Bozu.live (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#499) can be used in cross function reentrancies:
+	- Bozu.GoLive() (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#587-609)
+	- Bozu.internalTransfer(address,address,uint256) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#610-669)
+	- Bozu.live (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#499)
+Reentrancy in Bozu.internalTransfer(address,address,uint256) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#610-669):
+	External calls:
+	- taxTokenSwap() (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#642)
+		- uniV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#705-712)
+		- uniV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#695-701)
+		- (success,None) = address(marketingAddress).call{value: ethForMarketing}() (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#682)
+		- (success,None) = address(devAddress).call{value: address(this).balance}() (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#687)
+	External calls sending eth:
+	- taxTokenSwap() (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#642)
+		- uniV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#705-712)
+		- (success,None) = address(marketingAddress).call{value: ethForMarketing}() (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#682)
+		- (success,None) = address(devAddress).call{value: address(this).balance}() (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#687)
+	State variables written after the call(s):
+	- tokenTransfer(from,to,amount) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#668)
+		- liquidityTokens += taxTokens.mul(liquidityTax).div(divForSplitTax) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#719)
+	Bozu.liquidityTokens (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#482) can be used in cross function reentrancies:
+	- Bozu.internalTransfer(address,address,uint256) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#610-669)
+	- Bozu.splitTaxTokens(uint256) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#717-720)
+	- Bozu.taxTokenSwap() (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#670-689)
+	- tokenTransfer(from,to,amount) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#668)
+		- marketingTokens += taxTokens.mul(marketingTax).div(divForSplitTax) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#718)
+	Bozu.marketingTokens (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#481) can be used in cross function reentrancies:
+	- Bozu.internalTransfer(address,address,uint256) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#610-669)
+	- Bozu.splitTaxTokens(uint256) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#717-720)
+	- Bozu.taxTokenSwap() (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#670-689)
+	- tokenTransfer(from,to,amount) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#668)
+		- tokenBalance[sender] -= amount (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#726)
+		- tokenBalance[recipient] += transferTokens (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#727)
+		- tokenBalance[address(this)] += taxTokens (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#728)
+		- tokenBalance[sender] -= amount (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#731)
+		- tokenBalance[recipient] += amount (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#732)
+	Bozu.tokenBalance (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#464) can be used in cross function reentrancies:
+	- Bozu.balanceOf(address) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#550-552)
+	- Bozu.constructor() (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#508-536)
+	- Bozu.tokenTransfer(address,address,uint256) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#721-735)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+Bozu.internalTransfer(address,address,uint256) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#610-669) uses a dangerous strict equality:
+	- block.number == activeTradingBlock.add(x) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#624)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-strict-equalities
+
+Reentrancy in Bozu.taxTokenSwap() (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#670-689):
+	External calls:
+	- swapTokensForETH(amountToSwapForETH) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#676)
+		- uniV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#695-701)
+	State variables written after the call(s):
+	- liquidityTokens = 0 (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#681)
+	Bozu.liquidityTokens (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#482) can be used in cross function reentrancies:
+	- Bozu.internalTransfer(address,address,uint256) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#610-669)
+	- Bozu.splitTaxTokens(uint256) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#717-720)
+	- Bozu.taxTokenSwap() (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#670-689)
+	- marketingTokens = 0 (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#680)
+	Bozu.marketingTokens (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#481) can be used in cross function reentrancies:
+	- Bozu.internalTransfer(address,address,uint256) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#610-669)
+	- Bozu.splitTaxTokens(uint256) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#717-720)
+	- Bozu.taxTokenSwap() (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#670-689)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+Bozu.addLiquidity(uint256,uint256) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#703-713) ignores return value by uniV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#705-712)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+Bozu.allowance(address,address).owner (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#553) shadows:
+	- ERC20Ownable.owner() (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#24-26) (function)
+Bozu.internalApprove(address,address,uint256).owner (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#563) shadows:
+	- ERC20Ownable.owner() (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#24-26) (function)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#local-variable-shadowing
+
+Bozu.setMaxWalletAmount(uint256,uint256) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#800-803) should emit an event for: 
+	- maxWallet = tokenSupply.mul(percent).div(divider) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#801) 
+Bozu.setTaxes(uint256,uint256,uint256,uint256) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#816-821) should emit an event for: 
+	- taxBuyMarketing = buyMarketingTax (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#817) 
+	- taxBuyLiquidity = buyLiquidityTax (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#818) 
+	- taxSellMarketing = sellMarketingTax (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#819) 
+	- taxSellLiquidity = sellLiquidityTax (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#820) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+Bozu.swapTokensForETH(uint256) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#690-702) has external calls inside a loop: path[1] = uniV2Router.WETH() (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#693)
+Bozu.swapTokensForETH(uint256) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#690-702) has external calls inside a loop: uniV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#695-701)
+Bozu.taxTokenSwap() (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#670-689) has external calls inside a loop: (success,None) = address(marketingAddress).call{value: ethForMarketing}() (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#682)
+Bozu.addLiquidity(uint256,uint256) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#703-713) has external calls inside a loop: uniV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#705-712)
+Bozu.taxTokenSwap() (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#670-689) has external calls inside a loop: (success,None) = address(devAddress).call{value: address(this).balance}() (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#687)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation/#calls-inside-a-loop
+
+Reentrancy in Bozu.GoLive() (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#587-609):
+	External calls:
+	- uniV2Pair = IUniswapV2Factory(_uniV2Router.factory()).createPair(address(this),_uniV2Router.WETH()) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#598)
+	State variables written after the call(s):
+	- isContractsExcluded[address(uniV2Pair)] = true (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#599)
+	- isMaxWalletExcluded[address(uniV2Pair)] = true (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#600)
+Reentrancy in Bozu.GoLive() (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#587-609):
+	External calls:
+	- uniV2Pair = IUniswapV2Factory(_uniV2Router.factory()).createPair(address(this),_uniV2Router.WETH()) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#598)
+	- addLiquidity(balanceOf(address(this)),address(this).balance) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#602)
+		- uniV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#705-712)
+	External calls sending eth:
+	- addLiquidity(balanceOf(address(this)),address(this).balance) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#602)
+		- uniV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#705-712)
+	State variables written after the call(s):
+	- launchSetLiquidityAddress(dead) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#603)
+		- isTaxExcluded[liquidityAddress] = true (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#738)
+	- limitsOn = true (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#606)
+	- maxWalletOn = true (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#604)
+	- swapAndLiquifyStatus = true (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#605)
+	- addLiquidity(balanceOf(address(this)),address(this).balance) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#602)
+		- tokenAllowances[owner][spender] = amount (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#566)
+Reentrancy in Bozu.internalTransfer(address,address,uint256) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#610-669):
+	External calls:
+	- taxTokenSwap() (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#642)
+		- uniV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#705-712)
+		- uniV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#695-701)
+		- (success,None) = address(marketingAddress).call{value: ethForMarketing}() (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#682)
+		- (success,None) = address(devAddress).call{value: address(this).balance}() (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#687)
+	External calls sending eth:
+	- taxTokenSwap() (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#642)
+		- uniV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#705-712)
+		- (success,None) = address(marketingAddress).call{value: ethForMarketing}() (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#682)
+		- (success,None) = address(devAddress).call{value: address(this).balance}() (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#687)
+	State variables written after the call(s):
+	- divForSplitTax = marketingTax.add(liquidityTax) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#647)
+	- divForSplitTax = taxBuyMarketing.add(taxBuyLiquidity) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#652)
+	- divForSplitTax = taxSellMarketing.add(taxSellLiquidity) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#656)
+	- divForSplitTax = marketingTax.add(liquidityTax) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#660)
+	- liquidityTax = 0 (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#646)
+	- liquidityTax = taxBuyLiquidity (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#651)
+	- liquidityTax = taxSellLiquidity (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#655)
+	- liquidityTax = 10 (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#659)
+	- liquidityTax = 0 (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#665)
+	- marketingTax = 0 (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#645)
+	- marketingTax = taxBuyMarketing (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#650)
+	- marketingTax = taxSellMarketing (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#654)
+	- marketingTax = 85 (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#658)
+	- marketingTax = 0 (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#664)
+Reentrancy in Bozu.manualBurnTokensFromLP(uint256) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#761-773):
+	External calls:
+	- internalTransfer(uniV2Pair,dead,amountToBurn) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#766)
+		- uniV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#705-712)
+		- uniV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#695-701)
+		- (success,None) = address(marketingAddress).call{value: ethForMarketing}() (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#682)
+		- (success,None) = address(devAddress).call{value: address(this).balance}() (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#687)
+	External calls sending eth:
+	- internalTransfer(uniV2Pair,dead,amountToBurn) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#766)
+		- uniV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#705-712)
+		- (success,None) = address(marketingAddress).call{value: ethForMarketing}() (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#682)
+		- (success,None) = address(devAddress).call{value: address(this).balance}() (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#687)
+	State variables written after the call(s):
+	- totalBurnedTokens = balanceOf(dead) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#768)
+Reentrancy in Bozu.taxTokenSwap() (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#670-689):
+	External calls:
+	- swapTokensForETH(amountToSwapForETH) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#676)
+		- uniV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#695-701)
+	- (success,None) = address(marketingAddress).call{value: ethForMarketing}() (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#682)
+	- addLiquidity(swapLiquidityTokens,ethForLiquidity) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#684)
+		- uniV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#705-712)
+	External calls sending eth:
+	- (success,None) = address(marketingAddress).call{value: ethForMarketing}() (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#682)
+	- addLiquidity(swapLiquidityTokens,ethForLiquidity) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#684)
+		- uniV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#705-712)
+	State variables written after the call(s):
+	- addLiquidity(swapLiquidityTokens,ethForLiquidity) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#684)
+		- tokenAllowances[owner][spender] = amount (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#566)
+Reentrancy in Bozu.transferFrom(address,address,uint256) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#573-578):
+	External calls:
+	- internalTransfer(sender,recipient,amount) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#574)
+		- uniV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#705-712)
+		- uniV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#695-701)
+		- (success,None) = address(marketingAddress).call{value: ethForMarketing}() (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#682)
+		- (success,None) = address(devAddress).call{value: address(this).balance}() (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#687)
+	External calls sending eth:
+	- internalTransfer(sender,recipient,amount) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#574)
+		- uniV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#705-712)
+		- (success,None) = address(marketingAddress).call{value: ethForMarketing}() (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#682)
+		- (success,None) = address(devAddress).call{value: address(this).balance}() (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#687)
+	State variables written after the call(s):
+	- internalApprove(sender,_msgSender(),tokenAllowances[sender][_msgSender()].sub(amount,ERC20: Can not transfer. Amount exceeds allowance)) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#575-576)
+		- tokenAllowances[owner][spender] = amount (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#566)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in Bozu.GoLive() (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#587-609):
+	External calls:
+	- uniV2Pair = IUniswapV2Factory(_uniV2Router.factory()).createPair(address(this),_uniV2Router.WETH()) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#598)
+	- addLiquidity(balanceOf(address(this)),address(this).balance) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#602)
+		- uniV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#705-712)
+	External calls sending eth:
+	- addLiquidity(balanceOf(address(this)),address(this).balance) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#602)
+		- uniV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#705-712)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#567)
+		- addLiquidity(balanceOf(address(this)),address(this).balance) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#602)
+Reentrancy in Bozu.internalTransfer(address,address,uint256) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#610-669):
+	External calls:
+	- taxTokenSwap() (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#642)
+		- uniV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#705-712)
+		- uniV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#695-701)
+		- (success,None) = address(marketingAddress).call{value: ethForMarketing}() (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#682)
+		- (success,None) = address(devAddress).call{value: address(this).balance}() (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#687)
+	External calls sending eth:
+	- taxTokenSwap() (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#642)
+		- uniV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#705-712)
+		- (success,None) = address(marketingAddress).call{value: ethForMarketing}() (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#682)
+		- (success,None) = address(devAddress).call{value: address(this).balance}() (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#687)
+	Event emitted after the call(s):
+	- Transfer(sender,recipient,transferTokens) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#729)
+		- tokenTransfer(from,to,amount) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#668)
+	- Transfer(sender,recipient,amount) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#733)
+		- tokenTransfer(from,to,amount) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#668)
+Reentrancy in Bozu.taxTokenSwap() (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#670-689):
+	External calls:
+	- swapTokensForETH(amountToSwapForETH) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#676)
+		- uniV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#695-701)
+	- (success,None) = address(marketingAddress).call{value: ethForMarketing}() (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#682)
+	- addLiquidity(swapLiquidityTokens,ethForLiquidity) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#684)
+		- uniV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#705-712)
+	External calls sending eth:
+	- (success,None) = address(marketingAddress).call{value: ethForMarketing}() (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#682)
+	- addLiquidity(swapLiquidityTokens,ethForLiquidity) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#684)
+		- uniV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#705-712)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#567)
+		- addLiquidity(swapLiquidityTokens,ethForLiquidity) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#684)
+Reentrancy in Bozu.transferFrom(address,address,uint256) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#573-578):
+	External calls:
+	- internalTransfer(sender,recipient,amount) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#574)
+		- uniV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#705-712)
+		- uniV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#695-701)
+		- (success,None) = address(marketingAddress).call{value: ethForMarketing}() (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#682)
+		- (success,None) = address(devAddress).call{value: address(this).balance}() (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#687)
+	External calls sending eth:
+	- internalTransfer(sender,recipient,amount) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#574)
+		- uniV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#705-712)
+		- (success,None) = address(marketingAddress).call{value: ethForMarketing}() (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#682)
+		- (success,None) = address(devAddress).call{value: address(this).balance}() (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#687)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#567)
+		- internalApprove(sender,_msgSender(),tokenAllowances[sender][_msgSender()].sub(amount,ERC20: Can not transfer. Amount exceeds allowance)) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#575-576)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+Bozu.internalTransfer(address,address,uint256) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#610-669) uses timestamp for comparisons
+	Dangerous comparisons:
+	- isSniper[from] && sniperPenaltyEnd >= block.timestamp (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#657)
+	- require(bool,string)(! isSniper[from] || sniperPenaltyEnd <= block.timestamp,ERC20: Snipers can not transfer till penalty time is over) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#663)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Address.isContract(address) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#332-343) uses assembly
+	- INLINE ASM (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#339-341)
+Address._functionCallWithValue(address,bytes,uint256,string) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#395-418) uses assembly
+	- INLINE ASM (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#410-413)
+Bozu.isContract(address) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#740-747) uses assembly
+	- INLINE ASM (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#743-745)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#assembly-usage
+
+Bozu.internalTransfer(address,address,uint256) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#610-669) compares to a boolean constant:
+	-maxWalletOn == true && ! isMaxWalletExcluded[to] (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#618)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#boolean-equality
+
+Bozu.lockTheSwap() (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#503-507) has costly operations inside a loop:
+	- inSwapAndLiquify = true (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#504)
+Bozu.lockTheSwap() (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#503-507) has costly operations inside a loop:
+	- inSwapAndLiquify = false (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#506)
+Bozu.taxTokenSwap() (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#670-689) has costly operations inside a loop:
+	- marketingTokens = 0 (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#680)
+Bozu.taxTokenSwap() (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#670-689) has costly operations inside a loop:
+	- liquidityTokens = 0 (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#681)
+Bozu.internalTransfer(address,address,uint256) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#610-669) has costly operations inside a loop:
+	- marketingTax = 0 (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#645)
+Bozu.internalTransfer(address,address,uint256) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#610-669) has costly operations inside a loop:
+	- liquidityTax = 0 (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#646)
+Bozu.internalTransfer(address,address,uint256) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#610-669) has costly operations inside a loop:
+	- divForSplitTax = marketingTax.add(liquidityTax) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#647)
+Bozu.splitTaxTokens(uint256) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#717-720) has costly operations inside a loop:
+	- marketingTokens += taxTokens.mul(marketingTax).div(divForSplitTax) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#718)
+Bozu.splitTaxTokens(uint256) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#717-720) has costly operations inside a loop:
+	- liquidityTokens += taxTokens.mul(liquidityTax).div(divForSplitTax) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#719)
+Bozu.internalTransfer(address,address,uint256) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#610-669) has costly operations inside a loop:
+	- marketingTax = taxBuyMarketing (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#650)
+Bozu.internalTransfer(address,address,uint256) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#610-669) has costly operations inside a loop:
+	- liquidityTax = taxBuyLiquidity (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#651)
+Bozu.internalTransfer(address,address,uint256) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#610-669) has costly operations inside a loop:
+	- divForSplitTax = taxBuyMarketing.add(taxBuyLiquidity) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#652)
+Bozu.internalTransfer(address,address,uint256) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#610-669) has costly operations inside a loop:
+	- marketingTax = taxSellMarketing (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#654)
+Bozu.internalTransfer(address,address,uint256) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#610-669) has costly operations inside a loop:
+	- liquidityTax = taxSellLiquidity (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#655)
+Bozu.internalTransfer(address,address,uint256) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#610-669) has costly operations inside a loop:
+	- divForSplitTax = taxSellMarketing.add(taxSellLiquidity) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#656)
+Bozu.internalTransfer(address,address,uint256) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#610-669) has costly operations inside a loop:
+	- marketingTax = 85 (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#658)
+Bozu.internalTransfer(address,address,uint256) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#610-669) has costly operations inside a loop:
+	- liquidityTax = 10 (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#659)
+Bozu.internalTransfer(address,address,uint256) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#610-669) has costly operations inside a loop:
+	- divForSplitTax = marketingTax.add(liquidityTax) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#660)
+Bozu.internalTransfer(address,address,uint256) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#610-669) has costly operations inside a loop:
+	- marketingTax = 0 (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#664)
+Bozu.internalTransfer(address,address,uint256) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#610-669) has costly operations inside a loop:
+	- liquidityTax = 0 (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#665)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#costly-operations-inside-a-loop
+
+Bozu.internalTransfer(address,address,uint256) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#610-669) has a high cyclomatic complexity (13).
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#cyclomatic-complexity
+
+Version constraint ^0.8.9 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- VerbatimInvalidDeduplication
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation.
+It is used by:
+	- ^0.8.9 (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#10)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in Address.sendValue(address,uint256) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#344-356):
+	- (success,None) = recipient.call{value: amount}() (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#351)
+Low level call in Address._functionCallWithValue(address,bytes,uint256,string) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#395-418):
+	- (success,returndata) = target.call{value: weiValue}(data) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#403-405)
+Low level call in Bozu.taxTokenSwap() (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#670-689):
+	- (success,None) = address(marketingAddress).call{value: ethForMarketing}() (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#682)
+	- (success,None) = address(devAddress).call{value: address(this).balance}() (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#687)
+Low level call in Bozu.withdrawStuckETH() (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#754-757):
+	- (success,None) = address(owner()).call{value: address(this).balance}() (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#756)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Function IUniswapV2Router01.WETH() (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#127) is not in mixedCase
+Function IUniswapV2Router02.WETH() (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#218) is not in mixedCase
+Function IUniswapV2Pair.DOMAIN_SEPARATOR() (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#432) is not in mixedCase
+Function IUniswapV2Pair.PERMIT_TYPEHASH() (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#433) is not in mixedCase
+Function IUniswapV2Pair.MINIMUM_LIQUIDITY() (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#439) is not in mixedCase
+Function Bozu.AirDrop(address[],uint256[]) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#579-586) is not in mixedCase
+Function Bozu.GoLive() (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#587-609) is not in mixedCase
+Parameter Bozu.launchSetLiquidityAddress(address).LPAddress (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#736) is not in mixedCase
+Constant Bozu.tokenName (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#458) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant Bozu.tokenSymbol (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#459) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant Bozu.tokenDecimal (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#460) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant Bozu.tokenSupply (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#461) is not in UPPER_CASE_WITH_UNDERSCORES
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Bozu.taxSellTreasury (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#491) is never used in Bozu (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#454-838)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-state-variable
+
+Bozu.dead (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#474) should be constant 
+Bozu.taxSellTreasury (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#491) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+
+Bozu.devAddress (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#473) should be immutable 
+Bozu.marketingAddress (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#472) should be immutable 
+Bozu.minTaxSwap (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#480) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+
+The function Bozu.manualBurnTokensFromLP(uint256) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#761-773) reads liquidityPairBalance = this.balanceOf(uniV2Pair) (0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol#763) with `this` which adds an extra STATICCALL.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#public-variable-read-in-external-context
+./0x049658b3cc6ec345aaf2be7233a33da24ee82150.sol analyzed (10 contracts with 94 detectors), 74 result(s) found
+
+real	0m4.794s
+user	0m4.621s
+sys	0m0.174s

@@ -1,0 +1,495 @@
+'solc --version' running
+'solc ./0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol:
+./0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol:294:13: Warning: Failure condition of 'send' ignored. Consider using 'transfer' instead.
+            winner.send(silver[1]);
+            ^--------------------^
+./0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol:308:17: Warning: Failure condition of 'send' ignored. Consider using 'transfer' instead.
+                addresses[k].send(goldenPrize);
+                ^----------------------------^
+./0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol:325:9: Warning: Failure condition of 'send' ignored. Consider using 'transfer' instead.
+        players[winnerIdx].send(brilliant[1]);
+        ^-----------------------------------^
+./0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol:335:9: Warning: Failure condition of 'send' ignored. Consider using 'transfer' instead.
+        msg.sender.send(txCost);
+        ^---------------------^
+./0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol:339:9: Warning: Failure condition of 'send' ignored. Consider using 'transfer' instead.
+        owner.send(fee);
+        ^-------------^
+
+
+Storage (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#58-112) contract sets array length with a user-controlled value:
+	- level[amount[addr]].push(addr) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#75)
+Lottery10ETH (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#197-377) contract sets array length with a user-controlled value:
+	- players.push(msg.sender) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#269)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#array-length-assignment
+
+Lottery10ETH.drawing() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#281-342) uses a weak PRNG: "winner = players[uint256((blockhash(uint256)(futureblock - 1 - i))) % players.length] (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#293)" 
+Lottery10ETH.drawing() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#281-342) uses a weak PRNG: "uint256(blockhash(uint256)(futureblock - j)) % 2 == 0 (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#320)" 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#weak-PRNG
+
+Reentrancy in Lottery10ETH.drawing() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#281-342):
+	External calls:
+	- WT.emitEvent(winner) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#295)
+	- x.count() < gold[0] (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#301)
+	- goldenWinners = x.count() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#302)
+	- goldenPrize = gold[0] * gold[1] / x.count() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#303)
+	- addresses = x.draw(goldenWinners) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#306)
+	- RS.sendBonus(addresses[k]) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#309)
+	- WT.emitEvent(addresses[k]) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#310)
+	- WT.emitEvent(players[winnerIdx]) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#326)
+	External calls sending eth:
+	- winner.send(silver[1]) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#294)
+	- addresses[k].send(goldenPrize) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#308)
+	- players[winnerIdx].send(brilliant[1]) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#325)
+	State variables written after the call(s):
+	- futureblock = 0 (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#330)
+	Lottery10ETH.futureblock (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#210) can be used in cross function reentrancies:
+	- Lottery10ETH.drawing() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#281-342)
+	- Lottery10ETH.futureblock (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#210)
+	- gameCount ++ (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#332)
+	Lottery10ETH.gameCount (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#212) can be used in cross function reentrancies:
+	- Lottery10ETH.constructor(address) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#235-241)
+	- Lottery10ETH.drawing() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#281-342)
+	- Lottery10ETH.fallback() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#243-279)
+	- Lottery10ETH.gameCount (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#212)
+	- players.length = 0 (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#329)
+	Lottery10ETH.players (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#206) can be used in cross function reentrancies:
+	- Lottery10ETH.amountOfPlayers() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#364-366)
+	- Lottery10ETH.drawing() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#281-342)
+	- Lottery10ETH.fallback() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#243-279)
+	- Lottery10ETH.players (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#206)
+	- x = new Storage() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#331)
+	Lottery10ETH.x (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#199) can be used in cross function reentrancies:
+	- Lottery10ETH.constructor(address) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#235-241)
+	- Lottery10ETH.drawing() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#281-342)
+	- Lottery10ETH.fallback() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#243-279)
+	- Lottery10ETH.x (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#199)
+Reentrancy in Lottery10ETH.fallback() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#243-279):
+	External calls:
+	- drawing() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#250)
+		- WT.emitEvent(winner) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#295)
+		- x.count() < gold[0] (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#301)
+		- goldenWinners = x.count() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#302)
+		- goldenPrize = gold[0] * gold[1] / x.count() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#303)
+		- addresses = x.draw(goldenWinners) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#306)
+		- RS.sendBonus(addresses[k]) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#309)
+		- WT.emitEvent(addresses[k]) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#310)
+		- WT.emitEvent(players[winnerIdx]) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#326)
+	- RS.addReferrer(bytesToAddress(bytes(msg.data))) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#266)
+	External calls sending eth:
+	- drawing() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#250)
+		- winner.send(silver[1]) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#294)
+		- addresses[k].send(goldenPrize) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#308)
+		- players[winnerIdx].send(brilliant[1]) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#325)
+		- msg.sender.send(txCost) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#335)
+		- owner.send(fee) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#339)
+	- msg.sender.transfer(msg.value - PRICE) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#262)
+	State variables written after the call(s):
+	- players.push(msg.sender) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#269)
+	Lottery10ETH.players (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#206) can be used in cross function reentrancies:
+	- Lottery10ETH.amountOfPlayers() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#364-366)
+	- Lottery10ETH.drawing() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#281-342)
+	- Lottery10ETH.fallback() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#243-279)
+	- Lottery10ETH.players (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#206)
+Reentrancy in Lottery10ETH.fallback() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#243-279):
+	External calls:
+	- drawing() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#250)
+		- WT.emitEvent(winner) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#295)
+		- x.count() < gold[0] (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#301)
+		- goldenWinners = x.count() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#302)
+		- goldenPrize = gold[0] * gold[1] / x.count() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#303)
+		- addresses = x.draw(goldenWinners) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#306)
+		- RS.sendBonus(addresses[k]) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#309)
+		- WT.emitEvent(addresses[k]) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#310)
+		- WT.emitEvent(players[winnerIdx]) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#326)
+	- RS.addReferrer(bytesToAddress(bytes(msg.data))) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#266)
+	- x.purchase(msg.sender) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#270)
+	- RS.newTicket() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#271)
+	- LT.emitEvent(msg.sender) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#272)
+	- drawing() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#276)
+		- WT.emitEvent(winner) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#295)
+		- x.count() < gold[0] (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#301)
+		- goldenWinners = x.count() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#302)
+		- goldenPrize = gold[0] * gold[1] / x.count() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#303)
+		- addresses = x.draw(goldenWinners) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#306)
+		- RS.sendBonus(addresses[k]) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#309)
+		- WT.emitEvent(addresses[k]) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#310)
+		- WT.emitEvent(players[winnerIdx]) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#326)
+	External calls sending eth:
+	- drawing() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#250)
+		- winner.send(silver[1]) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#294)
+		- addresses[k].send(goldenPrize) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#308)
+		- players[winnerIdx].send(brilliant[1]) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#325)
+		- msg.sender.send(txCost) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#335)
+		- owner.send(fee) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#339)
+	- msg.sender.transfer(msg.value - PRICE) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#262)
+	- drawing() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#276)
+		- winner.send(silver[1]) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#294)
+		- addresses[k].send(goldenPrize) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#308)
+		- players[winnerIdx].send(brilliant[1]) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#325)
+		- msg.sender.send(txCost) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#335)
+		- owner.send(fee) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#339)
+	State variables written after the call(s):
+	- drawing() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#276)
+		- futureblock = block.number + 20 (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#286)
+		- futureblock = 0 (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#330)
+	Lottery10ETH.futureblock (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#210) can be used in cross function reentrancies:
+	- Lottery10ETH.drawing() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#281-342)
+	- Lottery10ETH.futureblock (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#210)
+	- drawing() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#276)
+		- gameCount ++ (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#332)
+	Lottery10ETH.gameCount (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#212) can be used in cross function reentrancies:
+	- Lottery10ETH.constructor(address) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#235-241)
+	- Lottery10ETH.drawing() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#281-342)
+	- Lottery10ETH.fallback() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#243-279)
+	- Lottery10ETH.gameCount (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#212)
+	- drawing() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#276)
+		- players.length = 0 (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#329)
+	Lottery10ETH.players (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#206) can be used in cross function reentrancies:
+	- Lottery10ETH.amountOfPlayers() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#364-366)
+	- Lottery10ETH.drawing() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#281-342)
+	- Lottery10ETH.fallback() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#243-279)
+	- Lottery10ETH.players (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#206)
+	- drawing() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#276)
+		- x = new Storage() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#331)
+	Lottery10ETH.x (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#199) can be used in cross function reentrancies:
+	- Lottery10ETH.constructor(address) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#235-241)
+	- Lottery10ETH.drawing() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#281-342)
+	- Lottery10ETH.fallback() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#243-279)
+	- Lottery10ETH.x (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#199)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+RefStorage.newTicket() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#154-164) ignores return value by token.transfer(tx.origin,prize) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#158)
+RefStorage.newTicket() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#154-164) ignores return value by token.transfer(players[tx.origin].referrer,prize) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#160)
+RefStorage.sendBonus(address) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#175-181) ignores return value by token.transfer(winner,prize) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#177)
+RefStorage.withdrawERC20(address,address) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#183-186) ignores return value by IERC20(ERC20Token).transfer(recipient,amount) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#185)
+Lottery10ETH.withdrawERC20(address,address) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#352-355) ignores return value by IERC20(ERC20Token).transfer(recipient,amount) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#354)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+Lottery10ETH.bytesToAddress(bytes) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#357-362) is declared view but contains assembly code
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#constant-functions-using-assembly-code
+
+Lottery10ETH.drawing() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#281-342) uses a dangerous strict equality:
+	- uint256(blockhash(uint256)(futureblock - j)) % 2 == 0 (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#320)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-strict-equalities
+
+RefStorage.newTicket() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#154-164) uses tx.origin for authorization: players[tx.origin].referrer != address(0) && (players[tx.origin].tickets - players[tx.origin].checkpoint) % interval == 0 (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#156)
+RefStorage.addReferrer(address) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#166-173) uses tx.origin for authorization: players[tx.origin].referrer == address(0) && players[referrer].tickets >= interval && referrer != tx.origin (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#167)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-usage-of-txorigin
+
+Lottery10ETH.drawing() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#281-342) ignores return value by winner.send(silver[1]) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#294)
+Lottery10ETH.drawing() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#281-342) ignores return value by addresses[k].send(goldenPrize) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#308)
+Lottery10ETH.drawing() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#281-342) ignores return value by players[winnerIdx].send(brilliant[1]) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#325)
+Lottery10ETH.drawing() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#281-342) ignores return value by msg.sender.send(txCost) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#335)
+Lottery10ETH.drawing() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#281-342) ignores return value by owner.send(fee) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#339)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-send
+
+Lottery10ETH.drawing().winnerIdx (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#316) is a local variable never initialized
+Storage.draw(uint256).winnersCount (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#96) is a local variable never initialized
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#uninitialized-local-variables
+
+RefStorage.changePrize(uint256) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#146-148) should emit an event for: 
+	- prize = newPrize (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#147) 
+RefStorage.changeInterval(uint256) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#150-152) should emit an event for: 
+	- interval = newInterval (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#151) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+Reentrancy in Lottery10ETH.drawing() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#281-342):
+	External calls:
+	- WT.emitEvent(winner) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#295)
+	External calls sending eth:
+	- winner.send(silver[1]) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#294)
+	Event emitted after the call(s):
+	- SilverWinner(winner,silver[1],gameCount) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#296)
+Reentrancy in Lottery10ETH.drawing() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#281-342):
+	External calls:
+	- WT.emitEvent(winner) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#295)
+	- x.count() < gold[0] (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#301)
+	- goldenWinners = x.count() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#302)
+	- goldenPrize = gold[0] * gold[1] / x.count() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#303)
+	- addresses = x.draw(goldenWinners) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#306)
+	- RS.sendBonus(addresses[k]) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#309)
+	- WT.emitEvent(addresses[k]) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#310)
+	External calls sending eth:
+	- winner.send(silver[1]) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#294)
+	- addresses[k].send(goldenPrize) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#308)
+	Event emitted after the call(s):
+	- GoldenWinner(addresses[k],goldenPrize,gameCount) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#311)
+Reentrancy in Lottery10ETH.drawing() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#281-342):
+	External calls:
+	- WT.emitEvent(winner) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#295)
+	- x.count() < gold[0] (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#301)
+	- goldenWinners = x.count() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#302)
+	- goldenPrize = gold[0] * gold[1] / x.count() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#303)
+	- addresses = x.draw(goldenWinners) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#306)
+	- RS.sendBonus(addresses[k]) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#309)
+	- WT.emitEvent(addresses[k]) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#310)
+	- WT.emitEvent(players[winnerIdx]) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#326)
+	External calls sending eth:
+	- winner.send(silver[1]) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#294)
+	- addresses[k].send(goldenPrize) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#308)
+	- players[winnerIdx].send(brilliant[1]) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#325)
+	Event emitted after the call(s):
+	- BrilliantWinner(players[winnerIdx],brilliant[1],gameCount) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#327)
+Reentrancy in Lottery10ETH.drawing() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#281-342):
+	External calls:
+	- WT.emitEvent(winner) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#295)
+	- x.count() < gold[0] (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#301)
+	- goldenWinners = x.count() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#302)
+	- goldenPrize = gold[0] * gold[1] / x.count() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#303)
+	- addresses = x.draw(goldenWinners) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#306)
+	- RS.sendBonus(addresses[k]) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#309)
+	- WT.emitEvent(addresses[k]) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#310)
+	- WT.emitEvent(players[winnerIdx]) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#326)
+	External calls sending eth:
+	- winner.send(silver[1]) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#294)
+	- addresses[k].send(goldenPrize) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#308)
+	- players[winnerIdx].send(brilliant[1]) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#325)
+	- msg.sender.send(txCost) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#335)
+	Event emitted after the call(s):
+	- txCostRefunded(msg.sender,txCost) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#336)
+Reentrancy in Lottery10ETH.drawing() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#281-342):
+	External calls:
+	- WT.emitEvent(winner) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#295)
+	- x.count() < gold[0] (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#301)
+	- goldenWinners = x.count() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#302)
+	- goldenPrize = gold[0] * gold[1] / x.count() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#303)
+	- addresses = x.draw(goldenWinners) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#306)
+	- RS.sendBonus(addresses[k]) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#309)
+	- WT.emitEvent(addresses[k]) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#310)
+	- WT.emitEvent(players[winnerIdx]) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#326)
+	External calls sending eth:
+	- winner.send(silver[1]) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#294)
+	- addresses[k].send(goldenPrize) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#308)
+	- players[winnerIdx].send(brilliant[1]) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#325)
+	- msg.sender.send(txCost) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#335)
+	- owner.send(fee) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#339)
+	Event emitted after the call(s):
+	- FeePayed(owner,fee) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#340)
+Reentrancy in Lottery10ETH.fallback() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#243-279):
+	External calls:
+	- drawing() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#250)
+		- WT.emitEvent(winner) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#295)
+		- x.count() < gold[0] (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#301)
+		- goldenWinners = x.count() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#302)
+		- goldenPrize = gold[0] * gold[1] / x.count() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#303)
+		- addresses = x.draw(goldenWinners) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#306)
+		- RS.sendBonus(addresses[k]) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#309)
+		- WT.emitEvent(addresses[k]) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#310)
+		- WT.emitEvent(players[winnerIdx]) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#326)
+	- RS.addReferrer(bytesToAddress(bytes(msg.data))) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#266)
+	- x.purchase(msg.sender) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#270)
+	- RS.newTicket() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#271)
+	- LT.emitEvent(msg.sender) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#272)
+	External calls sending eth:
+	- drawing() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#250)
+		- winner.send(silver[1]) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#294)
+		- addresses[k].send(goldenPrize) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#308)
+		- players[winnerIdx].send(brilliant[1]) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#325)
+		- msg.sender.send(txCost) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#335)
+		- owner.send(fee) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#339)
+	- msg.sender.transfer(msg.value - PRICE) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#262)
+	Event emitted after the call(s):
+	- NewPlayer(msg.sender,gameCount) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#273)
+Reentrancy in Lottery10ETH.fallback() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#243-279):
+	External calls:
+	- drawing() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#250)
+		- WT.emitEvent(winner) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#295)
+		- x.count() < gold[0] (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#301)
+		- goldenWinners = x.count() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#302)
+		- goldenPrize = gold[0] * gold[1] / x.count() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#303)
+		- addresses = x.draw(goldenWinners) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#306)
+		- RS.sendBonus(addresses[k]) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#309)
+		- WT.emitEvent(addresses[k]) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#310)
+		- WT.emitEvent(players[winnerIdx]) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#326)
+	- RS.addReferrer(bytesToAddress(bytes(msg.data))) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#266)
+	- x.purchase(msg.sender) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#270)
+	- RS.newTicket() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#271)
+	- LT.emitEvent(msg.sender) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#272)
+	- drawing() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#276)
+		- WT.emitEvent(winner) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#295)
+		- x.count() < gold[0] (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#301)
+		- goldenWinners = x.count() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#302)
+		- goldenPrize = gold[0] * gold[1] / x.count() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#303)
+		- addresses = x.draw(goldenWinners) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#306)
+		- RS.sendBonus(addresses[k]) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#309)
+		- WT.emitEvent(addresses[k]) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#310)
+		- WT.emitEvent(players[winnerIdx]) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#326)
+	External calls sending eth:
+	- drawing() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#250)
+		- winner.send(silver[1]) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#294)
+		- addresses[k].send(goldenPrize) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#308)
+		- players[winnerIdx].send(brilliant[1]) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#325)
+		- msg.sender.send(txCost) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#335)
+		- owner.send(fee) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#339)
+	- msg.sender.transfer(msg.value - PRICE) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#262)
+	- drawing() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#276)
+		- winner.send(silver[1]) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#294)
+		- addresses[k].send(goldenPrize) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#308)
+		- players[winnerIdx].send(brilliant[1]) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#325)
+		- msg.sender.send(txCost) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#335)
+		- owner.send(fee) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#339)
+	Event emitted after the call(s):
+	- BrilliantWinner(players[winnerIdx],brilliant[1],gameCount) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#327)
+		- drawing() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#276)
+	- FeePayed(owner,fee) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#340)
+		- drawing() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#276)
+	- GoldenWinner(addresses[k],goldenPrize,gameCount) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#311)
+		- drawing() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#276)
+	- SilverWinner(winner,silver[1],gameCount) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#296)
+		- drawing() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#276)
+	- txCostRefunded(msg.sender,txCost) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#336)
+		- drawing() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#276)
+Reentrancy in RefStorage.newTicket() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#154-164):
+	External calls:
+	- token.balanceOf(address(this)) >= prize * 2 (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#157)
+	- token.transfer(tx.origin,prize) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#158)
+	Event emitted after the call(s):
+	- BonusSent(tx.origin,prize) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#159)
+Reentrancy in RefStorage.newTicket() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#154-164):
+	External calls:
+	- token.balanceOf(address(this)) >= prize * 2 (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#157)
+	- token.transfer(tx.origin,prize) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#158)
+	- token.transfer(players[tx.origin].referrer,prize) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#160)
+	Event emitted after the call(s):
+	- BonusSent(players[tx.origin].referrer,prize) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#161)
+Reentrancy in RefStorage.sendBonus(address) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#175-181):
+	External calls:
+	- token.balanceOf(address(this)) >= prize (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#176)
+	- token.transfer(winner,prize) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#177)
+	Event emitted after the call(s):
+	- BonusSent(winner,prize) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#179)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+Lottery10ETH.bytesToAddress(bytes) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#357-362) uses assembly
+	- INLINE ASM (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#358-361)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#assembly-usage
+
+Version constraint 0.4.25 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ABIEncoderV2PackedStorage_0.4.x.
+It is used by:
+	- 0.4.25 (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#1)
+solc-0.4.25 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Parameter RefStorage.withdrawERC20(address,address).ERC20Token (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#183) is not in mixedCase
+Event Lottery10ETH.txCostRefunded(address,uint256) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#224) is not in CapWords
+Parameter Lottery10ETH.withdrawERC20(address,address).ERC20Token (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#352) is not in mixedCase
+Variable Lottery10ETH.RS (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#200) is not in mixedCase
+Variable Lottery10ETH.LT (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#201) is not in mixedCase
+Variable Lottery10ETH.WT (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#202) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in Lottery10ETH.drawing() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#281-342):
+	External calls:
+	- winner.send(silver[1]) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#294)
+	Event emitted after the call(s):
+	- SilverWinner(winner,silver[1],gameCount) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#296)
+Reentrancy in Lottery10ETH.drawing() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#281-342):
+	External calls:
+	- winner.send(silver[1]) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#294)
+	- addresses[k].send(goldenPrize) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#308)
+	Event emitted after the call(s):
+	- GoldenWinner(addresses[k],goldenPrize,gameCount) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#311)
+Reentrancy in Lottery10ETH.drawing() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#281-342):
+	External calls:
+	- winner.send(silver[1]) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#294)
+	- addresses[k].send(goldenPrize) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#308)
+	- players[winnerIdx].send(brilliant[1]) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#325)
+	State variables written after the call(s):
+	- futureblock = 0 (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#330)
+	- gameCount ++ (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#332)
+	- players.length = 0 (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#329)
+	- x = new Storage() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#331)
+	Event emitted after the call(s):
+	- BrilliantWinner(players[winnerIdx],brilliant[1],gameCount) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#327)
+Reentrancy in Lottery10ETH.drawing() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#281-342):
+	External calls:
+	- winner.send(silver[1]) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#294)
+	- addresses[k].send(goldenPrize) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#308)
+	- players[winnerIdx].send(brilliant[1]) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#325)
+	- msg.sender.send(txCost) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#335)
+	Event emitted after the call(s):
+	- txCostRefunded(msg.sender,txCost) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#336)
+Reentrancy in Lottery10ETH.drawing() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#281-342):
+	External calls:
+	- winner.send(silver[1]) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#294)
+	- addresses[k].send(goldenPrize) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#308)
+	- players[winnerIdx].send(brilliant[1]) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#325)
+	- msg.sender.send(txCost) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#335)
+	- owner.send(fee) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#339)
+	Event emitted after the call(s):
+	- FeePayed(owner,fee) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#340)
+Reentrancy in Lottery10ETH.fallback() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#243-279):
+	External calls:
+	- drawing() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#250)
+		- winner.send(silver[1]) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#294)
+		- addresses[k].send(goldenPrize) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#308)
+		- players[winnerIdx].send(brilliant[1]) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#325)
+		- msg.sender.send(txCost) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#335)
+		- owner.send(fee) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#339)
+	- msg.sender.transfer(msg.value - PRICE) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#262)
+	State variables written after the call(s):
+	- players.push(msg.sender) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#269)
+	Event emitted after the call(s):
+	- NewPlayer(msg.sender,gameCount) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#273)
+Reentrancy in Lottery10ETH.fallback() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#243-279):
+	External calls:
+	- drawing() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#250)
+		- winner.send(silver[1]) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#294)
+		- addresses[k].send(goldenPrize) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#308)
+		- players[winnerIdx].send(brilliant[1]) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#325)
+		- msg.sender.send(txCost) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#335)
+		- owner.send(fee) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#339)
+	- msg.sender.transfer(msg.value - PRICE) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#262)
+	- drawing() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#276)
+		- winner.send(silver[1]) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#294)
+		- addresses[k].send(goldenPrize) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#308)
+		- players[winnerIdx].send(brilliant[1]) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#325)
+		- msg.sender.send(txCost) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#335)
+		- owner.send(fee) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#339)
+	State variables written after the call(s):
+	- drawing() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#276)
+		- futureblock = block.number + 20 (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#286)
+		- futureblock = 0 (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#330)
+	- drawing() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#276)
+		- gameCount ++ (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#332)
+	- drawing() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#276)
+		- players.length = 0 (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#329)
+	- drawing() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#276)
+		- x = new Storage() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#331)
+	Event emitted after the call(s):
+	- BrilliantWinner(players[winnerIdx],brilliant[1],gameCount) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#327)
+		- drawing() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#276)
+	- FeePayed(owner,fee) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#340)
+		- drawing() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#276)
+	- GoldenWinner(addresses[k],goldenPrize,gameCount) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#311)
+		- drawing() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#276)
+	- SilverWinner(winner,silver[1],gameCount) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#296)
+		- drawing() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#276)
+	- txCostRefunded(msg.sender,txCost) (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#336)
+		- drawing() (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#276)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+Lottery10ETH.limit (0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol#208) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+./0x150dbfc384ba5c13c304efd2efee73cc57cc2c16.sol analyzed (7 contracts with 94 detectors), 52 result(s) found
+
+real	0m3.240s
+user	0m2.996s
+sys	0m0.246s

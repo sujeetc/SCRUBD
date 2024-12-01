@@ -1,0 +1,152 @@
+'solc --version' running
+'solc ./0xf1add8bf553d0066be17768d6816f3730c476237.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0xf1add8bf553d0066be17768d6816f3730c476237.sol:
+./0xf1add8bf553d0066be17768d6816f3730c476237.sol:71:9: Warning: Failure condition of 'send' ignored. Consider using 'transfer' instead.
+        processing.send(msg.value / 33);
+        ^-----------------------------^
+./0xf1add8bf553d0066be17768d6816f3730c476237.sol:73:13: Warning: Failure condition of 'send' ignored. Consider using 'transfer' instead.
+            _referrer.send(msg.value / 20);
+            ^----------------------------^
+./0xf1add8bf553d0066be17768d6816f3730c476237.sol:164:9: Warning: Return value of low-level calls not used.
+        smartolution.call.value(msg.value)();
+        ^----------------------------------^
+./0xf1add8bf553d0066be17768d6816f3730c476237.sol:169:9: Warning: Failure condition of 'send' ignored. Consider using 'transfer' instead.
+        owner.send(address(this).balance);
+        ^-------------------------------^
+
+
+Participant.processPayment() (0xf1add8bf553d0066be17768d6816f3730c476237.sol#158-172) sends eth to arbitrary user
+	Dangerous calls:
+	- owner.send(address(this).balance) (0xf1add8bf553d0066be17768d6816f3730c476237.sol#169)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+Reentrancy in EasySmartolution.processPayment(address) (0xf1add8bf553d0066be17768d6816f3730c476237.sol#90-99):
+	External calls:
+	- done = participant.processPayment.value(participant.daily())() (0xf1add8bf553d0066be17768d6816f3730c476237.sol#93)
+	State variables written after the call(s):
+	- participants[_address] = address(0) (0xf1add8bf553d0066be17768d6816f3730c476237.sol#96)
+	EasySmartolution.participants (0xf1add8bf553d0066be17768d6816f3730c476237.sol#41) can be used in cross function reentrancies:
+	- EasySmartolution.addParticipant(address,address) (0xf1add8bf553d0066be17768d6816f3730c476237.sol#64-77)
+	- EasySmartolution.fallback() (0xf1add8bf553d0066be17768d6816f3730c476237.sol#50-62)
+	- EasySmartolution.getOut() (0xf1add8bf553d0066be17768d6816f3730c476237.sol#101-116)
+	- EasySmartolution.participants (0xf1add8bf553d0066be17768d6816f3730c476237.sol#41)
+	- EasySmartolution.processPayment(address) (0xf1add8bf553d0066be17768d6816f3730c476237.sol#90-99)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+Reentrancy in EasySmartolution.getOut() (0xf1add8bf553d0066be17768d6816f3730c476237.sol#101-116):
+	External calls:
+	- (value,index,None) = SmartolutionInterface(smartolution).users(address(participant)) (0xf1add8bf553d0066be17768d6816f3730c476237.sol#106)
+	State variables written after the call(s):
+	- participants[msg.sender] = address(0) (0xf1add8bf553d0066be17768d6816f3730c476237.sol#112)
+	EasySmartolution.participants (0xf1add8bf553d0066be17768d6816f3730c476237.sol#41) can be used in cross function reentrancies:
+	- EasySmartolution.addParticipant(address,address) (0xf1add8bf553d0066be17768d6816f3730c476237.sol#64-77)
+	- EasySmartolution.fallback() (0xf1add8bf553d0066be17768d6816f3730c476237.sol#50-62)
+	- EasySmartolution.getOut() (0xf1add8bf553d0066be17768d6816f3730c476237.sol#101-116)
+	- EasySmartolution.participants (0xf1add8bf553d0066be17768d6816f3730c476237.sol#41)
+	- EasySmartolution.processPayment(address) (0xf1add8bf553d0066be17768d6816f3730c476237.sol#90-99)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+Participant.processPayment() (0xf1add8bf553d0066be17768d6816f3730c476237.sol#158-172) ignores return value by smartolution.call.value(msg.value)() (0xf1add8bf553d0066be17768d6816f3730c476237.sol#164)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-low-level-calls
+
+EasySmartolution.addParticipant(address,address) (0xf1add8bf553d0066be17768d6816f3730c476237.sol#64-77) ignores return value by processing.send(msg.value / 33) (0xf1add8bf553d0066be17768d6816f3730c476237.sol#71)
+EasySmartolution.addParticipant(address,address) (0xf1add8bf553d0066be17768d6816f3730c476237.sol#64-77) ignores return value by _referrer.send(msg.value / 20) (0xf1add8bf553d0066be17768d6816f3730c476237.sol#73)
+Participant.processPayment() (0xf1add8bf553d0066be17768d6816f3730c476237.sol#158-172) ignores return value by owner.send(address(this).balance) (0xf1add8bf553d0066be17768d6816f3730c476237.sol#169)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-send
+
+EasySmartolution.getOut() (0xf1add8bf553d0066be17768d6816f3730c476237.sol#101-116) ignores return value by (value,index,None) = SmartolutionInterface(smartolution).users(address(participant)) (0xf1add8bf553d0066be17768d6816f3730c476237.sol#106)
+Participant.processPayment() (0xf1add8bf553d0066be17768d6816f3730c476237.sol#158-172) ignores return value by (None,indexBefore,None) = SmartolutionInterface(smartolution).users(address(this)) (0xf1add8bf553d0066be17768d6816f3730c476237.sol#163)
+Participant.processPayment() (0xf1add8bf553d0066be17768d6816f3730c476237.sol#158-172) ignores return value by (None,index,None) = SmartolutionInterface(smartolution).users(address(this)) (0xf1add8bf553d0066be17768d6816f3730c476237.sol#165)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+EasySmartolution.constructor(address)._processing (0xf1add8bf553d0066be17768d6816f3730c476237.sol#46) lacks a zero-check on :
+		- processing = _processing (0xf1add8bf553d0066be17768d6816f3730c476237.sol#47)
+EasySmartolutionRef.setReferrer(address)._referrer (0xf1add8bf553d0066be17768d6816f3730c476237.sol#126) lacks a zero-check on :
+		- referrer = _referrer (0xf1add8bf553d0066be17768d6816f3730c476237.sol#128)
+EasySmartolutionRef.setSmartolution(address)._smartolution (0xf1add8bf553d0066be17768d6816f3730c476237.sol#131) lacks a zero-check on :
+		- smartolution = _smartolution (0xf1add8bf553d0066be17768d6816f3730c476237.sol#133)
+Participant.constructor(address,uint256)._owner (0xf1add8bf553d0066be17768d6816f3730c476237.sol#151) lacks a zero-check on :
+		- owner = _owner (0xf1add8bf553d0066be17768d6816f3730c476237.sol#152)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in EasySmartolution.addParticipant(address,address) (0xf1add8bf553d0066be17768d6816f3730c476237.sol#64-77):
+	External calls:
+	- processPayment(_address) (0xf1add8bf553d0066be17768d6816f3730c476237.sol#69)
+		- done = participant.processPayment.value(participant.daily())() (0xf1add8bf553d0066be17768d6816f3730c476237.sol#93)
+	External calls sending eth:
+	- processPayment(_address) (0xf1add8bf553d0066be17768d6816f3730c476237.sol#69)
+		- done = participant.processPayment.value(participant.daily())() (0xf1add8bf553d0066be17768d6816f3730c476237.sol#93)
+	- processing.send(msg.value / 33) (0xf1add8bf553d0066be17768d6816f3730c476237.sol#71)
+	- _referrer.send(msg.value / 20) (0xf1add8bf553d0066be17768d6816f3730c476237.sol#73)
+	Event emitted after the call(s):
+	- ParticipantAdded(_address) (0xf1add8bf553d0066be17768d6816f3730c476237.sol#76)
+Reentrancy in EasySmartolution.addReferrer(address) (0xf1add8bf553d0066be17768d6816f3730c476237.sol#79-88):
+	External calls:
+	- refContract.setReferrer(_address) (0xf1add8bf553d0066be17768d6816f3730c476237.sol#84)
+	- refContract.setSmartolution(address(this)) (0xf1add8bf553d0066be17768d6816f3730c476237.sol#85)
+	Event emitted after the call(s):
+	- ReferrerAdded(address(refContract),_address) (0xf1add8bf553d0066be17768d6816f3730c476237.sol#87)
+Reentrancy in EasySmartolution.getOut() (0xf1add8bf553d0066be17768d6816f3730c476237.sol#101-116):
+	External calls:
+	- (value,index,None) = SmartolutionInterface(smartolution).users(address(participant)) (0xf1add8bf553d0066be17768d6816f3730c476237.sol#106)
+	Event emitted after the call(s):
+	- ParticipantRemoved(msg.sender) (0xf1add8bf553d0066be17768d6816f3730c476237.sol#113)
+Reentrancy in EasySmartolution.processPayment(address) (0xf1add8bf553d0066be17768d6816f3730c476237.sol#90-99):
+	External calls:
+	- done = participant.processPayment.value(participant.daily())() (0xf1add8bf553d0066be17768d6816f3730c476237.sol#93)
+	Event emitted after the call(s):
+	- ParticipantRemoved(_address) (0xf1add8bf553d0066be17768d6816f3730c476237.sol#97)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+Version constraint ^0.4.25 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ABIEncoderV2PackedStorage_0.4.x.
+It is used by:
+	- ^0.4.25 (0xf1add8bf553d0066be17768d6816f3730c476237.sol#1)
+solc-0.4.25 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in Participant.processPayment() (0xf1add8bf553d0066be17768d6816f3730c476237.sol#158-172):
+	- smartolution.call.value(msg.value)() (0xf1add8bf553d0066be17768d6816f3730c476237.sol#164)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Parameter EasySmartolution.addParticipant(address,address)._address (0xf1add8bf553d0066be17768d6816f3730c476237.sol#64) is not in mixedCase
+Parameter EasySmartolution.addParticipant(address,address)._referrer (0xf1add8bf553d0066be17768d6816f3730c476237.sol#64) is not in mixedCase
+Parameter EasySmartolution.addReferrer(address)._address (0xf1add8bf553d0066be17768d6816f3730c476237.sol#79) is not in mixedCase
+Parameter EasySmartolution.processPayment(address)._address (0xf1add8bf553d0066be17768d6816f3730c476237.sol#90) is not in mixedCase
+Constant EasySmartolution.smartolution (0xf1add8bf553d0066be17768d6816f3730c476237.sol#35) is not in UPPER_CASE_WITH_UNDERSCORES
+Parameter EasySmartolutionRef.setReferrer(address)._referrer (0xf1add8bf553d0066be17768d6816f3730c476237.sol#126) is not in mixedCase
+Parameter EasySmartolutionRef.setSmartolution(address)._smartolution (0xf1add8bf553d0066be17768d6816f3730c476237.sol#131) is not in mixedCase
+Constant Participant.smartolution (0xf1add8bf553d0066be17768d6816f3730c476237.sol#146) is not in UPPER_CASE_WITH_UNDERSCORES
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in EasySmartolution.addParticipant(address,address) (0xf1add8bf553d0066be17768d6816f3730c476237.sol#64-77):
+	External calls:
+	- processing.send(msg.value / 33) (0xf1add8bf553d0066be17768d6816f3730c476237.sol#71)
+	- _referrer.send(msg.value / 20) (0xf1add8bf553d0066be17768d6816f3730c476237.sol#73)
+	External calls sending eth:
+	- processPayment(_address) (0xf1add8bf553d0066be17768d6816f3730c476237.sol#69)
+		- done = participant.processPayment.value(participant.daily())() (0xf1add8bf553d0066be17768d6816f3730c476237.sol#93)
+	- processing.send(msg.value / 33) (0xf1add8bf553d0066be17768d6816f3730c476237.sol#71)
+	- _referrer.send(msg.value / 20) (0xf1add8bf553d0066be17768d6816f3730c476237.sol#73)
+	Event emitted after the call(s):
+	- ParticipantAdded(_address) (0xf1add8bf553d0066be17768d6816f3730c476237.sol#76)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+./0xf1add8bf553d0066be17768d6816f3730c476237.sol analyzed (4 contracts with 94 detectors), 30 result(s) found
+
+real	0m1.488s
+user	0m1.306s
+sys	0m0.185s

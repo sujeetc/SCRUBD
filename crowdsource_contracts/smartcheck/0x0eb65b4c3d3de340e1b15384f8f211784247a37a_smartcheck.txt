@@ -1,0 +1,296 @@
+./0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol
+jar:file:/usr/local/lib/node_modules/@smartdec/smartcheck/jdeploy-bundle/smartcheck-2.0-jar-with-dependencies.jar!/solidity-rules.xmlruleId: SOLIDITY_ADDRESS_HARDCODED
+patternId: a91b18
+severity: 1
+line: 1141
+column: 21
+content: (_id,reserveAuction.bidder,bidToRefund,address(0),0)
+
+ruleId: SOLIDITY_ADDRESS_HARDCODED
+patternId: a91b18
+severity: 1
+line: 1143
+column: 8
+content: reserveAuction.bidder=address(0)
+
+ruleId: SOLIDITY_ADDRESS_HARDCODED
+patternId: a91b18
+severity: 1
+line: 1197
+column: 21
+content: (_id,reserveAuction.bidder,reserveAuction.bid,address(0),0)
+
+ruleId: SOLIDITY_ADDRESS_HARDCODED
+patternId: a91b18
+severity: 1
+line: 1227
+column: 25
+content: (_id,reserveAuction.bidder,reserveAuction.bid,address(0),0)
+
+ruleId: SOLIDITY_ADDRESS_HARDCODED
+patternId: a91b18
+severity: 1
+line: 1337
+column: 21
+content: (_editionId,offer.bidder,offer.offer,address(0),0)
+
+ruleId: SOLIDITY_ADDRESS_HARDCODED
+patternId: a91b18
+severity: 1
+line: 1401
+column: 21
+content: (_tokenId,offer.bidder,offer.offer,address(0),0)
+
+ruleId: SOLIDITY_ADDRESS_HARDCODED
+patternId: a91b18
+severity: 1
+line: 1421
+column: 21
+content: (_tokenId,offer.bidder,offer.offer,address(0),0)
+
+ruleId: SOLIDITY_ADDRESS_HARDCODED
+patternId: a91b18
+severity: 1
+line: 1459
+column: 25
+content: (_tokenId,offer.bidder,offer.offer,address(0),0)
+
+ruleId: SOLIDITY_DIV_MUL
+patternId: 09hhh1
+severity: 2
+line: 1517
+column: 31
+content: (_paymentAmount/modulo)*platformSecondarySaleCommission
+
+ruleId: SOLIDITY_LOCKED_MONEY
+patternId: 30281d
+severity: 3
+line: 913
+column: 9
+content: contractBuyNowMarketplaceisIBuyNowMarketplace,BaseMarketplace{structListing{uint128price;uint128startDate;addressseller;}mapping(uint256=>Listing)publiceditionOrTokenListings;functionlistForBuyNow(address_seller,uint256_id,uint128_listingPrice,uint128_startDate)publicoverridewhenNotPaused{require(_isListingPermitted(_id),"Listing is not permitted");require(_isBuyNowListingPermitted(_id),"Buy now listing invalid");require(_listingPrice>=minBidAmount,"Listing price not enough");editionOrTokenListings[_id]=Listing(_listingPrice,_startDate,_seller);emitListedForBuyNow(_id,_listingPrice,_seller,_startDate);}functionbuyEditionToken(uint256_id)publicoverridepayablewhenNotPausednonReentrant{_facilitateBuyNow(_id,_msgSender());}functionbuyEditionTokenFor(uint256_id,address_recipient)publicoverridepayablewhenNotPausednonReentrant{_facilitateBuyNow(_id,_recipient);}functionsetBuyNowPriceListing(uint256_id,uint128_listingPrice)publicoverridewhenNotPaused{require(editionOrTokenListings[_id].seller==_msgSender()||accessControls.isVerifiedArtistProxy(editionOrTokenListings[_id].seller,_msgSender()),"Only seller can change price");editionOrTokenListings[_id].price=_listingPrice;emitBuyNowPriceChanged(_id,_listingPrice);}function_facilitateBuyNow(uint256_id,address_recipient)internal{Listingstoragelisting=editionOrTokenListings[_id];require(address(0)!=listing.seller,"No listing found");require(msg.value>=listing.price,"List price not satisfied");require(block.timestamp>=listing.startDate,"List not available yet");uint256tokenId=_processSale(_id,msg.value,_recipient,listing.seller);emitBuyNowPurchased(tokenId,_recipient,listing.seller,msg.value);}function_isBuyNowListingPermitted(uint256_id)internalvirtualreturns(bool);}
+
+ruleId: SOLIDITY_LOCKED_MONEY
+patternId: 30281d
+severity: 3
+line: 1001
+column: 9
+content: contractReserveAuctionMarketplaceisIReserveAuctionMarketplace,BaseMarketplace{eventAdminUpdateReserveAuctionBidExtensionWindow(uint128_reserveAuctionBidExtensionWindow);eventAdminUpdateReserveAuctionLengthOnceReserveMet(uint128_reserveAuctionLengthOnceReserveMet);structReserveAuction{addressseller;addressbidder;uint128reservePrice;uint128bid;uint128startDate;uint128biddingEnd;}mapping(uint256=>ReserveAuction)publiceditionOrTokenWithReserveAuctions;uint128publicreserveAuctionBidExtensionWindow=15minutes;uint128publicreserveAuctionLengthOnceReserveMet=24hours;functionlistForReserveAuction(address_creator,uint256_id,uint128_reservePrice,uint128_startDate)publicoverridewhenNotPaused{require(_isListingPermitted(_id),"Listing not permitted");require(_isReserveListingPermitted(_id),"Reserve listing not permitted");require(_reservePrice>=minBidAmount,"Reserve price must be at least min bid");editionOrTokenWithReserveAuctions[_id]=ReserveAuction({seller:_creator,bidder:address(0),reservePrice:_reservePrice,startDate:_startDate,biddingEnd:0,bid:0});emitListedForReserveAuction(_id,_reservePrice,_startDate);}functionplaceBidOnReserveAuction(uint256_id)publicoverridepayablewhenNotPausednonReentrant{_placeBidOnReserveAuction(_id,_msgSender());}functionplaceBidOnReserveAuctionFor(uint256_id,address_bidder)publicoverridepayablewhenNotPausednonReentrant{_placeBidOnReserveAuction(_id,_bidder);}function_placeBidOnReserveAuction(uint256_id,address_bidder)internal{ReserveAuctionstoragereserveAuction=editionOrTokenWithReserveAuctions[_id];require(reserveAuction.reservePrice>0,"Not set up for reserve auction");require(block.timestamp>=reserveAuction.startDate,"Not accepting bids yet");require(msg.value>=reserveAuction.bid+minBidAmount,"You have not exceeded previous bid by min bid amount");uint128originalBiddingEnd=reserveAuction.biddingEnd;boolisCountDownTriggered=originalBiddingEnd>0;if(msg.value>=reserveAuction.reservePrice&&!isCountDownTriggered){reserveAuction.biddingEnd=uint128(block.timestamp)+reserveAuctionLengthOnceReserveMet;}elseif(isCountDownTriggered){require(block.timestamp<originalBiddingEnd,"No longer accepting bids");uint128secondsUntilBiddingEnd=originalBiddingEnd-uint128(block.timestamp);if(secondsUntilBiddingEnd<=reserveAuctionBidExtensionWindow){reserveAuction.biddingEnd=reserveAuction.biddingEnd+reserveAuctionBidExtensionWindow;}}if(reserveAuction.bid>0){_refundBidder(_id,reserveAuction.bidder,reserveAuction.bid,_bidder,msg.value);}reserveAuction.bid=uint128(msg.value);reserveAuction.bidder=_bidder;emitBidPlacedOnReserveAuction(_id,reserveAuction.seller,_bidder,msg.value,originalBiddingEnd,reserveAuction.biddingEnd);}functionresultReserveAuction(uint256_id)publicoverridewhenNotPausednonReentrant{ReserveAuctionstoragereserveAuction=editionOrTokenWithReserveAuctions[_id];require(reserveAuction.reservePrice>0,"No active auction");require(reserveAuction.bid>=reserveAuction.reservePrice,"Reserve not met");require(block.timestamp>reserveAuction.biddingEnd,"Bidding has not yet ended");addresswinner=reserveAuction.bidder;addressseller=reserveAuction.seller;uint256winningBid=reserveAuction.bid;deleteeditionOrTokenWithReserveAuctions[_id];_processSale(_id,winningBid,winner,seller);emitReserveAuctionResulted(_id,winningBid,seller,winner,_msgSender());}functionwithdrawBidFromReserveAuction(uint256_id)publicoverridewhenNotPausednonReentrant{ReserveAuctionstoragereserveAuction=editionOrTokenWithReserveAuctions[_id];require(reserveAuction.reservePrice>0,"No reserve auction in flight");require(reserveAuction.bid<reserveAuction.reservePrice,"Bids can only be withdrawn if reserve not met");require(reserveAuction.bidder==_msgSender(),"Only the bidder can withdraw their bid");uint256bidToRefund=reserveAuction.bid;_refundBidder(_id,reserveAuction.bidder,bidToRefund,address(0),0);reserveAuction.bidder=address(0);reserveAuction.bid=0;emitBidWithdrawnFromReserveAuction(_id,_msgSender(),uint128(bidToRefund));}functionupdateReservePriceForReserveAuction(uint256_id,uint128_reservePrice)publicoverridewhenNotPausednonReentrant{ReserveAuctionstoragereserveAuction=editionOrTokenWithReserveAuctions[_id];require(reserveAuction.seller==_msgSender()||accessControls.isVerifiedArtistProxy(reserveAuction.seller,_msgSender()),"Not the seller");require(reserveAuction.biddingEnd==0,"Reserve countdown commenced");require(_reservePrice>=minBidAmount,"Reserve must be at least min bid");if(reserveAuction.bid>=_reservePrice){reserveAuction.biddingEnd=uint128(block.timestamp)+reserveAuctionLengthOnceReserveMet;}reserveAuction.reservePrice=_reservePrice;emitReservePriceUpdated(_id,_reservePrice);}functionemergencyExitBidFromReserveAuction(uint256_id)publicoverridewhenNotPausednonReentrant{ReserveAuctionstoragereserveAuction=editionOrTokenWithReserveAuctions[_id];require(reserveAuction.bid>0,"No bid in flight");require(_hasReserveListingBeenInvalidated(_id),"Bid cannot be withdrawn as reserve auction listing is valid");boolisSeller=reserveAuction.seller==_msgSender();boolisBidder=reserveAuction.bidder==_msgSender();require(isSeller||isBidder||accessControls.isVerifiedArtistProxy(reserveAuction.seller,_msgSender())||accessControls.hasContractOrAdminRole(_msgSender()),"Only seller, bidder, contract or platform admin");_refundBidder(_id,reserveAuction.bidder,reserveAuction.bid,address(0),0);emitEmergencyBidWithdrawFromReserveAuction(_id,reserveAuction.bidder,reserveAuction.bid);deleteeditionOrTokenWithReserveAuctions[_id];}functionupdateReserveAuctionBidExtensionWindow(uint128_reserveAuctionBidExtensionWindow)onlyAdminpublic{reserveAuctionBidExtensionWindow=_reserveAuctionBidExtensionWindow;emitAdminUpdateReserveAuctionBidExtensionWindow(_reserveAuctionBidExtensionWindow);}functionupdateReserveAuctionLengthOnceReserveMet(uint128_reserveAuctionLengthOnceReserveMet)onlyAdminpublic{reserveAuctionLengthOnceReserveMet=_reserveAuctionLengthOnceReserveMet;emitAdminUpdateReserveAuctionLengthOnceReserveMet(_reserveAuctionLengthOnceReserveMet);}function_isReserveListingPermitted(uint256_id)internalvirtualreturns(bool);function_hasReserveListingBeenInvalidated(uint256_id)internalvirtualreturns(bool);function_removeReserveAuctionListing(uint256_id)internal{ReserveAuctionstoragereserveAuction=editionOrTokenWithReserveAuctions[_id];require(reserveAuction.reservePrice>0,"No active auction");require(reserveAuction.bid<reserveAuction.reservePrice,"Can only convert before reserve met");require(reserveAuction.seller==_msgSender(),"Only the seller can convert");if(reserveAuction.bid>0){_refundBidder(_id,reserveAuction.bidder,reserveAuction.bid,address(0),0);}deleteeditionOrTokenWithReserveAuctions[_id];}}
+
+ruleId: SOLIDITY_LOCKED_MONEY
+patternId: 30281d
+severity: 3
+line: 1250
+column: 0
+content: contractKODAV3SecondaryMarketplaceisIKODAV3SecondarySaleMarketplace,BaseMarketplace,BuyNowMarketplace,ReserveAuctionMarketplace{eventSecondaryMarketplaceDeployed();eventAdminUpdateSecondarySaleCommission(uint256_platformSecondarySaleCommission);eventConvertFromBuyNowToOffers(uint256indexed_tokenId,uint128_startDate);eventReserveAuctionConvertedToOffers(uint256indexed_tokenId);structOffer{uint256offer;addressbidder;uint256lockupUntil;}mapping(uint256=>Offer)publictokenBids;mapping(uint256=>Offer)publiceditionBids;uint256publicplatformSecondarySaleCommission=2_50000;constructor(IKOAccessControlsLookup_accessControls,IKODAV3_koda,address_platformAccount)BaseMarketplace(_accessControls,_koda,_platformAccount){emitSecondaryMarketplaceDeployed();}functionlistTokenForBuyNow(uint256_tokenId,uint128_listingPrice,uint128_startDate)publicoverridewhenNotPaused{listForBuyNow(_msgSender(),_tokenId,_listingPrice,_startDate);}functiondelistToken(uint256_tokenId)publicoverridewhenNotPaused{require(editionOrTokenListings[_tokenId].seller!=address(0),"No listing found");require(koda.ownerOf(_tokenId)==_msgSender(),"Not token owner");deleteeditionOrTokenListings[_tokenId];emitTokenDeListed(_tokenId);}functionplaceEditionBid(uint256_editionId)publicpayableoverridewhenNotPausednonReentrant{_placeEditionBidFor(_editionId,_msgSender());}functionplaceEditionBidFor(uint256_editionId,address_bidder)publicpayableoverridewhenNotPausednonReentrant{_placeEditionBidFor(_editionId,_bidder);}functionwithdrawEditionBid(uint256_editionId)publicoverridewhenNotPausednonReentrant{Offerstorageoffer=editionBids[_editionId];require(offer.bidder==_msgSender(),"Not bidder");require(block.timestamp>=offer.lockupUntil,"Bid lockup not elapsed");_refundBidder(_editionId,offer.bidder,offer.offer,address(0),0);deleteeditionBids[_editionId];emitEditionBidWithdrawn(_editionId,_msgSender());}functionacceptEditionBid(uint256_tokenId,uint256_offerPrice)publicoverridewhenNotPausednonReentrant{uint256editionId=koda.getEditionIdOfToken(_tokenId);Offermemoryoffer=editionBids[editionId];require(offer.bidder!=address(0),"No open bid");require(offer.offer>=_offerPrice,"Offer price has changed");addresscurrentOwner=koda.ownerOf(_tokenId);require(currentOwner==_msgSender(),"Not current owner");require(!_isTokenListed(_tokenId),"The token is listed so cannot accept an edition bid");_facilitateSecondarySale(_tokenId,offer.offer,currentOwner,offer.bidder);deleteeditionBids[editionId];emitEditionBidAccepted(_tokenId,currentOwner,offer.bidder,offer.offer);}functionplaceTokenBid(uint256_tokenId)publicpayableoverridewhenNotPausednonReentrant{_placeTokenBidFor(_tokenId,_msgSender());}functionplaceTokenBidFor(uint256_tokenId,address_bidder)publicpayableoverridewhenNotPausednonReentrant{_placeTokenBidFor(_tokenId,_bidder);}functionwithdrawTokenBid(uint256_tokenId)publicoverridewhenNotPausednonReentrant{Offerstorageoffer=tokenBids[_tokenId];require(offer.bidder==_msgSender(),"Not bidder");require(block.timestamp>=offer.lockupUntil,"Bid lockup not elapsed");_refundBidder(_tokenId,offer.bidder,offer.offer,address(0),0);deletetokenBids[_tokenId];emitTokenBidWithdrawn(_tokenId,_msgSender());}functionrejectTokenBid(uint256_tokenId)publicoverridewhenNotPausednonReentrant{Offermemoryoffer=tokenBids[_tokenId];require(offer.bidder!=address(0),"No open bid");addresscurrentOwner=koda.ownerOf(_tokenId);require(currentOwner==_msgSender(),"Not current owner");_refundBidder(_tokenId,offer.bidder,offer.offer,address(0),0);deletetokenBids[_tokenId];emitTokenBidRejected(_tokenId,currentOwner,offer.bidder,offer.offer);}functionacceptTokenBid(uint256_tokenId,uint256_offerPrice)publicoverridewhenNotPausednonReentrant{Offermemoryoffer=tokenBids[_tokenId];require(offer.bidder!=address(0),"No open bid");require(offer.offer>=_offerPrice,"Offer price has changed");addresscurrentOwner=koda.ownerOf(_tokenId);require(currentOwner==_msgSender(),"Not current owner");_facilitateSecondarySale(_tokenId,offer.offer,currentOwner,offer.bidder);deletetokenBids[_tokenId];emitTokenBidAccepted(_tokenId,currentOwner,offer.bidder,offer.offer);}functionadminRejectTokenBid(uint256_tokenId)publicnonReentrantonlyAdmin{Offermemoryoffer=tokenBids[_tokenId];require(offer.bidder!=address(0),"No open bid");if(offer.offer>0){_refundBidder(_tokenId,offer.bidder,offer.offer,address(0),0);}deletetokenBids[_tokenId];emitTokenBidRejected(_tokenId,koda.ownerOf(_tokenId),offer.bidder,offer.offer);}functionconvertReserveAuctionToBuyItNow(uint256_tokenId,uint128_listingPrice,uint128_startDate)publicoverridewhenNotPausednonReentrant{require(_listingPrice>=minBidAmount,"Listing price not enough");_removeReserveAuctionListing(_tokenId);editionOrTokenListings[_tokenId]=Listing(_listingPrice,_startDate,_msgSender());emitReserveAuctionConvertedToBuyItNow(_tokenId,_listingPrice,_startDate);}functionconvertReserveAuctionToOffers(uint256_tokenId)publicoverridewhenNotPausednonReentrant{_removeReserveAuctionListing(_tokenId);emitReserveAuctionConvertedToOffers(_tokenId);}function_facilitateSecondarySale(uint256_tokenId,uint256_paymentAmount,address_seller,address_buyer)internal{(address_royaltyRecipient,uint256_royaltyAmount)=koda.royaltyInfo(_tokenId,_paymentAmount);handleSecondarySaleFunds(_seller,_royaltyRecipient,_paymentAmount,_royaltyAmount);koda.safeTransferFrom(_seller,_buyer,_tokenId);}functionhandleSecondarySaleFunds(address_seller,address_royaltyRecipient,uint256_paymentAmount,uint256_creatorRoyalties)internal{(boolcreatorSuccess,)=_royaltyRecipient.call<missing ';'>{value:_creatorRoyalties}("");require(creatorSuccess,"Token payment failed");uint256koCommission=(_paymentAmount/modulo)*platformSecondarySaleCommission;(boolkoCommissionSuccess,)=platformAccount.call<missing ';'>{value:koCommission}("");require(koCommissionSuccess,"Token commission payment failed");(boolsuccess,)=_seller.call<missing ';'>{value:_paymentAmount-_creatorRoyalties-koCommission}("");require(success,"Token payment failed");}functionupdatePlatformSecondarySaleCommission(uint256_platformSecondarySaleCommission)publiconlyAdmin{platformSecondarySaleCommission=_platformSecondarySaleCommission;emitAdminUpdateSecondarySaleCommission(_platformSecondarySaleCommission);}function_isListingPermitted(uint256_tokenId)internalviewoverridereturns(bool){return!_isTokenListed(_tokenId);}function_isReserveListingPermitted(uint256_tokenId)internalviewoverridereturns(bool){returnkoda.ownerOf(_tokenId)==_msgSender();}function_hasReserveListingBeenInvalidated(uint256_id)internalviewoverridereturns(bool){boolisApprovalActiveForMarketplace=koda.isApprovedForAll(editionOrTokenWithReserveAuctions[_id].seller,address(this));return!isApprovalActiveForMarketplace||koda.ownerOf(_id)!=editionOrTokenWithReserveAuctions[_id].seller;}function_isBuyNowListingPermitted(uint256_tokenId)internalviewoverridereturns(bool){returnkoda.ownerOf(_tokenId)==_msgSender();}function_processSale(uint256_tokenId,uint256_paymentAmount,address_buyer,address_seller)internaloverridereturns(uint256){_facilitateSecondarySale(_tokenId,_paymentAmount,_seller,_buyer);return_tokenId;}function_isTokenListed(uint256_tokenId)internalviewreturns(bool){addresscurrentOwner=koda.ownerOf(_tokenId);if(editionOrTokenListings[_tokenId].seller==currentOwner){returntrue;}if(editionOrTokenWithReserveAuctions[_tokenId].seller==currentOwner){returntrue;}returnfalse;}function_placeEditionBidFor(uint256_editionId,address_bidder)internal{require(koda.editionExists(_editionId),"Edition does not exist");Offerstorageoffer=editionBids[_editionId];require(msg.value>=offer.offer+minBidAmount,"Bid not high enough");if(offer.offer>0){_refundBidder(_editionId,offer.bidder,offer.offer,_bidder,msg.value);}editionBids[_editionId]=Offer(msg.value,_bidder,_getLockupTime());emitEditionBidPlaced(_editionId,_bidder,msg.value);}function_placeTokenBidFor(uint256_tokenId,address_bidder)internal{require(!_isTokenListed(_tokenId),"Token is listed");Offerstorageoffer=tokenBids[_tokenId];require(msg.value>=offer.offer+minBidAmount,"Bid not high enough");if(offer.offer>0){_refundBidder(_tokenId,offer.bidder,offer.offer,_bidder,msg.value);}tokenBids[_tokenId]=Offer(msg.value,_bidder,_getLockupTime());emitTokenBidPlaced(_tokenId,koda.ownerOf(_tokenId),_bidder,msg.value);}}
+
+ruleId: SOLIDITY_PRAGMAS_VERSION
+patternId: 23fc32
+severity: 1
+line: 158
+column: 16
+content: ^
+
+ruleId: SOLIDITY_PRAGMAS_VERSION
+patternId: 23fc32
+severity: 1
+line: 185
+column: 16
+content: ^
+
+ruleId: SOLIDITY_PRAGMAS_VERSION
+patternId: 23fc32
+severity: 1
+line: 500
+column: 16
+content: ^
+
+ruleId: SOLIDITY_PRAGMAS_VERSION
+patternId: 23fc32
+severity: 1
+line: 565
+column: 16
+content: ^
+
+ruleId: SOLIDITY_PRAGMAS_VERSION
+patternId: 23fc32
+severity: 1
+line: 591
+column: 16
+content: ^
+
+ruleId: SOLIDITY_PRAGMAS_VERSION
+patternId: 23fc32
+severity: 1
+line: 683
+column: 16
+content: ^
+
+ruleId: SOLIDITY_PRIVATE_MODIFIER_DONT_HIDE_DATA
+patternId: 5616b2
+severity: 1
+line: 530
+column: 12
+content: private
+
+ruleId: SOLIDITY_PRIVATE_MODIFIER_DONT_HIDE_DATA
+patternId: 5616b2
+severity: 1
+line: 531
+column: 12
+content: private
+
+ruleId: SOLIDITY_PRIVATE_MODIFIER_DONT_HIDE_DATA
+patternId: 5616b2
+severity: 1
+line: 533
+column: 12
+content: private
+
+ruleId: SOLIDITY_PRIVATE_MODIFIER_DONT_HIDE_DATA
+patternId: 5616b2
+severity: 1
+line: 614
+column: 9
+content: private
+
+ruleId: SOLIDITY_SHOULD_RETURN_STRUCT
+patternId: 83hf3l
+severity: 1
+line: 392
+column: 28
+content: (address_receiver,uint256_royaltyAmount)
+
+ruleId: SOLIDITY_SHOULD_RETURN_STRUCT
+patternId: 83hf3l
+severity: 1
+line: 464
+column: 76
+content: (address_receiver,address_creator,uint256_tokenId)
+
+ruleId: SOLIDITY_SHOULD_RETURN_STRUCT
+patternId: 83hf3l
+severity: 1
+line: 467
+column: 79
+content: (address_receiver,address_creator,uint256_tokenId)
+
+ruleId: SOLIDITY_SHOULD_RETURN_STRUCT
+patternId: 83hf3l
+severity: 1
+line: 470
+column: 88
+content: (address_receiver,address_creator,uint256_amount)
+
+ruleId: SOLIDITY_SHOULD_RETURN_STRUCT
+patternId: 83hf3l
+severity: 1
+line: 490
+column: 71
+content: (address_originalCreator,address_owner,uint16_size,uint256_editionId,stringmemory_uri)
+
+ruleId: SOLIDITY_UPGRADE_TO_050
+patternId: 341gim
+severity: 1
+line: 582
+column: 55
+content: bytescalldata
+
+ruleId: SOLIDITY_VISIBILITY
+patternId: 910067
+severity: 1
+line: 535
+column: 4
+content: constructor(){_status=_NOT_ENTERED;}
+
+ruleId: SOLIDITY_VISIBILITY
+patternId: 910067
+severity: 1
+line: 619
+column: 4
+content: constructor(){_paused=false;}
+
+ruleId: SOLIDITY_VISIBILITY
+patternId: 910067
+severity: 1
+line: 827
+column: 4
+content: constructor(IKOAccessControlsLookup_accessControls,IKODAV3_koda,address_platformAccount){koda=_koda;accessControls=_accessControls;platformAccount=_platformAccount;}
+
+ruleId: SOLIDITY_VISIBILITY
+patternId: 910067
+severity: 1
+line: 838
+column: 4
+content: functionrecoverStuckETH(addresspayable
+
+ruleId: SOLIDITY_VISIBILITY
+patternId: 910067
+severity: 1
+line: 1275
+column: 4
+content: constructor(IKOAccessControlsLookup_accessControls,IKODAV3_koda,address_platformAccount)BaseMarketplace(_accessControls,_koda,_platformAccount){emitSecondaryMarketplaceDeployed();}
+
+ruleId: SOLIDITY_VISIBILITY
+patternId: b51ce0
+severity: 1
+line: 784
+column: 50
+content: _recipient,
+
+ruleId: SOLIDITY_VISIBILITY
+patternId: b51ce0
+severity: 1
+line: 784
+column: 62
+content: uint256_amount);
+
+ruleId: SOLIDITY_VISIBILITY
+patternId: b51ce0
+severity: 1
+line: 838
+column: 45
+content: _recipient,
+
+ruleId: SOLIDITY_VISIBILITY
+patternId: b51ce0
+severity: 1
+line: 838
+column: 57
+content: uint256_amount)public
+
+ruleId: SOLIDITY_VISIBILITY
+patternId: b51ce0
+severity: 1
+line: 838
+column: 81
+content: onlyAdmin{
+
+ruleId: SOLIDITY_VISIBILITY
+patternId: b51ce0
+severity: 1
+line: 839
+column: 8
+content: (bool<missing ')'>success,)=
+
+ruleId: SOLIDITY_VISIBILITY
+patternId: b51ce0
+severity: 1
+line: 839
+column: 26
+content: _recipient.call{value:
+
+ruleId: SOLIDITY_VISIBILITY
+patternId: b51ce0
+severity: 1
+line: 839
+column: 50
+content: _amount
+
+SOLIDITY_VISIBILITY :13
+SOLIDITY_PRAGMAS_VERSION :6
+SOLIDITY_LOCKED_MONEY :3
+SOLIDITY_PRIVATE_MODIFIER_DONT_HIDE_DATA :4
+SOLIDITY_ADDRESS_HARDCODED :8
+SOLIDITY_UPGRADE_TO_050 :1
+SOLIDITY_DIV_MUL :1
+SOLIDITY_SHOULD_RETURN_STRUCT :5

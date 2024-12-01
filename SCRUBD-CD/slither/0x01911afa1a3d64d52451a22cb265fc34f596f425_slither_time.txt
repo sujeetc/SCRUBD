@@ -1,0 +1,65 @@
+'solc --version' running
+'solc ./0x01911afa1a3d64d52451a22cb265fc34f596f425.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+BuyVote.buy() (0x01911afa1a3d64d52451a22cb265fc34f596f425.sol#369-379) ignores return value by voteCoinContract.transfer(msg.sender,_amount) (0x01911afa1a3d64d52451a22cb265fc34f596f425.sol#374)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+BuyVote.setPrice(uint256) (0x01911afa1a3d64d52451a22cb265fc34f596f425.sol#359-362) should emit an event for: 
+	- price = _price (0x01911afa1a3d64d52451a22cb265fc34f596f425.sol#360) 
+BuyVote.setMinQty(uint256) (0x01911afa1a3d64d52451a22cb265fc34f596f425.sol#364-367) should emit an event for: 
+	- minQty = _qty (0x01911afa1a3d64d52451a22cb265fc34f596f425.sol#365) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+Reentrancy in BuyVote.buy() (0x01911afa1a3d64d52451a22cb265fc34f596f425.sol#369-379):
+	External calls:
+	- voteCoinContract.transfer(msg.sender,_amount) (0x01911afa1a3d64d52451a22cb265fc34f596f425.sol#374)
+	Event emitted after the call(s):
+	- Buy(msg.sender,_amount,msg.value) (0x01911afa1a3d64d52451a22cb265fc34f596f425.sol#376)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+Context._msgData() (0x01911afa1a3d64d52451a22cb265fc34f596f425.sol#24-27) is never used and should be removed
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dead-code
+
+BuyVote.voteCoinContract (0x01911afa1a3d64d52451a22cb265fc34f596f425.sol#338) is set pre-construction with a non-constant function or state variable:
+	- IERC20(voteCoinAddress)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#function-initializing-state
+
+Version constraint ^0.5.16 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- MissingEscapingInFormatting
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden.
+It is used by:
+	- ^0.5.16 (0x01911afa1a3d64d52451a22cb265fc34f596f425.sol#1)
+solc-0.5.16 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Parameter BuyVote.setPrice(uint256)._price (0x01911afa1a3d64d52451a22cb265fc34f596f425.sol#359) is not in mixedCase
+Parameter BuyVote.setMinQty(uint256)._qty (0x01911afa1a3d64d52451a22cb265fc34f596f425.sol#364) is not in mixedCase
+Parameter BuyVote.withdraw(uint256)._amount (0x01911afa1a3d64d52451a22cb265fc34f596f425.sol#381) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Redundant expression "this (0x01911afa1a3d64d52451a22cb265fc34f596f425.sol#25)" inContext (0x01911afa1a3d64d52451a22cb265fc34f596f425.sol#13-28)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#redundant-statements
+
+BuyVote.slitherConstructorVariables() (0x01911afa1a3d64d52451a22cb265fc34f596f425.sol#333-388) uses literals with too many digits:
+	- price = 100000000 (0x01911afa1a3d64d52451a22cb265fc34f596f425.sol#340)
+BuyVote.slitherConstructorVariables() (0x01911afa1a3d64d52451a22cb265fc34f596f425.sol#333-388) uses literals with too many digits:
+	- minQty = 500000000 (0x01911afa1a3d64d52451a22cb265fc34f596f425.sol#343)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+BuyVote.voteCoinAddress (0x01911afa1a3d64d52451a22cb265fc34f596f425.sol#336) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+./0x01911afa1a3d64d52451a22cb265fc34f596f425.sol analyzed (5 contracts with 94 detectors), 15 result(s) found
+
+real	0m1.224s
+user	0m1.095s
+sys	0m0.133s

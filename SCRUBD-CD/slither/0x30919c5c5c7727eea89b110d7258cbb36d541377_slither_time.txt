@@ -1,0 +1,93 @@
+'solc --version' running
+'solc ./0x30919c5c5c7727eea89b110d7258cbb36d541377.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x30919c5c5c7727eea89b110d7258cbb36d541377.sol:
+./0x30919c5c5c7727eea89b110d7258cbb36d541377.sol:73:29: Warning: This looks like an address but has an invalid checksum. If this is not used as an address, please prepend '00'.
+        tokenReward = token(0x2ca8e1fbcde534c8c71d8f39864395c2ed76fb0e);  //chozun coin address
+                            ^----------------------------------------^
+
+
+Crowdsale.fallback() (0x30919c5c5c7727eea89b110d7258cbb36d541377.sol#80-95) performs a multiplication on the result of a division:
+	- price = SafeMath.div(0.35 * 1000000000000000000,dollar_exchange) (0x30919c5c5c7727eea89b110d7258cbb36d541377.sol#86)
+	- price = SafeMath.div(SafeMath.mul(100,price),120) (0x30919c5c5c7727eea89b110d7258cbb36d541377.sol#89)
+Crowdsale.fallback() (0x30919c5c5c7727eea89b110d7258cbb36d541377.sol#80-95) performs a multiplication on the result of a division:
+	- price = SafeMath.div(SafeMath.mul(100,price),115) (0x30919c5c5c7727eea89b110d7258cbb36d541377.sol#88)
+	- price = SafeMath.div(SafeMath.mul(100,price),120) (0x30919c5c5c7727eea89b110d7258cbb36d541377.sol#89)
+Crowdsale.fallback() (0x30919c5c5c7727eea89b110d7258cbb36d541377.sol#80-95) performs a multiplication on the result of a division:
+	- price = SafeMath.div(SafeMath.mul(100,price),110) (0x30919c5c5c7727eea89b110d7258cbb36d541377.sol#87)
+	- price = SafeMath.div(SafeMath.mul(100,price),115) (0x30919c5c5c7727eea89b110d7258cbb36d541377.sol#88)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+token (0x30919c5c5c7727eea89b110d7258cbb36d541377.sol#45-48) has incorrect ERC20 function interface:token.transfer(address,uint256) (0x30919c5c5c7727eea89b110d7258cbb36d541377.sol#46)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-erc20-interface
+
+Crowdsale.fallback() (0x30919c5c5c7727eea89b110d7258cbb36d541377.sol#80-95) contains a tautology or contradiction:
+	- tokenBalance < 0 (0x30919c5c5c7727eea89b110d7258cbb36d541377.sol#91)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#tautology-or-contradiction
+
+Modifier Crowdsale.afterDeadline() (0x30919c5c5c7727eea89b110d7258cbb36d541377.sol#97) does not always execute _; or revert
+Modifier Crowdsale.beforeDeadline() (0x30919c5c5c7727eea89b110d7258cbb36d541377.sol#98) does not always execute _; or revert
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-modifier
+
+Reentrancy in Crowdsale.safeWithdrawal() (0x30919c5c5c7727eea89b110d7258cbb36d541377.sol#100-107):
+	External calls:
+	- tokenReward.transfer(beneficiary,tokenReward.balanceOf(this)) (0x30919c5c5c7727eea89b110d7258cbb36d541377.sol#104)
+	External calls sending eth:
+	- beneficiary.send(amountRaised) (0x30919c5c5c7727eea89b110d7258cbb36d541377.sol#102)
+	State variables written after the call(s):
+	- tokenBalance = 0 (0x30919c5c5c7727eea89b110d7258cbb36d541377.sol#105)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in Crowdsale.fallback() (0x30919c5c5c7727eea89b110d7258cbb36d541377.sol#80-95):
+	External calls:
+	- tokenReward.transfer(msg.sender,SafeMath.div(amount * 1000000000000000000,price)) (0x30919c5c5c7727eea89b110d7258cbb36d541377.sol#92)
+	Event emitted after the call(s):
+	- FundTransfer(msg.sender,amount,true) (0x30919c5c5c7727eea89b110d7258cbb36d541377.sol#93)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+Version constraint ^0.4.13 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ExpExponentCleanup
+	- NestedArrayFunctionCallDecoder
+	- ZeroFunctionSelector
+	- DelegateCallReturnValue
+	- ECRecoverMalformedInput.
+It is used by:
+	- ^0.4.13 (0x30919c5c5c7727eea89b110d7258cbb36d541377.sol#1)
+solc-0.4.13 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Contract token (0x30919c5c5c7727eea89b110d7258cbb36d541377.sol#45-48) is not in CapWords
+Variable Crowdsale.dollar_exchange (0x30919c5c5c7727eea89b110d7258cbb36d541377.sol#55) is not in mixedCase
+Variable Crowdsale.test_factor (0x30919c5c5c7727eea89b110d7258cbb36d541377.sol#56) is not in mixedCase
+Variable Crowdsale.start_time (0x30919c5c5c7727eea89b110d7258cbb36d541377.sol#57) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in Crowdsale.safeWithdrawal() (0x30919c5c5c7727eea89b110d7258cbb36d541377.sol#100-107):
+	External calls:
+	- beneficiary.send(amountRaised) (0x30919c5c5c7727eea89b110d7258cbb36d541377.sol#102)
+	State variables written after the call(s):
+	- tokenBalance = 0 (0x30919c5c5c7727eea89b110d7258cbb36d541377.sol#105)
+	Event emitted after the call(s):
+	- FundTransfer(beneficiary,amountRaised,false) (0x30919c5c5c7727eea89b110d7258cbb36d541377.sol#103)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+Crowdsale.test_factor (0x30919c5c5c7727eea89b110d7258cbb36d541377.sol#56) is never used in Crowdsale (0x30919c5c5c7727eea89b110d7258cbb36d541377.sol#50-109)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-state-variable
+
+Crowdsale.test_factor (0x30919c5c5c7727eea89b110d7258cbb36d541377.sol#56) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+./0x30919c5c5c7727eea89b110d7258cbb36d541377.sol analyzed (3 contracts with 94 detectors), 18 result(s) found
+
+real	0m1.524s
+user	0m1.380s
+sys	0m0.147s

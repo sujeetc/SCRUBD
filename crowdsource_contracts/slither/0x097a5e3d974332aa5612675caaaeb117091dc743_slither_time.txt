@@ -1,0 +1,280 @@
+'solc --version' running
+'solc ./0x097a5e3d974332aa5612675caaaeb117091dc743.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+Reentrancy in ShibaUncle._transfer(address,address,uint256) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#552-583):
+	External calls:
+	- swapBack() (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#565)
+		- router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,lpWallet,block.timestamp) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#621-628)
+		- router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#611-617)
+		- coolUncle.deposit{value: ethForSHIL}() (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#648)
+	External calls sending eth:
+	- swapBack() (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#565)
+		- router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,lpWallet,block.timestamp) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#621-628)
+		- address(uncleWallet).transfer(ethForUncle) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#645)
+		- coolUncle.deposit{value: ethForSHIL}() (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#648)
+	State variables written after the call(s):
+	- _balances[sender] = _balances[sender].sub(amount,Insufficient Balance) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#567)
+	ShibaUncle._balances (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#349) can be used in cross function reentrancies:
+	- ShibaUncle._basicTransfer(address,address,uint256) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#585-590)
+	- ShibaUncle._setIsDividendExempt(address,bool) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#500-508)
+	- ShibaUncle._transfer(address,address,uint256) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#552-583)
+	- ShibaUncle.balanceOf(address) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#527)
+	- ShibaUncle.constructor(address) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#399-428)
+	- ShibaUncle.swapBack() (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#631-653)
+	- ShibaUncle.takeFee(address,address,uint256) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#592-601)
+	- _balances[recipient] = _balances[recipient].add(finalAmount) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#570)
+	ShibaUncle._balances (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#349) can be used in cross function reentrancies:
+	- ShibaUncle._basicTransfer(address,address,uint256) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#585-590)
+	- ShibaUncle._setIsDividendExempt(address,bool) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#500-508)
+	- ShibaUncle._transfer(address,address,uint256) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#552-583)
+	- ShibaUncle.balanceOf(address) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#527)
+	- ShibaUncle.constructor(address) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#399-428)
+	- ShibaUncle.swapBack() (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#631-653)
+	- ShibaUncle.takeFee(address,address,uint256) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#592-601)
+	- finalAmount = takeFee(sender,recipient,amount) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#569)
+		- _balances[address(this)] = _balances[address(this)].add(feeAmount) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#597)
+	ShibaUncle._balances (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#349) can be used in cross function reentrancies:
+	- ShibaUncle._basicTransfer(address,address,uint256) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#585-590)
+	- ShibaUncle._setIsDividendExempt(address,bool) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#500-508)
+	- ShibaUncle._transfer(address,address,uint256) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#552-583)
+	- ShibaUncle.balanceOf(address) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#527)
+	- ShibaUncle.constructor(address) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#399-428)
+	- ShibaUncle.swapBack() (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#631-653)
+	- ShibaUncle.takeFee(address,address,uint256) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#592-601)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+CoolUncle.distributeDividend(address) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#294-305) ignores return value by IERC20(SHIL).transfer(shareholder,amount) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#300)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+Reentrancy in CoolUncle.distributeDividend(address) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#294-305):
+	External calls:
+	- IERC20(SHIL).transfer(shareholder,amount) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#300)
+	State variables written after the call(s):
+	- shares[shareholder].totalRealised = shares[shareholder].totalRealised.add(amount) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#302)
+	CoolUncle.shares (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#189) can be used in cross function reentrancies:
+	- CoolUncle.distributeDividend(address) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#294-305)
+	- CoolUncle.getUnpaidEarnings(address) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#311-320)
+	- CoolUncle.setShare(address,uint256) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#228-243)
+	- CoolUncle.shares (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#189)
+	- shares[shareholder].totalExcluded = getCumulativeDividends(shares[shareholder].amount) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#303)
+	CoolUncle.shares (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#189) can be used in cross function reentrancies:
+	- CoolUncle.distributeDividend(address) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#294-305)
+	- CoolUncle.getUnpaidEarnings(address) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#311-320)
+	- CoolUncle.setShare(address,uint256) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#228-243)
+	- CoolUncle.shares (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#189)
+Reentrancy in CoolUncle.process(uint256) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#265-287):
+	External calls:
+	- distributeDividend(shareholders[currentIndex]) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#279)
+		- IERC20(SHIL).transfer(shareholder,amount) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#300)
+	State variables written after the call(s):
+	- currentIndex = 0 (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#276)
+	CoolUncle.currentIndex (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#200) can be used in cross function reentrancies:
+	- CoolUncle.currentIndex (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#200)
+	- CoolUncle.process(uint256) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#265-287)
+	- currentIndex ++ (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#284)
+	CoolUncle.currentIndex (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#200) can be used in cross function reentrancies:
+	- CoolUncle.currentIndex (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#200)
+	- CoolUncle.process(uint256) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#265-287)
+Reentrancy in CoolUncle.setShare(address,uint256) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#228-243):
+	External calls:
+	- distributeDividend(shareholder) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#231)
+		- IERC20(SHIL).transfer(shareholder,amount) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#300)
+	State variables written after the call(s):
+	- shares[shareholder].amount = amount (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#241)
+	CoolUncle.shares (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#189) can be used in cross function reentrancies:
+	- CoolUncle.distributeDividend(address) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#294-305)
+	- CoolUncle.getUnpaidEarnings(address) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#311-320)
+	- CoolUncle.setShare(address,uint256) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#228-243)
+	- CoolUncle.shares (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#189)
+	- shares[shareholder].totalExcluded = getCumulativeDividends(shares[shareholder].amount) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#242)
+	CoolUncle.shares (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#189) can be used in cross function reentrancies:
+	- CoolUncle.distributeDividend(address) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#294-305)
+	- CoolUncle.getUnpaidEarnings(address) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#311-320)
+	- CoolUncle.setShare(address,uint256) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#228-243)
+	- CoolUncle.shares (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#189)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+ShibaUncle.addLiquidity(uint256,uint256) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#620-629) ignores return value by router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,lpWallet,block.timestamp) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#621-628)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+CoolUncle.setDistributionCriteria(uint256,uint256) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#223-226) should emit an event for: 
+	- minPeriod = newMinPeriod (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#224) 
+	- minDistribution = newMinDistribution (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#225) 
+CoolUncle.setShare(address,uint256) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#228-243) should emit an event for: 
+	- totalShares = totalShares.sub(shares[shareholder].amount).add(amount) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#240) 
+ShibaUncle.changeTotalFees(uint256,uint256) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#445-452) should emit an event for: 
+	- buyFee = newBuyFee (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#447) 
+	- sellFee = newSellFee (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#448) 
+ShibaUncle.changeFeeAllocation(uint256,uint256,uint256) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#454-458) should emit an event for: 
+	- toReflections = newRewardFee (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#455) 
+	- toLiquidity = newLpFee (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#456) 
+	- toMarketing = newMarketingFee (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#457) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+Auth.transferOwnership(address).adr (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#102) lacks a zero-check on :
+		- owner = adr (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#103)
+ShibaUncle.setUncleWallet(address).newUncleWallet (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#476) lacks a zero-check on :
+		- uncleWallet = address(newUncleWallet) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#477)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+CoolUncle.distributeDividend(address) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#294-305) has external calls inside a loop: IERC20(SHIL).transfer(shareholder,amount) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#300)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation/#calls-inside-a-loop
+
+Reentrancy in CoolUncle.deposit() (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#245-263):
+	External calls:
+	- router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: msg.value}(0,path,address(this),block.timestamp) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#253-258)
+	State variables written after the call(s):
+	- dividendsPerShare = dividendsPerShare.add(dividendsPerShareAccuracyFactor.mul(amount).div(totalShares)) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#262)
+	- totalDividends = totalDividends.add(amount) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#261)
+Reentrancy in CoolUncle.distributeDividend(address) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#294-305):
+	External calls:
+	- IERC20(SHIL).transfer(shareholder,amount) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#300)
+	State variables written after the call(s):
+	- shareholderClaims[shareholder] = block.timestamp (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#301)
+Reentrancy in CoolUncle.setShare(address,uint256) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#228-243):
+	External calls:
+	- distributeDividend(shareholder) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#231)
+		- IERC20(SHIL).transfer(shareholder,amount) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#300)
+	State variables written after the call(s):
+	- addShareholder(shareholder) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#235)
+		- shareholderIndexes[shareholder] = shareholders.length (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#327)
+	- removeShareholder(shareholder) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#237)
+		- shareholderIndexes[shareholders[shareholders.length - 1]] = shareholderIndexes[shareholder] (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#333)
+	- addShareholder(shareholder) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#235)
+		- shareholders.push(shareholder) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#328)
+	- removeShareholder(shareholder) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#237)
+		- shareholders[shareholderIndexes[shareholder]] = shareholders[shareholders.length - 1] (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#332)
+		- shareholders.pop() (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#334)
+	- totalShares = totalShares.sub(shares[shareholder].amount).add(amount) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#240)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in ShibaUncle._transfer(address,address,uint256) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#552-583):
+	External calls:
+	- swapBack() (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#565)
+		- router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,lpWallet,block.timestamp) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#621-628)
+		- router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#611-617)
+		- coolUncle.deposit{value: ethForSHIL}() (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#648)
+	- coolUncle.setShare(sender,_balances[sender]) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#574)
+	- coolUncle.setShare(recipient,_balances[recipient]) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#578)
+	External calls sending eth:
+	- swapBack() (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#565)
+		- router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,lpWallet,block.timestamp) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#621-628)
+		- address(uncleWallet).transfer(ethForUncle) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#645)
+		- coolUncle.deposit{value: ethForSHIL}() (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#648)
+	Event emitted after the call(s):
+	- Transfer(sender,recipient,finalAmount) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#581)
+Reentrancy in ShibaUncle._transfer(address,address,uint256) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#552-583):
+	External calls:
+	- swapBack() (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#565)
+		- router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,lpWallet,block.timestamp) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#621-628)
+		- router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#611-617)
+		- coolUncle.deposit{value: ethForSHIL}() (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#648)
+	External calls sending eth:
+	- swapBack() (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#565)
+		- router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,lpWallet,block.timestamp) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#621-628)
+		- address(uncleWallet).transfer(ethForUncle) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#645)
+		- coolUncle.deposit{value: ethForSHIL}() (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#648)
+	Event emitted after the call(s):
+	- Transfer(sender,address(this),feeAmount) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#598)
+		- finalAmount = takeFee(sender,recipient,amount) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#569)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+CoolUncle.shouldDistribute(address) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#289-292) uses timestamp for comparisons
+	Dangerous comparisons:
+	- shareholderClaims[shareholder] + minPeriod < block.timestamp && getUnpaidEarnings(shareholder) > minDistribution (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#290-291)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+CoolUncle.process(uint256) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#265-287) has costly operations inside a loop:
+	- currentIndex = 0 (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#276)
+CoolUncle.distributeDividend(address) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#294-305) has costly operations inside a loop:
+	- totalDistributed = totalDistributed.add(amount) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#299)
+CoolUncle.process(uint256) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#265-287) has costly operations inside a loop:
+	- currentIndex ++ (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#284)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#costly-operations-inside-a-loop
+
+ShibaUncle.lpWallet (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#365) is set pre-construction with a non-constant function or state variable:
+	- DEAD
+ShibaUncle.maxTx (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#395) is set pre-construction with a non-constant function or state variable:
+	- _totalSupply.div(100)
+ShibaUncle.maxWallet (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#396) is set pre-construction with a non-constant function or state variable:
+	- _totalSupply.div(50)
+ShibaUncle.swapThreshold (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#397) is set pre-construction with a non-constant function or state variable:
+	- _totalSupply.div(400)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#function-initializing-state
+
+Version constraint 0.8.13 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- VerbatimInvalidDeduplication
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- StorageWriteRemovalBeforeConditionalTermination
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- InlineAssemblyMemorySideEffects
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation.
+It is used by:
+	- 0.8.13 (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#3)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Function IDEXRouter.WETH() (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#116) is not in mixedCase
+Variable CoolUncle.SHIL (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#176) is not in mixedCase
+Variable ShibaUncle.SHIL (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#341) is not in mixedCase
+Constant ShibaUncle._name (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#343) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant ShibaUncle._symbol (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#344) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant ShibaUncle._decimals (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#345) is not in UPPER_CASE_WITH_UNDERSCORES
+Variable ShibaUncle.WETH (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#353) is not in mixedCase
+Variable ShibaUncle.DEAD (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#354) is not in mixedCase
+Variable ShibaUncle.ZERO (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#355) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in ShibaUncle._transfer(address,address,uint256) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#552-583):
+	External calls:
+	- swapBack() (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#565)
+		- address(uncleWallet).transfer(ethForUncle) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#645)
+	External calls sending eth:
+	- swapBack() (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#565)
+		- router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,lpWallet,block.timestamp) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#621-628)
+		- address(uncleWallet).transfer(ethForUncle) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#645)
+		- coolUncle.deposit{value: ethForSHIL}() (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#648)
+	State variables written after the call(s):
+	- _balances[sender] = _balances[sender].sub(amount,Insufficient Balance) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#567)
+	- _balances[recipient] = _balances[recipient].add(finalAmount) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#570)
+	- finalAmount = takeFee(sender,recipient,amount) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#569)
+		- _balances[address(this)] = _balances[address(this)].add(feeAmount) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#597)
+	Event emitted after the call(s):
+	- Transfer(sender,address(this),feeAmount) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#598)
+		- finalAmount = takeFee(sender,recipient,amount) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#569)
+	- Transfer(sender,recipient,finalAmount) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#581)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+ShibaUncle.slitherConstructorVariables() (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#338-678) uses literals with too many digits:
+	- _totalSupply = 1000000000 * (10 ** _decimals) (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#347)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+ShibaUncle.cooldown (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#351) is never used in ShibaUncle (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#338-678)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-state-variable
+
+CoolUncle.dividendsPerShareAccuracyFactor (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#195) should be constant 
+ShibaUncle.DEAD (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#354) should be constant 
+ShibaUncle.SHIL (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#341) should be constant 
+ShibaUncle.ZERO (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#355) should be constant 
+ShibaUncle._totalSupply (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#347) should be constant 
+ShibaUncle.allocationSum (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#374) should be constant 
+ShibaUncle.antiBot (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#357) should be constant 
+ShibaUncle.factory (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#378) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+
+CoolUncle.SHIL (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#176) should be immutable 
+CoolUncle._token (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#174) should be immutable 
+CoolUncle.router (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#178) should be immutable 
+ShibaUncle.WETH (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#353) should be immutable 
+ShibaUncle.coolUncle (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#386) should be immutable 
+ShibaUncle.lpWallet (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#365) should be immutable 
+ShibaUncle.pair (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#377) should be immutable 
+ShibaUncle.router (0x097a5e3d974332aa5612675caaaeb117091dc743.sol#376) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+./0x097a5e3d974332aa5612675caaaeb117091dc743.sol analyzed (8 contracts with 94 detectors), 55 result(s) found
+
+real	0m2.536s
+user	0m2.295s
+sys	0m0.244s

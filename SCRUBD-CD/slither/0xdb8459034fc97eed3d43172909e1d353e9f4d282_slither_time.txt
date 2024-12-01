@@ -1,0 +1,112 @@
+'solc --version' running
+'solc ./0xdb8459034fc97eed3d43172909e1d353e9f4d282.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+URUNCrowdsale.buyTokens(address) (0xdb8459034fc97eed3d43172909e1d353e9f4d282.sol#181-205) ignores return value by token.transfer(beneficiary,tokens) (0xdb8459034fc97eed3d43172909e1d353e9f4d282.sol#201)
+URUNCrowdsale.takeTokensBack() (0xdb8459034fc97eed3d43172909e1d353e9f4d282.sol#283-287) ignores return value by token.transfer(owner,remainingTokensInTheContract) (0xdb8459034fc97eed3d43172909e1d353e9f4d282.sol#286)
+URUNCrowdsale.manualTokenTransfer(address,uint256) (0xdb8459034fc97eed3d43172909e1d353e9f4d282.sol#293-297) ignores return value by token.transfer(receiver,value) (0xdb8459034fc97eed3d43172909e1d353e9f4d282.sol#295)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+Reentrancy in URUNCrowdsale.buyTokens(address) (0xdb8459034fc97eed3d43172909e1d353e9f4d282.sol#181-205):
+	External calls:
+	- token.transfer(beneficiary,tokens) (0xdb8459034fc97eed3d43172909e1d353e9f4d282.sol#201)
+	State variables written after the call(s):
+	- TOKENS_SOLD = TOKENS_SOLD.add(tokens) (0xdb8459034fc97eed3d43172909e1d353e9f4d282.sol#203)
+	URUNCrowdsale.TOKENS_SOLD (0xdb8459034fc97eed3d43172909e1d353e9f4d282.sol#106) can be used in cross function reentrancies:
+	- URUNCrowdsale.TOKENS_SOLD (0xdb8459034fc97eed3d43172909e1d353e9f4d282.sol#106)
+	- URUNCrowdsale.buyTokens(address) (0xdb8459034fc97eed3d43172909e1d353e9f4d282.sol#181-205)
+	- URUNCrowdsale.determineBonus(uint256) (0xdb8459034fc97eed3d43172909e1d353e9f4d282.sol#154-177)
+	- URUNCrowdsale.manualTokenTransfer(address,uint256) (0xdb8459034fc97eed3d43172909e1d353e9f4d282.sol#293-297)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+URUNCrowdsale.changeStartAndEndDate(uint256,uint256) (0xdb8459034fc97eed3d43172909e1d353e9f4d282.sol#228-235) should emit an event for: 
+	- startTime = startTimeUnixTimestamp (0xdb8459034fc97eed3d43172909e1d353e9f4d282.sol#233) 
+	- endTime = endTimeUnixTimestamp (0xdb8459034fc97eed3d43172909e1d353e9f4d282.sol#234) 
+URUNCrowdsale.setPriceRate(uint256) (0xdb8459034fc97eed3d43172909e1d353e9f4d282.sol#241-243) should emit an event for: 
+	- ratePerWei = newPrice (0xdb8459034fc97eed3d43172909e1d353e9f4d282.sol#242) 
+URUNCrowdsale.manualTokenTransfer(address,uint256) (0xdb8459034fc97eed3d43172909e1d353e9f4d282.sol#293-297) should emit an event for: 
+	- TOKENS_SOLD = TOKENS_SOLD.add(value) (0xdb8459034fc97eed3d43172909e1d353e9f4d282.sol#296) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+Reentrancy in URUNCrowdsale.manualTokenTransfer(address,uint256) (0xdb8459034fc97eed3d43172909e1d353e9f4d282.sol#293-297):
+	External calls:
+	- token.transfer(receiver,value) (0xdb8459034fc97eed3d43172909e1d353e9f4d282.sol#295)
+	State variables written after the call(s):
+	- TOKENS_SOLD = TOKENS_SOLD.add(value) (0xdb8459034fc97eed3d43172909e1d353e9f4d282.sol#296)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in URUNCrowdsale.buyTokens(address) (0xdb8459034fc97eed3d43172909e1d353e9f4d282.sol#181-205):
+	External calls:
+	- token.transfer(beneficiary,tokens) (0xdb8459034fc97eed3d43172909e1d353e9f4d282.sol#201)
+	Event emitted after the call(s):
+	- TokenPurchase(owner,beneficiary,weiAmount,tokens) (0xdb8459034fc97eed3d43172909e1d353e9f4d282.sol#202)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+URUNCrowdsale.constructor(uint256,address,address) (0xdb8459034fc97eed3d43172909e1d353e9f4d282.sol#130-146) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(_startTime >= now) (0xdb8459034fc97eed3d43172909e1d353e9f4d282.sol#134)
+URUNCrowdsale.determineBonus(uint256) (0xdb8459034fc97eed3d43172909e1d353e9f4d282.sol#154-177) uses timestamp for comparisons
+	Dangerous comparisons:
+	- timeElapsedInDays < 15 (0xdb8459034fc97eed3d43172909e1d353e9f4d282.sol#160)
+	- timeElapsedInDays >= 15 && timeElapsedInDays < 31 (0xdb8459034fc97eed3d43172909e1d353e9f4d282.sol#167)
+URUNCrowdsale.validPurchase() (0xdb8459034fc97eed3d43172909e1d353e9f4d282.sol#213-217) uses timestamp for comparisons
+	Dangerous comparisons:
+	- withinPeriod = now >= startTime && now <= endTime (0xdb8459034fc97eed3d43172909e1d353e9f4d282.sol#214)
+	- withinPeriod && nonZeroPurchase (0xdb8459034fc97eed3d43172909e1d353e9f4d282.sol#216)
+URUNCrowdsale.hasEnded() (0xdb8459034fc97eed3d43172909e1d353e9f4d282.sol#220-222) uses timestamp for comparisons
+	Dangerous comparisons:
+	- now > endTime (0xdb8459034fc97eed3d43172909e1d353e9f4d282.sol#221)
+URUNCrowdsale.isWithinContributionRange() (0xdb8459034fc97eed3d43172909e1d353e9f4d282.sol#265-278) uses timestamp for comparisons
+	Dangerous comparisons:
+	- timePassed < 15 (0xdb8459034fc97eed3d43172909e1d353e9f4d282.sol#270)
+	- timePassed >= 15 && timePassed < 31 (0xdb8459034fc97eed3d43172909e1d353e9f4d282.sol#272)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+URUNCrowdsale.buyTokens(address) (0xdb8459034fc97eed3d43172909e1d353e9f4d282.sol#181-205) compares to a boolean constant:
+	-require(bool)(isCrowdsalePaused == false) (0xdb8459034fc97eed3d43172909e1d353e9f4d282.sol#183)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#boolean-equality
+
+Version constraint 0.4.23 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ABIEncoderV2PackedStorage_0.4.x
+	- ExpExponentCleanup
+	- EventStructWrongData.
+It is used by:
+	- 0.4.23 (0xdb8459034fc97eed3d43172909e1d353e9f4d282.sol#1)
+solc-0.4.23 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Variable URUNCrowdsale.TOKENS_SOLD (0xdb8459034fc97eed3d43172909e1d353e9f4d282.sol#106) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+URUNCrowdsale.constructor(uint256,address,address) (0xdb8459034fc97eed3d43172909e1d353e9f4d282.sol#130-146) uses literals with too many digits:
+	- maxTokensToSaleInClosedPreSale = 60000000 * 10 ** 18 (0xdb8459034fc97eed3d43172909e1d353e9f4d282.sol#142)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+URUNCrowdsale.minimumContributionPresalePhase1 (0xdb8459034fc97eed3d43172909e1d353e9f4d282.sol#108) should be constant 
+URUNCrowdsale.minimumContributionPresalePhase2 (0xdb8459034fc97eed3d43172909e1d353e9f4d282.sol#109) should be constant 
+URUNCrowdsale.totalDurationInDays (0xdb8459034fc97eed3d43172909e1d353e9f4d282.sol#118) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+
+addMultipleAddressesToWhitelist(address[]) should be declared external:
+	- URUNCrowdsale.addMultipleAddressesToWhitelist(address[]) (0xdb8459034fc97eed3d43172909e1d353e9f4d282.sol#312-318)
+removeMultipleAddressesFromWhitelist(address[]) should be declared external:
+	- URUNCrowdsale.removeMultipleAddressesFromWhitelist(address[]) (0xdb8459034fc97eed3d43172909e1d353e9f4d282.sol#333-339)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#public-function-that-could-be-declared-external
+./0xdb8459034fc97eed3d43172909e1d353e9f4d282.sol analyzed (4 contracts with 94 detectors), 24 result(s) found
+
+real	0m2.100s
+user	0m1.829s
+sys	0m0.274s

@@ -1,0 +1,205 @@
+'solc --version' running
+'solc ./0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+MetaMononokeInu.sendETHToFee(uint256) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#369-372) sends eth to arbitrary user
+	Dangerous calls:
+	- _teamAddress.transfer(amount.div(2)) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#370)
+	- _marketingFunds.transfer(amount.div(2)) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#371)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+Reentrancy in MetaMononokeInu._transfer(address,address,uint256) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#302-353):
+	External calls:
+	- swapTokensForEth(contractTokenBalance) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#339)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#360-366)
+	External calls sending eth:
+	- sendETHToFee(address(this).balance) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#342)
+		- _teamAddress.transfer(amount.div(2)) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#370)
+		- _marketingFunds.transfer(amount.div(2)) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#371)
+	State variables written after the call(s):
+	- _tokenTransfer(from,to,amount,takeFee) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#352)
+		- _rOwned[address(this)] = _rOwned[address(this)].add(rTeam) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#455)
+		- _rOwned[sender] = _rOwned[sender].sub(rAmount) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#445)
+		- _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#446)
+	MetaMononokeInu._rOwned (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#157) can be used in cross function reentrancies:
+	- MetaMononokeInu._takeTeam(uint256) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#452-456)
+	- MetaMononokeInu._transferStandard(address,address,uint256) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#432-450)
+	- MetaMononokeInu.balanceOf(address) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#215-217)
+	- MetaMononokeInu.constructor(address,address) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#188-197)
+	- _tokenTransfer(from,to,amount,takeFee) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#352)
+		- _rTotal = _rTotal.sub(rFee) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#459)
+	MetaMononokeInu._rTotal (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#163) can be used in cross function reentrancies:
+	- MetaMononokeInu._getCurrentSupply() (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#534-540)
+	- MetaMononokeInu._reflectFee(uint256,uint256) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#458-461)
+	- MetaMononokeInu.constructor(address,address) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#188-197)
+	- MetaMononokeInu.tokenFromReflection(uint256) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#267-278)
+Reentrancy in MetaMononokeInu.startTrading() (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#374-397):
+	External calls:
+	- uniswapV2Pair = IUniswapV2Factory(_uniswapV2Router.factory()).createPair(address(this),_uniswapV2Router.WETH()) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#379-380)
+	- uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#381-388)
+	External calls sending eth:
+	- uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#381-388)
+	State variables written after the call(s):
+	- tradingOpen = true (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#392)
+	MetaMononokeInu.tradingOpen (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#175) can be used in cross function reentrancies:
+	- MetaMononokeInu.startTrading() (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#374-397)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+MetaMononokeInu.startTrading() (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#374-397) ignores return value by uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#381-388)
+MetaMononokeInu.startTrading() (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#374-397) ignores return value by IERC20(uniswapV2Pair).approve(address(uniswapV2Router),type()(uint256).max) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#393-396)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+MetaMononokeInu.allowance(address,address).owner (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#228) shadows:
+	- Ownable.owner() (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#53-55) (function)
+MetaMononokeInu._approve(address,address,uint256).owner (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#292) shadows:
+	- Ownable.owner() (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#53-55) (function)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#local-variable-shadowing
+
+Ownable.constructor().msgSender (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#48) lacks a zero-check on :
+		- _owner = msgSender (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#49)
+MetaMononokeInu.constructor(address,address).addr1 (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#188) lacks a zero-check on :
+		- _teamAddress = addr1 (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#189)
+MetaMononokeInu.constructor(address,address).addr2 (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#188) lacks a zero-check on :
+		- _marketingFunds = addr2 (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#190)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in MetaMononokeInu._transfer(address,address,uint256) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#302-353):
+	External calls:
+	- swapTokensForEth(contractTokenBalance) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#339)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#360-366)
+	External calls sending eth:
+	- sendETHToFee(address(this).balance) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#342)
+		- _teamAddress.transfer(amount.div(2)) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#370)
+		- _marketingFunds.transfer(amount.div(2)) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#371)
+	State variables written after the call(s):
+	- _tokenTransfer(from,to,amount,takeFee) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#352)
+		- _tFeeTotal = _tFeeTotal.add(tFee) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#460)
+	- _tokenTransfer(from,to,amount,takeFee) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#352)
+		- _taxFee = 5 (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#287)
+		- _taxFee = 0 (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#282)
+	- _tokenTransfer(from,to,amount,takeFee) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#352)
+		- _teamFee = 10 (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#288)
+		- _teamFee = 0 (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#283)
+Reentrancy in MetaMononokeInu.startTrading() (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#374-397):
+	External calls:
+	- uniswapV2Pair = IUniswapV2Factory(_uniswapV2Router.factory()).createPair(address(this),_uniswapV2Router.WETH()) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#379-380)
+	- uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#381-388)
+	External calls sending eth:
+	- uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#381-388)
+	State variables written after the call(s):
+	- _maxTxAmount = 60000000000 * 10 ** 9 (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#391)
+	- cooldownEnabled = false (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#390)
+	- swapEnabled = true (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#389)
+Reentrancy in MetaMononokeInu.transferFrom(address,address,uint256) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#246-261):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#251)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#360-366)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#251)
+		- _teamAddress.transfer(amount.div(2)) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#370)
+		- _marketingFunds.transfer(amount.div(2)) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#371)
+	State variables written after the call(s):
+	- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#252-259)
+		- _allowances[owner][spender] = amount (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#298)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in MetaMononokeInu._transfer(address,address,uint256) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#302-353):
+	External calls:
+	- swapTokensForEth(contractTokenBalance) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#339)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#360-366)
+	External calls sending eth:
+	- sendETHToFee(address(this).balance) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#342)
+		- _teamAddress.transfer(amount.div(2)) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#370)
+		- _marketingFunds.transfer(amount.div(2)) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#371)
+	Event emitted after the call(s):
+	- Transfer(sender,recipient,tTransferAmount) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#449)
+		- _tokenTransfer(from,to,amount,takeFee) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#352)
+Reentrancy in MetaMononokeInu.transferFrom(address,address,uint256) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#246-261):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#251)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#360-366)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#251)
+		- _teamAddress.transfer(amount.div(2)) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#370)
+		- _marketingFunds.transfer(amount.div(2)) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#371)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#299)
+		- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#252-259)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+MetaMononokeInu._transfer(address,address,uint256) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#302-353) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(cooldown[to] < block.timestamp) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#334)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Version constraint ^0.8.4 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- SignedImmutables.
+It is used by:
+	- ^0.8.4 (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#6)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Function IUniswapV2Router02.WETH() (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#130) is not in mixedCase
+Constant MetaMononokeInu._name (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#152) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant MetaMononokeInu._symbol (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#153) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant MetaMononokeInu._decimals (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#154) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant MetaMononokeInu._tTotal (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#162) is not in UPPER_CASE_WITH_UNDERSCORES
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in MetaMononokeInu._transfer(address,address,uint256) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#302-353):
+	External calls:
+	- sendETHToFee(address(this).balance) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#342)
+		- _teamAddress.transfer(amount.div(2)) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#370)
+		- _marketingFunds.transfer(amount.div(2)) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#371)
+	State variables written after the call(s):
+	- _tokenTransfer(from,to,amount,takeFee) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#352)
+		- _rOwned[address(this)] = _rOwned[address(this)].add(rTeam) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#455)
+		- _rOwned[sender] = _rOwned[sender].sub(rAmount) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#445)
+		- _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#446)
+	- _tokenTransfer(from,to,amount,takeFee) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#352)
+		- _rTotal = _rTotal.sub(rFee) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#459)
+	- _tokenTransfer(from,to,amount,takeFee) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#352)
+		- _tFeeTotal = _tFeeTotal.add(tFee) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#460)
+	- _tokenTransfer(from,to,amount,takeFee) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#352)
+		- _taxFee = 5 (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#287)
+		- _taxFee = 0 (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#282)
+	- _tokenTransfer(from,to,amount,takeFee) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#352)
+		- _teamFee = 10 (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#288)
+		- _teamFee = 0 (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#283)
+	Event emitted after the call(s):
+	- Transfer(sender,recipient,tTransferAmount) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#449)
+		- _tokenTransfer(from,to,amount,takeFee) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#352)
+Reentrancy in MetaMononokeInu.transferFrom(address,address,uint256) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#246-261):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#251)
+		- _teamAddress.transfer(amount.div(2)) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#370)
+		- _marketingFunds.transfer(amount.div(2)) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#371)
+	State variables written after the call(s):
+	- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#252-259)
+		- _allowances[owner][spender] = amount (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#298)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#299)
+		- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#252-259)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+MetaMononokeInu.startTrading() (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#374-397) uses literals with too many digits:
+	- _maxTxAmount = 60000000000 * 10 ** 9 (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#391)
+MetaMononokeInu.slitherConstructorConstantVariables() (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#149-548) uses literals with too many digits:
+	- _tTotal = 1000000000000 * 10 ** 9 (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#162)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+MetaMononokeInu._tOwned (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#158) is never used in MetaMononokeInu (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#149-548)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-state-variable
+
+MetaMononokeInu._marketingFunds (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#172) should be immutable 
+MetaMononokeInu._teamAddress (0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol#171) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+./0x085e64546fe941bbfd1751b99365dab4b2f454fc.sol analyzed (7 contracts with 94 detectors), 29 result(s) found
+
+real	0m2.552s
+user	0m2.358s
+sys	0m0.196s

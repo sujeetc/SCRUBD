@@ -1,0 +1,140 @@
+'solc --version' running
+'solc ./0x1056f5436dc817e28a24c509ff26f5912b837214.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x1056f5436dc817e28a24c509ff26f5912b837214.sol:
+./0x1056f5436dc817e28a24c509ff26f5912b837214.sol:286:5: Warning: Function state mutability can be restricted to pure
+    function finalization() internal {}
+    ^---------------------------------^
+
+
+Reentrancy in CompliantCrowdsaleHardcap._approveMint(uint256) (0x1056f5436dc817e28a24c509ff26f5912b837214.sol#556-578):
+	External calls:
+	- TokenInterface(token).mint(pendingMints[nonce].to,pendingMints[nonce].tokens) (0x1056f5436dc817e28a24c509ff26f5912b837214.sol#565)
+	- checkIsInvestorApproved(pendingMints[nonce].to) (0x1056f5436dc817e28a24c509ff26f5912b837214.sol#558)
+		- require(bool)(whiteListingContract.isInvestorApproved(_account)) (0x1056f5436dc817e28a24c509ff26f5912b837214.sol#379)
+	External calls sending eth:
+	- forwardFunds(pendingMints[nonce].weiAmount) (0x1056f5436dc817e28a24c509ff26f5912b837214.sol#574)
+		- wallet.transfer(amount) (0x1056f5436dc817e28a24c509ff26f5912b837214.sol#641)
+	State variables written after the call(s):
+	- delete pendingMints[nonce] (0x1056f5436dc817e28a24c509ff26f5912b837214.sol#575)
+	CompliantCrowdsaleHardcap.pendingMints (0x1056f5436dc817e28a24c509ff26f5912b837214.sol#374) can be used in cross function reentrancies:
+	- CompliantCrowdsaleHardcap._approveMint(uint256) (0x1056f5436dc817e28a24c509ff26f5912b837214.sol#556-578)
+	- CompliantCrowdsaleHardcap._rejectMint(uint256,uint256) (0x1056f5436dc817e28a24c509ff26f5912b837214.sol#584-599)
+	- CompliantCrowdsaleHardcap.buyTokens(address) (0x1056f5436dc817e28a24c509ff26f5912b837214.sol#479-495)
+	- CompliantCrowdsaleHardcap.pendingMints (0x1056f5436dc817e28a24c509ff26f5912b837214.sol#374)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+Crowdsale.buyTokens(address) (0x1056f5436dc817e28a24c509ff26f5912b837214.sol#207-223) ignores return value by TokenInterface(token).mint(beneficiary,tokens) (0x1056f5436dc817e28a24c509ff26f5912b837214.sol#219)
+CompliantCrowdsaleHardcap._approveMint(uint256) (0x1056f5436dc817e28a24c509ff26f5912b837214.sol#556-578) ignores return value by TokenInterface(token).mint(pendingMints[nonce].to,pendingMints[nonce].tokens) (0x1056f5436dc817e28a24c509ff26f5912b837214.sol#565)
+CompliantCrowdsaleHardcap.finalization() (0x1056f5436dc817e28a24c509ff26f5912b837214.sol#612-616) ignores return value by TokenInterface(token).finishMinting() (0x1056f5436dc817e28a24c509ff26f5912b837214.sol#613)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+CompliantCrowdsaleHardcap.checkIsInvestorApproved(address) (0x1056f5436dc817e28a24c509ff26f5912b837214.sol#378-381) has external calls inside a loop: require(bool)(whiteListingContract.isInvestorApproved(_account)) (0x1056f5436dc817e28a24c509ff26f5912b837214.sol#379)
+CompliantCrowdsaleHardcap._approveMint(uint256) (0x1056f5436dc817e28a24c509ff26f5912b837214.sol#556-578) has external calls inside a loop: TokenInterface(token).mint(pendingMints[nonce].to,pendingMints[nonce].tokens) (0x1056f5436dc817e28a24c509ff26f5912b837214.sol#565)
+CompliantCrowdsaleHardcap.forwardFunds(uint256) (0x1056f5436dc817e28a24c509ff26f5912b837214.sol#640-642) has external calls inside a loop: wallet.transfer(amount) (0x1056f5436dc817e28a24c509ff26f5912b837214.sol#641)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation/#calls-inside-a-loop
+
+Reentrancy in CompliantCrowdsaleHardcap._approveMint(uint256) (0x1056f5436dc817e28a24c509ff26f5912b837214.sol#556-578):
+	External calls:
+	- checkIsInvestorApproved(pendingMints[nonce].to) (0x1056f5436dc817e28a24c509ff26f5912b837214.sol#558)
+		- require(bool)(whiteListingContract.isInvestorApproved(_account)) (0x1056f5436dc817e28a24c509ff26f5912b837214.sol#379)
+	State variables written after the call(s):
+	- weiRaised = weiRaised.add(pendingMints[nonce].weiAmount) (0x1056f5436dc817e28a24c509ff26f5912b837214.sol#562)
+Reentrancy in CompliantCrowdsaleHardcap.buyTokens(address) (0x1056f5436dc817e28a24c509ff26f5912b837214.sol#479-495):
+	External calls:
+	- checkIsInvestorApproved(beneficiary) (0x1056f5436dc817e28a24c509ff26f5912b837214.sol#482)
+		- require(bool)(whiteListingContract.isInvestorApproved(_account)) (0x1056f5436dc817e28a24c509ff26f5912b837214.sol#379)
+	State variables written after the call(s):
+	- currentMintNonce ++ (0x1056f5436dc817e28a24c509ff26f5912b837214.sol#494)
+	- pendingMints[currentMintNonce] = MintStruct(beneficiary,tokens,weiAmount) (0x1056f5436dc817e28a24c509ff26f5912b837214.sol#491)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in CompliantCrowdsaleHardcap._approveMint(uint256) (0x1056f5436dc817e28a24c509ff26f5912b837214.sol#556-578):
+	External calls:
+	- TokenInterface(token).mint(pendingMints[nonce].to,pendingMints[nonce].tokens) (0x1056f5436dc817e28a24c509ff26f5912b837214.sol#565)
+	- checkIsInvestorApproved(pendingMints[nonce].to) (0x1056f5436dc817e28a24c509ff26f5912b837214.sol#558)
+		- require(bool)(whiteListingContract.isInvestorApproved(_account)) (0x1056f5436dc817e28a24c509ff26f5912b837214.sol#379)
+	Event emitted after the call(s):
+	- TokenPurchase(msg.sender,pendingMints[nonce].to,pendingMints[nonce].weiAmount,pendingMints[nonce].tokens) (0x1056f5436dc817e28a24c509ff26f5912b837214.sol#567-572)
+Reentrancy in Crowdsale.buyTokens(address) (0x1056f5436dc817e28a24c509ff26f5912b837214.sol#207-223):
+	External calls:
+	- TokenInterface(token).mint(beneficiary,tokens) (0x1056f5436dc817e28a24c509ff26f5912b837214.sol#219)
+	Event emitted after the call(s):
+	- TokenPurchase(msg.sender,beneficiary,weiAmount,tokens) (0x1056f5436dc817e28a24c509ff26f5912b837214.sol#220)
+Reentrancy in CompliantCrowdsaleHardcap.buyTokens(address) (0x1056f5436dc817e28a24c509ff26f5912b837214.sol#479-495):
+	External calls:
+	- checkIsInvestorApproved(beneficiary) (0x1056f5436dc817e28a24c509ff26f5912b837214.sol#482)
+		- require(bool)(whiteListingContract.isInvestorApproved(_account)) (0x1056f5436dc817e28a24c509ff26f5912b837214.sol#379)
+	Event emitted after the call(s):
+	- ContributionRegistered(beneficiary,tokens,weiAmount,currentMintNonce) (0x1056f5436dc817e28a24c509ff26f5912b837214.sol#492)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+Crowdsale.constructor(uint256,uint256,uint256,uint256,address,address) (0x1056f5436dc817e28a24c509ff26f5912b837214.sol#186-199) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(_startTime >= now) (0x1056f5436dc817e28a24c509ff26f5912b837214.sol#187)
+Crowdsale.hasEnded() (0x1056f5436dc817e28a24c509ff26f5912b837214.sol#226-228) uses timestamp for comparisons
+	Dangerous comparisons:
+	- now > endTime (0x1056f5436dc817e28a24c509ff26f5912b837214.sol#227)
+Crowdsale.validPurchase() (0x1056f5436dc817e28a24c509ff26f5912b837214.sol#242-247) uses timestamp for comparisons
+	Dangerous comparisons:
+	- withinPeriod = now >= startTime && now <= endTime (0x1056f5436dc817e28a24c509ff26f5912b837214.sol#244)
+	- withinPeriod && nonZeroPurchase (0x1056f5436dc817e28a24c509ff26f5912b837214.sol#246)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Whitelist.disapproveInvestorsInBulk(address[]) (0x1056f5436dc817e28a24c509ff26f5912b837214.sol#354-359) has costly operations inside a loop:
+	- delete investorMap[toDisapprove[i]] (0x1056f5436dc817e28a24c509ff26f5912b837214.sol#356)
+CompliantCrowdsaleHardcap._approveMint(uint256) (0x1056f5436dc817e28a24c509ff26f5912b837214.sol#556-578) has costly operations inside a loop:
+	- weiRaised = weiRaised.add(pendingMints[nonce].weiAmount) (0x1056f5436dc817e28a24c509ff26f5912b837214.sol#562)
+CompliantCrowdsaleHardcap._approveMint(uint256) (0x1056f5436dc817e28a24c509ff26f5912b837214.sol#556-578) has costly operations inside a loop:
+	- delete pendingMints[nonce] (0x1056f5436dc817e28a24c509ff26f5912b837214.sol#575)
+CompliantCrowdsaleHardcap._rejectMint(uint256,uint256) (0x1056f5436dc817e28a24c509ff26f5912b837214.sol#584-599) has costly operations inside a loop:
+	- delete pendingMints[nonce] (0x1056f5436dc817e28a24c509ff26f5912b837214.sol#598)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#costly-operations-inside-a-loop
+
+Crowdsale.forwardFunds() (0x1056f5436dc817e28a24c509ff26f5912b837214.sol#237-239) is never used and should be removed
+Crowdsale.getTokenAmount(uint256) (0x1056f5436dc817e28a24c509ff26f5912b837214.sol#231-233) is never used and should be removed
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dead-code
+
+Version constraint 0.4.24 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ABIEncoderV2PackedStorage_0.4.x
+	- ExpExponentCleanup
+	- EventStructWrongData.
+It is used by:
+	- 0.4.24 (0x1056f5436dc817e28a24c509ff26f5912b837214.sol#1)
+solc-0.4.24 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Parameter Whitelist.isInvestorApproved(address)._investor (0x1056f5436dc817e28a24c509ff26f5912b837214.sol#320) is not in mixedCase
+Parameter CompliantCrowdsaleHardcap.updateRate(uint256)._rate (0x1056f5436dc817e28a24c509ff26f5912b837214.sol#500) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in CompliantCrowdsaleHardcap._approveMint(uint256) (0x1056f5436dc817e28a24c509ff26f5912b837214.sol#556-578):
+	External calls:
+	- forwardFunds(pendingMints[nonce].weiAmount) (0x1056f5436dc817e28a24c509ff26f5912b837214.sol#574)
+		- wallet.transfer(amount) (0x1056f5436dc817e28a24c509ff26f5912b837214.sol#641)
+	State variables written after the call(s):
+	- delete pendingMints[nonce] (0x1056f5436dc817e28a24c509ff26f5912b837214.sol#575)
+Reentrancy in CompliantCrowdsaleHardcap.claim() (0x1056f5436dc817e28a24c509ff26f5912b837214.sol#602-610):
+	External calls:
+	- msg.sender.transfer(value) (0x1056f5436dc817e28a24c509ff26f5912b837214.sol#607)
+	Event emitted after the call(s):
+	- Claimed(msg.sender,value) (0x1056f5436dc817e28a24c509ff26f5912b837214.sol#609)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+./0x1056f5436dc817e28a24c509ff26f5912b837214.sol analyzed (8 contracts with 94 detectors), 27 result(s) found
+
+real	0m1.788s
+user	0m1.581s
+sys	0m0.210s

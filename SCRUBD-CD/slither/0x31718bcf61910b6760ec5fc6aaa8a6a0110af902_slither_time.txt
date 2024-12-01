@@ -1,0 +1,58 @@
+'solc --version' running
+'solc ./0x31718bcf61910b6760ec5fc6aaa8a6a0110af902.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+PepFarmer.reapFarm() (0x31718bcf61910b6760ec5fc6aaa8a6a0110af902.sol#71-75) ignores return value by Corn(object).transfer(msg.sender,workDone[msg.sender]) (0x31718bcf61910b6760ec5fc6aaa8a6a0110af902.sol#73)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+Reentrancy in PepFarmer.reapFarm() (0x31718bcf61910b6760ec5fc6aaa8a6a0110af902.sol#71-75):
+	External calls:
+	- Corn(object).transfer(msg.sender,workDone[msg.sender]) (0x31718bcf61910b6760ec5fc6aaa8a6a0110af902.sol#73)
+	State variables written after the call(s):
+	- workDone[msg.sender] = 0 (0x31718bcf61910b6760ec5fc6aaa8a6a0110af902.sol#74)
+	PepFarmer.workDone (0x31718bcf61910b6760ec5fc6aaa8a6a0110af902.sol#61) can be used in cross function reentrancies:
+	- PepFarmer.pepFarm() (0x31718bcf61910b6760ec5fc6aaa8a6a0110af902.sol#63-69)
+	- PepFarmer.reapFarm() (0x31718bcf61910b6760ec5fc6aaa8a6a0110af902.sol#71-75)
+	- PepFarmer.workDone (0x31718bcf61910b6760ec5fc6aaa8a6a0110af902.sol#61)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+PepFarmer.pepFarm() (0x31718bcf61910b6760ec5fc6aaa8a6a0110af902.sol#63-69) has external calls inside a loop: CornFarm(shop).buyObject(this) (0x31718bcf61910b6760ec5fc6aaa8a6a0110af902.sol#65)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation/#calls-inside-a-loop
+
+Reentrancy in PepFarmer.pepFarm() (0x31718bcf61910b6760ec5fc6aaa8a6a0110af902.sol#63-69):
+	External calls:
+	- CornFarm(shop).buyObject(this) (0x31718bcf61910b6760ec5fc6aaa8a6a0110af902.sol#65)
+	State variables written after the call(s):
+	- workDone[msg.sender] = workDone[msg.sender].add(uint256(100000000000000000000)) (0x31718bcf61910b6760ec5fc6aaa8a6a0110af902.sol#68)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Version constraint ^0.4.18 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ExpExponentCleanup
+	- EventStructWrongData
+	- NestedArrayFunctionCallDecoder.
+It is used by:
+	- ^0.4.18 (0x31718bcf61910b6760ec5fc6aaa8a6a0110af902.sol#1)
+solc-0.4.18 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+PepFarmer.object (0x31718bcf61910b6760ec5fc6aaa8a6a0110af902.sol#59) should be constant 
+PepFarmer.shop (0x31718bcf61910b6760ec5fc6aaa8a6a0110af902.sol#58) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+./0x31718bcf61910b6760ec5fc6aaa8a6a0110af902.sol analyzed (4 contracts with 94 detectors), 8 result(s) found
+
+real	0m1.295s
+user	0m1.090s
+sys	0m0.208s

@@ -1,0 +1,553 @@
+'solc --version' running
+'solc ./0x13c34380e14c47cdd089d466396e53f8a0a24442.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x13c34380e14c47cdd089d466396e53f8a0a24442.sol:
+Warning: Contract code size is 34023 bytes and exceeds 24576 bytes (a limit introduced in Spurious Dragon). This contract may not be deployable on Mainnet. Consider enabling the optimizer (with a low "runs" value!), turning off revert strings, or using libraries.
+   --> 0x13c34380e14c47cdd089d466396e53f8a0a24442.sol:564:1:
+    |
+564 | contract PunkMonkey is ERC20, Ownable {
+    | ^ (Relevant source part starts here and spans across multiple lines).
+
+
+
+PunkMonkeyDividendTracker._reinvestDividendOfUser(address) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1481-1521) sends eth to arbitrary user
+	Dangerous calls:
+	- uniswapV2Router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: _withdrawableDividend}(0,path,address(this),block.timestamp) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1495-1510)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+Reentrancy in PunkMonkeyDividendTracker._reinvestDividendOfUser(address) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1481-1521):
+	External calls:
+	- uniswapV2Router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: _withdrawableDividend}(0,path,address(this),block.timestamp) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1495-1510)
+	- PunkMonkeyContract.transfer(account,received) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1503)
+	External calls sending eth:
+	- uniswapV2Router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: _withdrawableDividend}(0,path,address(this),block.timestamp) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1495-1510)
+	State variables written after the call(s):
+	- withdrawnDividends[account] = withdrawnDividends[account].sub(_withdrawableDividend) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1513)
+	DividendPayingToken.withdrawnDividends (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#461) can be used in cross function reentrancies:
+	- PunkMonkeyDividendTracker._reinvestDividendOfUser(address) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1481-1521)
+	- PunkMonkeyDividendTracker._withdrawDividendOfUser(address) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1523-1559)
+	- DividendPayingToken.withdrawableDividendOf(address) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#514-516)
+	- DividendPayingToken.withdrawnDividendOf(address) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#518-520)
+Reentrancy in PunkMonkey._transfer(address,address,uint256) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#923-1060):
+	External calls:
+	- swapAndLiquify(swapTokens) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1019)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1108-1115)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1077-1083)
+	- swapAndSendDividends(remainingBalance) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1023)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1077-1083)
+		- (success,None) = address(dividendTracker).call{value: dividends}() (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1156)
+		- (successOp1,None) = address(marketingWallet).call{value: marketingPayout}() (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1170)
+		- (successOp2,None) = address(devWallet).call{value: devPayout}() (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1173)
+	External calls sending eth:
+	- swapAndLiquify(swapTokens) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1019)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1108-1115)
+	- swapAndSendDividends(remainingBalance) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1023)
+		- (success,None) = address(dividendTracker).call{value: dividends}() (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1156)
+		- (successOp1,None) = address(marketingWallet).call{value: marketingPayout}() (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1170)
+		- (successOp2,None) = address(devWallet).call{value: devPayout}() (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1173)
+	State variables written after the call(s):
+	- super._transfer(from,DEAD,burntokens) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1034)
+		- _balances[sender] = _balances[sender].sub(amount,ERC20: transfer amount exceeds balance) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#188)
+		- _balances[recipient] = _balances[recipient].add(amount) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#189)
+	ERC20._balances (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#117) can be used in cross function reentrancies:
+	- ERC20._mint(address,uint256) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#193-201)
+	- ERC20._transfer(address,address,uint256) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#182-191)
+	- ERC20.balanceOf(address) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#146-148)
+	- super._transfer(from,address(this),fees) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1048)
+		- _balances[sender] = _balances[sender].sub(amount,ERC20: transfer amount exceeds balance) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#188)
+		- _balances[recipient] = _balances[recipient].add(amount) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#189)
+	ERC20._balances (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#117) can be used in cross function reentrancies:
+	- ERC20._mint(address,uint256) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#193-201)
+	- ERC20._transfer(address,address,uint256) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#182-191)
+	- ERC20.balanceOf(address) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#146-148)
+	- buyAmount = 1 (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1024)
+	PunkMonkey.buyAmount (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#575) can be used in cross function reentrancies:
+	- PunkMonkey._transfer(address,address,uint256) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#923-1060)
+	- PunkMonkey.buyAmount (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#575)
+	- PunkMonkey.forceSwapAndSendDividends(uint256) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1118-1128)
+	- PunkMonkey.swapAndSendDividends(uint256) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1130-1177)
+	- buyAmount = buyAmount.add(fees) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1045)
+	PunkMonkey.buyAmount (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#575) can be used in cross function reentrancies:
+	- PunkMonkey._transfer(address,address,uint256) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#923-1060)
+	- PunkMonkey.buyAmount (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#575)
+	- PunkMonkey.forceSwapAndSendDividends(uint256) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1118-1128)
+	- PunkMonkey.swapAndSendDividends(uint256) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1130-1177)
+	- sellAmount = 1 (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1025)
+	PunkMonkey.sellAmount (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#574) can be used in cross function reentrancies:
+	- PunkMonkey._transfer(address,address,uint256) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#923-1060)
+	- PunkMonkey.forceSwapAndSendDividends(uint256) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1118-1128)
+	- PunkMonkey.sellAmount (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#574)
+	- PunkMonkey.swapAndSendDividends(uint256) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1130-1177)
+	- sellAmount = sellAmount.add(fees) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1042)
+	PunkMonkey.sellAmount (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#574) can be used in cross function reentrancies:
+	- PunkMonkey._transfer(address,address,uint256) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#923-1060)
+	- PunkMonkey.forceSwapAndSendDividends(uint256) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1118-1128)
+	- PunkMonkey.sellAmount (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#574)
+	- PunkMonkey.swapAndSendDividends(uint256) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1130-1177)
+	- swapping = false (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1026)
+	PunkMonkey.swapping (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#571) can be used in cross function reentrancies:
+	- PunkMonkey._transfer(address,address,uint256) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#923-1060)
+Reentrancy in PunkMonkey._transfer(address,address,uint256) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#923-1060):
+	External calls:
+	- swapAndLiquify(swapTokens) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1019)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1108-1115)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1077-1083)
+	- swapAndSendDividends(remainingBalance) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1023)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1077-1083)
+		- (success,None) = address(dividendTracker).call{value: dividends}() (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1156)
+		- (successOp1,None) = address(marketingWallet).call{value: marketingPayout}() (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1170)
+		- (successOp2,None) = address(devWallet).call{value: devPayout}() (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1173)
+	- (iterations,claims,lastProcessedIndex) = dividendTracker.process(gas) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1052-1054)
+	External calls sending eth:
+	- swapAndLiquify(swapTokens) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1019)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1108-1115)
+	- swapAndSendDividends(remainingBalance) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1023)
+		- (success,None) = address(dividendTracker).call{value: dividends}() (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1156)
+		- (successOp1,None) = address(marketingWallet).call{value: marketingPayout}() (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1170)
+		- (successOp2,None) = address(devWallet).call{value: devPayout}() (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1173)
+	State variables written after the call(s):
+	- super._transfer(from,to,amount) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1057)
+		- _balances[sender] = _balances[sender].sub(amount,ERC20: transfer amount exceeds balance) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#188)
+		- _balances[recipient] = _balances[recipient].add(amount) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#189)
+	ERC20._balances (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#117) can be used in cross function reentrancies:
+	- ERC20._mint(address,uint256) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#193-201)
+	- ERC20._transfer(address,address,uint256) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#182-191)
+	- ERC20.balanceOf(address) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#146-148)
+Reentrancy in DividendPayingToken._withdrawDividendOfUser(address) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#492-508):
+	External calls:
+	- (success,None) = user.call{gas: 3000,value: _withdrawableDividend}() (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#497)
+	State variables written after the call(s):
+	- withdrawnDividends[user] = withdrawnDividends[user].sub(_withdrawableDividend) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#500)
+	DividendPayingToken.withdrawnDividends (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#461) can be used in cross function reentrancies:
+	- DividendPayingToken._withdrawDividendOfUser(address) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#492-508)
+	- DividendPayingToken.withdrawableDividendOf(address) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#514-516)
+	- DividendPayingToken.withdrawnDividendOf(address) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#518-520)
+Reentrancy in PunkMonkeyDividendTracker._withdrawDividendOfUser(address) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1523-1559):
+	External calls:
+	- (success,None) = user.call{gas: 3000,value: _withdrawableDividend}() (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1533)
+	- uniswapV2Router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: _withdrawableDividend}(0,path,user,block.timestamp) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1539-1546)
+	State variables written after the call(s):
+	- withdrawnDividends[user] = withdrawnDividends[user].sub(_withdrawableDividend) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1550)
+	DividendPayingToken.withdrawnDividends (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#461) can be used in cross function reentrancies:
+	- PunkMonkeyDividendTracker._reinvestDividendOfUser(address) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1481-1521)
+	- PunkMonkeyDividendTracker._withdrawDividendOfUser(address) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1523-1559)
+	- DividendPayingToken.withdrawableDividendOf(address) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#514-516)
+	- DividendPayingToken.withdrawnDividendOf(address) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#518-520)
+Reentrancy in PunkMonkey.forceSwapAndSendDividends(uint256) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1118-1128):
+	External calls:
+	- swapAndSendDividends(tokens) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1124)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1077-1083)
+		- (success,None) = address(dividendTracker).call{value: dividends}() (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1156)
+		- (successOp1,None) = address(marketingWallet).call{value: marketingPayout}() (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1170)
+		- (successOp2,None) = address(devWallet).call{value: devPayout}() (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1173)
+	External calls sending eth:
+	- swapAndSendDividends(tokens) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1124)
+		- (success,None) = address(dividendTracker).call{value: dividends}() (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1156)
+		- (successOp1,None) = address(marketingWallet).call{value: marketingPayout}() (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1170)
+		- (successOp2,None) = address(devWallet).call{value: devPayout}() (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1173)
+	State variables written after the call(s):
+	- buyAmount = buyAmount.sub(fromBuy) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1126)
+	PunkMonkey.buyAmount (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#575) can be used in cross function reentrancies:
+	- PunkMonkey._transfer(address,address,uint256) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#923-1060)
+	- PunkMonkey.buyAmount (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#575)
+	- PunkMonkey.forceSwapAndSendDividends(uint256) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1118-1128)
+	- PunkMonkey.swapAndSendDividends(uint256) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1130-1177)
+	- sellAmount = sellAmount.sub(fromSell) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1127)
+	PunkMonkey.sellAmount (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#574) can be used in cross function reentrancies:
+	- PunkMonkey._transfer(address,address,uint256) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#923-1060)
+	- PunkMonkey.forceSwapAndSendDividends(uint256) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1118-1128)
+	- PunkMonkey.sellAmount (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#574)
+	- PunkMonkey.swapAndSendDividends(uint256) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1130-1177)
+Reentrancy in PunkMonkeyDividendTracker.process(uint256) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1390-1436):
+	External calls:
+	- processAccount(address(account),true) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1417)
+		- (success,None) = user.call{gas: 3000,value: _withdrawableDividend}() (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1533)
+		- uniswapV2Router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: _withdrawableDividend}(0,path,address(this),block.timestamp) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1495-1510)
+		- uniswapV2Router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: _withdrawableDividend}(0,path,user,block.timestamp) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1539-1546)
+		- PunkMonkeyContract.transfer(account,received) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1503)
+	External calls sending eth:
+	- processAccount(address(account),true) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1417)
+		- (success,None) = user.call{gas: 3000,value: _withdrawableDividend}() (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1533)
+		- uniswapV2Router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: _withdrawableDividend}(0,path,address(this),block.timestamp) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1495-1510)
+		- uniswapV2Router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: _withdrawableDividend}(0,path,user,block.timestamp) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1539-1546)
+	State variables written after the call(s):
+	- lastProcessedIndex = _lastProcessedIndex (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1433)
+	PunkMonkeyDividendTracker.lastProcessedIndex (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1200) can be used in cross function reentrancies:
+	- PunkMonkeyDividendTracker.getAccount(address) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1329-1354)
+	- PunkMonkeyDividendTracker.getLastProcessedIndex() (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1321-1323)
+	- PunkMonkeyDividendTracker.lastProcessedIndex (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1200)
+	- PunkMonkeyDividendTracker.process(uint256) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1390-1436)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+PunkMonkeyDividendTracker._reinvestDividendOfUser(address) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1481-1521) ignores return value by PunkMonkeyContract.transfer(account,received) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1503)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+PunkMonkey._transfer(address,address,uint256) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#923-1060) performs a multiplication on the result of a division:
+	- swapAmountBought = contractTokenBalance.mul(buyAmount).div(totalBuySell) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1013)
+	- swapBuyTokens = swapAmountBought.mul(liquidityFee).div(totalBuyFees) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1015)
+PunkMonkey._transfer(address,address,uint256) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#923-1060) performs a multiplication on the result of a division:
+	- swapAmountSold = contractTokenBalance.mul(sellAmount).div(totalBuySell) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1014)
+	- swapSellTokens = swapAmountSold.mul(liquidityFee).div(totalSellFees) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1016)
+PunkMonkey.swapAndSendDividends(uint256) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1130-1177) performs a multiplication on the result of a division:
+	- dividendsFromSell = address(this).balance.mul(sellAmount).div(totalAmount).mul(sellRewardsFee).div(sellRewardsFee + sellMarketingFees + sellDevFee) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1150-1151)
+PunkMonkey.swapAndSendDividends(uint256) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1130-1177) performs a multiplication on the result of a division:
+	- dividendsFromBuy = address(this).balance.mul(buyAmount).div(totalAmount).mul(buyRewardsFee).div(buyRewardsFee + buyMarketingFees + buyDevFee) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1146-1147)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+Reentrancy in PunkMonkey.airdropToWallets(address[],uint256[]) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1179-1191):
+	External calls:
+	- dividendTracker.setBalance(address(wallet),balanceOf(wallet)) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1189)
+	State variables written after the call(s):
+	- super._transfer(msg.sender,wallet,airdropAmount) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1188)
+		- _balances[sender] = _balances[sender].sub(amount,ERC20: transfer amount exceeds balance) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#188)
+		- _balances[recipient] = _balances[recipient].add(amount) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#189)
+	ERC20._balances (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#117) can be used in cross function reentrancies:
+	- ERC20._mint(address,uint256) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#193-201)
+	- ERC20._transfer(address,address,uint256) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#182-191)
+	- ERC20.balanceOf(address) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#146-148)
+Reentrancy in PunkMonkey.transferAdmin(address) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#823-827):
+	External calls:
+	- dividendTracker.excludeFromDividends(newOwner) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#824)
+	State variables written after the call(s):
+	- transferOwnership(newOwner) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#826)
+		- _owner = newOwner (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#315)
+	Ownable._owner (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#288) can be used in cross function reentrancies:
+	- Ownable.onlyOwner() (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#302-305)
+	- Ownable.owner() (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#298-300)
+	- Ownable.renounceOwnership() (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#307-310)
+	- Ownable.transferOwnership(address) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#312-316)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+PunkMonkey._transfer(address,address,uint256) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#923-1060) uses tx.origin for authorization: require(bool,string)(block.timestamp >= _holderLastTransferTimestamp[tx.origin] + cooldowntimer,cooldown period active) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#976-977)
+PunkMonkey._transfer(address,address,uint256) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#923-1060) uses tx.origin for authorization: require(bool,string)(_holderLastTransferBlock[tx.origin] != block.number,Too many TX in block) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#993)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-usage-of-txorigin
+
+PunkMonkey._transfer(address,address,uint256).marketingFees (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#928) is a local variable never initialized
+PunkMonkey._transfer(address,address,uint256).devFees (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#930) is a local variable never initialized
+PunkMonkey._transfer(address,address,uint256).RewardsFee (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#926) is a local variable never initialized
+PunkMonkey.swapAndSendDividends(uint256).dividendsFromSell (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1143) is a local variable never initialized
+PunkMonkeyDividendTracker._withdrawDividendOfUser(address).success (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1530) is a local variable never initialized
+PunkMonkeyDividendTracker._reinvestDividendOfUser(address).success (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1484) is a local variable never initialized
+PunkMonkey._transfer(address,address,uint256).deadFees (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#927) is a local variable never initialized
+PunkMonkey.swapAndSendDividends(uint256).feePortions (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1162) is a local variable never initialized
+PunkMonkey._transfer(address,address,uint256).burntokens (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1030) is a local variable never initialized
+PunkMonkey._transfer(address,address,uint256).liquidityFee (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#929) is a local variable never initialized
+PunkMonkey.swapAndSendDividends(uint256).dividendsFromBuy (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1142) is a local variable never initialized
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#uninitialized-local-variables
+
+PunkMonkey.constructor() (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#645-698) ignores return value by dividendTracker.excludedFromDividends(address(0)) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#681)
+PunkMonkey.getAccountDividendsInfo(address) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#876-879) ignores return value by dividendTracker.getAccount(account) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#878)
+PunkMonkey.getAccountDividendsInfoAtIndex(uint256) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#881-884) ignores return value by dividendTracker.getAccountAtIndex(index) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#883)
+PunkMonkey.claim() (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#891-893) ignores return value by dividendTracker.processAccount(address(msg.sender),false) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#892)
+PunkMonkey.addLiquidity(uint256,uint256) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1103-1116) ignores return value by uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1108-1115)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+DividendPayingToken.constructor(string,string)._name (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#465) shadows:
+	- ERC20._name (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#122) (state variable)
+DividendPayingToken.constructor(string,string)._symbol (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#465) shadows:
+	- ERC20._symbol (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#123) (state variable)
+PunkMonkeyDividendTracker.constructor(address,address,address,string,string)._name (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1230) shadows:
+	- ERC20._name (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#122) (state variable)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#local-variable-shadowing
+
+PunkMonkey.setGasPriceLimit(uint256) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#759-762) should emit an event for: 
+	- gasPriceLimit = GWEI * 1000000000 (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#761) 
+PunkMonkey.setcooldowntimer(uint256) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#765-768) should emit an event for: 
+	- cooldowntimer = value (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#767) 
+PunkMonkey.setmaxWallet(uint256) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#771-775) should emit an event for: 
+	- maxWallet = value (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#774) 
+PunkMonkey.setmaxTX(uint256) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#778-782) should emit an event for: 
+	- maxTX = value (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#781) 
+PunkMonkey.setSwapTriggerAmount(uint256) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#785-787) should emit an event for: 
+	- swapTokensAtAmount = amount * (10 ** 18) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#786) 
+PunkMonkey.forceSwapAndSendDividends(uint256) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1118-1128) should emit an event for: 
+	- buyAmount = buyAmount.sub(fromBuy) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1126) 
+	- sellAmount = sellAmount.sub(fromSell) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1127) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+Ownable.constructor().msgSender (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#293) lacks a zero-check on :
+		- _owner = msgSender (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#294)
+PunkMonkeyDividendTracker.constructor(address,address,address,string,string).token (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1230) lacks a zero-check on :
+		- defaultToken = token (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1235)
+PunkMonkeyDividendTracker.updatePayoutToken(address).token (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1473) lacks a zero-check on :
+		- defaultToken = token (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1474)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+PunkMonkey.airdropToWallets(address[],uint256[]) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1179-1191) has external calls inside a loop: dividendTracker.setBalance(address(wallet),balanceOf(wallet)) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1189)
+PunkMonkeyDividendTracker._reinvestDividendOfUser(address) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1481-1521) has external calls inside a loop: path[0] = uniswapV2Router.WETH() (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1489)
+PunkMonkeyDividendTracker._reinvestDividendOfUser(address) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1481-1521) has external calls inside a loop: prevBalance = PunkMonkeyContract.balanceOf(address(this)) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1492)
+PunkMonkeyDividendTracker._reinvestDividendOfUser(address) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1481-1521) has external calls inside a loop: uniswapV2Router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: _withdrawableDividend}(0,path,address(this),block.timestamp) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1495-1510)
+PunkMonkeyDividendTracker._reinvestDividendOfUser(address) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1481-1521) has external calls inside a loop: received = PunkMonkeyContract.balanceOf(address(this)).sub(prevBalance) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1500)
+PunkMonkeyDividendTracker._reinvestDividendOfUser(address) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1481-1521) has external calls inside a loop: PunkMonkeyContract.transfer(account,received) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1503)
+PunkMonkeyDividendTracker._withdrawDividendOfUser(address) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1523-1559) has external calls inside a loop: (success,None) = user.call{gas: 3000,value: _withdrawableDividend}() (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1533)
+PunkMonkeyDividendTracker._withdrawDividendOfUser(address) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1523-1559) has external calls inside a loop: path[0] = uniswapV2Router.WETH() (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1537)
+PunkMonkeyDividendTracker._withdrawDividendOfUser(address) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1523-1559) has external calls inside a loop: uniswapV2Router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: _withdrawableDividend}(0,path,user,block.timestamp) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1539-1546)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation/#calls-inside-a-loop
+
+Reentrancy in PunkMonkey._transfer(address,address,uint256) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#923-1060):
+	External calls:
+	- swapAndLiquify(swapTokens) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1019)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1108-1115)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1077-1083)
+	- swapAndSendDividends(remainingBalance) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1023)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1077-1083)
+		- (success,None) = address(dividendTracker).call{value: dividends}() (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1156)
+		- (successOp1,None) = address(marketingWallet).call{value: marketingPayout}() (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1170)
+		- (successOp2,None) = address(devWallet).call{value: devPayout}() (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1173)
+	External calls sending eth:
+	- swapAndLiquify(swapTokens) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1019)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1108-1115)
+	- swapAndSendDividends(remainingBalance) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1023)
+		- (success,None) = address(dividendTracker).call{value: dividends}() (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1156)
+		- (successOp1,None) = address(marketingWallet).call{value: marketingPayout}() (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1170)
+		- (successOp2,None) = address(devWallet).call{value: devPayout}() (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1173)
+	State variables written after the call(s):
+	- swapAndSendDividends(remainingBalance) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1023)
+		- _allowances[owner][spender] = amount (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#217)
+	- _totalSupply = _totalSupply.sub(burntokens) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1035)
+Reentrancy in PunkMonkeyDividendTracker.processAccount(address,bool) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1438-1467):
+	External calls:
+	- amount = _reinvestDividendOfUser(account) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1451-1453)
+		- uniswapV2Router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: _withdrawableDividend}(0,path,address(this),block.timestamp) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1495-1510)
+		- PunkMonkeyContract.transfer(account,received) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1503)
+	- amount = _withdrawDividendOfUser(account) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1451-1453)
+		- (success,None) = user.call{gas: 3000,value: _withdrawableDividend}() (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1533)
+		- uniswapV2Router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: _withdrawableDividend}(0,path,user,block.timestamp) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1539-1546)
+	External calls sending eth:
+	- amount = _reinvestDividendOfUser(account) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1451-1453)
+		- uniswapV2Router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: _withdrawableDividend}(0,path,address(this),block.timestamp) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1495-1510)
+	- amount = _withdrawDividendOfUser(account) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1451-1453)
+		- (success,None) = user.call{gas: 3000,value: _withdrawableDividend}() (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1533)
+		- uniswapV2Router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: _withdrawableDividend}(0,path,user,block.timestamp) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1539-1546)
+	State variables written after the call(s):
+	- lastClaimTimes[account] = block.timestamp (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1456)
+Reentrancy in PunkMonkey.swapAndLiquify(uint256) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1062-1070):
+	External calls:
+	- swapTokensForEth(half) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1066)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1077-1083)
+	- addLiquidity(otherHalf,newBalance) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1068)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1108-1115)
+	External calls sending eth:
+	- addLiquidity(otherHalf,newBalance) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1068)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1108-1115)
+	State variables written after the call(s):
+	- addLiquidity(otherHalf,newBalance) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1068)
+		- _allowances[owner][spender] = amount (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#217)
+Reentrancy in PunkMonkey.transferAdmin(address) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#823-827):
+	External calls:
+	- dividendTracker.excludeFromDividends(newOwner) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#824)
+	State variables written after the call(s):
+	- _isExcludedFromFees[newOwner] = true (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#825)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in PunkMonkey._setAutomatedMarketMakerPair(address,bool) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#807-815):
+	External calls:
+	- dividendTracker.excludeFromDividends(pair) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#811)
+	Event emitted after the call(s):
+	- SetAutomatedMarketMakerPair(pair,value) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#814)
+Reentrancy in PunkMonkey._transfer(address,address,uint256) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#923-1060):
+	External calls:
+	- swapAndLiquify(swapTokens) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1019)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1108-1115)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1077-1083)
+	- swapAndSendDividends(remainingBalance) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1023)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1077-1083)
+		- (success,None) = address(dividendTracker).call{value: dividends}() (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1156)
+		- (successOp1,None) = address(marketingWallet).call{value: marketingPayout}() (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1170)
+		- (successOp2,None) = address(devWallet).call{value: devPayout}() (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1173)
+	External calls sending eth:
+	- swapAndLiquify(swapTokens) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1019)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1108-1115)
+	- swapAndSendDividends(remainingBalance) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1023)
+		- (success,None) = address(dividendTracker).call{value: dividends}() (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1156)
+		- (successOp1,None) = address(marketingWallet).call{value: marketingPayout}() (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1170)
+		- (successOp2,None) = address(devWallet).call{value: devPayout}() (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1173)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#218)
+		- swapAndSendDividends(remainingBalance) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1023)
+	- SendDividends(dividends,marketingPayout + devPayout,success && successOp1 && successOp2) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1176)
+		- swapAndSendDividends(remainingBalance) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1023)
+	- Transfer(sender,recipient,amount) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#190)
+		- super._transfer(from,address(this),fees) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1048)
+	- Transfer(sender,recipient,amount) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#190)
+		- super._transfer(from,DEAD,burntokens) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1034)
+Reentrancy in PunkMonkey._transfer(address,address,uint256) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#923-1060):
+	External calls:
+	- swapAndLiquify(swapTokens) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1019)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1108-1115)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1077-1083)
+	- swapAndSendDividends(remainingBalance) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1023)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1077-1083)
+		- (success,None) = address(dividendTracker).call{value: dividends}() (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1156)
+		- (successOp1,None) = address(marketingWallet).call{value: marketingPayout}() (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1170)
+		- (successOp2,None) = address(devWallet).call{value: devPayout}() (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1173)
+	- (iterations,claims,lastProcessedIndex) = dividendTracker.process(gas) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1052-1054)
+	External calls sending eth:
+	- swapAndLiquify(swapTokens) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1019)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1108-1115)
+	- swapAndSendDividends(remainingBalance) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1023)
+		- (success,None) = address(dividendTracker).call{value: dividends}() (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1156)
+		- (successOp1,None) = address(marketingWallet).call{value: marketingPayout}() (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1170)
+		- (successOp2,None) = address(devWallet).call{value: devPayout}() (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1173)
+	Event emitted after the call(s):
+	- ProcessedDividendTracker(iterations,claims,lastProcessedIndex,true,gas,tx.origin) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1053)
+	- Transfer(sender,recipient,amount) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#190)
+		- super._transfer(from,to,amount) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1057)
+Reentrancy in PunkMonkeyDividendTracker._withdrawDividendOfUser(address) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1523-1559):
+	External calls:
+	- (success,None) = user.call{gas: 3000,value: _withdrawableDividend}() (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1533)
+	- uniswapV2Router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: _withdrawableDividend}(0,path,user,block.timestamp) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1539-1546)
+	Event emitted after the call(s):
+	- DividendWithdrawn(user,_withdrawableDividend) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1554)
+Reentrancy in PunkMonkey.airdropToWallets(address[],uint256[]) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1179-1191):
+	External calls:
+	- dividendTracker.setBalance(address(wallet),balanceOf(wallet)) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1189)
+	Event emitted after the call(s):
+	- Transfer(sender,recipient,amount) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#190)
+		- super._transfer(msg.sender,wallet,airdropAmount) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1188)
+Reentrancy in PunkMonkeyDividendTracker.processAccount(address,bool) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1438-1467):
+	External calls:
+	- amount = _reinvestDividendOfUser(account) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1451-1453)
+		- uniswapV2Router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: _withdrawableDividend}(0,path,address(this),block.timestamp) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1495-1510)
+		- PunkMonkeyContract.transfer(account,received) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1503)
+	- amount = _withdrawDividendOfUser(account) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1451-1453)
+		- (success,None) = user.call{gas: 3000,value: _withdrawableDividend}() (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1533)
+		- uniswapV2Router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: _withdrawableDividend}(0,path,user,block.timestamp) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1539-1546)
+	External calls sending eth:
+	- amount = _reinvestDividendOfUser(account) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1451-1453)
+		- uniswapV2Router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: _withdrawableDividend}(0,path,address(this),block.timestamp) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1495-1510)
+	- amount = _withdrawDividendOfUser(account) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1451-1453)
+		- (success,None) = user.call{gas: 3000,value: _withdrawableDividend}() (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1533)
+		- uniswapV2Router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: _withdrawableDividend}(0,path,user,block.timestamp) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1539-1546)
+	Event emitted after the call(s):
+	- Claim(account,amount,automatic) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1461)
+	- DividendReinvested(account,amount,automatic) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1458)
+Reentrancy in PunkMonkey.processDividendTracker(uint256) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#886-889):
+	External calls:
+	- (iterations,claims,lastProcessedIndex) = dividendTracker.process(gas) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#887)
+	Event emitted after the call(s):
+	- ProcessedDividendTracker(iterations,claims,lastProcessedIndex,false,gas,tx.origin) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#888)
+Reentrancy in PunkMonkey.setPresaleWallet(address) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#724-729):
+	External calls:
+	- dividendTracker.excludeFromDividends(wallet) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#727)
+	Event emitted after the call(s):
+	- SetPreSaleWallet(wallet) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#728)
+Reentrancy in PunkMonkey.swapAndLiquify(uint256) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1062-1070):
+	External calls:
+	- swapTokensForEth(half) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1066)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1077-1083)
+	- addLiquidity(otherHalf,newBalance) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1068)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1108-1115)
+	External calls sending eth:
+	- addLiquidity(otherHalf,newBalance) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1068)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1108-1115)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#218)
+		- addLiquidity(otherHalf,newBalance) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1068)
+	- SwapAndLiquify(half,newBalance,otherHalf) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1069)
+Reentrancy in PunkMonkey.swapAndSendDividends(uint256) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1130-1177):
+	External calls:
+	- swapTokensForEth(tokens) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1134)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1077-1083)
+	- (success,None) = address(dividendTracker).call{value: dividends}() (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1156)
+	- (successOp1,None) = address(marketingWallet).call{value: marketingPayout}() (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1170)
+	- (successOp2,None) = address(devWallet).call{value: devPayout}() (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1173)
+	External calls sending eth:
+	- (success,None) = address(dividendTracker).call{value: dividends}() (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1156)
+	- (successOp1,None) = address(marketingWallet).call{value: marketingPayout}() (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1170)
+	- (successOp2,None) = address(devWallet).call{value: devPayout}() (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1173)
+	Event emitted after the call(s):
+	- SendDividends(dividends,marketingPayout + devPayout,success && successOp1 && successOp2) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1176)
+Reentrancy in PunkMonkey.transferAdmin(address) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#823-827):
+	External calls:
+	- dividendTracker.excludeFromDividends(newOwner) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#824)
+	Event emitted after the call(s):
+	- OwnershipTransferred(_owner,newOwner) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#314)
+		- transferOwnership(newOwner) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#826)
+Reentrancy in PunkMonkey.updatePayoutToken(address) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1086-1089):
+	External calls:
+	- dividendTracker.updatePayoutToken(token) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1087)
+	Event emitted after the call(s):
+	- UpdatePayoutToken(token) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1088)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+DividendPayingToken._withdrawDividendOfUser(address) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#492-508) tries to limit the gas of an external call that controls implicit decoding
+	(success,None) = user.call{gas: 3000,value: _withdrawableDividend}() (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#497)
+PunkMonkeyDividendTracker._withdrawDividendOfUser(address) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1523-1559) tries to limit the gas of an external call that controls implicit decoding
+	(success,None) = user.call{gas: 3000,value: _withdrawableDividend}() (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1533)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#return-bomb
+
+PunkMonkey._transfer(address,address,uint256) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#923-1060) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(block.timestamp >= _holderLastTransferTimestamp[tx.origin] + cooldowntimer,cooldown period active) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#976-977)
+	- require(bool,string)(block.timestamp > launchtimestamp + delay,you shall not pass) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#991)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+PunkMonkey._transfer(address,address,uint256) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#923-1060) has a high cyclomatic complexity (13).
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#cyclomatic-complexity
+
+Context._msgData() (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#32-35) is never used and should be removed
+DividendPayingToken._transfer(address,address,uint256) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#528-534) is never used and should be removed
+DividendPayingToken._withdrawDividendOfUser(address) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#492-508) is never used and should be removed
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dead-code
+
+Version constraint 0.8.17 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- VerbatimInvalidDeduplication
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess.
+It is used by:
+	- 0.8.17 (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#23)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in DividendPayingToken._withdrawDividendOfUser(address) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#492-508):
+	- (success,None) = user.call{gas: 3000,value: _withdrawableDividend}() (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#497)
+Low level call in PunkMonkey.swapAndSendDividends(uint256) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1130-1177):
+	- (success,None) = address(dividendTracker).call{value: dividends}() (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1156)
+	- (successOp1,None) = address(marketingWallet).call{value: marketingPayout}() (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1170)
+	- (successOp2,None) = address(devWallet).call{value: devPayout}() (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1173)
+Low level call in PunkMonkeyDividendTracker._withdrawDividendOfUser(address) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1523-1559):
+	- (success,None) = user.call{gas: 3000,value: _withdrawableDividend}() (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1533)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Function IUniswapV2Pair.DOMAIN_SEPARATOR() (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#51) is not in mixedCase
+Function IUniswapV2Pair.PERMIT_TYPEHASH() (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#52) is not in mixedCase
+Function IUniswapV2Pair.MINIMUM_LIQUIDITY() (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#64) is not in mixedCase
+Function IUniswapV2Router01.WETH() (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#374) is not in mixedCase
+Parameter DividendPayingToken.dividendOf(address)._owner (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#510) is not in mixedCase
+Parameter DividendPayingToken.withdrawableDividendOf(address)._owner (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#514) is not in mixedCase
+Parameter DividendPayingToken.withdrawnDividendOf(address)._owner (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#518) is not in mixedCase
+Parameter DividendPayingToken.accumulativeDividendOf(address)._owner (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#522) is not in mixedCase
+Constant DividendPayingToken.magnitude (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#456) is not in UPPER_CASE_WITH_UNDERSCORES
+Parameter PunkMonkey.setGasPriceLimit(uint256).GWEI (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#759) is not in mixedCase
+Parameter PunkMonkey.updateFees(uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256).RewardsBuy (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#836) is not in mixedCase
+Parameter PunkMonkey.updateFees(uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256).RewardsSell (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#836) is not in mixedCase
+Variable PunkMonkey.DEAD (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#570) is not in mixedCase
+Parameter PunkMonkeyDividendTracker.getAccount(address)._account (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1329) is not in mixedCase
+Variable PunkMonkeyDividendTracker.PunkMonkeyContract (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1215) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Redundant expression "this (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#33)" inContext (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#27-36)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#redundant-statements
+
+PunkMonkey.updateGasForProcessing(uint256) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#817-821) uses literals with too many digits:
+	- require(bool)(newValue >= 200000 && newValue <= 2000000) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#818)
+PunkMonkey.slitherConstructorVariables() (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#564-1192) uses literals with too many digits:
+	- gasForProcessing = 300000 (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#604)
+PunkMonkeyDividendTracker.constructor(address,address,address,string,string) (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1230-1243) uses literals with too many digits:
+	- minimumTokenBalanceForAutoDividends = 1000000_000000000000000000 (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1237)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+PunkMonkey.DEAD (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#570) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+
+PunkMonkey.devWallet (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#583) should be immutable 
+PunkMonkey.dividendTracker (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#580) should be immutable 
+PunkMonkey.marketingWallet (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#582) should be immutable 
+PunkMonkey.uniswapV2Pair (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#569) should be immutable 
+PunkMonkey.uniswapV2Router (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#567) should be immutable 
+PunkMonkeyDividendTracker.PunkMonkeyContract (0x13c34380e14c47cdd089d466396e53f8a0a24442.sol#1215) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+./0x13c34380e14c47cdd089d466396e53f8a0a24442.sol analyzed (18 contracts with 94 detectors), 107 result(s) found
+
+real	0m7.707s
+user	0m7.354s
+sys	0m0.351s

@@ -1,0 +1,205 @@
+'solc --version' running
+'solc ./0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+GohanInu.sendETHToFee(uint256) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#383-386) sends eth to arbitrary user
+	Dangerous calls:
+	- _teamAddress.transfer(amount.div(2)) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#384)
+	- _marketingFunds.transfer(amount.div(2)) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#385)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+Reentrancy in GohanInu._transfer(address,address,uint256) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#316-367):
+	External calls:
+	- swapTokensForEth(contractTokenBalance) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#353)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#374-380)
+	External calls sending eth:
+	- sendETHToFee(address(this).balance) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#356)
+		- _teamAddress.transfer(amount.div(2)) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#384)
+		- _marketingFunds.transfer(amount.div(2)) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#385)
+	State variables written after the call(s):
+	- _tokenTransfer(from,to,amount,takeFee) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#366)
+		- _rOwned[address(this)] = _rOwned[address(this)].add(rTeam) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#469)
+		- _rOwned[sender] = _rOwned[sender].sub(rAmount) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#459)
+		- _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#460)
+	GohanInu._rOwned (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#171) can be used in cross function reentrancies:
+	- GohanInu._takeTeam(uint256) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#466-470)
+	- GohanInu._transferStandard(address,address,uint256) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#446-464)
+	- GohanInu.balanceOf(address) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#229-231)
+	- GohanInu.constructor(address,address) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#202-211)
+	- _tokenTransfer(from,to,amount,takeFee) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#366)
+		- _rTotal = _rTotal.sub(rFee) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#473)
+	GohanInu._rTotal (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#177) can be used in cross function reentrancies:
+	- GohanInu._getCurrentSupply() (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#548-554)
+	- GohanInu._reflectFee(uint256,uint256) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#472-475)
+	- GohanInu.constructor(address,address) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#202-211)
+	- GohanInu.tokenFromReflection(uint256) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#281-292)
+Reentrancy in GohanInu.startTrading() (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#388-411):
+	External calls:
+	- uniswapV2Pair = IUniswapV2Factory(_uniswapV2Router.factory()).createPair(address(this),_uniswapV2Router.WETH()) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#393-394)
+	- uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#395-402)
+	External calls sending eth:
+	- uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#395-402)
+	State variables written after the call(s):
+	- tradingOpen = true (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#406)
+	GohanInu.tradingOpen (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#189) can be used in cross function reentrancies:
+	- GohanInu.startTrading() (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#388-411)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+GohanInu.startTrading() (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#388-411) ignores return value by uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#395-402)
+GohanInu.startTrading() (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#388-411) ignores return value by IERC20(uniswapV2Pair).approve(address(uniswapV2Router),type()(uint256).max) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#407-410)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+GohanInu.allowance(address,address).owner (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#242) shadows:
+	- Ownable.owner() (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#67-69) (function)
+GohanInu._approve(address,address,uint256).owner (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#306) shadows:
+	- Ownable.owner() (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#67-69) (function)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#local-variable-shadowing
+
+Ownable.constructor().msgSender (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#62) lacks a zero-check on :
+		- _owner = msgSender (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#63)
+GohanInu.constructor(address,address).addr1 (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#202) lacks a zero-check on :
+		- _teamAddress = addr1 (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#203)
+GohanInu.constructor(address,address).addr2 (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#202) lacks a zero-check on :
+		- _marketingFunds = addr2 (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#204)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in GohanInu._transfer(address,address,uint256) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#316-367):
+	External calls:
+	- swapTokensForEth(contractTokenBalance) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#353)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#374-380)
+	External calls sending eth:
+	- sendETHToFee(address(this).balance) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#356)
+		- _teamAddress.transfer(amount.div(2)) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#384)
+		- _marketingFunds.transfer(amount.div(2)) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#385)
+	State variables written after the call(s):
+	- _tokenTransfer(from,to,amount,takeFee) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#366)
+		- _tFeeTotal = _tFeeTotal.add(tFee) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#474)
+	- _tokenTransfer(from,to,amount,takeFee) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#366)
+		- _taxFee = 5 (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#301)
+		- _taxFee = 0 (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#296)
+	- _tokenTransfer(from,to,amount,takeFee) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#366)
+		- _teamFee = 10 (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#302)
+		- _teamFee = 0 (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#297)
+Reentrancy in GohanInu.startTrading() (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#388-411):
+	External calls:
+	- uniswapV2Pair = IUniswapV2Factory(_uniswapV2Router.factory()).createPair(address(this),_uniswapV2Router.WETH()) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#393-394)
+	- uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#395-402)
+	External calls sending eth:
+	- uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#395-402)
+	State variables written after the call(s):
+	- _maxTxAmount = 50000000000 * 10 ** 9 (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#405)
+	- cooldownEnabled = false (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#404)
+	- swapEnabled = true (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#403)
+Reentrancy in GohanInu.transferFrom(address,address,uint256) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#260-275):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#265)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#374-380)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#265)
+		- _teamAddress.transfer(amount.div(2)) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#384)
+		- _marketingFunds.transfer(amount.div(2)) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#385)
+	State variables written after the call(s):
+	- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#266-273)
+		- _allowances[owner][spender] = amount (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#312)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in GohanInu._transfer(address,address,uint256) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#316-367):
+	External calls:
+	- swapTokensForEth(contractTokenBalance) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#353)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#374-380)
+	External calls sending eth:
+	- sendETHToFee(address(this).balance) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#356)
+		- _teamAddress.transfer(amount.div(2)) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#384)
+		- _marketingFunds.transfer(amount.div(2)) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#385)
+	Event emitted after the call(s):
+	- Transfer(sender,recipient,tTransferAmount) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#463)
+		- _tokenTransfer(from,to,amount,takeFee) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#366)
+Reentrancy in GohanInu.transferFrom(address,address,uint256) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#260-275):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#265)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#374-380)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#265)
+		- _teamAddress.transfer(amount.div(2)) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#384)
+		- _marketingFunds.transfer(amount.div(2)) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#385)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#313)
+		- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#266-273)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+GohanInu._transfer(address,address,uint256) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#316-367) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(cooldown[to] < block.timestamp) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#348)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Version constraint ^0.8.4 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- SignedImmutables.
+It is used by:
+	- ^0.8.4 (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#20)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Function IUniswapV2Router02.WETH() (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#144) is not in mixedCase
+Constant GohanInu._name (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#166) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant GohanInu._symbol (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#167) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant GohanInu._decimals (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#168) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant GohanInu._tTotal (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#176) is not in UPPER_CASE_WITH_UNDERSCORES
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in GohanInu._transfer(address,address,uint256) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#316-367):
+	External calls:
+	- sendETHToFee(address(this).balance) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#356)
+		- _teamAddress.transfer(amount.div(2)) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#384)
+		- _marketingFunds.transfer(amount.div(2)) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#385)
+	State variables written after the call(s):
+	- _tokenTransfer(from,to,amount,takeFee) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#366)
+		- _rOwned[address(this)] = _rOwned[address(this)].add(rTeam) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#469)
+		- _rOwned[sender] = _rOwned[sender].sub(rAmount) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#459)
+		- _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#460)
+	- _tokenTransfer(from,to,amount,takeFee) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#366)
+		- _rTotal = _rTotal.sub(rFee) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#473)
+	- _tokenTransfer(from,to,amount,takeFee) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#366)
+		- _tFeeTotal = _tFeeTotal.add(tFee) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#474)
+	- _tokenTransfer(from,to,amount,takeFee) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#366)
+		- _taxFee = 5 (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#301)
+		- _taxFee = 0 (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#296)
+	- _tokenTransfer(from,to,amount,takeFee) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#366)
+		- _teamFee = 10 (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#302)
+		- _teamFee = 0 (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#297)
+	Event emitted after the call(s):
+	- Transfer(sender,recipient,tTransferAmount) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#463)
+		- _tokenTransfer(from,to,amount,takeFee) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#366)
+Reentrancy in GohanInu.transferFrom(address,address,uint256) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#260-275):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#265)
+		- _teamAddress.transfer(amount.div(2)) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#384)
+		- _marketingFunds.transfer(amount.div(2)) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#385)
+	State variables written after the call(s):
+	- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#266-273)
+		- _allowances[owner][spender] = amount (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#312)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#313)
+		- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#266-273)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+GohanInu.startTrading() (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#388-411) uses literals with too many digits:
+	- _maxTxAmount = 50000000000 * 10 ** 9 (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#405)
+GohanInu.slitherConstructorConstantVariables() (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#163-562) uses literals with too many digits:
+	- _tTotal = 1000000000000 * 10 ** 9 (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#176)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+GohanInu._tOwned (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#172) is never used in GohanInu (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#163-562)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-state-variable
+
+GohanInu._marketingFunds (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#186) should be immutable 
+GohanInu._teamAddress (0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol#185) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+./0x038b7537fd58d966404be0c7bcec64e6cbeb88a1.sol analyzed (7 contracts with 94 detectors), 29 result(s) found
+
+real	0m2.902s
+user	0m2.649s
+sys	0m0.256s

@@ -1,0 +1,229 @@
+'solc --version' running
+'solc ./0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol:
+Warning: This contract has a payable fallback function, but no receive ether function. Consider adding a receive ether function.
+  --> ./0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol:91:1:
+   |
+91 | contract DappIncubator is Ownable, ReentrancyGuard {
+   | ^ (Relevant source part starts here and spans across multiple lines).
+Note: The payable fallback function is defined here.
+   --> ./0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol:202:5:
+    |
+202 |     fallback() nonReentrant payable external
+    |     ^ (Relevant source part starts here and spans across multiple lines).
+
+
+
+Reentrancy in DappIncubator.transfer(address,address,uint256) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#294-333):
+	External calls:
+	- withdraw(contractAddress) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#307)
+		- ERC20(contractAddress).transfer(_customerAddress,_dividends) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#281)
+	External calls sending eth:
+	- withdraw(contractAddress) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#307)
+		- address(address(_customerAddress)).transfer(_dividends) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#278)
+	State variables written after the call(s):
+	- balanceLedger[_customerAddress][contractAddress].tokenBalance = SafeMath.sub(balanceLedger[_customerAddress][contractAddress].tokenBalance,amountOfCollate) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#318)
+	DappIncubator.balanceLedger (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#124) can be used in cross function reentrancies:
+	- DappIncubator.balanceOf(address,address) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#612-617)
+	- DappIncubator.dividendsOf(address,address) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#622-627)
+	- DappIncubator.myDividends(address,bool) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#601-607)
+	- DappIncubator.sell(address,uint256) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#339-369)
+	- DappIncubator.transfer(address,address,uint256) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#294-333)
+	- DappIncubator.withdraw(address) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#260-287)
+	- balanceLedger[toAddress][contractAddress].tokenBalance = SafeMath.add(balanceLedger[toAddress][contractAddress].tokenBalance,_taxedTokens) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#319)
+	DappIncubator.balanceLedger (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#124) can be used in cross function reentrancies:
+	- DappIncubator.balanceOf(address,address) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#612-617)
+	- DappIncubator.dividendsOf(address,address) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#622-627)
+	- DappIncubator.myDividends(address,bool) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#601-607)
+	- DappIncubator.sell(address,uint256) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#339-369)
+	- DappIncubator.transfer(address,address,uint256) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#294-333)
+	- DappIncubator.withdraw(address) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#260-287)
+	- balanceLedger[_customerAddress][contractAddress].payOut -= int256(tokenLedger[contractAddress].dividend * amountOfCollate) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#322)
+	DappIncubator.balanceLedger (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#124) can be used in cross function reentrancies:
+	- DappIncubator.balanceOf(address,address) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#612-617)
+	- DappIncubator.dividendsOf(address,address) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#622-627)
+	- DappIncubator.myDividends(address,bool) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#601-607)
+	- DappIncubator.sell(address,uint256) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#339-369)
+	- DappIncubator.transfer(address,address,uint256) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#294-333)
+	- DappIncubator.withdraw(address) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#260-287)
+	- balanceLedger[toAddress][contractAddress].payOut += int256(tokenLedger[contractAddress].dividend * _taxedTokens) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#323)
+	DappIncubator.balanceLedger (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#124) can be used in cross function reentrancies:
+	- DappIncubator.balanceOf(address,address) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#612-617)
+	- DappIncubator.dividendsOf(address,address) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#622-627)
+	- DappIncubator.myDividends(address,bool) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#601-607)
+	- DappIncubator.sell(address,uint256) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#339-369)
+	- DappIncubator.transfer(address,address,uint256) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#294-333)
+	- DappIncubator.withdraw(address) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#260-287)
+	- tokenLedger[contractAddress].supply = SafeMath.sub(tokenLedger[contractAddress].supply,_tokenFee) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#315)
+	DappIncubator.tokenLedger (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#125) can be used in cross function reentrancies:
+	- DappIncubator.buyPrice(address) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#374-385)
+	- DappIncubator.calculateTokenReceived(address,uint256) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#486-495)
+	- DappIncubator.collateralToToken_(address,uint256) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#444-467)
+	- DappIncubator.dividendsOf(address,address) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#622-627)
+	- DappIncubator.sell(address,uint256) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#339-369)
+	- DappIncubator.sellPrice(address) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#390-401)
+	- DappIncubator.tokentoCollateral_(address,uint256) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#409-437)
+	- DappIncubator.totalSupply(address) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#580-585)
+	- DappIncubator.transfer(address,address,uint256) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#294-333)
+	- tokenLedger[contractAddress].dividend = SafeMath.add(tokenLedger[contractAddress].dividend,(_dividends * magnitude) / tokenLedger[contractAddress].supply) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#326)
+	DappIncubator.tokenLedger (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#125) can be used in cross function reentrancies:
+	- DappIncubator.buyPrice(address) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#374-385)
+	- DappIncubator.calculateTokenReceived(address,uint256) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#486-495)
+	- DappIncubator.collateralToToken_(address,uint256) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#444-467)
+	- DappIncubator.dividendsOf(address,address) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#622-627)
+	- DappIncubator.sell(address,uint256) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#339-369)
+	- DappIncubator.sellPrice(address) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#390-401)
+	- DappIncubator.tokentoCollateral_(address,uint256) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#409-437)
+	- DappIncubator.totalSupply(address) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#580-585)
+	- DappIncubator.transfer(address,address,uint256) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#294-333)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+DappIncubator.withdraw(address) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#260-287) ignores return value by ERC20(contractAddress).transfer(_customerAddress,_dividends) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#281)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+DappIncubator.sell(address,uint256) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#339-369) performs a multiplication on the result of a division:
+	- _dividends = SafeMath.div(_tokens,dividendFee) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#350)
+	- tokenLedger[contractAddress].dividend = SafeMath.add(tokenLedger[contractAddress].dividend,(_dividends * magnitude) / tokenLedger[contractAddress].supply) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#364)
+DappIncubator.collateralToToken_(address,uint256) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#444-467) performs a multiplication on the result of a division:
+	- _etherReceived = (SafeMath.sub((((tokenPriceInitial_ + (tokenPriceIncremental_ * (_tokenSupply / 1e18))) - tokenPriceIncremental_) * (tokens_ - 1e18)),(tokenPriceIncremental_ * ((tokens_ ** 2 - tokens_) / 1e18)) / 2) / 1e18) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#452-464)
+DappIncubator.purchaseCollate(address,uint256,address) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#500-560) performs a multiplication on the result of a division:
+	- _fee = _fee - (_fee - (_amountOfCollate * (_dividends * magnitude / (tokenLedger[contractAddress].supply)))) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#543)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+Reentrancy in DappIncubator.buy(address,uint256,address) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#179-197):
+	External calls:
+	- require(bool)(ERC20(contractAddress).transferFrom(msg.sender,address(this),tokenAmount)) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#186)
+	State variables written after the call(s):
+	- collateAmount = purchaseCollate(contractAddress,tokenAmount,_referredBy) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#195)
+		- balanceLedger[_referredBy][contractAddress].referralBalance = SafeMath.add(balanceLedger[_referredBy][contractAddress].referralBalance,_referralBonus) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#525)
+		- balanceLedger[_customerAddress][contractAddress].tokenBalance = SafeMath.add(balanceLedger[_customerAddress][contractAddress].tokenBalance,_amountOfCollate) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#551)
+		- balanceLedger[_customerAddress][contractAddress].payOut += _updatedPayouts (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#554)
+	- collateAmount = purchaseCollate(contractAddress,tokenAmount,_referredBy) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#195)
+		- tokenLedger[contractAddress].supply = SafeMath.add(tokenLedger[contractAddress].supply,_amountOfCollate) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#537)
+		- tokenLedger[contractAddress].dividend += (_dividends * magnitude / (tokenLedger[contractAddress].supply)) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#540)
+		- tokenLedger[contractAddress].supply = _amountOfCollate (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#547)
+	- walletAddressRecord[msg.sender] = true (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#192)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in DappIncubator.transfer(address,address,uint256) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#294-333):
+	External calls:
+	- withdraw(contractAddress) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#307)
+		- ERC20(contractAddress).transfer(_customerAddress,_dividends) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#281)
+	External calls sending eth:
+	- withdraw(contractAddress) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#307)
+		- address(address(_customerAddress)).transfer(_dividends) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#278)
+	Event emitted after the call(s):
+	- onTransfer(contractAddress,_customerAddress,toAddress,_taxedTokens) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#329)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+DappIncubator.tokenOnboard(address,uint256,uint256) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#141-156) compares to a boolean constant:
+	-contractAddressRecord[contractAddress] == false (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#143)
+DappIncubator.buy(address) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#162-174) compares to a boolean constant:
+	-walletAddressRecord[msg.sender] == false (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#168)
+DappIncubator.buy(address) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#162-174) compares to a boolean constant:
+	-require(bool)(contractAddressRecord[address(0)] == true) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#165)
+DappIncubator.buy(address,uint256,address) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#179-197) compares to a boolean constant:
+	-walletAddressRecord[msg.sender] == false (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#191)
+DappIncubator.buy(address,uint256,address) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#179-197) compares to a boolean constant:
+	-require(bool)(contractAddressRecord[contractAddress] == true) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#183)
+DappIncubator.fallback() (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#202-212) compares to a boolean constant:
+	-require(bool)(contractAddressRecord[address(0)] == true) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#205)
+DappIncubator.fallback() (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#202-212) compares to a boolean constant:
+	-walletAddressRecord[msg.sender] == false (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#208)
+DappIncubator.reinvest(address) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#217-239) compares to a boolean constant:
+	-require(bool)(contractAddressRecord[contractAddress] == true) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#219)
+DappIncubator.reinvest(address) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#217-239) compares to a boolean constant:
+	-require(bool)(walletAddressRecord[msg.sender] == true) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#220)
+DappIncubator.exit(address) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#244-255) compares to a boolean constant:
+	-require(bool)(walletAddressRecord[msg.sender] == true) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#247)
+DappIncubator.exit(address) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#244-255) compares to a boolean constant:
+	-require(bool)(contractAddressRecord[contractAddress] == true) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#246)
+DappIncubator.withdraw(address) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#260-287) compares to a boolean constant:
+	-require(bool)(walletAddressRecord[msg.sender] == true) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#263)
+DappIncubator.withdraw(address) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#260-287) compares to a boolean constant:
+	-require(bool)(contractAddressRecord[contractAddress] == true) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#262)
+DappIncubator.transfer(address,address,uint256) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#294-333) compares to a boolean constant:
+	-require(bool)(contractAddressRecord[contractAddress] == true) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#298)
+DappIncubator.transfer(address,address,uint256) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#294-333) compares to a boolean constant:
+	-walletAddressRecord[toAddress] == false (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#302)
+DappIncubator.transfer(address,address,uint256) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#294-333) compares to a boolean constant:
+	-require(bool)(walletAddressRecord[_customerAddress] == true) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#299)
+DappIncubator.sell(address,uint256) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#339-369) compares to a boolean constant:
+	-require(bool)(contractAddressRecord[contractAddress] == true) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#341)
+DappIncubator.sell(address,uint256) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#339-369) compares to a boolean constant:
+	-require(bool)(walletAddressRecord[msg.sender] == true) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#342)
+DappIncubator.buyPrice(address) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#374-385) compares to a boolean constant:
+	-require(bool)(contractAddressRecord[contractAddress] == true) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#375)
+DappIncubator.sellPrice(address) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#390-401) compares to a boolean constant:
+	-require(bool)(contractAddressRecord[contractAddress] == true) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#391)
+DappIncubator.calculateCollateReceived(address,uint256) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#472-481) compares to a boolean constant:
+	-require(bool)(contractAddressRecord[contractAddress] == true) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#474)
+DappIncubator.calculateTokenReceived(address,uint256) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#486-495) compares to a boolean constant:
+	-require(bool)(contractAddressRecord[contractAddress] == true) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#488)
+DappIncubator.purchaseCollate(address,uint256,address) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#500-560) compares to a boolean constant:
+	-_referredBy != address(0) && _referredBy != _customerAddress && walletAddressRecord[_referredBy] == true (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#517-522)
+DappIncubator.totalTokenBalance(address) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#565-575) compares to a boolean constant:
+	-require(bool)(contractAddressRecord[contractAddress] == true) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#567)
+DappIncubator.totalSupply(address) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#580-585) compares to a boolean constant:
+	-require(bool)(contractAddressRecord[contractAddress] == true) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#582)
+DappIncubator.myTokens(address) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#590-596) compares to a boolean constant:
+	-require(bool)(contractAddressRecord[contractAddress] == true) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#592)
+DappIncubator.myDividends(address,bool) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#601-607) compares to a boolean constant:
+	-require(bool)(contractAddressRecord[contractAddress] == true) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#603)
+DappIncubator.balanceOf(address,address) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#612-617) compares to a boolean constant:
+	-require(bool)(contractAddressRecord[contractAddress] == true) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#614)
+DappIncubator.dividendsOf(address,address) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#622-627) compares to a boolean constant:
+	-require(bool)(contractAddressRecord[contractAddress] == true) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#624)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#boolean-equality
+
+Version constraint >=0.6.0<0.8.0 is too complex.
+It is used by:
+	- >=0.6.0<0.8.0 (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#12)
+solc-0.6.0 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Event DappIncubator.onTokenOnboard(address,uint256,uint256) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#131) is not in CapWords
+Event DappIncubator.onPurchase(address,address,uint256,uint256,address) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#132) is not in CapWords
+Event DappIncubator.onSell(address,address,uint256,uint256) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#133) is not in CapWords
+Event DappIncubator.onReinvest(address,address,uint256,uint256) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#134) is not in CapWords
+Event DappIncubator.onWithdraw(address,address,uint256) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#135) is not in CapWords
+Event DappIncubator.onTransfer(address,address,address,uint256) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#136) is not in CapWords
+Parameter DappIncubator.buy(address)._referredBy (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#162) is not in mixedCase
+Parameter DappIncubator.buy(address,uint256,address)._referredBy (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#179) is not in mixedCase
+Parameter DappIncubator.sell(address,uint256)._amountOfCollate (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#339) is not in mixedCase
+Parameter DappIncubator.collateralToToken_(address,uint256)._tokens (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#444) is not in mixedCase
+Parameter DappIncubator.calculateCollateReceived(address,uint256)._tokenAmount (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#472) is not in mixedCase
+Parameter DappIncubator.calculateTokenReceived(address,uint256)._collateToSell (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#486) is not in mixedCase
+Parameter DappIncubator.purchaseCollate(address,uint256,address)._incomingToken (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#500) is not in mixedCase
+Parameter DappIncubator.purchaseCollate(address,uint256,address)._referredBy (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#500) is not in mixedCase
+Parameter DappIncubator.myDividends(address,bool)._includeReferralBonus (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#601) is not in mixedCase
+Parameter DappIncubator.balanceOf(address,address)._customerAddress (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#612) is not in mixedCase
+Parameter DappIncubator.dividendsOf(address,address)._customerAddress (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#622) is not in mixedCase
+Constant DappIncubator.magnitude (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#118) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant DappIncubator.dividendFee (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#119) is not in UPPER_CASE_WITH_UNDERSCORES
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in DappIncubator.transfer(address,address,uint256) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#294-333):
+	External calls:
+	- withdraw(contractAddress) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#307)
+		- address(address(_customerAddress)).transfer(_dividends) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#278)
+	State variables written after the call(s):
+	- balanceLedger[_customerAddress][contractAddress].tokenBalance = SafeMath.sub(balanceLedger[_customerAddress][contractAddress].tokenBalance,amountOfCollate) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#318)
+	- balanceLedger[toAddress][contractAddress].tokenBalance = SafeMath.add(balanceLedger[toAddress][contractAddress].tokenBalance,_taxedTokens) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#319)
+	- balanceLedger[_customerAddress][contractAddress].payOut -= int256(tokenLedger[contractAddress].dividend * amountOfCollate) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#322)
+	- balanceLedger[toAddress][contractAddress].payOut += int256(tokenLedger[contractAddress].dividend * _taxedTokens) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#323)
+	- tokenLedger[contractAddress].supply = SafeMath.sub(tokenLedger[contractAddress].supply,_tokenFee) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#315)
+	- tokenLedger[contractAddress].dividend = SafeMath.add(tokenLedger[contractAddress].dividend,(_dividends * magnitude) / tokenLedger[contractAddress].supply) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#326)
+	Event emitted after the call(s):
+	- onTransfer(contractAddress,_customerAddress,toAddress,_taxedTokens) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#329)
+Reentrancy in DappIncubator.withdraw(address) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#260-287):
+	External calls:
+	- address(address(_customerAddress)).transfer(_dividends) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#278)
+	Event emitted after the call(s):
+	- onWithdraw(_customerAddress,contractAddress,_dividends) (0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol#286)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+./0x0e82b29a77a53880dd4ee8326cfea9b4c68db638.sol analyzed (5 contracts with 94 detectors), 59 result(s) found
+
+real	0m6.124s
+user	0m5.925s
+sys	0m0.200s

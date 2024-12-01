@@ -1,0 +1,291 @@
+'solc --version' running
+'solc ./0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+Voting (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#260-558) contract sets array length with a user-controlled value:
+	- proposals.push(proposal) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#328)
+Voting (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#260-558) contract sets array length with a user-controlled value:
+	- proposals.push(proposal) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#553)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#array-length-assignment
+
+Reentrancy in Voting.addDestructionProposal(string) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#353-360):
+	External calls:
+	- addProposal(Subject.Destruction,_reason) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#356)
+		- require(bool)(DaicoPool(poolAddr).isStateProjectInProgress()) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#542)
+	External calls sending eth:
+	- addProposal(Subject.Destruction,_reason) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#356)
+		- poolAddr.transfer(msg.value) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#543)
+	State variables written after the call(s):
+	- queued[uint256(Subject.Destruction)] = true (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#358)
+	Voting.queued (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#266) can be used in cross function reentrancies:
+	- Voting.addDestructionProposal(string) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#353-360)
+	- Voting.addRaiseTapProposal(string,uint256) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#336-348)
+	- Voting.finalizeVoting() (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#385-405)
+	- Voting.queued (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#266)
+Reentrancy in Voting.addRaiseTapProposal(string,uint256) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#336-348):
+	External calls:
+	- newID = addProposal(Subject.RaiseTap,_reason) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#343)
+		- require(bool)(DaicoPool(poolAddr).isStateProjectInProgress()) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#542)
+	External calls sending eth:
+	- newID = addProposal(Subject.RaiseTap,_reason) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#343)
+		- poolAddr.transfer(msg.value) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#543)
+	State variables written after the call(s):
+	- proposals[newID].tapMultiplierRate = _tapMultiplierRate (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#344)
+	Voting.proposals (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#283) can be used in cross function reentrancies:
+	- Voting.addProposal(Voting.Subject,string) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#540-556)
+	- Voting.addRaiseTapProposal(string,uint256) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#336-348)
+	- Voting.constructor(address,address) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#310-330)
+	- Voting.finalizeVoting() (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#385-405)
+	- Voting.getAyes(uint256) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#521-525)
+	- Voting.getCurrentVoting() (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#442-449)
+	- Voting.getNays(uint256) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#530-534)
+	- Voting.getReason(uint256) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#489-492)
+	- Voting.getVoterCount(uint256) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#513-516)
+	- Voting.isEnded(uint256) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#477-484)
+	- Voting.isPassed(uint256) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#454-460)
+	- Voting.isStarted(uint256) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#465-472)
+	- Voting.isSubjectDestruction(uint256) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#505-508)
+	- Voting.isSubjectRaiseTap(uint256) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#497-500)
+	- Voting.proposals (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#283)
+	- Voting.returnToken(address) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#410-429)
+	- Voting.vote(bool,uint256) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#365-380)
+	- queued[uint256(Subject.RaiseTap)] = true (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#346)
+	Voting.queued (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#266) can be used in cross function reentrancies:
+	- Voting.addDestructionProposal(string) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#353-360)
+	- Voting.addRaiseTapProposal(string,uint256) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#336-348)
+	- Voting.finalizeVoting() (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#385-405)
+	- Voting.queued (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#266)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+Voting.getAyes(uint256) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#521-525) uses a Boolean constant improperly:
+	-proposals[pid].votes[true] (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#524)
+Voting.getNays(uint256) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#530-534) uses a Boolean constant improperly:
+	-proposals[pid].votes[false] (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#533)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#misuse-of-a-boolean-constant
+
+Voting.constructor(address,address) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#310-330) uses a dangerous strict equality:
+	- assert(bool)(proposals.length == 1) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#329)
+Voting.isSubjectDestruction(uint256) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#505-508) uses a dangerous strict equality:
+	- proposals[pid].subject == Subject.Destruction (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#507)
+Voting.isSubjectRaiseTap(uint256) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#497-500) uses a dangerous strict equality:
+	- proposals[pid].subject == Subject.RaiseTap (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#499)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-strict-equalities
+
+DaicoPool.tokenSaleAddr (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#64) shadows:
+	- PoolAndSaleInterface.tokenSaleAddr (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#50)
+DaicoPool.votingAddr (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#65) shadows:
+	- PoolAndSaleInterface.votingAddr (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#51)
+DaicoPool.votingTokenAddr (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#66) shadows:
+	- PoolAndSaleInterface.votingTokenAddr (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#52)
+DaicoPool.tap (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#67) shadows:
+	- PoolAndSaleInterface.tap (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#53)
+DaicoPool.initialTap (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#68) shadows:
+	- PoolAndSaleInterface.initialTap (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#54)
+DaicoPool.initialRelease (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#69) shadows:
+	- PoolAndSaleInterface.initialRelease (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#55)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variable-shadowing-from-abstract-contracts
+
+Voting.constructor(address,address).proposal (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#320) is a local variable never initialized
+Voting.addProposal(Voting.Subject,string).proposal (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#545) is a local variable never initialized
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#uninitialized-local-variables
+
+Voting.returnTokenMulti(address[]) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#434-438) ignores return value by this.returnToken(accounts[i]) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#436)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+Voting.returnTokenMulti(address[]) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#434-438) has external calls inside a loop: this.returnToken(accounts[i]) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#436)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation/#calls-inside-a-loop
+
+Reentrancy in Voting.addProposal(Voting.Subject,string) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#540-556):
+	External calls:
+	- require(bool)(DaicoPool(poolAddr).isStateProjectInProgress()) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#542)
+	External calls sending eth:
+	- poolAddr.transfer(msg.value) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#543)
+	State variables written after the call(s):
+	- proposals.push(proposal) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#553)
+Reentrancy in Voting.finalizeVoting() (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#385-405):
+	External calls:
+	- pid = this.getCurrentVoting() (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#386)
+	State variables written after the call(s):
+	- proposals[pid].isFinalized = true (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#391)
+	- queued[uint256(Subject.RaiseTap)] = false (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#394)
+	- queued[uint256(Subject.Destruction)] = false (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#400)
+Reentrancy in DaicoPool.selfDestruction() (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#162-170):
+	External calls:
+	- _totalSupply = ERC20Interface(votingTokenAddr).totalSupply() (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#168)
+	State variables written after the call(s):
+	- refundRateNano = address(this).balance.sub(getAvailableBalance()).mul(10 ** 9).div(_totalSupply) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#169)
+Reentrancy in Voting.vote(bool,uint256) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#365-380):
+	External calls:
+	- require(bool)(ERC20Interface(votingTokenAddr).transferFrom(msg.sender,this,amount)) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#366)
+	- pid = this.getCurrentVoting() (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#367)
+	State variables written after the call(s):
+	- deposits[pid][msg.sender] = deposits[pid][msg.sender].add(amount) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#377)
+	- proposals[pid].voter_count = proposals[pid].voter_count.add(1) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#374)
+	- proposals[pid].votes[agree] = proposals[pid].votes[agree].add(amount) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#378)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in Voting.addDestructionProposal(string) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#353-360):
+	External calls:
+	- addProposal(Subject.Destruction,_reason) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#356)
+		- require(bool)(DaicoPool(poolAddr).isStateProjectInProgress()) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#542)
+	External calls sending eth:
+	- addProposal(Subject.Destruction,_reason) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#356)
+		- poolAddr.transfer(msg.value) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#543)
+	Event emitted after the call(s):
+	- ProposalRaised(msg.sender,SelfDestruction) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#359)
+Reentrancy in Voting.addRaiseTapProposal(string,uint256) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#336-348):
+	External calls:
+	- newID = addProposal(Subject.RaiseTap,_reason) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#343)
+		- require(bool)(DaicoPool(poolAddr).isStateProjectInProgress()) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#542)
+	External calls sending eth:
+	- newID = addProposal(Subject.RaiseTap,_reason) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#343)
+		- poolAddr.transfer(msg.value) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#543)
+	Event emitted after the call(s):
+	- ProposalRaised(msg.sender,RaiseTap) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#347)
+Reentrancy in DaicoPool.refund(uint256) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#172-178):
+	External calls:
+	- require(bool)(ERC20Interface(votingTokenAddr).transferFrom(msg.sender,this,tokenAmount)) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#173)
+	Event emitted after the call(s):
+	- Refund(msg.sender,tokenAmount) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#176)
+Reentrancy in Voting.returnToken(address) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#410-429):
+	External calls:
+	- require(bool)(ERC20Interface(votingTokenAddr).transfer(account,amount)) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#425)
+	Event emitted after the call(s):
+	- ReturnDeposit(account,amount) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#426)
+Reentrancy in Voting.vote(bool,uint256) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#365-380):
+	External calls:
+	- require(bool)(ERC20Interface(votingTokenAddr).transferFrom(msg.sender,this,amount)) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#366)
+	- pid = this.getCurrentVoting() (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#367)
+	Event emitted after the call(s):
+	- Vote(msg.sender,amount) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#379)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+DaicoPool.withdraw(uint256) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#141-155) uses timestamp for comparisons
+	Dangerous comparisons:
+	- amount > available_balance (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#147)
+DaicoPool.getAvailableBalance() (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#185-193) uses timestamp for comparisons
+	Dangerous comparisons:
+	- available_balance > address(this).balance (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#188)
+Voting.constructor(address,address) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#310-330) uses timestamp for comparisons
+	Dangerous comparisons:
+	- assert(bool)(proposals.length == 1) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#329)
+Voting.vote(bool,uint256) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#365-380) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(proposals[pid].start_time <= block.timestamp) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#370)
+	- require(bool)(proposals[pid].end_time >= block.timestamp) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#371)
+Voting.finalizeVoting() (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#385-405) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(proposals[pid].end_time <= block.timestamp) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#388)
+	- require(bool)(! proposals[pid].isFinalized) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#389)
+Voting.returnToken(address) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#410-429) uses timestamp for comparisons
+	Dangerous comparisons:
+	- pid < proposals.length (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#413)
+Voting.getCurrentVoting() (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#442-449) uses timestamp for comparisons
+	Dangerous comparisons:
+	- i < proposals.length (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#443)
+Voting.isPassed(uint256) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#454-460) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(proposals[pid].isFinalized) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#455)
+	- (ayes > nays.add(absent.div(6))) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#459)
+Voting.isStarted(uint256) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#465-472) uses timestamp for comparisons
+	Dangerous comparisons:
+	- block.timestamp >= proposals[pid].start_time (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#468)
+Voting.isEnded(uint256) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#477-484) uses timestamp for comparisons
+	Dangerous comparisons:
+	- block.timestamp >= proposals[pid].end_time (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#480)
+Voting.getReason(uint256) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#489-492) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(pid < proposals.length) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#490)
+Voting.isSubjectRaiseTap(uint256) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#497-500) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(pid < proposals.length) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#498)
+	- proposals[pid].subject == Subject.RaiseTap (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#499)
+Voting.isSubjectDestruction(uint256) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#505-508) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(pid < proposals.length) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#506)
+	- proposals[pid].subject == Subject.Destruction (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#507)
+Voting.getVoterCount(uint256) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#513-516) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(pid < proposals.length) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#514)
+Voting.getAyes(uint256) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#521-525) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(pid < proposals.length) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#522)
+	- require(bool)(proposals[pid].isFinalized) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#523)
+Voting.getNays(uint256) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#530-534) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(pid < proposals.length) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#531)
+	- require(bool)(proposals[pid].isFinalized) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#532)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Version constraint ^0.4.13 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ExpExponentCleanup
+	- NestedArrayFunctionCallDecoder
+	- ZeroFunctionSelector
+	- DelegateCallReturnValue
+	- ECRecoverMalformedInput.
+It is used by:
+	- ^0.4.13 (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#1)
+solc-0.4.22 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Parameter DaicoPool.setTokenSaleContract(address)._tokenSaleAddr (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#125) is not in mixedCase
+Parameter DaicoPool.withdraw(uint256)._amount (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#141) is not in mixedCase
+Parameter DaicoPool.updateTap(uint256).new_tap (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#212) is not in mixedCase
+Parameter Voting.addRaiseTapProposal(string,uint256)._reason (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#337) is not in mixedCase
+Parameter Voting.addRaiseTapProposal(string,uint256)._tapMultiplierRate (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#338) is not in mixedCase
+Parameter Voting.addDestructionProposal(string)._reason (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#353) is not in mixedCase
+Parameter Voting.addProposal(Voting.Subject,string)._subject (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#540) is not in mixedCase
+Parameter Voting.addProposal(Voting.Subject,string)._reason (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#540) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in Voting.addDestructionProposal(string) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#353-360):
+	External calls:
+	- addProposal(Subject.Destruction,_reason) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#356)
+		- poolAddr.transfer(msg.value) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#543)
+	State variables written after the call(s):
+	- queued[uint256(Subject.Destruction)] = true (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#358)
+	Event emitted after the call(s):
+	- ProposalRaised(msg.sender,SelfDestruction) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#359)
+Reentrancy in Voting.addProposal(Voting.Subject,string) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#540-556):
+	External calls:
+	- poolAddr.transfer(msg.value) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#543)
+	State variables written after the call(s):
+	- proposals.push(proposal) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#553)
+Reentrancy in Voting.addRaiseTapProposal(string,uint256) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#336-348):
+	External calls:
+	- newID = addProposal(Subject.RaiseTap,_reason) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#343)
+		- poolAddr.transfer(msg.value) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#543)
+	State variables written after the call(s):
+	- proposals[newID].tapMultiplierRate = _tapMultiplierRate (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#344)
+	- queued[uint256(Subject.RaiseTap)] = true (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#346)
+	Event emitted after the call(s):
+	- ProposalRaised(msg.sender,RaiseTap) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#347)
+Reentrancy in DaicoPool.withdraw(uint256) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#141-155):
+	External calls:
+	- owner.transfer(amount) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#152)
+	Event emitted after the call(s):
+	- WithdrawalHistory(ETH,amount) (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#154)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+Loop condition pid < proposals.length (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#413) should use cached array length instead of referencing `length` member of the storage array.
+ Loop condition i < proposals.length (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#443) should use cached array length instead of referencing `length` member of the storage array.
+ Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#cache-array-length
+
+DaicoPool.closingRelease (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#74) should be constant 
+Voting.proposalCostWei (0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol#268) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+./0x136e99a415957fc3f23e0a6885b22bcd0c475ab4.sol analyzed (6 contracts with 94 detectors), 62 result(s) found
+
+real	0m2.141s
+user	0m1.977s
+sys	0m0.167s

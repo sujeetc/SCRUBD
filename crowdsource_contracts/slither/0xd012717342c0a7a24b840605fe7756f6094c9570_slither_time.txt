@@ -1,0 +1,103 @@
+'solc --version' running
+'solc ./0xd012717342c0a7a24b840605fe7756f6094c9570.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0xd012717342c0a7a24b840605fe7756f6094c9570.sol:
+./0xd012717342c0a7a24b840605fe7756f6094c9570.sol:387:13: Warning: Variable is declared as a storage pointer. Use an explicit "storage" keyword to silence this warning.
+            SDDatasets.Plan plan = plan_[player_[uid].plans[i].planId];
+            ^------------------^
+./0xd012717342c0a7a24b840605fe7756f6094c9570.sol:404:13: Warning: Failure condition of 'send' ignored. Consider using 'transfer' instead.
+            sender.send(amount);
+            ^-----------------^
+
+
+SafeDif.withdraw() (0xd012717342c0a7a24b840605fe7756f6094c9570.sol#376-411) performs a multiplication on the result of a division:
+	- amount = player_[uid].plans[i].invested * plan.interest / 10000 * (blockNumber - player_[uid].plans[i].atBlock) / G_DayBlocks (0xd012717342c0a7a24b840605fe7756f6094c9570.sol#400)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+SafeDif.withdraw() (0xd012717342c0a7a24b840605fe7756f6094c9570.sol#376-411) ignores return value by sender.send(amount) (0xd012717342c0a7a24b840605fe7756f6094c9570.sol#404)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-send
+
+SafeDif.withdraw() (0xd012717342c0a7a24b840605fe7756f6094c9570.sol#376-411) has external calls inside a loop: sender.send(amount) (0xd012717342c0a7a24b840605fe7756f6094c9570.sol#404)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation/#calls-inside-a-loop
+
+SafeDif.activate() (0xd012717342c0a7a24b840605fe7756f6094c9570.sol#177-184) compares to a boolean constant:
+	-require(bool,string)(activated_ == false,Only once) (0xd012717342c0a7a24b840605fe7756f6094c9570.sol#182)
+SafeDif.isActivated() (0xd012717342c0a7a24b840605fe7756f6094c9570.sol#172-175) compares to a boolean constant:
+	-require(bool,string)(activated_ == true,its not active yet.) (0xd012717342c0a7a24b840605fe7756f6094c9570.sol#173)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#boolean-equality
+
+Version constraint ^0.4.24 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ABIEncoderV2PackedStorage_0.4.x
+	- ExpExponentCleanup
+	- EventStructWrongData.
+It is used by:
+	- ^0.4.24 (0xd012717342c0a7a24b840605fe7756f6094c9570.sol#1)
+solc-0.4.24 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Parameter SafeDif.addRule(uint256,uint256,uint256,uint256)._interest (0xd012717342c0a7a24b840605fe7756f6094c9570.sol#199) is not in mixedCase
+Parameter SafeDif.addRule(uint256,uint256,uint256,uint256)._dayRange (0xd012717342c0a7a24b840605fe7756f6094c9570.sol#199) is not in mixedCase
+Parameter SafeDif.addRule(uint256,uint256,uint256,uint256)._min (0xd012717342c0a7a24b840605fe7756f6094c9570.sol#200) is not in mixedCase
+Parameter SafeDif.addRule(uint256,uint256,uint256,uint256)._max (0xd012717342c0a7a24b840605fe7756f6094c9570.sol#200) is not in mixedCase
+Function SafeDif.GetIdByAddr(address) (0xd012717342c0a7a24b840605fe7756f6094c9570.sol#219-223) is not in mixedCase
+Function SafeDif.GetPlayerByUid(uint256) (0xd012717342c0a7a24b840605fe7756f6094c9570.sol#226-241) is not in mixedCase
+Function SafeDif.GetPlanByUid(uint256) (0xd012717342c0a7a24b840605fe7756f6094c9570.sol#243-271) is not in mixedCase
+Function SafeDif.GetPlanTimeByUid(uint256) (0xd012717342c0a7a24b840605fe7756f6094c9570.sol#273-286) is not in mixedCase
+Parameter SafeDif.register_(uint256)._affCode (0xd012717342c0a7a24b840605fe7756f6094c9570.sol#298) is not in mixedCase
+Parameter SafeDif.invest(uint256,uint256)._affCode (0xd012717342c0a7a24b840605fe7756f6094c9570.sol#330) is not in mixedCase
+Parameter SafeDif.invest(uint256,uint256)._planId (0xd012717342c0a7a24b840605fe7756f6094c9570.sol#330) is not in mixedCase
+Parameter SafeDif.distributeRef(uint256,uint256)._eth (0xd012717342c0a7a24b840605fe7756f6094c9570.sol#414) is not in mixedCase
+Parameter SafeDif.distributeRef(uint256,uint256)._affID (0xd012717342c0a7a24b840605fe7756f6094c9570.sol#414) is not in mixedCase
+Variable SafeDif.g_users (0xd012717342c0a7a24b840605fe7756f6094c9570.sol#186) is not in mixedCase
+Variable SafeDif.G_NowUserId (0xd012717342c0a7a24b840605fe7756f6094c9570.sol#211) is not in mixedCase
+Variable SafeDif.G_AllEth (0xd012717342c0a7a24b840605fe7756f6094c9570.sol#212) is not in mixedCase
+Variable SafeDif.G_DayBlocks (0xd012717342c0a7a24b840605fe7756f6094c9570.sol#213) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in SafeDif.distributeRef(uint256,uint256) (0xd012717342c0a7a24b840605fe7756f6094c9570.sol#414-447):
+	External calls:
+	- player_[_affID1].addr.transfer(_aff) (0xd012717342c0a7a24b840605fe7756f6094c9570.sol#427)
+	State variables written after the call(s):
+	- player_[_affID2].aff = _aff.add(player_[_affID2].aff) (0xd012717342c0a7a24b840605fe7756f6094c9570.sol#433)
+Reentrancy in SafeDif.distributeRef(uint256,uint256) (0xd012717342c0a7a24b840605fe7756f6094c9570.sol#414-447):
+	External calls:
+	- player_[_affID1].addr.transfer(_aff) (0xd012717342c0a7a24b840605fe7756f6094c9570.sol#427)
+	- player_[_affID2].addr.transfer(_aff) (0xd012717342c0a7a24b840605fe7756f6094c9570.sol#434)
+	State variables written after the call(s):
+	- player_[_affID3].aff = _aff.add(player_[_affID3].aff) (0xd012717342c0a7a24b840605fe7756f6094c9570.sol#440)
+Reentrancy in SafeDif.withdraw() (0xd012717342c0a7a24b840605fe7756f6094c9570.sol#376-411):
+	External calls:
+	- sender.send(amount) (0xd012717342c0a7a24b840605fe7756f6094c9570.sol#404)
+	State variables written after the call(s):
+	- player_[uid].plans[i].atBlock = block.number (0xd012717342c0a7a24b840605fe7756f6094c9570.sol#407)
+	- player_[uid].plans[i].isClose = bClose (0xd012717342c0a7a24b840605fe7756f6094c9570.sol#408)
+	- player_[uid].plans[i].payEth += amount (0xd012717342c0a7a24b840605fe7756f6094c9570.sol#409)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+SafeDif.invest(uint256,uint256) (0xd012717342c0a7a24b840605fe7756f6094c9570.sol#330-373) uses literals with too many digits:
+	- msg.value > 1000000000 (0xd012717342c0a7a24b840605fe7756f6094c9570.sol#363)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+SafeDif.G_DayBlocks (0xd012717342c0a7a24b840605fe7756f6094c9570.sol#213) should be constant 
+SafeDif.affiAddr_ (0xd012717342c0a7a24b840605fe7756f6094c9570.sol#164) should be constant 
+SafeDif.devAddr_ (0xd012717342c0a7a24b840605fe7756f6094c9570.sol#163) should be constant 
+SafeDif.partnerAddr_ (0xd012717342c0a7a24b840605fe7756f6094c9570.sol#167) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+./0xd012717342c0a7a24b840605fe7756f6094c9570.sol analyzed (3 contracts with 94 detectors), 32 result(s) found
+
+real	0m2.494s
+user	0m2.234s
+sys	0m0.263s

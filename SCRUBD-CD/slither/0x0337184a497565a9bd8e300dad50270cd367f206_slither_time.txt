@@ -1,0 +1,378 @@
+'solc --version' running
+'solc ./0x0337184a497565a9bd8e300dad50270cd367f206.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+LiquidTokenConverter.sell(uint256,address,address) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1501-1534) sends eth to arbitrary user
+	Dangerous calls:
+	- _beneficiary.transfer(amount) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1526)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+Reentrancy in DynamicLiquidTokenConverter.reduceWeight(IERC20Token) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1625-1656):
+	External calls:
+	- safeTransfer(_reserveToken,msg.sender,balance) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1649)
+		- (success,data) = address(_token).call(abi.encodeWithSelector(TRANSFER_FUNC_SELECTOR,_to,_value)) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#525)
+	External calls sending eth:
+	- msg.sender.transfer(balance) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1647)
+	State variables written after the call(s):
+	- lastWeightAdjustmentMarketCap = currentMarketCap (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1651)
+	DynamicLiquidTokenConverter.lastWeightAdjustmentMarketCap (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1556) can be used in cross function reentrancies:
+	- DynamicLiquidTokenConverter.reduceWeight(IERC20Token) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1625-1656)
+	- syncReserveBalance(_reserveToken) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1653)
+		- reserves[_reserveToken].balance = address(this).balance (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1148)
+		- reserves[_reserveToken].balance = _reserveToken.balanceOf(address(this)) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1150)
+	ConverterBase.reserves (0x0337184a497565a9bd8e300dad50270cd367f206.sol#688) can be used in cross function reentrancies:
+	- ConverterBase._validReserve(IERC20Token) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#798-800)
+	- ConverterBase.addReserve(IERC20Token,uint32) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1010-1031)
+	- ConverterBase.connectors(IERC20Token) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1212-1215)
+	- LiquidTokenConverter.doConvert(IERC20Token,IERC20Token,uint256,address,address) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1360-1387)
+	- DynamicLiquidTokenConverter.getMarketCap(IERC20Token) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1658-1665)
+	- ConverterBase.hasETHReserve() (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1073-1075)
+	- LiquidTokenConverter.purchaseTargetAmount(uint256) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1397-1420)
+	- ConverterBase.receive() (0x0337184a497565a9bd8e300dad50270cd367f206.sol#839-843)
+	- DynamicLiquidTokenConverter.reduceWeight(IERC20Token) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1625-1656)
+	- ConverterBase.reserveBalance(IERC20Token) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1058-1066)
+	- ConverterBase.reserveWeight(IERC20Token) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1041-1048)
+	- ConverterBase.reserves (0x0337184a497565a9bd8e300dad50270cd367f206.sol#688)
+	- LiquidTokenConverter.saleTargetAmount(uint256) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1430-1454)
+	- LiquidTokenConverter.sell(uint256,address,address) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1501-1534)
+	- ConverterBase.syncReserveBalance(IERC20Token) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1146-1151)
+	- LiquidTokenConverter.targetAmountAndFee(IERC20Token,IERC20Token,uint256) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1338-1346)
+	- DynamicLiquidTokenConverter.withdrawTokens(IERC20Token,address,uint256) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1713-1724)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+Reentrancy in LiquidTokenConverter.sell(uint256,address,address) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1501-1534):
+	External calls:
+	- IDSToken(address(anchor)).destroy(address(this),_amount) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1519)
+	State variables written after the call(s):
+	- reserves[reserveToken].balance = reserves[reserveToken].balance.sub(amount) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1522)
+	ConverterBase.reserves (0x0337184a497565a9bd8e300dad50270cd367f206.sol#688) can be used in cross function reentrancies:
+	- ConverterBase._validReserve(IERC20Token) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#798-800)
+	- ConverterBase.addReserve(IERC20Token,uint32) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1010-1031)
+	- ConverterBase.connectors(IERC20Token) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1212-1215)
+	- LiquidTokenConverter.doConvert(IERC20Token,IERC20Token,uint256,address,address) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1360-1387)
+	- ConverterBase.hasETHReserve() (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1073-1075)
+	- LiquidTokenConverter.purchaseTargetAmount(uint256) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1397-1420)
+	- ConverterBase.receive() (0x0337184a497565a9bd8e300dad50270cd367f206.sol#839-843)
+	- ConverterBase.reserveBalance(IERC20Token) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1058-1066)
+	- ConverterBase.reserveWeight(IERC20Token) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1041-1048)
+	- ConverterBase.reserves (0x0337184a497565a9bd8e300dad50270cd367f206.sol#688)
+	- LiquidTokenConverter.saleTargetAmount(uint256) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1430-1454)
+	- LiquidTokenConverter.sell(uint256,address,address) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1501-1534)
+	- ConverterBase.syncReserveBalance(IERC20Token) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1146-1151)
+	- LiquidTokenConverter.targetAmountAndFee(IERC20Token,IERC20Token,uint256) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1338-1346)
+	- ConverterBase.withdrawTokens(IERC20Token,address,uint256) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#958-975)
+Reentrancy in ConverterBase.upgrade() (0x0337184a497565a9bd8e300dad50270cd367f206.sol#982-991):
+	External calls:
+	- converterUpgrader.upgrade(version) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#989)
+	State variables written after the call(s):
+	- acceptOwnership() (0x0337184a497565a9bd8e300dad50270cd367f206.sol#990)
+		- owner = newOwner (0x0337184a497565a9bd8e300dad50270cd367f206.sol#227)
+	Owned.owner (0x0337184a497565a9bd8e300dad50270cd367f206.sol#180) can be used in cross function reentrancies:
+	- Owned._ownerOnly() (0x0337184a497565a9bd8e300dad50270cd367f206.sol#205-207)
+	- Owned.acceptOwnership() (0x0337184a497565a9bd8e300dad50270cd367f206.sol#224-229)
+	- Owned.owner (0x0337184a497565a9bd8e300dad50270cd367f206.sol#180)
+	- Owned.transferOwnership(address) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#216-219)
+	- ContractRegistryClient.updateRegistry() (0x0337184a497565a9bd8e300dad50270cd367f206.sol#340-358)
+	- ConverterBase.withdrawETH(address) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#853-869)
+	- ConverterBase.withdrawTokens(IERC20Token,address,uint256) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#958-975)
+Reentrancy in ConverterBase.withdrawTokens(IERC20Token,address,uint256) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#958-975):
+	External calls:
+	- super.withdrawTokens(_token,_to,_amount) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#970)
+		- (success,data) = address(_token).call(abi.encodeWithSelector(TRANSFER_FUNC_SELECTOR,_to,_value)) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#525)
+	State variables written after the call(s):
+	- syncReserveBalance(_token) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#974)
+		- reserves[_reserveToken].balance = address(this).balance (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1148)
+		- reserves[_reserveToken].balance = _reserveToken.balanceOf(address(this)) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1150)
+	ConverterBase.reserves (0x0337184a497565a9bd8e300dad50270cd367f206.sol#688) can be used in cross function reentrancies:
+	- ConverterBase._validReserve(IERC20Token) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#798-800)
+	- ConverterBase.addReserve(IERC20Token,uint32) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1010-1031)
+	- ConverterBase.connectors(IERC20Token) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1212-1215)
+	- ConverterBase.hasETHReserve() (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1073-1075)
+	- ConverterBase.receive() (0x0337184a497565a9bd8e300dad50270cd367f206.sol#839-843)
+	- ConverterBase.reserveBalance(IERC20Token) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1058-1066)
+	- ConverterBase.reserveWeight(IERC20Token) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1041-1048)
+	- ConverterBase.reserves (0x0337184a497565a9bd8e300dad50270cd367f206.sol#688)
+	- ConverterBase.syncReserveBalance(IERC20Token) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1146-1151)
+	- ConverterBase.withdrawTokens(IERC20Token,address,uint256) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#958-975)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+LiquidTokenConverter.doConvert(IERC20Token,IERC20Token,uint256,address,address).targetAmount (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1365) is a local variable never initialized
+LiquidTokenConverter.doConvert(IERC20Token,IERC20Token,uint256,address,address).reserveToken (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1366) is a local variable never initialized
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#uninitialized-local-variables
+
+LiquidTokenConverter.doConvert(IERC20Token,IERC20Token,uint256,address,address).reserveWeight (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1383) shadows:
+	- ConverterBase.reserveWeight(IERC20Token) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1041-1048) (function)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#local-variable-shadowing
+
+DynamicLiquidTokenConverter.withdrawETH(address)._to (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1678) lacks a zero-check on :
+		- _to.transfer(address(this).balance) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1685)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in ConverterBase.acceptAnchorOwnership() (0x0337184a497565a9bd8e300dad50270cd367f206.sol#929-934):
+	External calls:
+	- anchor.acceptOwnership() (0x0337184a497565a9bd8e300dad50270cd367f206.sol#932)
+	State variables written after the call(s):
+	- syncReserveBalances() (0x0337184a497565a9bd8e300dad50270cd367f206.sol#933)
+		- reserves[_reserveToken].balance = address(this).balance (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1148)
+		- reserves[_reserveToken].balance = _reserveToken.balanceOf(address(this)) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1150)
+Reentrancy in ConverterBase.upgrade() (0x0337184a497565a9bd8e300dad50270cd367f206.sol#982-991):
+	External calls:
+	- converterUpgrader.upgrade(version) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#989)
+	State variables written after the call(s):
+	- acceptOwnership() (0x0337184a497565a9bd8e300dad50270cd367f206.sol#990)
+		- newOwner = address(0) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#228)
+Reentrancy in DynamicLiquidTokenConverter.withdrawTokens(IERC20Token,address,uint256) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1713-1724):
+	External calls:
+	- TokenHolder.withdrawTokens(_token,_to,_amount) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1719)
+		- (success,data) = address(_token).call(abi.encodeWithSelector(TRANSFER_FUNC_SELECTOR,_to,_value)) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#525)
+	State variables written after the call(s):
+	- syncReserveBalance(_token) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1723)
+		- reserves[_reserveToken].balance = address(this).balance (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1148)
+		- reserves[_reserveToken].balance = _reserveToken.balanceOf(address(this)) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1150)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in LiquidTokenConverter.acceptAnchorOwnership() (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1307-1311):
+	External calls:
+	- super.acceptAnchorOwnership() (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1308)
+		- anchor.acceptOwnership() (0x0337184a497565a9bd8e300dad50270cd367f206.sol#932)
+	Event emitted after the call(s):
+	- Activation(converterType(),anchor,true) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1310)
+Reentrancy in LiquidTokenConverter.buy(uint256,address,address) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1465-1490):
+	External calls:
+	- IDSToken(address(anchor)).issue(_beneficiary,amount) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1484)
+	Event emitted after the call(s):
+	- Conversion(_sourceToken,_targetToken,_trader,_amount,_returnAmount,int256(_feeAmount)) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1185)
+		- dispatchConversionEvent(reserveToken,IDSToken(address(anchor)),_trader,_amount,amount,fee) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1487)
+Reentrancy in LiquidTokenConverter.doConvert(IERC20Token,IERC20Token,uint256,address,address) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1360-1387):
+	External calls:
+	- targetAmount = buy(_amount,_trader,_beneficiary) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1370)
+		- IDSToken(address(anchor)).issue(_beneficiary,amount) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1484)
+	- targetAmount = sell(_amount,_trader,_beneficiary) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1374)
+		- (success,data) = address(_token).call(abi.encodeWithSelector(TRANSFER_FUNC_SELECTOR,_to,_value)) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#525)
+		- IDSToken(address(anchor)).destroy(address(this),_amount) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1519)
+	External calls sending eth:
+	- targetAmount = sell(_amount,_trader,_beneficiary) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1374)
+		- _beneficiary.transfer(amount) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1526)
+	Event emitted after the call(s):
+	- TokenRateUpdate(IDSToken(address(anchor)),reserveToken,reserveBalance(reserveToken).mul(PPM_RESOLUTION),totalSupply.mul(reserveWeight)) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1384)
+Reentrancy in DynamicLiquidTokenConverter.reduceWeight(IERC20Token) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1625-1656):
+	External calls:
+	- safeTransfer(_reserveToken,msg.sender,balance) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1649)
+		- (success,data) = address(_token).call(abi.encodeWithSelector(TRANSFER_FUNC_SELECTOR,_to,_value)) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#525)
+	External calls sending eth:
+	- msg.sender.transfer(balance) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1647)
+	Event emitted after the call(s):
+	- ReserveTokenWeightUpdate(oldWeight,weight,percentage,reserve.balance) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1655)
+Reentrancy in LiquidTokenConverter.sell(uint256,address,address) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1501-1534):
+	External calls:
+	- IDSToken(address(anchor)).destroy(address(this),_amount) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1519)
+	- safeTransfer(reserveToken,_beneficiary,amount) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1528)
+		- (success,data) = address(_token).call(abi.encodeWithSelector(TRANSFER_FUNC_SELECTOR,_to,_value)) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#525)
+	External calls sending eth:
+	- _beneficiary.transfer(amount) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1526)
+	Event emitted after the call(s):
+	- Conversion(_sourceToken,_targetToken,_trader,_amount,_returnAmount,int256(_feeAmount)) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1185)
+		- dispatchConversionEvent(IDSToken(address(anchor)),reserveToken,_trader,_amount,amount,fee) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1531)
+Reentrancy in ConverterBase.upgrade() (0x0337184a497565a9bd8e300dad50270cd367f206.sol#982-991):
+	External calls:
+	- converterUpgrader.upgrade(version) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#989)
+	Event emitted after the call(s):
+	- OwnerUpdate(owner,newOwner) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#226)
+		- acceptOwnership() (0x0337184a497565a9bd8e300dad50270cd367f206.sol#990)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+TokenHandler.safeApprove(IERC20Token,address,uint256) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#510-513) is never used and should be removed
+TokenHandler.safeTransferFrom(IERC20Token,address,address,uint256) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#539-542) is never used and should be removed
+Utils._greaterThanZero(uint256) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#247-249) is never used and should be removed
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dead-code
+
+Version constraint 0.6.12 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- SignedImmutables
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup.
+It is used by:
+	- 0.6.12 (0x0337184a497565a9bd8e300dad50270cd367f206.sol#5)
+	- 0.6.12 (0x0337184a497565a9bd8e300dad50270cd367f206.sol#20)
+	- 0.6.12 (0x0337184a497565a9bd8e300dad50270cd367f206.sol#31)
+	- 0.6.12 (0x0337184a497565a9bd8e300dad50270cd367f206.sol#51)
+	- 0.6.12 (0x0337184a497565a9bd8e300dad50270cd367f206.sol#62)
+	- 0.6.12 (0x0337184a497565a9bd8e300dad50270cd367f206.sol#109)
+	- 0.6.12 (0x0337184a497565a9bd8e300dad50270cd367f206.sol#121)
+	- 0.6.12 (0x0337184a497565a9bd8e300dad50270cd367f206.sol#174)
+	- 0.6.12 (0x0337184a497565a9bd8e300dad50270cd367f206.sol#234)
+	- 0.6.12 (0x0337184a497565a9bd8e300dad50270cd367f206.sol#276)
+	- 0.6.12 (0x0337184a497565a9bd8e300dad50270cd367f206.sol#287)
+	- 0.6.12 (0x0337184a497565a9bd8e300dad50270cd367f206.sol#392)
+	- 0.6.12 (0x0337184a497565a9bd8e300dad50270cd367f206.sol#425)
+	- 0.6.12 (0x0337184a497565a9bd8e300dad50270cd367f206.sol#493)
+	- 0.6.12 (0x0337184a497565a9bd8e300dad50270cd367f206.sol#547)
+	- 0.6.12 (0x0337184a497565a9bd8e300dad50270cd367f206.sol#560)
+	- 0.6.12 (0x0337184a497565a9bd8e300dad50270cd367f206.sol#601)
+	- 0.6.12 (0x0337184a497565a9bd8e300dad50270cd367f206.sol#616)
+	- 0.6.12 (0x0337184a497565a9bd8e300dad50270cd367f206.sol#627)
+	- 0.6.12 (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1248)
+	- 0.6.12 (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1263)
+	- 0.6.12 (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1539)
+solc-0.6.12 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in TokenHandler.safeApprove(IERC20Token,address,uint256) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#510-513):
+	- (success,data) = address(_token).call(abi.encodeWithSelector(APPROVE_FUNC_SELECTOR,_spender,_value)) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#511)
+Low level call in TokenHandler.safeTransfer(IERC20Token,address,uint256) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#524-527):
+	- (success,data) = address(_token).call(abi.encodeWithSelector(TRANSFER_FUNC_SELECTOR,_to,_value)) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#525)
+Low level call in TokenHandler.safeTransferFrom(IERC20Token,address,address,uint256) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#539-542):
+	- (success,data) = address(_token).call(abi.encodeWithSelector(TRANSFER_FROM_FUNC_SELECTOR,_from,_to,_value)) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#540)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Parameter Owned.transferOwnership(address)._newOwner (0x0337184a497565a9bd8e300dad50270cd367f206.sol#216) is not in mixedCase
+Parameter ContractRegistryClient.restrictRegistryUpdate(bool)._onlyOwnerCanUpdateRegistry (0x0337184a497565a9bd8e300dad50270cd367f206.sol#373) is not in mixedCase
+Parameter ContractRegistryClient.addressOf(bytes32)._contractName (0x0337184a497565a9bd8e300dad50270cd367f206.sol#385) is not in mixedCase
+Parameter SafeMath.add(uint256,uint256)._x (0x0337184a497565a9bd8e300dad50270cd367f206.sol#439) is not in mixedCase
+Parameter SafeMath.add(uint256,uint256)._y (0x0337184a497565a9bd8e300dad50270cd367f206.sol#439) is not in mixedCase
+Parameter SafeMath.sub(uint256,uint256)._x (0x0337184a497565a9bd8e300dad50270cd367f206.sol#453) is not in mixedCase
+Parameter SafeMath.sub(uint256,uint256)._y (0x0337184a497565a9bd8e300dad50270cd367f206.sol#453) is not in mixedCase
+Parameter SafeMath.mul(uint256,uint256)._x (0x0337184a497565a9bd8e300dad50270cd367f206.sol#466) is not in mixedCase
+Parameter SafeMath.mul(uint256,uint256)._y (0x0337184a497565a9bd8e300dad50270cd367f206.sol#466) is not in mixedCase
+Parameter SafeMath.div(uint256,uint256)._x (0x0337184a497565a9bd8e300dad50270cd367f206.sol#484) is not in mixedCase
+Parameter SafeMath.div(uint256,uint256)._y (0x0337184a497565a9bd8e300dad50270cd367f206.sol#484) is not in mixedCase
+Parameter TokenHandler.safeApprove(IERC20Token,address,uint256)._token (0x0337184a497565a9bd8e300dad50270cd367f206.sol#510) is not in mixedCase
+Parameter TokenHandler.safeApprove(IERC20Token,address,uint256)._spender (0x0337184a497565a9bd8e300dad50270cd367f206.sol#510) is not in mixedCase
+Parameter TokenHandler.safeApprove(IERC20Token,address,uint256)._value (0x0337184a497565a9bd8e300dad50270cd367f206.sol#510) is not in mixedCase
+Parameter TokenHandler.safeTransfer(IERC20Token,address,uint256)._token (0x0337184a497565a9bd8e300dad50270cd367f206.sol#524) is not in mixedCase
+Parameter TokenHandler.safeTransfer(IERC20Token,address,uint256)._to (0x0337184a497565a9bd8e300dad50270cd367f206.sol#524) is not in mixedCase
+Parameter TokenHandler.safeTransfer(IERC20Token,address,uint256)._value (0x0337184a497565a9bd8e300dad50270cd367f206.sol#524) is not in mixedCase
+Parameter TokenHandler.safeTransferFrom(IERC20Token,address,address,uint256)._token (0x0337184a497565a9bd8e300dad50270cd367f206.sol#539) is not in mixedCase
+Parameter TokenHandler.safeTransferFrom(IERC20Token,address,address,uint256)._from (0x0337184a497565a9bd8e300dad50270cd367f206.sol#539) is not in mixedCase
+Parameter TokenHandler.safeTransferFrom(IERC20Token,address,address,uint256)._to (0x0337184a497565a9bd8e300dad50270cd367f206.sol#539) is not in mixedCase
+Parameter TokenHandler.safeTransferFrom(IERC20Token,address,address,uint256)._value (0x0337184a497565a9bd8e300dad50270cd367f206.sol#539) is not in mixedCase
+Parameter TokenHolder.withdrawTokens(IERC20Token,address,uint256)._token (0x0337184a497565a9bd8e300dad50270cd367f206.sol#586) is not in mixedCase
+Parameter TokenHolder.withdrawTokens(IERC20Token,address,uint256)._to (0x0337184a497565a9bd8e300dad50270cd367f206.sol#586) is not in mixedCase
+Parameter TokenHolder.withdrawTokens(IERC20Token,address,uint256)._amount (0x0337184a497565a9bd8e300dad50270cd367f206.sol#586) is not in mixedCase
+Parameter ConverterBase.withdrawETH(address)._to (0x0337184a497565a9bd8e300dad50270cd367f206.sol#853) is not in mixedCase
+Parameter ConverterBase.setConversionWhitelist(IWhitelist)._whitelist (0x0337184a497565a9bd8e300dad50270cd367f206.sol#887) is not in mixedCase
+Parameter ConverterBase.transferAnchorOwnership(address)._newOwner (0x0337184a497565a9bd8e300dad50270cd367f206.sol#913) is not in mixedCase
+Parameter ConverterBase.setConversionFee(uint32)._conversionFee (0x0337184a497565a9bd8e300dad50270cd367f206.sol#942) is not in mixedCase
+Parameter ConverterBase.withdrawTokens(IERC20Token,address,uint256)._token (0x0337184a497565a9bd8e300dad50270cd367f206.sol#958) is not in mixedCase
+Parameter ConverterBase.withdrawTokens(IERC20Token,address,uint256)._to (0x0337184a497565a9bd8e300dad50270cd367f206.sol#958) is not in mixedCase
+Parameter ConverterBase.withdrawTokens(IERC20Token,address,uint256)._amount (0x0337184a497565a9bd8e300dad50270cd367f206.sol#958) is not in mixedCase
+Parameter ConverterBase.addReserve(IERC20Token,uint32)._token (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1010) is not in mixedCase
+Parameter ConverterBase.addReserve(IERC20Token,uint32)._weight (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1010) is not in mixedCase
+Parameter ConverterBase.reserveWeight(IERC20Token)._reserveToken (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1041) is not in mixedCase
+Parameter ConverterBase.reserveBalance(IERC20Token)._reserveToken (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1058) is not in mixedCase
+Parameter ConverterBase.convert(IERC20Token,IERC20Token,uint256,address,address)._sourceToken (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1089) is not in mixedCase
+Parameter ConverterBase.convert(IERC20Token,IERC20Token,uint256,address,address)._targetToken (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1089) is not in mixedCase
+Parameter ConverterBase.convert(IERC20Token,IERC20Token,uint256,address,address)._amount (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1089) is not in mixedCase
+Parameter ConverterBase.convert(IERC20Token,IERC20Token,uint256,address,address)._trader (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1089) is not in mixedCase
+Parameter ConverterBase.convert(IERC20Token,IERC20Token,uint256,address,address)._beneficiary (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1089) is not in mixedCase
+Parameter ConverterBase.calculateFee(uint256)._targetAmount (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1137) is not in mixedCase
+Parameter ConverterBase.syncReserveBalance(IERC20Token)._reserveToken (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1146) is not in mixedCase
+Parameter ConverterBase.dispatchConversionEvent(IERC20Token,IERC20Token,address,uint256,uint256,uint256)._sourceToken (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1172) is not in mixedCase
+Parameter ConverterBase.dispatchConversionEvent(IERC20Token,IERC20Token,address,uint256,uint256,uint256)._targetToken (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1173) is not in mixedCase
+Parameter ConverterBase.dispatchConversionEvent(IERC20Token,IERC20Token,address,uint256,uint256,uint256)._trader (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1174) is not in mixedCase
+Parameter ConverterBase.dispatchConversionEvent(IERC20Token,IERC20Token,address,uint256,uint256,uint256)._amount (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1175) is not in mixedCase
+Parameter ConverterBase.dispatchConversionEvent(IERC20Token,IERC20Token,address,uint256,uint256,uint256)._returnAmount (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1176) is not in mixedCase
+Parameter ConverterBase.dispatchConversionEvent(IERC20Token,IERC20Token,address,uint256,uint256,uint256)._feeAmount (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1177) is not in mixedCase
+Parameter ConverterBase.transferTokenOwnership(address)._newOwner (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1198) is not in mixedCase
+Parameter ConverterBase.connectors(IERC20Token)._address (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1212) is not in mixedCase
+Parameter ConverterBase.connectorTokens(uint256)._index (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1220) is not in mixedCase
+Parameter ConverterBase.getConnectorBalance(IERC20Token)._connectorToken (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1234) is not in mixedCase
+Parameter ConverterBase.getReturn(IERC20Token,IERC20Token,uint256)._sourceToken (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1241) is not in mixedCase
+Parameter ConverterBase.getReturn(IERC20Token,IERC20Token,uint256)._targetToken (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1241) is not in mixedCase
+Parameter ConverterBase.getReturn(IERC20Token,IERC20Token,uint256)._amount (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1241) is not in mixedCase
+Parameter LiquidTokenConverter.addReserve(IERC20Token,uint32)._token (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1321) is not in mixedCase
+Parameter LiquidTokenConverter.addReserve(IERC20Token,uint32)._weight (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1321) is not in mixedCase
+Parameter LiquidTokenConverter.targetAmountAndFee(IERC20Token,IERC20Token,uint256)._sourceToken (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1338) is not in mixedCase
+Parameter LiquidTokenConverter.targetAmountAndFee(IERC20Token,IERC20Token,uint256)._targetToken (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1338) is not in mixedCase
+Parameter LiquidTokenConverter.targetAmountAndFee(IERC20Token,IERC20Token,uint256)._amount (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1338) is not in mixedCase
+Parameter LiquidTokenConverter.doConvert(IERC20Token,IERC20Token,uint256,address,address)._sourceToken (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1360) is not in mixedCase
+Parameter LiquidTokenConverter.doConvert(IERC20Token,IERC20Token,uint256,address,address)._targetToken (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1360) is not in mixedCase
+Parameter LiquidTokenConverter.doConvert(IERC20Token,IERC20Token,uint256,address,address)._amount (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1360) is not in mixedCase
+Parameter LiquidTokenConverter.doConvert(IERC20Token,IERC20Token,uint256,address,address)._trader (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1360) is not in mixedCase
+Parameter LiquidTokenConverter.doConvert(IERC20Token,IERC20Token,uint256,address,address)._beneficiary (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1360) is not in mixedCase
+Parameter LiquidTokenConverter.purchaseTargetAmount(uint256)._amount (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1397) is not in mixedCase
+Parameter LiquidTokenConverter.saleTargetAmount(uint256)._amount (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1430) is not in mixedCase
+Parameter LiquidTokenConverter.buy(uint256,address,address)._amount (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1465) is not in mixedCase
+Parameter LiquidTokenConverter.buy(uint256,address,address)._trader (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1465) is not in mixedCase
+Parameter LiquidTokenConverter.buy(uint256,address,address)._beneficiary (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1465) is not in mixedCase
+Parameter LiquidTokenConverter.sell(uint256,address,address)._amount (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1501) is not in mixedCase
+Parameter LiquidTokenConverter.sell(uint256,address,address)._trader (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1501) is not in mixedCase
+Parameter LiquidTokenConverter.sell(uint256,address,address)._beneficiary (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1501) is not in mixedCase
+Parameter DynamicLiquidTokenConverter.setMarketCapThreshold(uint256)._marketCapThreshold (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1583) is not in mixedCase
+Parameter DynamicLiquidTokenConverter.setMinimumWeight(uint32)._minimumWeight (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1597) is not in mixedCase
+Parameter DynamicLiquidTokenConverter.setStepWeight(uint32)._stepWeight (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1611) is not in mixedCase
+Parameter DynamicLiquidTokenConverter.reduceWeight(IERC20Token)._reserveToken (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1625) is not in mixedCase
+Parameter DynamicLiquidTokenConverter.getMarketCap(IERC20Token)._reserveToken (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1658) is not in mixedCase
+Parameter DynamicLiquidTokenConverter.withdrawETH(address)._to (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1678) is not in mixedCase
+Parameter DynamicLiquidTokenConverter.transferAnchorOwnership(address)._newOwner (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1697) is not in mixedCase
+Parameter DynamicLiquidTokenConverter.withdrawTokens(IERC20Token,address,uint256)._token (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1713) is not in mixedCase
+Parameter DynamicLiquidTokenConverter.withdrawTokens(IERC20Token,address,uint256)._to (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1713) is not in mixedCase
+Parameter DynamicLiquidTokenConverter.withdrawTokens(IERC20Token,address,uint256)._amount (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1713) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in LiquidTokenConverter.doConvert(IERC20Token,IERC20Token,uint256,address,address) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1360-1387):
+	External calls:
+	- targetAmount = sell(_amount,_trader,_beneficiary) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1374)
+		- _beneficiary.transfer(amount) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1526)
+	Event emitted after the call(s):
+	- TokenRateUpdate(IDSToken(address(anchor)),reserveToken,reserveBalance(reserveToken).mul(PPM_RESOLUTION),totalSupply.mul(reserveWeight)) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1384)
+Reentrancy in DynamicLiquidTokenConverter.reduceWeight(IERC20Token) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1625-1656):
+	External calls:
+	- msg.sender.transfer(balance) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1647)
+	State variables written after the call(s):
+	- lastWeightAdjustmentMarketCap = currentMarketCap (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1651)
+	- syncReserveBalance(_reserveToken) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1653)
+		- reserves[_reserveToken].balance = address(this).balance (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1148)
+		- reserves[_reserveToken].balance = _reserveToken.balanceOf(address(this)) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1150)
+	Event emitted after the call(s):
+	- ReserveTokenWeightUpdate(oldWeight,weight,percentage,reserve.balance) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1655)
+Reentrancy in LiquidTokenConverter.sell(uint256,address,address) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1501-1534):
+	External calls:
+	- _beneficiary.transfer(amount) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1526)
+	Event emitted after the call(s):
+	- Conversion(_sourceToken,_targetToken,_trader,_amount,_returnAmount,int256(_feeAmount)) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1185)
+		- dispatchConversionEvent(IDSToken(address(anchor)),reserveToken,_trader,_amount,amount,fee) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1531)
+Reentrancy in ConverterBase.withdrawETH(address) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#853-869):
+	External calls:
+	- _to.transfer(address(this).balance) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#865)
+	State variables written after the call(s):
+	- syncReserveBalance(ETH_RESERVE_ADDRESS) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#868)
+		- reserves[_reserveToken].balance = address(this).balance (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1148)
+		- reserves[_reserveToken].balance = _reserveToken.balanceOf(address(this)) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1150)
+Reentrancy in DynamicLiquidTokenConverter.withdrawETH(address) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1678-1689):
+	External calls:
+	- _to.transfer(address(this).balance) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1685)
+	State variables written after the call(s):
+	- syncReserveBalance(ETH_RESERVE_ADDRESS) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1688)
+		- reserves[_reserveToken].balance = address(this).balance (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1148)
+		- reserves[_reserveToken].balance = _reserveToken.balanceOf(address(this)) (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1150)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+DynamicLiquidTokenConverter.slitherConstructorConstantVariables() (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1552-1727) uses literals with too many digits:
+	- PPM_RESOLUTION = 1000000 (0x0337184a497565a9bd8e300dad50270cd367f206.sol#669)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+ContractRegistryClient.CONVERTER_FACTORY (0x0337184a497565a9bd8e300dad50270cd367f206.sol#298) is never used in DynamicLiquidTokenConverter (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1552-1727)
+ContractRegistryClient.CONVERSION_PATH_FINDER (0x0337184a497565a9bd8e300dad50270cd367f206.sol#299) is never used in DynamicLiquidTokenConverter (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1552-1727)
+ContractRegistryClient.CONVERTER_REGISTRY (0x0337184a497565a9bd8e300dad50270cd367f206.sol#301) is never used in DynamicLiquidTokenConverter (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1552-1727)
+ContractRegistryClient.CONVERTER_REGISTRY_DATA (0x0337184a497565a9bd8e300dad50270cd367f206.sol#302) is never used in DynamicLiquidTokenConverter (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1552-1727)
+ContractRegistryClient.BNT_TOKEN (0x0337184a497565a9bd8e300dad50270cd367f206.sol#303) is never used in DynamicLiquidTokenConverter (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1552-1727)
+ContractRegistryClient.BANCOR_X (0x0337184a497565a9bd8e300dad50270cd367f206.sol#304) is never used in DynamicLiquidTokenConverter (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1552-1727)
+ContractRegistryClient.BANCOR_X_UPGRADER (0x0337184a497565a9bd8e300dad50270cd367f206.sol#305) is never used in DynamicLiquidTokenConverter (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1552-1727)
+ContractRegistryClient.CHAINLINK_ORACLE_WHITELIST (0x0337184a497565a9bd8e300dad50270cd367f206.sol#306) is never used in DynamicLiquidTokenConverter (0x0337184a497565a9bd8e300dad50270cd367f206.sol#1552-1727)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-state-variable
+
+ConverterBase.anchor (0x0337184a497565a9bd8e300dad50270cd367f206.sol#685) should be immutable 
+ConverterBase.maxConversionFee (0x0337184a497565a9bd8e300dad50270cd367f206.sol#690) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+./0x0337184a497565a9bd8e300dad50270cd367f206.sol analyzed (22 contracts with 94 detectors), 125 result(s) found
+
+real	0m4.833s
+user	0m4.611s
+sys	0m0.224s

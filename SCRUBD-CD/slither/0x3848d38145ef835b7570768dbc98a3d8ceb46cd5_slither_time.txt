@@ -1,0 +1,362 @@
+'solc --version' running
+'solc ./0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+DaffyDuck.swapBack() (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#865-926) sends eth to arbitrary user
+	Dangerous calls:
+	- (tmpSuccess,None) = address(marketingWallet).call{gas: 30000,value: amountBNBMarketing}() (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#902-905)
+	- (tmpSuccess2,None) = address(autoLiquidityReceiver).call{gas: 30000,value: amountBNBLiquidity}() (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#911-914)
+	- (tmpSuccess3,None) = address(stakingRewardWallet).call{gas: 30000,value: amountStakingReward}() (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#916-919)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+Reentrancy in DaffyDuck._transferFrom(address,address,uint256) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#759-827):
+	External calls:
+	- swapBack() (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#783)
+		- router.swapExactTokensForETHSupportingFeeOnTransferTokens(amountToSwap,0,path,address(this),block.timestamp) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#873-879)
+		- dividendDistributor.deposit{value: amountBNBReflection}() (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#898-900)
+		- (tmpSuccess,None) = address(marketingWallet).call{gas: 30000,value: amountBNBMarketing}() (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#902-905)
+		- (tmpSuccess1,None) = address(veWall).call{gas: 30000,value: amountBNBTeamdev}() (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#906-909)
+		- (tmpSuccess2,None) = address(autoLiquidityReceiver).call{gas: 30000,value: amountBNBLiquidity}() (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#911-914)
+		- (tmpSuccess3,None) = address(stakingRewardWallet).call{gas: 30000,value: amountStakingReward}() (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#916-919)
+	External calls sending eth:
+	- swapBack() (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#783)
+		- dividendDistributor.deposit{value: amountBNBReflection}() (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#898-900)
+		- (tmpSuccess,None) = address(marketingWallet).call{gas: 30000,value: amountBNBMarketing}() (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#902-905)
+		- (tmpSuccess1,None) = address(veWall).call{gas: 30000,value: amountBNBTeamdev}() (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#906-909)
+		- (tmpSuccess2,None) = address(autoLiquidityReceiver).call{gas: 30000,value: amountBNBLiquidity}() (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#911-914)
+		- (tmpSuccess3,None) = address(stakingRewardWallet).call{gas: 30000,value: amountStakingReward}() (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#916-919)
+	State variables written after the call(s):
+	- _basicTransfer(sender,recipient,amount) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#792)
+		- _balances[sender] = _balances[sender].sub(amount,Insufficient Balance) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#834-837)
+		- _balances[recipient] = _balances[recipient].add(amount) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#838)
+	DaffyDuck._balances (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#471) can be used in cross function reentrancies:
+	- DaffyDuck._basicTransfer(address,address,uint256) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#829-841)
+	- DaffyDuck._transferFrom(address,address,uint256) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#759-827)
+	- DaffyDuck.balanceOf(address) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#579-581)
+	- DaffyDuck.changeIsDividendExempt(address,bool) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#662-674)
+	- DaffyDuck.constructor() (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#516-551)
+	- DaffyDuck.swapBack() (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#865-926)
+	- DaffyDuck.takeFee(address,address,uint256) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#843-857)
+	- _balances[sender] = _balances[sender].sub(amount,Insufficient Balance) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#796-799)
+	DaffyDuck._balances (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#471) can be used in cross function reentrancies:
+	- DaffyDuck._basicTransfer(address,address,uint256) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#829-841)
+	- DaffyDuck._transferFrom(address,address,uint256) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#759-827)
+	- DaffyDuck.balanceOf(address) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#579-581)
+	- DaffyDuck.changeIsDividendExempt(address,bool) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#662-674)
+	- DaffyDuck.constructor() (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#516-551)
+	- DaffyDuck.swapBack() (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#865-926)
+	- DaffyDuck.takeFee(address,address,uint256) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#843-857)
+	- _balances[recipient] = _balances[recipient].add(finalAmount) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#808)
+	DaffyDuck._balances (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#471) can be used in cross function reentrancies:
+	- DaffyDuck._basicTransfer(address,address,uint256) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#829-841)
+	- DaffyDuck._transferFrom(address,address,uint256) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#759-827)
+	- DaffyDuck.balanceOf(address) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#579-581)
+	- DaffyDuck.changeIsDividendExempt(address,bool) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#662-674)
+	- DaffyDuck.constructor() (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#516-551)
+	- DaffyDuck.swapBack() (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#865-926)
+	- DaffyDuck.takeFee(address,address,uint256) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#843-857)
+	- finalAmount = takeFee(sender,recipient,amount) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#805-807)
+		- _balances[address(this)] = _balances[address(this)].add(feeAmount) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#853)
+	DaffyDuck._balances (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#471) can be used in cross function reentrancies:
+	- DaffyDuck._basicTransfer(address,address,uint256) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#829-841)
+	- DaffyDuck._transferFrom(address,address,uint256) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#759-827)
+	- DaffyDuck.balanceOf(address) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#579-581)
+	- DaffyDuck.changeIsDividendExempt(address,bool) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#662-674)
+	- DaffyDuck.constructor() (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#516-551)
+	- DaffyDuck.swapBack() (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#865-926)
+	- DaffyDuck.takeFee(address,address,uint256) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#843-857)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+DividendDistributor.distributeDividend(address) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#307-324) ignores return value by RewardToken.transfer(shareholder,amount) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#315)
+DividendDistributor.rescueDividends(address) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#330-332) ignores return value by RewardToken.transfer(to,RewardToken.balanceOf(address(this))) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#331)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+Reentrancy in DividendDistributor.distributeDividend(address) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#307-324):
+	External calls:
+	- RewardToken.transfer(shareholder,amount) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#315)
+	State variables written after the call(s):
+	- shares[shareholder].totalRealised = shares[shareholder].totalRealised.add(amount) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#317-319)
+	DividendDistributor.shares (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#188) can be used in cross function reentrancies:
+	- DividendDistributor.distributeDividend(address) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#307-324)
+	- DividendDistributor.getUnpaidEarnings(address) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#338-357)
+	- DividendDistributor.setShare(address,uint256) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#228-248)
+	- DividendDistributor.shares (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#188)
+	- shares[shareholder].totalExcluded = getCumulativeDividends(shares[shareholder].amount) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#320-322)
+	DividendDistributor.shares (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#188) can be used in cross function reentrancies:
+	- DividendDistributor.distributeDividend(address) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#307-324)
+	- DividendDistributor.getUnpaidEarnings(address) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#338-357)
+	- DividendDistributor.setShare(address,uint256) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#228-248)
+	- DividendDistributor.shares (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#188)
+Reentrancy in DividendDistributor.process(uint256) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#270-295):
+	External calls:
+	- distributeDividend(shareholders[currentIndex]) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#287)
+		- RewardToken.transfer(shareholder,amount) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#315)
+	State variables written after the call(s):
+	- currentIndex = 0 (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#283)
+	DividendDistributor.currentIndex (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#199) can be used in cross function reentrancies:
+	- DividendDistributor.process(uint256) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#270-295)
+	- currentIndex ++ (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#292)
+	DividendDistributor.currentIndex (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#199) can be used in cross function reentrancies:
+	- DividendDistributor.process(uint256) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#270-295)
+Reentrancy in DividendDistributor.setShare(address,uint256) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#228-248):
+	External calls:
+	- distributeDividend(shareholder) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#234)
+		- RewardToken.transfer(shareholder,amount) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#315)
+	State variables written after the call(s):
+	- shares[shareholder].amount = amount (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#244)
+	DividendDistributor.shares (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#188) can be used in cross function reentrancies:
+	- DividendDistributor.distributeDividend(address) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#307-324)
+	- DividendDistributor.getUnpaidEarnings(address) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#338-357)
+	- DividendDistributor.setShare(address,uint256) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#228-248)
+	- DividendDistributor.shares (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#188)
+	- shares[shareholder].totalExcluded = getCumulativeDividends(shares[shareholder].amount) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#245-247)
+	DividendDistributor.shares (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#188) can be used in cross function reentrancies:
+	- DividendDistributor.distributeDividend(address) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#307-324)
+	- DividendDistributor.getUnpaidEarnings(address) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#338-357)
+	- DividendDistributor.setShare(address,uint256) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#228-248)
+	- DividendDistributor.shares (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#188)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+DaffyDuck.swapBack().tmpSuccess (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#902) is written in both
+	(tmpSuccess,None) = address(marketingWallet).call{gas: 30000,value: amountBNBMarketing}() (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#902-905)
+	tmpSuccess = false (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#922)
+DaffyDuck.swapBack().tmpSuccess1 (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#906) is written in both
+	(tmpSuccess1,None) = address(veWall).call{gas: 30000,value: amountBNBTeamdev}() (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#906-909)
+	tmpSuccess1 = false (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#923)
+DaffyDuck.swapBack().tmpSuccess2 (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#911) is written in both
+	(tmpSuccess2,None) = address(autoLiquidityReceiver).call{gas: 30000,value: amountBNBLiquidity}() (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#911-914)
+	tmpSuccess2 = false (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#924)
+DaffyDuck.swapBack().tmpSuccess3 (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#916) is written in both
+	(tmpSuccess3,None) = address(stakingRewardWallet).call{gas: 30000,value: amountStakingReward}() (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#916-919)
+	tmpSuccess3 = false (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#925)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#write-after-write
+
+DividendDistributor.setDistributionCriteria(uint256,uint256) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#220-226) should emit an event for: 
+	- minPeriod = newMinPeriod (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#224) 
+	- minDistribution = newMinDistribution (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#225) 
+DaffyDuck.changeSellFeeX10(uint256) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#615-619) should emit an event for: 
+	- totalFeeIfSelling = totalFee.mul(sellMultiplier).div(10) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#618) 
+DaffyDuck.changeTxLimit(uint256) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#625-627) should emit an event for: 
+	- _maxTxAmount = newLimit (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#626) 
+DaffyDuck.changeFees(uint256,uint256,uint256,uint256,uint256) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#676-696) should emit an event for: 
+	- liquidityFee = newLiqFee (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#683) 
+	- rewardsFee = newRewardFee (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#684) 
+	- marketingFee = newMarketingFee (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#685) 
+	- veFee = newveFee (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#686) 
+	- stakingRewardFee = newStakingRewardFee (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#687) 
+	- totalFee = liquidityFee.add(marketingFee).add(rewardsFee).add(veFee).add(stakingRewardFee) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#689-693) 
+	- totalFeeIfSelling = totalFee.mul(sellMultiplier).div(10) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#695) 
+DaffyDuck.setGas(uint256) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#859-863) should emit an event for: 
+	- _gasPriceLimitB = Gas (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#861) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+Auth.transferOwnership(address).adr (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#444) lacks a zero-check on :
+		- owner = adr (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#445)
+DaffyDuck.changeFeeReceivers(address,address,address).newLiquidityReceiver (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#699) lacks a zero-check on :
+		- autoLiquidityReceiver = newLiquidityReceiver (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#704)
+DaffyDuck.changeFeeReceivers(address,address,address).newMarketingWallet (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#700) lacks a zero-check on :
+		- marketingWallet = newMarketingWallet (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#705)
+DaffyDuck.changeFeeReceivers(address,address,address).newStakingRewardWallet (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#702) lacks a zero-check on :
+		- stakingRewardWallet = newStakingRewardWallet (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#707)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+DividendDistributor.distributeDividend(address) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#307-324) has external calls inside a loop: RewardToken.transfer(shareholder,amount) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#315)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation/#calls-inside-a-loop
+
+Reentrancy in DaffyDuck._transferFrom(address,address,uint256) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#759-827):
+	External calls:
+	- swapBack() (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#783)
+		- router.swapExactTokensForETHSupportingFeeOnTransferTokens(amountToSwap,0,path,address(this),block.timestamp) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#873-879)
+		- dividendDistributor.deposit{value: amountBNBReflection}() (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#898-900)
+		- (tmpSuccess,None) = address(marketingWallet).call{gas: 30000,value: amountBNBMarketing}() (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#902-905)
+		- (tmpSuccess1,None) = address(veWall).call{gas: 30000,value: amountBNBTeamdev}() (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#906-909)
+		- (tmpSuccess2,None) = address(autoLiquidityReceiver).call{gas: 30000,value: amountBNBLiquidity}() (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#911-914)
+		- (tmpSuccess3,None) = address(stakingRewardWallet).call{gas: 30000,value: amountStakingReward}() (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#916-919)
+	External calls sending eth:
+	- swapBack() (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#783)
+		- dividendDistributor.deposit{value: amountBNBReflection}() (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#898-900)
+		- (tmpSuccess,None) = address(marketingWallet).call{gas: 30000,value: amountBNBMarketing}() (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#902-905)
+		- (tmpSuccess1,None) = address(veWall).call{gas: 30000,value: amountBNBTeamdev}() (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#906-909)
+		- (tmpSuccess2,None) = address(autoLiquidityReceiver).call{gas: 30000,value: amountBNBLiquidity}() (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#911-914)
+		- (tmpSuccess3,None) = address(stakingRewardWallet).call{gas: 30000,value: amountStakingReward}() (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#916-919)
+	State variables written after the call(s):
+	- launch() (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#788)
+		- launchedAt = block.number (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#622)
+Reentrancy in DividendDistributor.deposit() (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#250-268):
+	External calls:
+	- router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: msg.value}(0,path,address(this),block.timestamp) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#257-259)
+	State variables written after the call(s):
+	- dividendsPerShare = dividendsPerShare.add(dividendsPerShareAccuracyFactor.mul(amount).div(totalShares)) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#265-267)
+	- totalDividends = totalDividends.add(amount) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#264)
+Reentrancy in DividendDistributor.distributeDividend(address) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#307-324):
+	External calls:
+	- RewardToken.transfer(shareholder,amount) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#315)
+	State variables written after the call(s):
+	- shareholderClaims[shareholder] = block.timestamp (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#316)
+Reentrancy in DividendDistributor.setShare(address,uint256) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#228-248):
+	External calls:
+	- distributeDividend(shareholder) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#234)
+		- RewardToken.transfer(shareholder,amount) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#315)
+	State variables written after the call(s):
+	- addShareholder(shareholder) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#238)
+		- shareholderIndexes[shareholder] = shareholders.length (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#369)
+	- removeShareholder(shareholder) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#240)
+		- shareholderIndexes[shareholders[shareholders.length - 1]] = shareholderIndexes[shareholder] (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#377-379)
+	- addShareholder(shareholder) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#238)
+		- shareholders.push(shareholder) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#370)
+	- removeShareholder(shareholder) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#240)
+		- shareholders[shareholderIndexes[shareholder]] = shareholders[shareholders.length - 1] (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#374-376)
+		- shareholders.pop() (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#380)
+	- totalShares = totalShares.sub(shares[shareholder].amount).add(amount) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#243)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in DaffyDuck._transferFrom(address,address,uint256) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#759-827):
+	External calls:
+	- swapBack() (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#783)
+		- router.swapExactTokensForETHSupportingFeeOnTransferTokens(amountToSwap,0,path,address(this),block.timestamp) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#873-879)
+		- dividendDistributor.deposit{value: amountBNBReflection}() (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#898-900)
+		- (tmpSuccess,None) = address(marketingWallet).call{gas: 30000,value: amountBNBMarketing}() (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#902-905)
+		- (tmpSuccess1,None) = address(veWall).call{gas: 30000,value: amountBNBTeamdev}() (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#906-909)
+		- (tmpSuccess2,None) = address(autoLiquidityReceiver).call{gas: 30000,value: amountBNBLiquidity}() (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#911-914)
+		- (tmpSuccess3,None) = address(stakingRewardWallet).call{gas: 30000,value: amountStakingReward}() (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#916-919)
+	External calls sending eth:
+	- swapBack() (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#783)
+		- dividendDistributor.deposit{value: amountBNBReflection}() (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#898-900)
+		- (tmpSuccess,None) = address(marketingWallet).call{gas: 30000,value: amountBNBMarketing}() (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#902-905)
+		- (tmpSuccess1,None) = address(veWall).call{gas: 30000,value: amountBNBTeamdev}() (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#906-909)
+		- (tmpSuccess2,None) = address(autoLiquidityReceiver).call{gas: 30000,value: amountBNBLiquidity}() (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#911-914)
+		- (tmpSuccess3,None) = address(stakingRewardWallet).call{gas: 30000,value: amountStakingReward}() (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#916-919)
+	Event emitted after the call(s):
+	- Transfer(sender,recipient,amount) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#839)
+		- _basicTransfer(sender,recipient,amount) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#792)
+	- Transfer(sender,address(this),feeAmount) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#854)
+		- finalAmount = takeFee(sender,recipient,amount) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#805-807)
+Reentrancy in DaffyDuck._transferFrom(address,address,uint256) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#759-827):
+	External calls:
+	- swapBack() (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#783)
+		- router.swapExactTokensForETHSupportingFeeOnTransferTokens(amountToSwap,0,path,address(this),block.timestamp) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#873-879)
+		- dividendDistributor.deposit{value: amountBNBReflection}() (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#898-900)
+		- (tmpSuccess,None) = address(marketingWallet).call{gas: 30000,value: amountBNBMarketing}() (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#902-905)
+		- (tmpSuccess1,None) = address(veWall).call{gas: 30000,value: amountBNBTeamdev}() (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#906-909)
+		- (tmpSuccess2,None) = address(autoLiquidityReceiver).call{gas: 30000,value: amountBNBLiquidity}() (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#911-914)
+		- (tmpSuccess3,None) = address(stakingRewardWallet).call{gas: 30000,value: amountStakingReward}() (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#916-919)
+	- dividendDistributor.setShare(sender,_balances[sender]) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#812-814)
+	- dividendDistributor.setShare(recipient,_balances[recipient]) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#818-820)
+	- dividendDistributor.process(distributorGas) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#823)
+	External calls sending eth:
+	- swapBack() (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#783)
+		- dividendDistributor.deposit{value: amountBNBReflection}() (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#898-900)
+		- (tmpSuccess,None) = address(marketingWallet).call{gas: 30000,value: amountBNBMarketing}() (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#902-905)
+		- (tmpSuccess1,None) = address(veWall).call{gas: 30000,value: amountBNBTeamdev}() (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#906-909)
+		- (tmpSuccess2,None) = address(autoLiquidityReceiver).call{gas: 30000,value: amountBNBLiquidity}() (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#911-914)
+		- (tmpSuccess3,None) = address(stakingRewardWallet).call{gas: 30000,value: amountStakingReward}() (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#916-919)
+	Event emitted after the call(s):
+	- Transfer(sender,recipient,finalAmount) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#825)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+DaffyDuck.swapBack() (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#865-926) tries to limit the gas of an external call that controls implicit decoding
+	(tmpSuccess,None) = address(marketingWallet).call{gas: 30000,value: amountBNBMarketing}() (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#902-905)
+	(tmpSuccess2,None) = address(autoLiquidityReceiver).call{gas: 30000,value: amountBNBLiquidity}() (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#911-914)
+	(tmpSuccess3,None) = address(stakingRewardWallet).call{gas: 30000,value: amountStakingReward}() (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#916-919)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#return-bomb
+
+DividendDistributor.shouldDistribute(address) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#297-305) uses timestamp for comparisons
+	Dangerous comparisons:
+	- shareholderClaims[shareholder] + minPeriod < block.timestamp && getUnpaidEarnings(shareholder) > minDistribution (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#302-304)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+DaffyDuck._transferFrom(address,address,uint256) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#759-827) compares to a boolean constant:
+	-normalTransferAddress[sender] == true (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#768)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#boolean-equality
+
+DividendDistributor.process(uint256) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#270-295) has costly operations inside a loop:
+	- currentIndex = 0 (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#283)
+DividendDistributor.distributeDividend(address) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#307-324) has costly operations inside a loop:
+	- totalDistributed = totalDistributed.add(amount) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#314)
+DividendDistributor.process(uint256) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#270-295) has costly operations inside a loop:
+	- currentIndex ++ (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#292)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#costly-operations-inside-a-loop
+
+DaffyDuck._transferFrom(address,address,uint256) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#759-827) has a high cyclomatic complexity (13).
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#cyclomatic-complexity
+
+DaffyDuck.checkTxLimit(address,uint256) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#629-634) is never used and should be removed
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dead-code
+
+DaffyDuck._maxTxAmount (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#466) is set pre-construction with a non-constant function or state variable:
+	- (_totalSupply * 2) / 100
+DaffyDuck._walletMax (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#467) is set pre-construction with a non-constant function or state variable:
+	- (_totalSupply * 20) / 100
+DaffyDuck.gasPriceLimitB (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#485) is set pre-construction with a non-constant function or state variable:
+	- _gasPriceLimitB * 1000000000
+DaffyDuck.swapThreshold (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#508) is set pre-construction with a non-constant function or state variable:
+	- (_totalSupply * 5) / 2000
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#function-initializing-state
+
+Version constraint ^0.7.4 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- SignedImmutables
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching.
+It is used by:
+	- ^0.7.4 (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#3)
+solc-0.7.4 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in DaffyDuck.swapBack() (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#865-926):
+	- (tmpSuccess,None) = address(marketingWallet).call{gas: 30000,value: amountBNBMarketing}() (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#902-905)
+	- (tmpSuccess1,None) = address(veWall).call{gas: 30000,value: amountBNBTeamdev}() (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#906-909)
+	- (tmpSuccess2,None) = address(autoLiquidityReceiver).call{gas: 30000,value: amountBNBLiquidity}() (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#911-914)
+	- (tmpSuccess3,None) = address(stakingRewardWallet).call{gas: 30000,value: amountStakingReward}() (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#916-919)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Function IDEXRouter.WETH() (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#97) is not in mixedCase
+Parameter DividendDistributor.setRewardToken(address)._rewardToken (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#334) is not in mixedCase
+Variable DividendDistributor.RewardToken (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#183) is not in mixedCase
+Modifier Auth._onlyOwner() (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#404-407) is not in mixedCase
+Parameter DaffyDuck.setNormalTransferAddress(address,bool)._address (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#636) is not in mixedCase
+Parameter DaffyDuck.setNormalTransferAddress(address,bool)._status (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#636) is not in mixedCase
+Parameter DaffyDuck.setRewardToken(address)._rewardToken (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#735) is not in mixedCase
+Parameter DaffyDuck.setGas(uint256).Gas (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#859) is not in mixedCase
+Constant DaffyDuck._name (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#456) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant DaffyDuck._symbol (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#457) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant DaffyDuck._decimals (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#458) is not in UPPER_CASE_WITH_UNDERSCORES
+Variable DaffyDuck.DEAD (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#460) is not in mixedCase
+Variable DaffyDuck.ZERO (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#461) is not in mixedCase
+Variable DaffyDuck.RewardToken (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#463) is not in mixedCase
+Variable DaffyDuck._maxTxAmount (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#466) is not in mixedCase
+Variable DaffyDuck._walletMax (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#467) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+DaffyDuck.slitherConstructorVariables() (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#453-930) uses literals with too many digits:
+	- _totalSupply = 1000000000 * (10 ** _decimals) (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#465)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+DaffyDuck.RewardToken (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#463) is never used in DaffyDuck (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#453-930)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-state-variable
+
+DaffyDuck.DEAD (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#460) should be constant 
+DaffyDuck.RewardToken (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#463) should be constant 
+DaffyDuck.ZERO (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#461) should be constant 
+DaffyDuck._totalSupply (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#465) should be constant 
+DaffyDuck.routerAddress (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#462) should be constant 
+DividendDistributor.dividendsPerShareAccuracyFactor (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#194) should be constant 
+DividendDistributor.routerAddress (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#181) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+
+DaffyDuck.dividendDistributor (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#501) should be immutable 
+DaffyDuck.pair (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#497) should be immutable 
+DaffyDuck.router (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#496) should be immutable 
+DaffyDuck.veWall (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#493) should be immutable 
+DividendDistributor._token (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#171) should be immutable 
+DividendDistributor.router (0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol#179) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+./0x3848d38145ef835b7570768dbc98a3d8ceb46cd5.sol analyzed (8 contracts with 94 detectors), 73 result(s) found
+
+real	0m4.153s
+user	0m3.956s
+sys	0m0.199s

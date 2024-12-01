@@ -1,0 +1,214 @@
+'solc --version' running
+'solc ./0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+HoshiKatachi.sendETHToFee(uint256) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#352-355) sends eth to arbitrary user
+	Dangerous calls:
+	- _feeAddrWallet1.transfer(amount.div(2)) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#353)
+	- _feeAddrWallet2.transfer(amount.div(2)) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#354)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+Reentrancy in HoshiKatachi._transfer(address,address,uint256) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#301-336):
+	External calls:
+	- swapTokensForEth(contractTokenBalance) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#327)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#343-349)
+	External calls sending eth:
+	- sendETHToFee(address(this).balance) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#330)
+		- _feeAddrWallet1.transfer(amount.div(2)) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#353)
+		- _feeAddrWallet2.transfer(amount.div(2)) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#354)
+	State variables written after the call(s):
+	- _tokenTransfer(from,to,amount) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#335)
+		- _rOwned[address(this)] = _rOwned[address(this)].add(rTeam) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#422)
+		- _rOwned[sender] = _rOwned[sender].sub(rAmount) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#404)
+		- _rOwned[recipient] = _rOwned[recipient].add(rAmount) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#407)
+		- _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#411)
+	HoshiKatachi._rOwned (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#186) can be used in cross function reentrancies:
+	- HoshiKatachi._takeTeam(uint256) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#419-423)
+	- HoshiKatachi._transferStandard(address,address,uint256) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#401-417)
+	- HoshiKatachi.balanceOf(address) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#260-262)
+	- HoshiKatachi.constructor(address,address) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#225-242)
+	- _tokenTransfer(from,to,amount) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#335)
+		- _rTotal = _rTotal.sub(rFee) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#426)
+	HoshiKatachi._rTotal (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#195) can be used in cross function reentrancies:
+	- HoshiKatachi._getCurrentSupply() (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#473-478)
+	- HoshiKatachi._reflectFee(uint256,uint256) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#425-428)
+	- HoshiKatachi.constructor(address,address) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#225-242)
+	- HoshiKatachi.tokenFromReflection(uint256) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#288-292)
+Reentrancy in HoshiKatachi.openTrading() (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#357-375):
+	External calls:
+	- uniswapV2Pair = IUniswapV2Factory(_uniswapV2Router.factory()).createPair(address(this),_uniswapV2Router.WETH()) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#363)
+	- uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#368)
+	External calls sending eth:
+	- uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#368)
+	State variables written after the call(s):
+	- tradingOpen = true (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#372)
+	HoshiKatachi.tradingOpen (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#211) can be used in cross function reentrancies:
+	- HoshiKatachi.openTrading() (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#357-375)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+HoshiKatachi.bots (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#191) is never initialized. It is used in:
+	- HoshiKatachi._transfer(address,address,uint256) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#301-336)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#uninitialized-state-variables
+
+HoshiKatachi.openTrading() (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#357-375) ignores return value by uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#368)
+HoshiKatachi.openTrading() (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#357-375) ignores return value by IERC20(uniswapV2Pair).approve(address(uniswapV2Router),type()(uint256).max) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#374)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+HoshiKatachi.allowance(address,address).owner (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#269) shadows:
+	- Ownable.owner() (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#144-146) (function)
+HoshiKatachi._approve(address,address,uint256).owner (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#294) shadows:
+	- Ownable.owner() (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#144-146) (function)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#local-variable-shadowing
+
+HoshiKatachi.changeMaxTxAmount(uint256) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#377-379) should emit an event for: 
+	- _maxTxAmount = amount (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#378) 
+HoshiKatachi.changeMaxWalletAmount(uint256) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#381-383) should emit an event for: 
+	- _maxWalletAmount = amount (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#382) 
+HoshiKatachi.changeSwapThreshold(uint256) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#385-387) should emit an event for: 
+	- swapThreshold = amount (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#386) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+Ownable.constructor().msgSender (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#139) lacks a zero-check on :
+		- _owner = msgSender (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#140)
+HoshiKatachi.constructor(address,address).wallet1 (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#225) lacks a zero-check on :
+		- _feeAddrWallet1 = address(wallet1) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#226)
+HoshiKatachi.constructor(address,address).wallet2 (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#225) lacks a zero-check on :
+		- _feeAddrWallet2 = address(wallet2) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#227)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in HoshiKatachi._transfer(address,address,uint256) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#301-336):
+	External calls:
+	- swapTokensForEth(contractTokenBalance) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#327)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#343-349)
+	External calls sending eth:
+	- sendETHToFee(address(this).balance) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#330)
+		- _feeAddrWallet1.transfer(amount.div(2)) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#353)
+		- _feeAddrWallet2.transfer(amount.div(2)) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#354)
+	State variables written after the call(s):
+	- _tokenTransfer(from,to,amount) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#335)
+		- _tFeeTotal = _tFeeTotal.add(tFee) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#427)
+Reentrancy in HoshiKatachi.openTrading() (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#357-375):
+	External calls:
+	- uniswapV2Pair = IUniswapV2Factory(_uniswapV2Router.factory()).createPair(address(this),_uniswapV2Router.WETH()) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#363)
+	State variables written after the call(s):
+	- isExcludedFromLimit[address(uniswapV2Router)] = true (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#365)
+	- isExcludedFromLimit[uniswapV2Pair] = true (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#366)
+Reentrancy in HoshiKatachi.openTrading() (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#357-375):
+	External calls:
+	- uniswapV2Pair = IUniswapV2Factory(_uniswapV2Router.factory()).createPair(address(this),_uniswapV2Router.WETH()) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#363)
+	- uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#368)
+	External calls sending eth:
+	- uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#368)
+	State variables written after the call(s):
+	- cooldownEnabled = true (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#371)
+	- swapEnabled = true (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#370)
+Reentrancy in HoshiKatachi.transferFrom(address,address,uint256) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#278-282):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#279)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#343-349)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#279)
+		- _feeAddrWallet1.transfer(amount.div(2)) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#353)
+		- _feeAddrWallet2.transfer(amount.div(2)) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#354)
+	State variables written after the call(s):
+	- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#280)
+		- _allowances[owner][spender] = amount (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#297)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in HoshiKatachi._transfer(address,address,uint256) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#301-336):
+	External calls:
+	- swapTokensForEth(contractTokenBalance) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#327)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#343-349)
+	External calls sending eth:
+	- sendETHToFee(address(this).balance) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#330)
+		- _feeAddrWallet1.transfer(amount.div(2)) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#353)
+		- _feeAddrWallet2.transfer(amount.div(2)) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#354)
+	Event emitted after the call(s):
+	- Transfer(sender,recipient,tAmount) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#409)
+		- _tokenTransfer(from,to,amount) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#335)
+	- Transfer(sender,recipient,tTransferAmount) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#415)
+		- _tokenTransfer(from,to,amount) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#335)
+Reentrancy in HoshiKatachi.transferFrom(address,address,uint256) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#278-282):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#279)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#343-349)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#279)
+		- _feeAddrWallet1.transfer(amount.div(2)) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#353)
+		- _feeAddrWallet2.transfer(amount.div(2)) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#354)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#298)
+		- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#280)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+HoshiKatachi._transfer(address,address,uint256) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#301-336) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(cooldown[to] < block.timestamp) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#320)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Version constraint ^0.8.4 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- SignedImmutables.
+It is used by:
+	- ^0.8.4 (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#76)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Function IUniswapV2Router02.WETH() (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#173) is not in mixedCase
+Constant HoshiKatachi._tTotal (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#194) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant HoshiKatachi._name (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#205) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant HoshiKatachi._symbol (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#206) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant HoshiKatachi._decimals (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#207) is not in UPPER_CASE_WITH_UNDERSCORES
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in HoshiKatachi._transfer(address,address,uint256) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#301-336):
+	External calls:
+	- sendETHToFee(address(this).balance) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#330)
+		- _feeAddrWallet1.transfer(amount.div(2)) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#353)
+		- _feeAddrWallet2.transfer(amount.div(2)) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#354)
+	State variables written after the call(s):
+	- _tokenTransfer(from,to,amount) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#335)
+		- _rOwned[address(this)] = _rOwned[address(this)].add(rTeam) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#422)
+		- _rOwned[sender] = _rOwned[sender].sub(rAmount) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#404)
+		- _rOwned[recipient] = _rOwned[recipient].add(rAmount) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#407)
+		- _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#411)
+	- _tokenTransfer(from,to,amount) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#335)
+		- _rTotal = _rTotal.sub(rFee) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#426)
+	- _tokenTransfer(from,to,amount) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#335)
+		- _tFeeTotal = _tFeeTotal.add(tFee) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#427)
+	Event emitted after the call(s):
+	- Transfer(sender,recipient,tAmount) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#409)
+		- _tokenTransfer(from,to,amount) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#335)
+	- Transfer(sender,recipient,tTransferAmount) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#415)
+		- _tokenTransfer(from,to,amount) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#335)
+Reentrancy in HoshiKatachi.transferFrom(address,address,uint256) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#278-282):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#279)
+		- _feeAddrWallet1.transfer(amount.div(2)) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#353)
+		- _feeAddrWallet2.transfer(amount.div(2)) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#354)
+	State variables written after the call(s):
+	- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#280)
+		- _allowances[owner][spender] = amount (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#297)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#298)
+		- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#280)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+HoshiKatachi._tOwned (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#187) is never used in HoshiKatachi (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#184-480)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-state-variable
+
+HoshiKatachi._reflectionFee (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#200) should be constant 
+HoshiKatachi._teamFee (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#201) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+
+HoshiKatachi._feeAddrWallet1 (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#202) should be immutable 
+HoshiKatachi._feeAddrWallet2 (0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol#203) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+./0x0208a9ffc97a6e96f050087ae1c9f7a2bdd3f5b0.sol analyzed (7 contracts with 94 detectors), 34 result(s) found
+
+real	0m2.510s
+user	0m2.330s
+sys	0m0.183s

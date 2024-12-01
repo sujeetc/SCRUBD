@@ -1,0 +1,420 @@
+'solc --version' running
+'solc ./0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+Reentrancy in PiZZa.getMeOutOfHere() (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#290-293):
+	External calls:
+	- sellAllBonds() (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#291)
+		- resolveToken.mint(sender,UINTs[1],RGB[0],RGB[1],RGB[2]) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#394)
+		- (success,None) = sender.call{value: numEthers}() (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#432)
+	- withdraw(resolveEarnings(msg.sender)) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#292)
+		- resolveToken.transfer(address0,weightDiff) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#473)
+		- (success,None) = sender.call{value: amount}() (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#484)
+	External calls sending eth:
+	- sellAllBonds() (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#291)
+		- (success,None) = sender.call{value: numEthers}() (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#432)
+	- withdraw(resolveEarnings(msg.sender)) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#292)
+		- (success,None) = sender.call{value: amount}() (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#484)
+	State variables written after the call(s):
+	- withdraw(resolveEarnings(msg.sender)) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#292)
+		- dissolvingResolves -= weightDiff (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#474)
+	PiZZa.dissolvingResolves (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#176) can be used in cross function reentrancies:
+	- PiZZa.buy(address,uint256,uint256,uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#310-356)
+	- PiZZa.dissolvingResolves (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#176)
+	- PiZZa.fluxFee(uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#197-203)
+	- PiZZa.pullResolves(uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#492-512)
+	- PiZZa.reinvestEarnings(uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#208-275)
+	- PiZZa.sell(uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#376-437)
+	- PiZZa.tokenFallback(address,uint256,bytes) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#445-459)
+	- PiZZa.withdraw(uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#464-489)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+PiZZa.reinvestEarnings(uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#208-275) ignores return value by resolveToken.transfer(address0,weightDiff) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#217)
+PiZZa.withdraw(uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#464-489) ignores return value by resolveToken.transfer(address0,weightDiff) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#473)
+PiZZa.pullResolves(uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#492-512) ignores return value by resolveToken.transfer(sender,amount) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#509)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+PiZZa.fluxFee(uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#197-203) performs a multiplication on the result of a division:
+	- paidAmount * (totalResolveSupply - dissolvingResolves) / totalResolveSupply * sumOfOutputETH / sumOfInputETH (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#202)
+PiZZa.getReturnsForBonds(address,uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#362-373) performs a multiplication on the result of a division:
+	- input_ETH = average_ethSpent[addr] * bondsReleased / balances[addr] (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#364)
+	- (output_ETH,input_ETH * cashoutTime / averageHoldingTime * input_ETH / output_ETH,new_sumOfOutputTime,new_sumOfOutputETH,input_ETH) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#372)
+PiZZa.tokensToEthereum_(uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#615-637) performs a multiplication on the result of a division:
+	- _etherReceived = (subtract((((tokenPriceInitial_ + (tokenPriceIncremental_ * (_tokenSupply / 1e18))) - tokenPriceIncremental_) * (tokens_ - 1e18)),(tokenPriceIncremental_ * ((tokens_ ** 2 - tokens_) / 1e18)) / 2) / 1e18) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#623-635)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+ColorToken.RGB_Ratio(address) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#49-55) uses a dangerous strict equality:
+	- coloredWeight == 0 (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#51)
+PiZZa.buyPrice() (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#528-542) uses a dangerous strict equality:
+	- _totalSupply == 0 (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#534)
+PiZZa.fluxFee(uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#197-203) uses a dangerous strict equality:
+	- dissolvingResolves == 0 (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#199)
+PiZZa.sellPrice() (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#544-558) uses a dangerous strict equality:
+	- _totalSupply == 0 (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#550)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-strict-equalities
+
+Reentrancy in PiZZa.reinvestEarnings(uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#208-275):
+	External calls:
+	- resolveToken.transfer(address0,weightDiff) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#217)
+	State variables written after the call(s):
+	- earningsPerResolve += rewardPerResolve (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#264)
+	PiZZa.earningsPerResolve (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#188) can be used in cross function reentrancies:
+	- PiZZa.buy(address,uint256,uint256,uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#310-356)
+	- PiZZa.earningsPerResolve (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#188)
+	- PiZZa.pullResolves(uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#492-512)
+	- PiZZa.reinvestEarnings(uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#208-275)
+	- PiZZa.resolveEarnings(address) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#305-307)
+	- PiZZa.sell(uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#376-437)
+	- PiZZa.tokenFallback(address,uint256,bytes) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#445-459)
+	- PiZZa.withdraw(uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#464-489)
+	- payouts[sender] += withdrawnEarnings (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#222)
+	PiZZa.payouts (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#173) can be used in cross function reentrancies:
+	- PiZZa.payouts (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#173)
+	- PiZZa.pullResolves(uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#492-512)
+	- PiZZa.reinvestEarnings(uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#208-275)
+	- PiZZa.resolveEarnings(address) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#305-307)
+	- PiZZa.tokenFallback(address,uint256,bytes) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#445-459)
+	- PiZZa.withdraw(uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#464-489)
+Reentrancy in PiZZa.sell(uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#376-437):
+	External calls:
+	- resolveToken.mint(sender,UINTs[1],RGB[0],RGB[1],RGB[2]) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#394)
+	State variables written after the call(s):
+	- _totalSupply -= amount (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#409)
+	ColorToken._totalSupply (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#19) can be used in cross function reentrancies:
+	- ColorToken._totalSupply (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#19)
+	- PiZZa.buy(address,uint256,uint256,uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#310-356)
+	- PiZZa.buyPrice() (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#528-542)
+	- PiZZa.calculateEthereumReceived(uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#573-583)
+	- PiZZa.ethereumToTokens_(uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#585-613)
+	- PiZZa.reinvestEarnings(uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#208-275)
+	- PiZZa.sell(uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#376-437)
+	- PiZZa.sellPrice() (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#544-558)
+	- PiZZa.tokensToEthereum_(uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#615-637)
+	- ColorToken.totalSupply() (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#30-32)
+	- average_buyInTimeSum[sender] = average_buyInTimeSum[sender] * (balances[sender] - amount) / balances[sender] (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#403)
+	PiZZa.average_buyInTimeSum (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#167) can be used in cross function reentrancies:
+	- PiZZa.average_buyInTimeSum (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#167)
+	- PiZZa.buy(address,uint256,uint256,uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#310-356)
+	- PiZZa.getReturnsForBonds(address,uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#362-373)
+	- PiZZa.moveTokens(address,address,uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#514-526)
+	- PiZZa.reinvestEarnings(uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#208-275)
+	- PiZZa.sell(uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#376-437)
+	- average_ethSpent[sender] = average_ethSpent[sender] * (balances[sender] - amount) / balances[sender] (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#401)
+	PiZZa.average_ethSpent (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#165) can be used in cross function reentrancies:
+	- PiZZa.average_ethSpent (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#165)
+	- PiZZa.buy(address,uint256,uint256,uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#310-356)
+	- PiZZa.getReturnsForBonds(address,uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#362-373)
+	- PiZZa.moveTokens(address,address,uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#514-526)
+	- PiZZa.reinvestEarnings(uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#208-275)
+	- PiZZa.sell(uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#376-437)
+	- balances[sender] -= amount (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#415)
+	ColorToken.balances (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#14) can be used in cross function reentrancies:
+	- ColorToken.RGB_Ratio(address) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#49-55)
+	- ColorToken.balanceOf(address) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#34-36)
+	- ColorToken.balances (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#14)
+	- PiZZa.buy(address,uint256,uint256,uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#310-356)
+	- PiZZa.getReturnsForBonds(address,uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#362-373)
+	- ColorToken.moveTokens(address,address,uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#100-111)
+	- PiZZa.moveTokens(address,address,uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#514-526)
+	- PiZZa.reinvestEarnings(uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#208-275)
+	- PiZZa.sell(uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#376-437)
+	- thinColor(sender,balances[sender] - amount,balances[sender]) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#413)
+		- (red[addr],green[addr],blue[addr]) = RGB_scale(addr,newWeight,oldWeight) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#440)
+	ColorToken.blue (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#17) can be used in cross function reentrancies:
+	- ColorToken.RGB_Ratio(address) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#49-55)
+	- ColorToken.RGB_scale(address,uint256,uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#57-59)
+	- ColorToken.addColor(address,uint256,uint256,uint256,uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#38-42)
+	- ColorToken.blue (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#17)
+	- ColorToken.moveTokens(address,address,uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#100-111)
+	- PiZZa.thinColor(address,uint256,uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#439-441)
+	- thinColor(sender,balances[sender] - amount,balances[sender]) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#413)
+		- (red[addr],green[addr],blue[addr]) = RGB_scale(addr,newWeight,oldWeight) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#440)
+	ColorToken.green (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#16) can be used in cross function reentrancies:
+	- ColorToken.RGB_Ratio(address) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#49-55)
+	- ColorToken.RGB_scale(address,uint256,uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#57-59)
+	- ColorToken.addColor(address,uint256,uint256,uint256,uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#38-42)
+	- ColorToken.green (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#16)
+	- ColorToken.moveTokens(address,address,uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#100-111)
+	- PiZZa.thinColor(address,uint256,uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#439-441)
+	- thinColor(sender,balances[sender] - amount,balances[sender]) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#413)
+		- (red[addr],green[addr],blue[addr]) = RGB_scale(addr,newWeight,oldWeight) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#440)
+	ColorToken.red (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#15) can be used in cross function reentrancies:
+	- ColorToken.RGB_Ratio(address) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#49-55)
+	- ColorToken.RGB_scale(address,uint256,uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#57-59)
+	- ColorToken.addColor(address,uint256,uint256,uint256,uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#38-42)
+	- ColorToken.moveTokens(address,address,uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#100-111)
+	- ColorToken.red (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#15)
+	- PiZZa.thinColor(address,uint256,uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#439-441)
+	- sumOfOutputETH = UINTs[3] (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#398)
+	PiZZa.sumOfOutputETH (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#181) can be used in cross function reentrancies:
+	- PiZZa.avgHodl() (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#358-360)
+	- PiZZa.fluxFee(uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#197-203)
+	- PiZZa.getReturnsForBonds(address,uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#362-373)
+	- PiZZa.sell(uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#376-437)
+	- PiZZa.sumOfOutputETH (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#181)
+	- sumOfOutputTime = UINTs[2] (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#397)
+	PiZZa.sumOfOutputTime (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#182) can be used in cross function reentrancies:
+	- PiZZa.avgHodl() (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#358-360)
+	- PiZZa.getReturnsForBonds(address,uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#362-373)
+	- PiZZa.sell(uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#376-437)
+	- PiZZa.sumOfOutputTime (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#182)
+Reentrancy in PiZZa.withdraw(uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#464-489):
+	External calls:
+	- resolveToken.transfer(address0,weightDiff) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#473)
+	State variables written after the call(s):
+	- payouts[sender] += withdrawnEarnings (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#478)
+	PiZZa.payouts (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#173) can be used in cross function reentrancies:
+	- PiZZa.payouts (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#173)
+	- PiZZa.pullResolves(uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#492-512)
+	- PiZZa.reinvestEarnings(uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#208-275)
+	- PiZZa.resolveEarnings(address) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#305-307)
+	- PiZZa.tokenFallback(address,uint256,bytes) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#445-459)
+	- PiZZa.withdraw(uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#464-489)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+PiZZa.buy(address,uint256,uint256,uint256).resolveFee (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#343) is a local variable never initialized
+PiZZa.reinvestEarnings(uint256).resolveFee (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#253) is a local variable never initialized
+ColorToken.transfer(address,uint256).empty (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#75) is a local variable never initialized
+PiZZa.sell(uint256).resolveFee (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#418) is a local variable never initialized
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#uninitialized-local-variables
+
+Crust.constructor(address)._hourglass (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#665) lacks a zero-check on :
+		- hourglass = _hourglass (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#666)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in PiZZa.reinvestEarnings(uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#208-275):
+	External calls:
+	- resolveToken.transfer(address0,weightDiff) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#217)
+	State variables written after the call(s):
+	- _totalSupply += createdBonds (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#268)
+	- average_buyInTimeSum[sender] += now * scaleFactor * numEther (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#241)
+	- average_ethSpent[sender] += numEther (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#240)
+	- balances[sender] += createdBonds (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#271)
+	- addColor(sender,createdBonds,RGB[0],RGB[1],RGB[2]) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#250)
+		- blue[addr] += _blue * color (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#41)
+	- dissolvingResolves -= weightDiff (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#218)
+	- earningsOffset += withdrawnEarnings (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#224)
+	- addColor(sender,createdBonds,RGB[0],RGB[1],RGB[2]) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#250)
+		- green[addr] += _green * color (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#40)
+	- addColor(sender,createdBonds,RGB[0],RGB[1],RGB[2]) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#250)
+		- red[addr] += _red * color (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#39)
+	- sumOfInputETH += numEther (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#242)
+	- sumOfInputTime += now * scaleFactor * numEther (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#243)
+Reentrancy in PiZZa.sell(uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#376-437):
+	External calls:
+	- resolveToken.mint(sender,UINTs[1],RGB[0],RGB[1],RGB[2]) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#394)
+	State variables written after the call(s):
+	- earningsPerResolve += rewardPerResolve (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#428)
+Reentrancy in PiZZa.withdraw(uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#464-489):
+	External calls:
+	- resolveToken.transfer(address0,weightDiff) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#473)
+	State variables written after the call(s):
+	- dissolvingResolves -= weightDiff (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#474)
+	- earningsOffset += withdrawnEarnings (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#480)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in PiZZa.getMeOutOfHere() (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#290-293):
+	External calls:
+	- sellAllBonds() (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#291)
+		- resolveToken.mint(sender,UINTs[1],RGB[0],RGB[1],RGB[2]) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#394)
+		- (success,None) = sender.call{value: numEthers}() (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#432)
+	- withdraw(resolveEarnings(msg.sender)) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#292)
+		- resolveToken.transfer(address0,weightDiff) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#473)
+		- (success,None) = sender.call{value: amount}() (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#484)
+	External calls sending eth:
+	- sellAllBonds() (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#291)
+		- (success,None) = sender.call{value: numEthers}() (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#432)
+	- withdraw(resolveEarnings(msg.sender)) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#292)
+		- (success,None) = sender.call{value: amount}() (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#484)
+	Event emitted after the call(s):
+	- Withdraw(sender,amount,weightDiff) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#487)
+		- withdraw(resolveEarnings(msg.sender)) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#292)
+Reentrancy in PiZZa.pullResolves(uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#492-512):
+	External calls:
+	- resolveToken.transfer(sender,amount) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#509)
+	Event emitted after the call(s):
+	- PullResolves(sender,amount,forfeitedEarnings / scaleFactor) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#510)
+Reentrancy in PiZZa.reinvestEarnings(uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#208-275):
+	External calls:
+	- resolveToken.transfer(address0,weightDiff) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#217)
+	Event emitted after the call(s):
+	- Reinvest(sender,value_,weightDiff,createdBonds,resolveFee) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#273)
+Reentrancy in PiZZa.sell(uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#376-437):
+	External calls:
+	- resolveToken.mint(sender,UINTs[1],RGB[0],RGB[1],RGB[2]) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#394)
+	- (success,None) = sender.call{value: numEthers}() (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#432)
+	External calls sending eth:
+	- (success,None) = sender.call{value: numEthers}() (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#432)
+	Event emitted after the call(s):
+	- Sell(sender,amount,numEthers,UINTs[1],resolveFee,UINTs[4]) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#435)
+Reentrancy in ColorToken.transferToContract(address,uint256,bytes) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#92-98):
+	External calls:
+	- receiver.tokenFallback(msg.sender,_value,_data) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#95)
+	Event emitted after the call(s):
+	- Transfer(msg.sender,_to,_value,_data) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#96)
+Reentrancy in PiZZa.withdraw(uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#464-489):
+	External calls:
+	- resolveToken.transfer(address0,weightDiff) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#473)
+	- (success,None) = sender.call{value: amount}() (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#484)
+	External calls sending eth:
+	- (success,None) = sender.call{value: amount}() (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#484)
+	Event emitted after the call(s):
+	- Withdraw(sender,amount,weightDiff) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#487)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+PiZZa.fluxFee(uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#197-203) uses timestamp for comparisons
+	Dangerous comparisons:
+	- dissolvingResolves == 0 (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#199)
+PiZZa.reinvestEarnings(uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#208-275) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(amountFromEarnings <= totalEarnings,the amount exceeds total earnings) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#213)
+	- dissolvingResolves > 0 (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#256)
+PiZZa.sellBonds(uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#282-287) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(balance >= amount,Amount is more than balance) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#284)
+PiZZa.buy(address,uint256,uint256,uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#310-356) uses timestamp for comparisons
+	Dangerous comparisons:
+	- _red > 1e18 (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#311)
+	- _green > 1e18 (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#312)
+	- _blue > 1e18 (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#313)
+	- dissolvingResolves > 0 (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#344)
+PiZZa.sell(uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#376-437) uses timestamp for comparisons
+	Dangerous comparisons:
+	- dissolvingResolves > 0 (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#419)
+	- require(bool,string)(success,Transfer failed.) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#433)
+PiZZa.withdraw(uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#464-489) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(amount <= totalEarnings && amount > 0) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#469)
+	- require(bool,string)(success,Transfer failed.) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#485)
+PiZZa.pullResolves(uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#492-512) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(amount <= resolves && amount > 0) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#495)
+	- require(bool)(amount < dissolvingResolves) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#496)
+PiZZa.moveTokens(address,address,uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#514-526) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(_amount <= totalBonds && _amount > 0) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#516)
+PiZZa.buyPrice() (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#528-542) uses timestamp for comparisons
+	Dangerous comparisons:
+	- _totalSupply == 0 (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#534)
+PiZZa.sellPrice() (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#544-558) uses timestamp for comparisons
+	Dangerous comparisons:
+	- _totalSupply == 0 (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#550)
+PiZZa.calculateEthereumReceived(uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#573-583) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(_tokensToSell <= _totalSupply) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#578)
+PiZZa.sqrt(uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#639-646) uses timestamp for comparisons
+	Dangerous comparisons:
+	- z < y (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#642)
+PiZZa.subtract(uint256,uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#648-651) uses timestamp for comparisons
+	Dangerous comparisons:
+	- assert(bool)(b <= a) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#649)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+ColorToken.isContract(address) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#137-148) uses assembly
+	- INLINE ASM (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#139-142)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#assembly-usage
+
+Version constraint ^0.6.6 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- SignedImmutables
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- MissingEscapingInFormatting
+	- ArraySliceDynamicallyEncodedBaseType
+	- ImplicitConstructorCallvalueCheck.
+It is used by:
+	- ^0.6.6 (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#1)
+solc-0.6.6 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in PiZZa.sell(uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#376-437):
+	- (success,None) = sender.call{value: numEthers}() (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#432)
+Low level call in PiZZa.withdraw(uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#464-489):
+	- (success,None) = sender.call{value: amount}() (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#484)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+PiZZa (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#151-652) should inherit from ERC223ReceivingContract (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#654-656)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-inheritance
+
+Parameter ColorToken.balanceOf(address)._owner (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#34) is not in mixedCase
+Parameter ColorToken.addColor(address,uint256,uint256,uint256,uint256)._red (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#38) is not in mixedCase
+Parameter ColorToken.addColor(address,uint256,uint256,uint256,uint256)._green (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#38) is not in mixedCase
+Parameter ColorToken.addColor(address,uint256,uint256,uint256,uint256)._blue (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#38) is not in mixedCase
+Function ColorToken.RGB_Ratio() (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#45-47) is not in mixedCase
+Function ColorToken.RGB_Ratio(address) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#49-55) is not in mixedCase
+Function ColorToken.RGB_scale(address,uint256,uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#57-59) is not in mixedCase
+Parameter ColorToken.transfer(address,uint256,bytes)._to (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#62) is not in mixedCase
+Parameter ColorToken.transfer(address,uint256,bytes)._value (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#62) is not in mixedCase
+Parameter ColorToken.transfer(address,uint256,bytes)._data (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#62) is not in mixedCase
+Parameter ColorToken.transfer(address,uint256)._to (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#72) is not in mixedCase
+Parameter ColorToken.transfer(address,uint256)._value (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#72) is not in mixedCase
+Parameter ColorToken.transferToAddress(address,uint256,bytes)._to (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#85) is not in mixedCase
+Parameter ColorToken.transferToAddress(address,uint256,bytes)._value (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#85) is not in mixedCase
+Parameter ColorToken.transferToAddress(address,uint256,bytes)._data (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#85) is not in mixedCase
+Parameter ColorToken.transferToContract(address,uint256,bytes)._to (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#92) is not in mixedCase
+Parameter ColorToken.transferToContract(address,uint256,bytes)._value (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#92) is not in mixedCase
+Parameter ColorToken.transferToContract(address,uint256,bytes)._data (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#92) is not in mixedCase
+Parameter ColorToken.moveTokens(address,address,uint256)._from (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#100) is not in mixedCase
+Parameter ColorToken.moveTokens(address,address,uint256)._to (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#100) is not in mixedCase
+Parameter ColorToken.moveTokens(address,address,uint256)._amount (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#100) is not in mixedCase
+Parameter ColorToken.isContract(address)._addr (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#137) is not in mixedCase
+Variable ColorToken._totalSupply (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#19) is not in mixedCase
+Parameter PiZZa.resolveEarnings(address)._owner (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#305) is not in mixedCase
+Parameter PiZZa.buy(address,uint256,uint256,uint256)._red (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#310) is not in mixedCase
+Parameter PiZZa.buy(address,uint256,uint256,uint256)._green (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#310) is not in mixedCase
+Parameter PiZZa.buy(address,uint256,uint256,uint256)._blue (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#310) is not in mixedCase
+Parameter PiZZa.tokenFallback(address,uint256,bytes)._data (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#445) is not in mixedCase
+Parameter PiZZa.moveTokens(address,address,uint256)._from (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#514) is not in mixedCase
+Parameter PiZZa.moveTokens(address,address,uint256)._to (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#514) is not in mixedCase
+Parameter PiZZa.moveTokens(address,address,uint256)._amount (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#514) is not in mixedCase
+Parameter PiZZa.calculateTokensReceived(uint256)._ethereumToSpend (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#560) is not in mixedCase
+Parameter PiZZa.calculateEthereumReceived(uint256)._tokensToSell (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#573) is not in mixedCase
+Parameter PiZZa.ethereumToTokens_(uint256)._ethereum (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#585) is not in mixedCase
+Parameter PiZZa.tokensToEthereum_(uint256)._tokens (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#615) is not in mixedCase
+Constant PiZZa.scaleFactor (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#154) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant PiZZa.tokenPriceInitial_ (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#157) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant PiZZa.tokenPriceIncremental_ (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#158) is not in UPPER_CASE_WITH_UNDERSCORES
+Variable PiZZa.average_ethSpent (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#165) is not in mixedCase
+Variable PiZZa.average_buyInTimeSum (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#167) is not in mixedCase
+Parameter Crust.mint(address,uint256,uint256,uint256,uint256)._address (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#686) is not in mixedCase
+Parameter Crust.mint(address,uint256,uint256,uint256,uint256)._value (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#686) is not in mixedCase
+Parameter Crust.mint(address,uint256,uint256,uint256,uint256)._red (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#686) is not in mixedCase
+Parameter Crust.mint(address,uint256,uint256,uint256,uint256)._green (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#686) is not in mixedCase
+Parameter Crust.mint(address,uint256,uint256,uint256,uint256)._blue (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#686) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+PiZZa.reinvestEarnings(uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#208-275) uses literals with too many digits:
+	- value_ < 1000000000000 (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#230)
+PiZZa.buy(address,uint256,uint256,uint256) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#310-356) uses literals with too many digits:
+	- msg.value < 1000000000000 (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#316)
+PiZZa.slitherConstructorConstantVariables() (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#151-652) uses literals with too many digits:
+	- scaleFactor = 0x10000000000000000 (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#154)
+PiZZa.slitherConstructorConstantVariables() (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#151-652) uses literals with too many digits:
+	- tokenPriceInitial_ = 100000000000 (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#157)
+PiZZa.slitherConstructorConstantVariables() (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#151-652) uses literals with too many digits:
+	- tokenPriceIncremental_ = 10000000000 (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#158)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+Crust.name (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#660) should be constant 
+Crust.symbol (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#661) should be constant 
+PiZZa.address0 (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#155) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+
+Crust.hourglass (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#663) should be immutable 
+PiZZa.resolveToken (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#191) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+
+transfer(address,uint256,bytes) should be declared external:
+	- ColorToken.transfer(address,uint256,bytes) (0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol#62-68)
+Moreover, the following function parameters should change its data location:
+_data location should be calldata
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#public-function-that-could-be-declared-external
+./0x2980b7c0c8e1a2c0bdecff55cde9e3576aaf9eaf.sol analyzed (4 contracts with 94 detectors), 103 result(s) found
+
+real	0m9.983s
+user	0m9.652s
+sys	0m0.325s

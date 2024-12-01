@@ -1,0 +1,61 @@
+'solc --version' running
+'solc ./0x1b6df88f60b6b7c2b7f9b6beec4a6b3841a10d6c.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+Primacorp.fallback() (0x1b6df88f60b6b7c2b7f9b6beec4a6b3841a10d6c.sol#86-92) ignores return value by ERC20(_tokenAddress).transfer(msg.sender,allowance[msg.sender]) (0x1b6df88f60b6b7c2b7f9b6beec4a6b3841a10d6c.sol#89)
+Primacorp.withdraw(uint256) (0x1b6df88f60b6b7c2b7f9b6beec4a6b3841a10d6c.sol#94-96) ignores return value by ERC20(_tokenAddress).transfer(msg.sender,amount) (0x1b6df88f60b6b7c2b7f9b6beec4a6b3841a10d6c.sol#95)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+Reentrancy in Primacorp.fallback() (0x1b6df88f60b6b7c2b7f9b6beec4a6b3841a10d6c.sol#86-92):
+	External calls:
+	- ERC20(_tokenAddress).transfer(msg.sender,allowance[msg.sender]) (0x1b6df88f60b6b7c2b7f9b6beec4a6b3841a10d6c.sol#89)
+	State variables written after the call(s):
+	- allowance[msg.sender] = 0 (0x1b6df88f60b6b7c2b7f9b6beec4a6b3841a10d6c.sol#90)
+	Primacorp.allowance (0x1b6df88f60b6b7c2b7f9b6beec4a6b3841a10d6c.sol#77) can be used in cross function reentrancies:
+	- Primacorp.allowance (0x1b6df88f60b6b7c2b7f9b6beec4a6b3841a10d6c.sol#77)
+	- Primacorp.changeAllowance(address,uint256) (0x1b6df88f60b6b7c2b7f9b6beec4a6b3841a10d6c.sol#98-100)
+	- Primacorp.fallback() (0x1b6df88f60b6b7c2b7f9b6beec4a6b3841a10d6c.sol#86-92)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+Primacorp.setContributionInWei(uint256) (0x1b6df88f60b6b7c2b7f9b6beec4a6b3841a10d6c.sol#106-108) should emit an event for: 
+	- contributionInWei = _valueInWei (0x1b6df88f60b6b7c2b7f9b6beec4a6b3841a10d6c.sol#107) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+Primacorp.setWalletAddress(address).newWalletAddress (0x1b6df88f60b6b7c2b7f9b6beec4a6b3841a10d6c.sol#102) lacks a zero-check on :
+		- _wallet = newWalletAddress (0x1b6df88f60b6b7c2b7f9b6beec4a6b3841a10d6c.sol#103)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Version constraint ^0.4.24 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ABIEncoderV2PackedStorage_0.4.x
+	- ExpExponentCleanup
+	- EventStructWrongData.
+It is used by:
+	- ^0.4.24 (0x1b6df88f60b6b7c2b7f9b6beec4a6b3841a10d6c.sol#1)
+solc-0.4.24 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Parameter Ownable.transferOwnership(address)._newOwner (0x1b6df88f60b6b7c2b7f9b6beec4a6b3841a10d6c.sol#51) is not in mixedCase
+Parameter Primacorp.changeAllowance(address,uint256)._address (0x1b6df88f60b6b7c2b7f9b6beec4a6b3841a10d6c.sol#98) is not in mixedCase
+Parameter Primacorp.setContributionInWei(uint256)._valueInWei (0x1b6df88f60b6b7c2b7f9b6beec4a6b3841a10d6c.sol#106) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Primacorp._tokenAddress (0x1b6df88f60b6b7c2b7f9b6beec4a6b3841a10d6c.sol#79) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+./0x1b6df88f60b6b7c2b7f9b6beec4a6b3841a10d6c.sol analyzed (3 contracts with 94 detectors), 11 result(s) found
+
+real	0m1.273s
+user	0m1.109s
+sys	0m0.167s

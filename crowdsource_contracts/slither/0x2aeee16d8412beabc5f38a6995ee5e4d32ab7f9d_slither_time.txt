@@ -1,0 +1,190 @@
+'solc --version' running
+'solc ./0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+RAGE.startTrade(address,address[],uint256) (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#339-351) uses arbitrary from in transferFrom: IERC20(weth).transferFrom(admin,address(this),IERC20(weth).balanceOf(admin)) (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#342)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#arbitrary-from-in-transferfrom
+
+RAGE.removeERC20(address) (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#375-380) sends eth to arbitrary user
+	Dangerous calls:
+	- mkt.transfer(address(this).balance) (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#378)
+RAGE.swapTokenForETH(uint256) (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#382-399) sends eth to arbitrary user
+	Dangerous calls:
+	- mkt.transfer(_bal / 10) (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#396)
+	- team.transfer(address(this).balance) (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#397)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+Reentrancy in RAGE._transfer(address,address,uint256) (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#260-302):
+	External calls:
+	- swapTokenForETH(_numSellToken) (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#281)
+		- _uniswapRouter.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#386-392)
+	External calls sending eth:
+	- swapTokenForETH(_numSellToken) (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#281)
+		- mkt.transfer(_bal / 10) (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#396)
+		- team.transfer(address(this).balance) (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#397)
+	State variables written after the call(s):
+	- _transferToken(from,to,amount,takeFee) (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#301)
+		- _balances[sender] = _balances[sender] - tAmount (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#310)
+		- _balances[address(this)] = _balances[address(this)] + swapAmount (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#323)
+		- _balances[recipient] = _balances[recipient] + (tAmount - feeAmount) (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#328)
+	RAGE._balances (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#103) can be used in cross function reentrancies:
+	- RAGE._basicTransfer(address,address,uint256) (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#216-221)
+	- RAGE._transfer(address,address,uint256) (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#260-302)
+	- RAGE._transferToken(address,address,uint256,bool) (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#304-331)
+	- RAGE.balanceOf(address) (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#185-187)
+	- RAGE.constructor() (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#123-159)
+	- _buyCount ++ (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#291)
+	RAGE._buyCount (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#223) can be used in cross function reentrancies:
+	- RAGE._buyCount (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#223)
+	- RAGE._transfer(address,address,uint256) (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#260-302)
+	- RAGE._transferToken(address,address,uint256,bool) (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#304-331)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+RAGE.startTrade(address,address[],uint256) (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#339-351) ignores return value by IERC20(weth).transferFrom(admin,address(this),IERC20(weth).balanceOf(admin)) (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#342)
+RAGE.startTrade(address,address[],uint256) (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#339-351) ignores return value by IERC20(weth).transfer(admin,_bal) (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#349)
+RAGE.removeERC20(address) (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#375-380) ignores return value by IERC20(_token).transfer(mkt,IERC20(_token).balanceOf(address(this))) (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#377)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+RAGE.swapToken(uint256,address) (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#353-373) uses a dangerous strict equality:
+	- buyAmount == 0 (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#365)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-strict-equalities
+
+RAGE._transferToken(address,address,uint256,bool).taxFee (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#314) is a local variable never initialized
+RAGE._transfer(address,address,uint256).takeFee (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#273) is a local variable never initialized
+RAGE._transferToken(address,address,uint256,bool).feeAmount (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#311) is a local variable never initialized
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#uninitialized-local-variables
+
+RAGE.constructor() (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#123-159) ignores return value by IERC20(_uniswapRouter.WETH()).approve(address(address(_uniswapRouter)),~ uint256(0)) (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#153-156)
+RAGE.startTrade(address,address[],uint256) (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#339-351) ignores return value by IERC20(weth).approve(address(_uniswapRouter),~ uint256(0)) (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#341)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+RAGE.allowance(address,address).owner (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#194) shadows:
+	- Ownable.owner() (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#81-83) (function)
+RAGE._approve(address,address,uint256).owner (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#211) shadows:
+	- Ownable.owner() (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#81-83) (function)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#local-variable-shadowing
+
+RAGE.recuseTax(uint256,uint256,uint256,uint256,uint256) (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#232-246) should emit an event for: 
+	- _finalBuyTax = newBuy (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#239) 
+	- _finalSellTax = newSell (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#240) 
+	- _reduceBuyTaxAt = newReduceBuy (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#241) 
+	- _reduceSellTaxAt = newReduceSell (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#242) 
+	- _preventSwapBefore = newPreventSwapBefore (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#243) 
+RAGE.setSwapAtAmount(uint256) (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#254-258) should emit an event for: 
+	- swapAtAmount = newValue (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#257) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+RAGE.setMKT(address,address).newMKT (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#162) lacks a zero-check on :
+		- mkt = newMKT (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#165)
+RAGE.setMKT(address,address).newTeam (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#163) lacks a zero-check on :
+		- team = newTeam (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#166)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+RAGE.swapToken(uint256,address) (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#353-373) has external calls inside a loop: weth = _uniswapRouter.WETH() (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#354)
+RAGE.swapToken(uint256,address) (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#353-373) has external calls inside a loop: _bal = IERC20(weth).balanceOf(address(this)) (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#362)
+RAGE.swapToken(uint256,address) (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#353-373) has external calls inside a loop: buyAmount = _uniswapRouter.getAmountsOut(tokenAmount,sellpath)[1] (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#363)
+RAGE.swapToken(uint256,address) (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#353-373) has external calls inside a loop: _uniswapRouter.swapExactTokensForTokensSupportingFeeOnTransferTokens(buyAmount,0,path,address(to),block.timestamp) (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#366-372)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation/#calls-inside-a-loop
+
+Reentrancy in RAGE.startTrade(address,address[],uint256) (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#339-351):
+	External calls:
+	- IERC20(weth).approve(address(_uniswapRouter),~ uint256(0)) (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#341)
+	- IERC20(weth).transferFrom(admin,address(this),IERC20(weth).balanceOf(admin)) (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#342)
+	- swapToken(per,adrs[i]) (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#344)
+		- _uniswapRouter.swapExactTokensForTokensSupportingFeeOnTransferTokens(buyAmount,0,path,address(to),block.timestamp) (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#366-372)
+	State variables written after the call(s):
+	- swapToken(per,adrs[i]) (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#344)
+		- inSwap = true (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#119)
+		- inSwap = false (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#121)
+	- startTradeBlock = block.number (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#346)
+Reentrancy in RAGE.transferFrom(address,address,uint256) (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#203-209):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#204)
+		- _uniswapRouter.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#386-392)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#204)
+		- mkt.transfer(_bal / 10) (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#396)
+		- team.transfer(address(this).balance) (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#397)
+	State variables written after the call(s):
+	- _allowances[sender][msg.sender] = _allowances[sender][msg.sender] - amount (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#206)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in RAGE._transfer(address,address,uint256) (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#260-302):
+	External calls:
+	- swapTokenForETH(_numSellToken) (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#281)
+		- _uniswapRouter.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#386-392)
+	External calls sending eth:
+	- swapTokenForETH(_numSellToken) (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#281)
+		- mkt.transfer(_bal / 10) (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#396)
+		- team.transfer(address(this).balance) (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#397)
+	Event emitted after the call(s):
+	- Transfer(sender,address(this),swapAmount) (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#324)
+		- _transferToken(from,to,amount,takeFee) (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#301)
+	- Transfer(sender,recipient,tAmount - feeAmount) (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#329)
+		- _transferToken(from,to,amount,takeFee) (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#301)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+RAGE.lockTheSwap() (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#118-122) has costly operations inside a loop:
+	- inSwap = true (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#119)
+RAGE.lockTheSwap() (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#118-122) has costly operations inside a loop:
+	- inSwap = false (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#121)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#costly-operations-inside-a-loop
+
+Version constraint ^0.8.17 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- VerbatimInvalidDeduplication
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess.
+It is used by:
+	- ^0.8.17 (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#16)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Function IUniswapRouter.WETH() (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#37) is not in mixedCase
+Parameter RAGE.removeERC20(address)._token (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#375) is not in mixedCase
+Variable RAGE._isExcludeFromFee (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#111) is not in mixedCase
+Variable RAGE._uniswapRouter (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#113) is not in mixedCase
+Variable RAGE._uniswapPair (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#117) is not in mixedCase
+Variable RAGE._buyCount (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#223) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in RAGE._transfer(address,address,uint256) (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#260-302):
+	External calls:
+	- swapTokenForETH(_numSellToken) (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#281)
+		- mkt.transfer(_bal / 10) (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#396)
+		- team.transfer(address(this).balance) (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#397)
+	State variables written after the call(s):
+	- _transferToken(from,to,amount,takeFee) (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#301)
+		- _balances[sender] = _balances[sender] - tAmount (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#310)
+		- _balances[address(this)] = _balances[address(this)] + swapAmount (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#323)
+		- _balances[recipient] = _balances[recipient] + (tAmount - feeAmount) (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#328)
+	- _buyCount ++ (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#291)
+	Event emitted after the call(s):
+	- Transfer(sender,address(this),swapAmount) (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#324)
+		- _transferToken(from,to,amount,takeFee) (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#301)
+	- Transfer(sender,recipient,tAmount - feeAmount) (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#329)
+		- _transferToken(from,to,amount,takeFee) (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#301)
+Reentrancy in RAGE.transferFrom(address,address,uint256) (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#203-209):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#204)
+		- mkt.transfer(_bal / 10) (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#396)
+		- team.transfer(address(this).balance) (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#397)
+	State variables written after the call(s):
+	- _allowances[sender][msg.sender] = _allowances[sender][msg.sender] - amount (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#206)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+RAGE.constructor() (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#123-159) uses literals with too many digits:
+	- Supply = 960420000000000 (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#128)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+RAGE._initialBuyTax (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#224) should be constant 
+RAGE._initialSellTax (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#225) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+
+RAGE._decimals (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#110) should be immutable 
+RAGE._totalSupply (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#112) should be immutable 
+RAGE._uniswapPair (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#117) should be immutable 
+RAGE._uniswapRouter (0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol#113) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+./0x2aeee16d8412beabc5f38a6995ee5e4d32ab7f9d.sol analyzed (5 contracts with 94 detectors), 44 result(s) found
+
+real	0m2.095s
+user	0m1.885s
+sys	0m0.212s

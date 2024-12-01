@@ -1,0 +1,283 @@
+'solc --version' running
+'solc ./0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+Reentrancy in BEAST._transfer(address,address,uint256) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#583-614):
+	External calls:
+	- swapBack() (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#596)
+		- router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,lpWallet,block.timestamp) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#652-659)
+		- router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#642-648)
+		- bensRevival.deposit{value: ethForREVIVAL}() (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#679)
+	External calls sending eth:
+	- swapBack() (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#596)
+		- router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,lpWallet,block.timestamp) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#652-659)
+		- address(devWallet).transfer(ethForDev) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#676)
+		- bensRevival.deposit{value: ethForREVIVAL}() (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#679)
+	State variables written after the call(s):
+	- _balances[sender] = _balances[sender].sub(amount,Insufficient Balance) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#598)
+	BEAST._balances (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#388) can be used in cross function reentrancies:
+	- BEAST._basicTransfer(address,address,uint256) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#616-621)
+	- BEAST._setIsDividendExempt(address,bool) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#531-539)
+	- BEAST._transfer(address,address,uint256) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#583-614)
+	- BEAST.balanceOf(address) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#558)
+	- BEAST.constructor() (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#438-465)
+	- BEAST.swapBack() (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#662-684)
+	- BEAST.takeFee(address,address,uint256) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#623-632)
+	- _balances[recipient] = _balances[recipient].add(finalAmount) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#601)
+	BEAST._balances (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#388) can be used in cross function reentrancies:
+	- BEAST._basicTransfer(address,address,uint256) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#616-621)
+	- BEAST._setIsDividendExempt(address,bool) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#531-539)
+	- BEAST._transfer(address,address,uint256) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#583-614)
+	- BEAST.balanceOf(address) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#558)
+	- BEAST.constructor() (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#438-465)
+	- BEAST.swapBack() (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#662-684)
+	- BEAST.takeFee(address,address,uint256) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#623-632)
+	- finalAmount = takeFee(sender,recipient,amount) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#600)
+		- _balances[address(this)] = _balances[address(this)].add(feeAmount) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#628)
+	BEAST._balances (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#388) can be used in cross function reentrancies:
+	- BEAST._basicTransfer(address,address,uint256) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#616-621)
+	- BEAST._setIsDividendExempt(address,bool) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#531-539)
+	- BEAST._transfer(address,address,uint256) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#583-614)
+	- BEAST.balanceOf(address) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#558)
+	- BEAST.constructor() (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#438-465)
+	- BEAST.swapBack() (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#662-684)
+	- BEAST.takeFee(address,address,uint256) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#623-632)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+BensRevival.distributeDividend(address) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#333-344) ignores return value by IERC20(REVIVAL).transfer(shareholder,amount) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#339)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+Reentrancy in BensRevival.distributeDividend(address) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#333-344):
+	External calls:
+	- IERC20(REVIVAL).transfer(shareholder,amount) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#339)
+	State variables written after the call(s):
+	- shares[shareholder].totalRealised = shares[shareholder].totalRealised.add(amount) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#341)
+	BensRevival.shares (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#228) can be used in cross function reentrancies:
+	- BensRevival.distributeDividend(address) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#333-344)
+	- BensRevival.getUnpaidEarnings(address) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#350-359)
+	- BensRevival.setShare(address,uint256) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#267-282)
+	- BensRevival.shares (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#228)
+	- shares[shareholder].totalExcluded = getCumulativeDividends(shares[shareholder].amount) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#342)
+	BensRevival.shares (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#228) can be used in cross function reentrancies:
+	- BensRevival.distributeDividend(address) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#333-344)
+	- BensRevival.getUnpaidEarnings(address) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#350-359)
+	- BensRevival.setShare(address,uint256) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#267-282)
+	- BensRevival.shares (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#228)
+Reentrancy in BensRevival.process(uint256) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#304-326):
+	External calls:
+	- distributeDividend(shareholders[currentIndex]) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#318)
+		- IERC20(REVIVAL).transfer(shareholder,amount) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#339)
+	State variables written after the call(s):
+	- currentIndex = 0 (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#315)
+	BensRevival.currentIndex (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#239) can be used in cross function reentrancies:
+	- BensRevival.currentIndex (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#239)
+	- BensRevival.process(uint256) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#304-326)
+	- currentIndex ++ (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#323)
+	BensRevival.currentIndex (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#239) can be used in cross function reentrancies:
+	- BensRevival.currentIndex (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#239)
+	- BensRevival.process(uint256) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#304-326)
+Reentrancy in BensRevival.setShare(address,uint256) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#267-282):
+	External calls:
+	- distributeDividend(shareholder) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#270)
+		- IERC20(REVIVAL).transfer(shareholder,amount) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#339)
+	State variables written after the call(s):
+	- shares[shareholder].amount = amount (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#280)
+	BensRevival.shares (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#228) can be used in cross function reentrancies:
+	- BensRevival.distributeDividend(address) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#333-344)
+	- BensRevival.getUnpaidEarnings(address) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#350-359)
+	- BensRevival.setShare(address,uint256) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#267-282)
+	- BensRevival.shares (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#228)
+	- shares[shareholder].totalExcluded = getCumulativeDividends(shares[shareholder].amount) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#281)
+	BensRevival.shares (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#228) can be used in cross function reentrancies:
+	- BensRevival.distributeDividend(address) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#333-344)
+	- BensRevival.getUnpaidEarnings(address) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#350-359)
+	- BensRevival.setShare(address,uint256) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#267-282)
+	- BensRevival.shares (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#228)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+BEAST.addLiquidity(uint256,uint256) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#651-660) ignores return value by router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,lpWallet,block.timestamp) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#652-659)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+BensRevival.setDistributionCriteria(uint256,uint256) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#262-265) should emit an event for: 
+	- minPeriod = newMinPeriod (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#263) 
+	- minDistribution = newMinDistribution (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#264) 
+BensRevival.setShare(address,uint256) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#267-282) should emit an event for: 
+	- totalShares = totalShares.sub(shares[shareholder].amount).add(amount) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#279) 
+BEAST.changeTotalFees(uint256,uint256) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#482-486) should emit an event for: 
+	- buyFee = newBuyFee (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#484) 
+	- sellFee = newSellFee (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#485) 
+BEAST.changeFeeAllocation(uint256,uint256,uint256) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#488-492) should emit an event for: 
+	- toReflections = newRewardFee (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#489) 
+	- toLiquidity = newLpFee (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#490) 
+	- toMarketing = newMarketingFee (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#491) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+BEAST.setDevWallet(address).newDevWallet (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#510) lacks a zero-check on :
+		- devWallet = address(newDevWallet) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#511)
+BEAST.setOwnerWallet(address).newOwnerWallet (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#514) lacks a zero-check on :
+		- tokenOwner = newOwnerWallet (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#515)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+BensRevival.distributeDividend(address) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#333-344) has external calls inside a loop: IERC20(REVIVAL).transfer(shareholder,amount) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#339)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation/#calls-inside-a-loop
+
+Reentrancy in BensRevival.deposit() (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#284-302):
+	External calls:
+	- router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: msg.value}(0,path,address(this),block.timestamp) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#292-297)
+	State variables written after the call(s):
+	- dividendsPerShare = dividendsPerShare.add(dividendsPerShareAccuracyFactor.mul(amount).div(totalShares)) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#301)
+	- totalDividends = totalDividends.add(amount) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#300)
+Reentrancy in BensRevival.distributeDividend(address) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#333-344):
+	External calls:
+	- IERC20(REVIVAL).transfer(shareholder,amount) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#339)
+	State variables written after the call(s):
+	- shareholderClaims[shareholder] = block.timestamp (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#340)
+Reentrancy in BensRevival.setShare(address,uint256) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#267-282):
+	External calls:
+	- distributeDividend(shareholder) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#270)
+		- IERC20(REVIVAL).transfer(shareholder,amount) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#339)
+	State variables written after the call(s):
+	- addShareholder(shareholder) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#274)
+		- shareholderIndexes[shareholder] = shareholders.length (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#366)
+	- removeShareholder(shareholder) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#276)
+		- shareholderIndexes[shareholders[shareholders.length - 1]] = shareholderIndexes[shareholder] (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#372)
+	- addShareholder(shareholder) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#274)
+		- shareholders.push(shareholder) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#367)
+	- removeShareholder(shareholder) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#276)
+		- shareholders[shareholderIndexes[shareholder]] = shareholders[shareholders.length - 1] (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#371)
+		- shareholders.pop() (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#373)
+	- totalShares = totalShares.sub(shares[shareholder].amount).add(amount) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#279)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in BEAST._transfer(address,address,uint256) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#583-614):
+	External calls:
+	- swapBack() (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#596)
+		- router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,lpWallet,block.timestamp) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#652-659)
+		- router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#642-648)
+		- bensRevival.deposit{value: ethForREVIVAL}() (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#679)
+	- bensRevival.setShare(sender,_balances[sender]) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#605)
+	- bensRevival.setShare(recipient,_balances[recipient]) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#609)
+	External calls sending eth:
+	- swapBack() (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#596)
+		- router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,lpWallet,block.timestamp) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#652-659)
+		- address(devWallet).transfer(ethForDev) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#676)
+		- bensRevival.deposit{value: ethForREVIVAL}() (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#679)
+	Event emitted after the call(s):
+	- Transfer(sender,recipient,finalAmount) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#612)
+Reentrancy in BEAST._transfer(address,address,uint256) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#583-614):
+	External calls:
+	- swapBack() (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#596)
+		- router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,lpWallet,block.timestamp) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#652-659)
+		- router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#642-648)
+		- bensRevival.deposit{value: ethForREVIVAL}() (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#679)
+	External calls sending eth:
+	- swapBack() (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#596)
+		- router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,lpWallet,block.timestamp) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#652-659)
+		- address(devWallet).transfer(ethForDev) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#676)
+		- bensRevival.deposit{value: ethForREVIVAL}() (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#679)
+	Event emitted after the call(s):
+	- Transfer(sender,address(this),feeAmount) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#629)
+		- finalAmount = takeFee(sender,recipient,amount) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#600)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+BensRevival.shouldDistribute(address) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#328-331) uses timestamp for comparisons
+	Dangerous comparisons:
+	- shareholderClaims[shareholder] + minPeriod < block.timestamp && getUnpaidEarnings(shareholder) > minDistribution (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#329-330)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+BensRevival.process(uint256) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#304-326) has costly operations inside a loop:
+	- currentIndex = 0 (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#315)
+BensRevival.distributeDividend(address) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#333-344) has costly operations inside a loop:
+	- totalDistributed = totalDistributed.add(amount) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#338)
+BensRevival.process(uint256) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#304-326) has costly operations inside a loop:
+	- currentIndex ++ (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#323)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#costly-operations-inside-a-loop
+
+Context._msgData() (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#111-113) is never used and should be removed
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dead-code
+
+BEAST.lpWallet (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#404) is set pre-construction with a non-constant function or state variable:
+	- DEAD
+BEAST.maxTx (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#434) is set pre-construction with a non-constant function or state variable:
+	- _totalSupply.div(1000)
+BEAST.maxWallet (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#435) is set pre-construction with a non-constant function or state variable:
+	- _totalSupply.div(1000)
+BEAST.swapThreshold (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#436) is set pre-construction with a non-constant function or state variable:
+	- _totalSupply.div(4000)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#function-initializing-state
+
+Version constraint 0.8.13 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- VerbatimInvalidDeduplication
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- StorageWriteRemovalBeforeConditionalTermination
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- InlineAssemblyMemorySideEffects
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation.
+It is used by:
+	- 0.8.13 (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#43)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Function IDEXRouter.WETH() (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#155) is not in mixedCase
+Variable BensRevival.REVIVAL (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#215) is not in mixedCase
+Variable BEAST.REVIVAL (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#380) is not in mixedCase
+Constant BEAST._name (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#382) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant BEAST._symbol (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#383) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant BEAST._decimals (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#384) is not in UPPER_CASE_WITH_UNDERSCORES
+Variable BEAST.WETH (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#392) is not in mixedCase
+Variable BEAST.DEAD (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#393) is not in mixedCase
+Variable BEAST.ZERO (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#394) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in BEAST._transfer(address,address,uint256) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#583-614):
+	External calls:
+	- swapBack() (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#596)
+		- address(devWallet).transfer(ethForDev) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#676)
+	External calls sending eth:
+	- swapBack() (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#596)
+		- router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,lpWallet,block.timestamp) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#652-659)
+		- address(devWallet).transfer(ethForDev) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#676)
+		- bensRevival.deposit{value: ethForREVIVAL}() (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#679)
+	State variables written after the call(s):
+	- _balances[sender] = _balances[sender].sub(amount,Insufficient Balance) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#598)
+	- _balances[recipient] = _balances[recipient].add(finalAmount) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#601)
+	- finalAmount = takeFee(sender,recipient,amount) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#600)
+		- _balances[address(this)] = _balances[address(this)].add(feeAmount) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#628)
+	Event emitted after the call(s):
+	- Transfer(sender,address(this),feeAmount) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#629)
+		- finalAmount = takeFee(sender,recipient,amount) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#600)
+	- Transfer(sender,recipient,finalAmount) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#612)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+BEAST.slitherConstructorVariables() (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#377-709) uses literals with too many digits:
+	- _totalSupply = 555000000000 * (10 ** _decimals) (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#386)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+BEAST.cooldown (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#390) is never used in BEAST (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#377-709)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-state-variable
+
+BEAST.DEAD (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#393) should be constant 
+BEAST.REVIVAL (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#380) should be constant 
+BEAST.ZERO (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#394) should be constant 
+BEAST._totalSupply (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#386) should be constant 
+BEAST.allocationSum (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#413) should be constant 
+BEAST.antiBot (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#396) should be constant 
+BEAST.factory (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#417) should be constant 
+BensRevival.dividendsPerShareAccuracyFactor (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#234) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+
+BEAST.WETH (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#392) should be immutable 
+BEAST.bensRevival (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#425) should be immutable 
+BEAST.lpWallet (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#404) should be immutable 
+BEAST.pair (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#416) should be immutable 
+BEAST.router (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#415) should be immutable 
+BensRevival.REVIVAL (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#215) should be immutable 
+BensRevival._token (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#213) should be immutable 
+BensRevival.router (0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol#217) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+./0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2.sol analyzed (9 contracts with 94 detectors), 56 result(s) found
+
+real	0m2.896s
+user	0m2.694s
+sys	0m0.203s

@@ -1,0 +1,157 @@
+'solc --version' running
+'solc ./0x530a9cceee0c45f58229ae5c256e414e6df957ad.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x530a9cceee0c45f58229ae5c256e414e6df957ad.sol:
+./0x530a9cceee0c45f58229ae5c256e414e6df957ad.sol:7:5: Warning: No visibility specified. Defaulting to "public". 
+    constructor(){
+    ^ (Relevant source part starts here and spans across multiple lines).
+./0x530a9cceee0c45f58229ae5c256e414e6df957ad.sol:28:5: Warning: No visibility specified. Defaulting to "public". 
+    constructor(){
+    ^ (Relevant source part starts here and spans across multiple lines).
+./0x530a9cceee0c45f58229ae5c256e414e6df957ad.sol:109:10: Warning: No visibility specified. Defaulting to "public". 
+         function () payable stopOnPause{
+         ^ (Relevant source part starts here and spans across multiple lines).
+./0x530a9cceee0c45f58229ae5c256e414e6df957ad.sol:142:10: Warning: No visibility specified. Defaulting to "public". 
+         function burnRestTokens() afterDeadline{
+         ^ (Relevant source part starts here and spans across multiple lines).
+./0x530a9cceee0c45f58229ae5c256e414e6df957ad.sol:148:10: Warning: No visibility specified. Defaulting to "public". 
+         function isRunning() view returns (bool){
+         ^ (Relevant source part starts here and spans across multiple lines).
+./0x530a9cceee0c45f58229ae5c256e414e6df957ad.sol:165:5: Warning: No visibility specified. Defaulting to "public". 
+    constructor(address _abioAddress, address _treasury, address _PICOAddr, uint _lenInMins,uint _minInvestment, uint _priceInWei){
+    ^ (Relevant source part starts here and spans across multiple lines).
+./0x530a9cceee0c45f58229ae5c256e414e6df957ad.sol:200:5: Warning: No visibility specified. Defaulting to "public". 
+    function safeWithdrawal() afterDeadline stopOnPause{
+    ^ (Relevant source part starts here and spans across multiple lines).
+
+
+ABIO_Token (0x530a9cceee0c45f58229ae5c256e414e6df957ad.sol#46-50) has incorrect ERC20 function interface:ABIO_Token.transfer(address,uint256) (0x530a9cceee0c45f58229ae5c256e414e6df957ad.sol#48)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-erc20-interface
+
+Reentrancy in ABIO_BaseICO.burnRestTokens() (0x530a9cceee0c45f58229ae5c256e414e6df957ad.sol#142-146):
+	External calls:
+	- abioToken.burnMyBalance() (0x530a9cceee0c45f58229ae5c256e414e6df957ad.sol#144)
+	State variables written after the call(s):
+	- restTokensBurned = true (0x530a9cceee0c45f58229ae5c256e414e6df957ad.sol#145)
+	ABIO_BaseICO.restTokensBurned (0x530a9cceee0c45f58229ae5c256e414e6df957ad.sol#66) can be used in cross function reentrancies:
+	- ABIO_BaseICO.burnRestTokens() (0x530a9cceee0c45f58229ae5c256e414e6df957ad.sol#142-146)
+	- ABIO_BaseICO.restTokensBurned (0x530a9cceee0c45f58229ae5c256e414e6df957ad.sol#66)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+ABIO_ICO.goalReached() (0x530a9cceee0c45f58229ae5c256e414e6df957ad.sol#186-192) ignores return value by PICO.extGoalReached() (0x530a9cceee0c45f58229ae5c256e414e6df957ad.sol#190)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+ABIO_BaseICO.changeTreasury(address)._newTreasury (0x530a9cceee0c45f58229ae5c256e414e6df957ad.sol#88) lacks a zero-check on :
+		- treasury = _newTreasury (0x530a9cceee0c45f58229ae5c256e414e6df957ad.sol#89)
+ABIO_ICO.constructor(address,address,address,uint256,uint256,uint256)._treasury (0x530a9cceee0c45f58229ae5c256e414e6df957ad.sol#165) lacks a zero-check on :
+		- treasury = _treasury (0x530a9cceee0c45f58229ae5c256e414e6df957ad.sol#167)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Modifier ABIO_BaseICO.afterDeadline() (0x530a9cceee0c45f58229ae5c256e414e6df957ad.sol#154) does not always execute _; or revert
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-modifier
+
+Reentrancy in ABIO_BaseICO.fallback() (0x530a9cceee0c45f58229ae5c256e414e6df957ad.sol#109-121):
+	External calls:
+	- abioToken.transfer(msg.sender,ABIOAmount) (0x530a9cceee0c45f58229ae5c256e414e6df957ad.sol#118)
+	State variables written after the call(s):
+	- abioSold += ABIOAmount (0x530a9cceee0c45f58229ae5c256e414e6df957ad.sol#119)
+Reentrancy in ABIO_BaseICO.tokenFallback(address,uint256,bytes) (0x530a9cceee0c45f58229ae5c256e414e6df957ad.sol#129-136):
+	External calls:
+	- require(bool)(_from == abioToken.owner() || _from == owner) (0x530a9cceee0c45f58229ae5c256e414e6df957ad.sol#131)
+	State variables written after the call(s):
+	- deadline = now + length (0x530a9cceee0c45f58229ae5c256e414e6df957ad.sol#134)
+	- paused = false (0x530a9cceee0c45f58229ae5c256e414e6df957ad.sol#133)
+	- volume = _value (0x530a9cceee0c45f58229ae5c256e414e6df957ad.sol#132)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in ABIO_BaseICO.fallback() (0x530a9cceee0c45f58229ae5c256e414e6df957ad.sol#109-121):
+	External calls:
+	- abioToken.transfer(msg.sender,ABIOAmount) (0x530a9cceee0c45f58229ae5c256e414e6df957ad.sol#118)
+	Event emitted after the call(s):
+	- FundsReceived(msg.sender,amount) (0x530a9cceee0c45f58229ae5c256e414e6df957ad.sol#120)
+Reentrancy in ABIO_BaseICO.tokenFallback(address,uint256,bytes) (0x530a9cceee0c45f58229ae5c256e414e6df957ad.sol#129-136):
+	External calls:
+	- require(bool)(_from == abioToken.owner() || _from == owner) (0x530a9cceee0c45f58229ae5c256e414e6df957ad.sol#131)
+	Event emitted after the call(s):
+	- ICOStart(_value,weiPerABIO,minInvestment) (0x530a9cceee0c45f58229ae5c256e414e6df957ad.sol#135)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+ABIO_BaseICO.fallback() (0x530a9cceee0c45f58229ae5c256e414e6df957ad.sol#109-121) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(now < deadline) (0x530a9cceee0c45f58229ae5c256e414e6df957ad.sol#110)
+ABIO_BaseICO.isRunning() (0x530a9cceee0c45f58229ae5c256e414e6df957ad.sol#148-150) uses timestamp for comparisons
+	Dangerous comparisons:
+	- (now < deadline) (0x530a9cceee0c45f58229ae5c256e414e6df957ad.sol#149)
+ABIO_ICO.prolong(uint256) (0x530a9cceee0c45f58229ae5c256e414e6df957ad.sol#226-236) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(now <= deadline - 345600) (0x530a9cceee0c45f58229ae5c256e414e6df957ad.sol#228)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Haltable.stopOnPause() (0x530a9cceee0c45f58229ae5c256e414e6df957ad.sol#39-44) compares to a boolean constant:
+	-require(bool)(paused == false) (0x530a9cceee0c45f58229ae5c256e414e6df957ad.sol#41)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#boolean-equality
+
+Version constraint ^0.4.24 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ABIEncoderV2PackedStorage_0.4.x
+	- ExpExponentCleanup
+	- EventStructWrongData.
+It is used by:
+	- ^0.4.24 (0x530a9cceee0c45f58229ae5c256e414e6df957ad.sol#1)
+solc-0.4.24 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Event Ownable.ownerTransfer(address,address) (0x530a9cceee0c45f58229ae5c256e414e6df957ad.sol#4) is not in CapWords
+Event Ownable.ownerGone(address) (0x530a9cceee0c45f58229ae5c256e414e6df957ad.sol#5) is not in CapWords
+Parameter Ownable.changeOwner(address)._newOwner (0x530a9cceee0c45f58229ae5c256e414e6df957ad.sol#14) is not in mixedCase
+Contract ABIO_Token (0x530a9cceee0c45f58229ae5c256e414e6df957ad.sol#46-50) is not in CapWords
+Contract ABIO_preICO (0x530a9cceee0c45f58229ae5c256e414e6df957ad.sol#51-55) is not in CapWords
+Contract ABIO_BaseICO (0x530a9cceee0c45f58229ae5c256e414e6df957ad.sol#56-155) is not in CapWords
+Parameter ABIO_BaseICO.changeTreasury(address)._newTreasury (0x530a9cceee0c45f58229ae5c256e414e6df957ad.sol#88) is not in mixedCase
+Parameter ABIO_BaseICO.adjustPrice(uint256)._multiplier (0x530a9cceee0c45f58229ae5c256e414e6df957ad.sol#98) is not in mixedCase
+Parameter ABIO_BaseICO.tokenFallback(address,uint256,bytes)._from (0x530a9cceee0c45f58229ae5c256e414e6df957ad.sol#129) is not in mixedCase
+Parameter ABIO_BaseICO.tokenFallback(address,uint256,bytes)._value (0x530a9cceee0c45f58229ae5c256e414e6df957ad.sol#129) is not in mixedCase
+Contract ABIO_ICO (0x530a9cceee0c45f58229ae5c256e414e6df957ad.sol#158-238) is not in CapWords
+Parameter ABIO_ICO.prolong(uint256)._timeInMins (0x530a9cceee0c45f58229ae5c256e414e6df957ad.sol#226) is not in mixedCase
+Variable ABIO_ICO.PICO (0x530a9cceee0c45f58229ae5c256e414e6df957ad.sol#159) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in ABIO_ICO.safeWithdrawal() (0x530a9cceee0c45f58229ae5c256e414e6df957ad.sol#200-220):
+	External calls:
+	- msg.sender.send(amount) (0x530a9cceee0c45f58229ae5c256e414e6df957ad.sol#205)
+	Event emitted after the call(s):
+	- FundsWithdrawn(msg.sender,amount) (0x530a9cceee0c45f58229ae5c256e414e6df957ad.sol#206)
+Reentrancy in ABIO_ICO.safeWithdrawal() (0x530a9cceee0c45f58229ae5c256e414e6df957ad.sol#200-220):
+	External calls:
+	- treasury.send(weiRaised) (0x530a9cceee0c45f58229ae5c256e414e6df957ad.sol#214)
+	Event emitted after the call(s):
+	- FundsWithdrawn(treasury,weiRaised) (0x530a9cceee0c45f58229ae5c256e414e6df957ad.sol#215)
+Reentrancy in ABIO_ICO.safeWithdrawal() (0x530a9cceee0c45f58229ae5c256e414e6df957ad.sol#200-220):
+	External calls:
+	- treasury.send(address(this).balance) (0x530a9cceee0c45f58229ae5c256e414e6df957ad.sol#216)
+	Event emitted after the call(s):
+	- FundsWithdrawn(treasury,address(this).balance) (0x530a9cceee0c45f58229ae5c256e414e6df957ad.sol#217)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+ABIO_ICO.abioSoldInPICO (0x530a9cceee0c45f58229ae5c256e414e6df957ad.sol#161) is never used in ABIO_ICO (0x530a9cceee0c45f58229ae5c256e414e6df957ad.sol#158-238)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-state-variable
+
+ABIO_ICO.abioSoldInPICO (0x530a9cceee0c45f58229ae5c256e414e6df957ad.sol#161) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+./0x530a9cceee0c45f58229ae5c256e414e6df957ad.sol analyzed (6 contracts with 94 detectors), 34 result(s) found
+
+real	0m1.907s
+user	0m1.618s
+sys	0m0.292s

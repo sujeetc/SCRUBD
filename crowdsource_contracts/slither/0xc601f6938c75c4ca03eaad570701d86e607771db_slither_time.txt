@@ -1,0 +1,68 @@
+'solc --version' running
+'solc ./0xc601f6938c75c4ca03eaad570701d86e607771db.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0xc601f6938c75c4ca03eaad570701d86e607771db.sol:
+./0xc601f6938c75c4ca03eaad570701d86e607771db.sol:38:5: Warning: Failure condition of 'send' ignored. Consider using 'transfer' instead.
+	   owner.send(feecounter);
+	   ^--------------------^
+./0xc601f6938c75c4ca03eaad570701d86e607771db.sol:49:13: Warning: Failure condition of 'send' ignored. Consider using 'transfer' instead.
+            Tx[end].txuser.send((Tx[end].txvalue/1000)*33);
+            ^--------------------------------------------^
+
+
+Contagion.Count(uint256,uint256) (0xc601f6938c75c4ca03eaad570701d86e607771db.sol#47-52) performs a multiplication on the result of a division:
+	- Tx[end].txuser.send((Tx[end].txvalue / 1000) * 33) (0xc601f6938c75c4ca03eaad570701d86e607771db.sol#49)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+Contagion.Sort() (0xc601f6938c75c4ca03eaad570701d86e607771db.sol#34-45) ignores return value by owner.send(feecounter) (0xc601f6938c75c4ca03eaad570701d86e607771db.sol#38)
+Contagion.Count(uint256,uint256) (0xc601f6938c75c4ca03eaad570701d86e607771db.sol#47-52) ignores return value by Tx[end].txuser.send((Tx[end].txvalue / 1000) * 33) (0xc601f6938c75c4ca03eaad570701d86e607771db.sol#49)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-send
+
+Modifier Contagion.onlyowner() (0xc601f6938c75c4ca03eaad570701d86e607771db.sol#19-23) does not always execute _; or revert
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-modifier
+
+Contagion.Count(uint256,uint256) (0xc601f6938c75c4ca03eaad570701d86e607771db.sol#47-52) has external calls inside a loop: Tx[end].txuser.send((Tx[end].txvalue / 1000) * 33) (0xc601f6938c75c4ca03eaad570701d86e607771db.sol#49)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation/#calls-inside-a-loop
+
+Version constraint ^0.4.24 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ABIEncoderV2PackedStorage_0.4.x
+	- ExpExponentCleanup
+	- EventStructWrongData.
+It is used by:
+	- ^0.4.24 (0xc601f6938c75c4ca03eaad570701d86e607771db.sol#5)
+solc-0.4.24 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Struct Contagion._Tx (0xc601f6938c75c4ca03eaad570701d86e607771db.sol#9-12) is not in CapWords
+Function Contagion.Sort() (0xc601f6938c75c4ca03eaad570701d86e607771db.sol#34-45) is not in mixedCase
+Function Contagion.Count(uint256,uint256) (0xc601f6938c75c4ca03eaad570701d86e607771db.sol#47-52) is not in mixedCase
+Variable Contagion.Tx (0xc601f6938c75c4ca03eaad570701d86e607771db.sol#13) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in Contagion.Sort() (0xc601f6938c75c4ca03eaad570701d86e607771db.sol#34-45):
+	External calls:
+	- owner.send(feecounter) (0xc601f6938c75c4ca03eaad570701d86e607771db.sol#38)
+	State variables written after the call(s):
+	- Tx.length ++ (0xc601f6938c75c4ca03eaad570701d86e607771db.sol#42)
+	- Tx[txcounter].txuser = msg.sender (0xc601f6938c75c4ca03eaad570701d86e607771db.sol#43)
+	- Tx[txcounter].txvalue = msg.value (0xc601f6938c75c4ca03eaad570701d86e607771db.sol#44)
+	- counter = Tx.length (0xc601f6938c75c4ca03eaad570701d86e607771db.sol#41)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+./0xc601f6938c75c4ca03eaad570701d86e607771db.sol analyzed (1 contracts with 94 detectors), 12 result(s) found
+
+real	0m1.421s
+user	0m1.173s
+sys	0m0.251s

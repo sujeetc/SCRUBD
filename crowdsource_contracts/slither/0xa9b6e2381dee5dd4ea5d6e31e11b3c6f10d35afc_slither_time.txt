@@ -1,0 +1,101 @@
+'solc --version' running
+'solc ./0xa9b6e2381dee5dd4ea5d6e31e11b3c6f10d35afc.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+UserContract.Initiate(address,uint256,uint256,uint256,bool) (0xa9b6e2381dee5dd4ea5d6e31e11b3c6f10d35afc.sol#169-180) sends eth to arbitrary user
+	Dangerous calls:
+	- swap.CreateSwap.value(_premium)(_amounta,_amountb,_isLong,msg.sender) (0xa9b6e2381dee5dd4ea5d6e31e11b3c6f10d35afc.sol#172)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+UserContract.setFactory(address)._factory_address (0xa9b6e2381dee5dd4ea5d6e31e11b3c6f10d35afc.sol#198) lacks a zero-check on :
+		- factory_address = _factory_address (0xa9b6e2381dee5dd4ea5d6e31e11b3c6f10d35afc.sol#200)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in UserContract.Enter(uint256,uint256,bool,address) (0xa9b6e2381dee5dd4ea5d6e31e11b3c6f10d35afc.sol#182-195):
+	External calls:
+	- swap.EnterSwap(_amounta,_amountb,_isLong,msg.sender) (0xa9b6e2381dee5dd4ea5d6e31e11b3c6f10d35afc.sol#185)
+	- (token_a_address,token_b_address) = factory.getBase() (0xa9b6e2381dee5dd4ea5d6e31e11b3c6f10d35afc.sol#188)
+	State variables written after the call(s):
+	- token = Wrapped_Ether(token_b_address) (0xa9b6e2381dee5dd4ea5d6e31e11b3c6f10d35afc.sol#189)
+Reentrancy in UserContract.Initiate(address,uint256,uint256,uint256,bool) (0xa9b6e2381dee5dd4ea5d6e31e11b3c6f10d35afc.sol#169-180):
+	External calls:
+	- swap.CreateSwap.value(_premium)(_amounta,_amountb,_isLong,msg.sender) (0xa9b6e2381dee5dd4ea5d6e31e11b3c6f10d35afc.sol#172)
+	- (token_a_address,token_b_address) = factory.getBase() (0xa9b6e2381dee5dd4ea5d6e31e11b3c6f10d35afc.sol#175)
+	External calls sending eth:
+	- swap.CreateSwap.value(_premium)(_amounta,_amountb,_isLong,msg.sender) (0xa9b6e2381dee5dd4ea5d6e31e11b3c6f10d35afc.sol#172)
+	State variables written after the call(s):
+	- token = Wrapped_Ether(token_a_address) (0xa9b6e2381dee5dd4ea5d6e31e11b3c6f10d35afc.sol#176)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Version constraint ^0.4.17 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ExpExponentCleanup
+	- EventStructWrongData
+	- NestedArrayFunctionCallDecoder
+	- ZeroFunctionSelector.
+It is used by:
+	- ^0.4.17 (0xa9b6e2381dee5dd4ea5d6e31e11b3c6f10d35afc.sol#1)
+solc-0.4.17 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Contract TokenToTokenSwap_Interface (0xa9b6e2381dee5dd4ea5d6e31e11b3c6f10d35afc.sol#35-39) is not in CapWords
+Function TokenToTokenSwap_Interface.CreateSwap(uint256,uint256,bool,address) (0xa9b6e2381dee5dd4ea5d6e31e11b3c6f10d35afc.sol#36) is not in mixedCase
+Parameter TokenToTokenSwap_Interface.CreateSwap(uint256,uint256,bool,address)._amount_a (0xa9b6e2381dee5dd4ea5d6e31e11b3c6f10d35afc.sol#36) is not in mixedCase
+Parameter TokenToTokenSwap_Interface.CreateSwap(uint256,uint256,bool,address)._amount_b (0xa9b6e2381dee5dd4ea5d6e31e11b3c6f10d35afc.sol#36) is not in mixedCase
+Parameter TokenToTokenSwap_Interface.CreateSwap(uint256,uint256,bool,address)._sender_is_long (0xa9b6e2381dee5dd4ea5d6e31e11b3c6f10d35afc.sol#36) is not in mixedCase
+Function TokenToTokenSwap_Interface.EnterSwap(uint256,uint256,bool,address) (0xa9b6e2381dee5dd4ea5d6e31e11b3c6f10d35afc.sol#37) is not in mixedCase
+Parameter TokenToTokenSwap_Interface.EnterSwap(uint256,uint256,bool,address)._amount_a (0xa9b6e2381dee5dd4ea5d6e31e11b3c6f10d35afc.sol#37) is not in mixedCase
+Parameter TokenToTokenSwap_Interface.EnterSwap(uint256,uint256,bool,address)._amount_b (0xa9b6e2381dee5dd4ea5d6e31e11b3c6f10d35afc.sol#37) is not in mixedCase
+Parameter TokenToTokenSwap_Interface.EnterSwap(uint256,uint256,bool,address)._sender_is_long (0xa9b6e2381dee5dd4ea5d6e31e11b3c6f10d35afc.sol#37) is not in mixedCase
+Contract Factory_Interface (0xa9b6e2381dee5dd4ea5d6e31e11b3c6f10d35afc.sol#43-49) is not in CapWords
+Parameter Factory_Interface.createToken(uint256,address,bool,uint256)._start_date (0xa9b6e2381dee5dd4ea5d6e31e11b3c6f10d35afc.sol#44) is not in mixedCase
+Parameter Factory_Interface.payToken(address,address)._token_add (0xa9b6e2381dee5dd4ea5d6e31e11b3c6f10d35afc.sol#45) is not in mixedCase
+Parameter Factory_Interface.deployContract(uint256)._start_date (0xa9b6e2381dee5dd4ea5d6e31e11b3c6f10d35afc.sol#46) is not in mixedCase
+Contract Wrapped_Ether (0xa9b6e2381dee5dd4ea5d6e31e11b3c6f10d35afc.sol#54-148) is not in CapWords
+Function Wrapped_Ether.CreateToken() (0xa9b6e2381dee5dd4ea5d6e31e11b3c6f10d35afc.sol#78-82) is not in mixedCase
+Parameter Wrapped_Ether.withdraw(uint256)._value (0xa9b6e2381dee5dd4ea5d6e31e11b3c6f10d35afc.sol#89) is not in mixedCase
+Parameter Wrapped_Ether.balanceOf(address)._owner (0xa9b6e2381dee5dd4ea5d6e31e11b3c6f10d35afc.sol#96) is not in mixedCase
+Parameter Wrapped_Ether.transfer(address,uint256)._to (0xa9b6e2381dee5dd4ea5d6e31e11b3c6f10d35afc.sol#104) is not in mixedCase
+Parameter Wrapped_Ether.transfer(address,uint256)._amount (0xa9b6e2381dee5dd4ea5d6e31e11b3c6f10d35afc.sol#104) is not in mixedCase
+Parameter Wrapped_Ether.transferFrom(address,address,uint256)._from (0xa9b6e2381dee5dd4ea5d6e31e11b3c6f10d35afc.sol#124) is not in mixedCase
+Parameter Wrapped_Ether.transferFrom(address,address,uint256)._to (0xa9b6e2381dee5dd4ea5d6e31e11b3c6f10d35afc.sol#124) is not in mixedCase
+Parameter Wrapped_Ether.transferFrom(address,address,uint256)._amount (0xa9b6e2381dee5dd4ea5d6e31e11b3c6f10d35afc.sol#124) is not in mixedCase
+Parameter Wrapped_Ether.approve(address,uint256)._spender (0xa9b6e2381dee5dd4ea5d6e31e11b3c6f10d35afc.sol#140) is not in mixedCase
+Parameter Wrapped_Ether.approve(address,uint256)._amount (0xa9b6e2381dee5dd4ea5d6e31e11b3c6f10d35afc.sol#140) is not in mixedCase
+Parameter Wrapped_Ether.allowance(address,address)._owner (0xa9b6e2381dee5dd4ea5d6e31e11b3c6f10d35afc.sol#147) is not in mixedCase
+Parameter Wrapped_Ether.allowance(address,address)._spender (0xa9b6e2381dee5dd4ea5d6e31e11b3c6f10d35afc.sol#147) is not in mixedCase
+Variable Wrapped_Ether.total_supply (0xa9b6e2381dee5dd4ea5d6e31e11b3c6f10d35afc.sol#62) is not in mixedCase
+Function UserContract.Initiate(address,uint256,uint256,uint256,bool) (0xa9b6e2381dee5dd4ea5d6e31e11b3c6f10d35afc.sol#169-180) is not in mixedCase
+Parameter UserContract.Initiate(address,uint256,uint256,uint256,bool)._swapadd (0xa9b6e2381dee5dd4ea5d6e31e11b3c6f10d35afc.sol#169) is not in mixedCase
+Parameter UserContract.Initiate(address,uint256,uint256,uint256,bool)._amounta (0xa9b6e2381dee5dd4ea5d6e31e11b3c6f10d35afc.sol#169) is not in mixedCase
+Parameter UserContract.Initiate(address,uint256,uint256,uint256,bool)._amountb (0xa9b6e2381dee5dd4ea5d6e31e11b3c6f10d35afc.sol#169) is not in mixedCase
+Parameter UserContract.Initiate(address,uint256,uint256,uint256,bool)._premium (0xa9b6e2381dee5dd4ea5d6e31e11b3c6f10d35afc.sol#169) is not in mixedCase
+Parameter UserContract.Initiate(address,uint256,uint256,uint256,bool)._isLong (0xa9b6e2381dee5dd4ea5d6e31e11b3c6f10d35afc.sol#169) is not in mixedCase
+Function UserContract.Enter(uint256,uint256,bool,address) (0xa9b6e2381dee5dd4ea5d6e31e11b3c6f10d35afc.sol#182-195) is not in mixedCase
+Parameter UserContract.Enter(uint256,uint256,bool,address)._amounta (0xa9b6e2381dee5dd4ea5d6e31e11b3c6f10d35afc.sol#182) is not in mixedCase
+Parameter UserContract.Enter(uint256,uint256,bool,address)._amountb (0xa9b6e2381dee5dd4ea5d6e31e11b3c6f10d35afc.sol#182) is not in mixedCase
+Parameter UserContract.Enter(uint256,uint256,bool,address)._isLong (0xa9b6e2381dee5dd4ea5d6e31e11b3c6f10d35afc.sol#182) is not in mixedCase
+Parameter UserContract.Enter(uint256,uint256,bool,address)._swapadd (0xa9b6e2381dee5dd4ea5d6e31e11b3c6f10d35afc.sol#182) is not in mixedCase
+Parameter UserContract.setFactory(address)._factory_address (0xa9b6e2381dee5dd4ea5d6e31e11b3c6f10d35afc.sol#198) is not in mixedCase
+Variable UserContract.factory_address (0xa9b6e2381dee5dd4ea5d6e31e11b3c6f10d35afc.sol#156) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Wrapped_Ether.name (0xa9b6e2381dee5dd4ea5d6e31e11b3c6f10d35afc.sol#61) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+./0xa9b6e2381dee5dd4ea5d6e31e11b3c6f10d35afc.sol analyzed (5 contracts with 94 detectors), 47 result(s) found
+
+real	0m1.536s
+user	0m1.266s
+sys	0m0.273s

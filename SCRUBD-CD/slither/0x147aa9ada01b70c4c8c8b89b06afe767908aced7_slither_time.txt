@@ -1,0 +1,229 @@
+'solc --version' running
+'solc ./0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol:
+Warning: Contract code size exceeds 24576 bytes (a limit introduced in Spurious Dragon). This contract may not be deployable on mainnet. Consider enabling the optimizer (with a low "runs" value!), turning off revert strings, or using libraries.
+    --> 0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol:1834:1:
+     |
+1834 | contract PharaGoddess is ERC721A, Ownable, ReentrancyGuard{
+     | ^ (Relevant source part starts here and spans across multiple lines).
+
+
+
+PharaGoddess._withdraw(address,uint256) (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#2052-2055) sends eth to arbitrary user
+	Dangerous calls:
+	- (sent,None) = account.call{value: amount}() (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#2053)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+PharaGoddess.tokenURI(uint256) (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#2018-2028) calls abi.encodePacked() with multiple dynamic arguments:
+	- string(abi.encodePacked(baseURI,tokenId_.toString(),.json)) (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#2026)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#abi-encodePacked-collision
+
+Reentrancy in PharaGoddess.withdrawFund() (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#2044-2049):
+	External calls:
+	- _withdraw(address(0xd7DDfE7233D872d3600549b570b3631604aA5ffF),ethFund) (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#2047)
+		- (sent,None) = account.call{value: amount}() (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#2053)
+	State variables written after the call(s):
+	- ethFund = 0 (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#2048)
+	PharaGoddess.ethFund (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#1893) can be used in cross function reentrancies:
+	- PharaGoddess.withdrawFund() (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#2044-2049)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+Reentrancy in ERC721A._mint(address,uint256,bytes,bool) (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#1436-1476):
+	External calls:
+	- require(bool,string)(_checkOnERC721Received(address(0),to,updatedIndex,_data),ERC721A: transfer to non ERC721Receiver implementer) (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#1463-1466)
+		- retval = IERC721Receiver(to).onERC721Received(_msgSender(),from,tokenId,_data) (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#1565-1575)
+	State variables written after the call(s):
+	- currentIndex = updatedIndex (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#1472)
+	ERC721A.currentIndex (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#1160) can be used in cross function reentrancies:
+	- ERC721A._exists(uint256) (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#1400-1402)
+	- ERC721A.totalSupply() (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#1189-1191)
+Reentrancy in PharaGoddess.presaleMint(uint256,uint8,bytes32,bytes32) (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#1978-2000):
+	External calls:
+	- _safeMint(msg.sender,number) (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#1990)
+		- retval = IERC721Receiver(to).onERC721Received(_msgSender(),from,tokenId,_data) (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#1565-1575)
+	State variables written after the call(s):
+	- mintedAmountPreSale1 += number (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#1994)
+	PharaGoddess.mintedAmountPreSale1 (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#1854) can be used in cross function reentrancies:
+	- PharaGoddess.mintedAmountPreSale1 (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#1854)
+	- mintedAmountPreSale2 += number (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#1996)
+	PharaGoddess.mintedAmountPreSale2 (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#1855) can be used in cross function reentrancies:
+	- PharaGoddess.mintedAmountPreSale2 (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#1855)
+	- mintsPerAddressPreSale[msg.sender] += number (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#1992)
+	PharaGoddess.mintsPerAddressPreSale (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#1882) can be used in cross function reentrancies:
+	- PharaGoddess.mintsPerAddressPreSale (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#1882)
+Reentrancy in PharaGoddess.publicSaleMint(uint256) (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#2003-2016):
+	External calls:
+	- _safeMint(msg.sender,number) (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#2011)
+		- retval = IERC721Receiver(to).onERC721Received(_msgSender(),from,tokenId,_data) (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#1565-1575)
+	State variables written after the call(s):
+	- mintedAmountPublicSale += number (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#2013)
+	PharaGoddess.mintedAmountPublicSale (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#1856) can be used in cross function reentrancies:
+	- PharaGoddess.mintedAmountPublicSale (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#1856)
+	- mintsPerAddressPublicSale[msg.sender] += number (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#2012)
+	PharaGoddess.mintsPerAddressPublicSale (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#1883) can be used in cross function reentrancies:
+	- PharaGoddess.mintsPerAddressPublicSale (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#1883)
+Reentrancy in PharaGoddess.reservedMint(uint256,address) (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#2031-2036):
+	External calls:
+	- _safeMint(recipient,number) (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#2033)
+		- retval = IERC721Receiver(to).onERC721Received(_msgSender(),from,tokenId,_data) (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#1565-1575)
+	State variables written after the call(s):
+	- _reservedMints += number (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#2034)
+	PharaGoddess._reservedMints (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#1864) can be used in cross function reentrancies:
+	- PharaGoddess.reservedMint(uint256,address) (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#2031-2036)
+	- PharaGoddess.reservedMintsLeft() (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#2063-2065)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+ERC721A.ownershipOf(uint256) (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#1259-1272) contains a tautology or contradiction:
+	- curr >= 0 (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#1263)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#tautology-or-contradiction
+
+ERC721A.tokenOfOwnerByIndex(address,uint256).tokenIdsIdx (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#1209) is a local variable never initialized
+ERC721A.tokenOfOwnerByIndex(address,uint256).currOwnershipAddr (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#1210) is a local variable never initialized
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#uninitialized-local-variables
+
+PharaGoddess.switchToPreSale1(uint256,uint256) (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#1932-1936) should emit an event for: 
+	- mintCostPreSale1 = price (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#1934) 
+PharaGoddess.switchToPreSale2(uint256,uint256) (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#1938-1942) should emit an event for: 
+	- mintCostPreSale2 = price (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#1940) 
+PharaGoddess.switchToPublicSale(uint256,uint256) (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#1944-1948) should emit an event for: 
+	- mintCostPublicSale = price (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#1946) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+PharaGoddess.changeDummy(address)._dummy (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#2058) lacks a zero-check on :
+		- dummy = _dummy (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#2059)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in PharaGoddess.presaleMint(uint256,uint8,bytes32,bytes32) (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#1978-2000):
+	External calls:
+	- _safeMint(msg.sender,number) (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#1990)
+		- retval = IERC721Receiver(to).onERC721Received(_msgSender(),from,tokenId,_data) (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#1565-1575)
+	State variables written after the call(s):
+	- ethFund += msg.value (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#1999)
+Reentrancy in PharaGoddess.publicSaleMint(uint256) (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#2003-2016):
+	External calls:
+	- _safeMint(msg.sender,number) (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#2011)
+		- retval = IERC721Receiver(to).onERC721Received(_msgSender(),from,tokenId,_data) (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#1565-1575)
+	State variables written after the call(s):
+	- ethFund += msg.value (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#2015)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in ERC721A._mint(address,uint256,bytes,bool) (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#1436-1476):
+	External calls:
+	- require(bool,string)(_checkOnERC721Received(address(0),to,updatedIndex,_data),ERC721A: transfer to non ERC721Receiver implementer) (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#1463-1466)
+		- retval = IERC721Receiver(to).onERC721Received(_msgSender(),from,tokenId,_data) (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#1565-1575)
+	Event emitted after the call(s):
+	- Transfer(address(0),to,updatedIndex) (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#1461)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+Address.isContract(address) (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#195-205) uses assembly
+	- INLINE ASM (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#201-203)
+Address.verifyCallResult(bool,bytes,string) (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#364-384) uses assembly
+	- INLINE ASM (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#376-379)
+ERC721._checkOnERC721Received(address,address,uint256,bytes) (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#1000-1021) uses assembly
+	- INLINE ASM (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#1013-1015)
+ERC721A._checkOnERC721Received(address,address,uint256,bytes) (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#1558-1579) uses assembly
+	- INLINE ASM (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#1571-1573)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#assembly-usage
+
+PharaGoddess.tokenURI(uint256) (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#2018-2028) compares to a boolean constant:
+	-revealed == false (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#2021)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#boolean-equality
+
+2 different versions of Solidity are used:
+	- Version constraint ^0.8.9 is used by:
+		-^0.8.9 (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#4)
+		-^0.8.9 (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#73)
+		-^0.8.9 (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#99)
+		-^0.8.9 (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#172)
+		-^0.8.9 (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#389)
+		-^0.8.9 (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#418)
+		-^0.8.9 (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#445)
+		-^0.8.9 (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#475)
+		-^0.8.9 (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#619)
+		-^0.8.9 (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#1044)
+		-^0.8.9 (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#1106)
+		-^0.8.9 (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#1134)
+	- Version constraint >=0.8.9 is used by:
+		->=0.8.9 (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#644)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#different-pragma-directives-are-used
+
+Context._msgData() (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#90-92) is never used and should be removed
+ERC721._baseURI() (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#735-737) is never used and should be removed
+ERC721._burn(uint256) (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#935-947) is never used and should be removed
+ERC721._mint(address,uint256) (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#913-923) is never used and should be removed
+ERC721._safeMint(address,uint256) (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#881-883) is never used and should be removed
+ERC721._safeMint(address,uint256,bytes) (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#889-899) is never used and should be removed
+ERC721A._baseURI() (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#1310-1312) is never used and should be removed
+ERC721A._numberMinted(address) (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#1250-1253) is never used and should be removed
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dead-code
+
+Version constraint ^0.8.9 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- VerbatimInvalidDeduplication
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation.
+It is used by:
+	- ^0.8.9 (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#4)
+	- ^0.8.9 (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#73)
+	- ^0.8.9 (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#99)
+	- ^0.8.9 (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#172)
+	- ^0.8.9 (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#389)
+	- ^0.8.9 (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#418)
+	- ^0.8.9 (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#445)
+	- ^0.8.9 (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#475)
+	- ^0.8.9 (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#619)
+	- ^0.8.9 (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#1044)
+	- ^0.8.9 (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#1106)
+	- ^0.8.9 (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#1134)
+Version constraint >=0.8.9 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- VerbatimInvalidDeduplication
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation.
+It is used by:
+	- >=0.8.9 (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#644)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in Address.sendValue(address,uint256) (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#223-228):
+	- (success,None) = recipient.call{value: amount}() (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#226)
+Low level call in Address.functionCallWithValue(address,bytes,uint256,string) (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#291-302):
+	- (success,returndata) = target.call{value: value}(data) (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#300)
+Low level call in Address.functionStaticCall(address,bytes,string) (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#320-329):
+	- (success,returndata) = target.staticcall(data) (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#327)
+Low level call in Address.functionDelegateCall(address,bytes,string) (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#347-356):
+	- (success,returndata) = target.delegatecall(data) (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#354)
+Low level call in PharaGoddess._withdraw(address,uint256) (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#2052-2055):
+	- (sent,None) = account.call{value: amount}() (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#2053)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Parameter ERC721.safeTransferFrom(address,address,uint256,bytes)._data (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#812) is not in mixedCase
+Variable ERC721.id_to_URI (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#672) is not in mixedCase
+Parameter ERC721A.safeTransferFrom(address,address,uint256,bytes)._data (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#1384) is not in mixedCase
+Parameter PharaGoddess.isValidAccessMessage(address,uint8,bytes32,bytes32)._add (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#1972) is not in mixedCase
+Parameter PharaGoddess.isValidAccessMessage(address,uint8,bytes32,bytes32)._v (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#1972) is not in mixedCase
+Parameter PharaGoddess.isValidAccessMessage(address,uint8,bytes32,bytes32)._r (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#1972) is not in mixedCase
+Parameter PharaGoddess.isValidAccessMessage(address,uint8,bytes32,bytes32)._s (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#1972) is not in mixedCase
+Parameter PharaGoddess.presaleMint(uint256,uint8,bytes32,bytes32)._v (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#1978) is not in mixedCase
+Parameter PharaGoddess.presaleMint(uint256,uint8,bytes32,bytes32)._r (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#1978) is not in mixedCase
+Parameter PharaGoddess.presaleMint(uint256,uint8,bytes32,bytes32)._s (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#1978) is not in mixedCase
+Parameter PharaGoddess.changeDummy(address)._dummy (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#2058) is not in mixedCase
+Variable PharaGoddess.PRECISION_FACTOR (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#1897) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+ERC721.id_to_URI (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#672) is never used in ERC721 (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#649-1042)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-state-variable
+
+PharaGoddess.PRECISION_FACTOR (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#1897) should be constant 
+PharaGoddess.maxReservedMints (0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol#1867) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+./0x147aa9ada01b70c4c8c8b89b06afe767908aced7.sol analyzed (15 contracts with 94 detectors), 53 result(s) found
+
+real	0m3.529s
+user	0m3.325s
+sys	0m0.205s

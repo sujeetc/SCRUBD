@@ -1,0 +1,131 @@
+'solc --version' running
+'solc ./0x0f6423618083e15989be7e4208c222cf759f99fb.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+Reentrancy in TradableErc20.makeLiquidity() (0x0f6423618083e15989be7e4208c222cf759f99fb.sol#253-276):
+	External calls:
+	- pair = IUniswapV2Factory(_uniswapV2Router.factory()).createPair(address(this),_uniswapV2Router.WETH()) (0x0f6423618083e15989be7e4208c222cf759f99fb.sol#255-258)
+	- _uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),_totalSupply,0,0,msg.sender,block.timestamp) (0x0f6423618083e15989be7e4208c222cf759f99fb.sol#262-269)
+	External calls sending eth:
+	- _uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),_totalSupply,0,0,msg.sender,block.timestamp) (0x0f6423618083e15989be7e4208c222cf759f99fb.sol#262-269)
+	State variables written after the call(s):
+	- uniswapV2Pair = pair (0x0f6423618083e15989be7e4208c222cf759f99fb.sol#271)
+	TradableErc20.uniswapV2Pair (0x0f6423618083e15989be7e4208c222cf759f99fb.sol#221) can be used in cross function reentrancies:
+	- TradableErc20._transfer(address,address,uint256) (0x0f6423618083e15989be7e4208c222cf759f99fb.sol#278-332)
+	- TradableErc20.getSellBurnCount(uint256) (0x0f6423618083e15989be7e4208c222cf759f99fb.sol#341-351)
+	- TradableErc20.makeLiquidity() (0x0f6423618083e15989be7e4208c222cf759f99fb.sol#253-276)
+	- TradableErc20.uniswapV2Pair (0x0f6423618083e15989be7e4208c222cf759f99fb.sol#221)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+TradableErc20._transfer(address,address,uint256) (0x0f6423618083e15989be7e4208c222cf759f99fb.sol#278-332) performs a multiplication on the result of a division:
+	- incrementCount = (block.timestamp - incrementTime) / (maxBuyIncrementMinutesTimer * 60) (0x0f6423618083e15989be7e4208c222cf759f99fb.sol#288-289)
+	- maxBuy += maxBuyIncrementValue * incrementCount (0x0f6423618083e15989be7e4208c222cf759f99fb.sol#292)
+TradableErc20.getMaxBuy() (0x0f6423618083e15989be7e4208c222cf759f99fb.sol#377-383) performs a multiplication on the result of a division:
+	- incrementCount = (block.timestamp - incrementTime) / (maxBuyIncrementMinutesTimer * 60) (0x0f6423618083e15989be7e4208c222cf759f99fb.sol#378-379)
+	- maxBuy + maxBuyIncrementValue * incrementCount (0x0f6423618083e15989be7e4208c222cf759f99fb.sol#382)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+TradableErc20.getMaxBuy() (0x0f6423618083e15989be7e4208c222cf759f99fb.sol#377-383) uses a dangerous strict equality:
+	- incrementCount == 0 (0x0f6423618083e15989be7e4208c222cf759f99fb.sol#380)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-strict-equalities
+
+Reentrancy in TradableErc20._transfer(address,address,uint256) (0x0f6423618083e15989be7e4208c222cf759f99fb.sol#278-332):
+	External calls:
+	- swapTokensForEth(swapCount) (0x0f6423618083e15989be7e4208c222cf759f99fb.sol#323)
+		- _uniswapV2Router.swapExactTokensForETH(tokenAmount,0,path,address(this),block.timestamp) (0x0f6423618083e15989be7e4208c222cf759f99fb.sol#394-400)
+	State variables written after the call(s):
+	- super._transfer(from,to,amount) (0x0f6423618083e15989be7e4208c222cf759f99fb.sol#330)
+		- _balances[from] = senderBalance - amount (0x0f6423618083e15989be7e4208c222cf759f99fb.sol#99)
+		- _balances[to] += amount (0x0f6423618083e15989be7e4208c222cf759f99fb.sol#101)
+	ERC20._balances (0x0f6423618083e15989be7e4208c222cf759f99fb.sol#47) can be used in cross function reentrancies:
+	- TradableErc20._getFeeBuy(uint256) (0x0f6423618083e15989be7e4208c222cf759f99fb.sol#334-339)
+	- TradableErc20._getFeeSell(uint256,address) (0x0f6423618083e15989be7e4208c222cf759f99fb.sol#353-367)
+	- TradableErc20._transfer(address,address,uint256) (0x0f6423618083e15989be7e4208c222cf759f99fb.sol#278-332)
+	- ERC20._transfer(address,address,uint256) (0x0f6423618083e15989be7e4208c222cf759f99fb.sol#89-104)
+	- ERC20.balanceOf(address) (0x0f6423618083e15989be7e4208c222cf759f99fb.sol#71-78)
+	- TradableErc20.getSellBurnCount(uint256) (0x0f6423618083e15989be7e4208c222cf759f99fb.sol#341-351)
+	- TradableErc20.makeLiquidity() (0x0f6423618083e15989be7e4208c222cf759f99fb.sol#253-276)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+TradableErc20.makeLiquidity() (0x0f6423618083e15989be7e4208c222cf759f99fb.sol#253-276) ignores return value by _uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),_totalSupply,0,0,msg.sender,block.timestamp) (0x0f6423618083e15989be7e4208c222cf759f99fb.sol#262-269)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+theburningtoken.setMaxContractLiquidityPercent(uint256) (0x0f6423618083e15989be7e4208c222cf759f99fb.sol#463-468) should emit an event for: 
+	- maxContractLiquidityPercent = newMaxLiquidityPercent (0x0f6423618083e15989be7e4208c222cf759f99fb.sol#467) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+theburningtoken.transferOwnership(address).newOwner (0x0f6423618083e15989be7e4208c222cf759f99fb.sol#478) lacks a zero-check on :
+		- _owner = newOwner (0x0f6423618083e15989be7e4208c222cf759f99fb.sol#479)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in TradableErc20.makeLiquidity() (0x0f6423618083e15989be7e4208c222cf759f99fb.sol#253-276):
+	External calls:
+	- pair = IUniswapV2Factory(_uniswapV2Router.factory()).createPair(address(this),_uniswapV2Router.WETH()) (0x0f6423618083e15989be7e4208c222cf759f99fb.sol#255-258)
+	State variables written after the call(s):
+	- _allowances[address(this)][address(_uniswapV2Router)] = _totalSupply (0x0f6423618083e15989be7e4208c222cf759f99fb.sol#260)
+	- _balances[address(this)] = _totalSupply (0x0f6423618083e15989be7e4208c222cf759f99fb.sol#259)
+	- _isExcludedFromFee[pair] = true (0x0f6423618083e15989be7e4208c222cf759f99fb.sol#261)
+Reentrancy in TradableErc20.makeLiquidity() (0x0f6423618083e15989be7e4208c222cf759f99fb.sol#253-276):
+	External calls:
+	- pair = IUniswapV2Factory(_uniswapV2Router.factory()).createPair(address(this),_uniswapV2Router.WETH()) (0x0f6423618083e15989be7e4208c222cf759f99fb.sol#255-258)
+	- _uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),_totalSupply,0,0,msg.sender,block.timestamp) (0x0f6423618083e15989be7e4208c222cf759f99fb.sol#262-269)
+	External calls sending eth:
+	- _uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),_totalSupply,0,0,msg.sender,block.timestamp) (0x0f6423618083e15989be7e4208c222cf759f99fb.sol#262-269)
+	State variables written after the call(s):
+	- incrementTime = block.timestamp (0x0f6423618083e15989be7e4208c222cf759f99fb.sol#274)
+	- maxBuyIncrementValue = (_totalSupply * maxByyIncrementPercentil) / 1000 (0x0f6423618083e15989be7e4208c222cf759f99fb.sol#275)
+	- tradingEnable = true (0x0f6423618083e15989be7e4208c222cf759f99fb.sol#272)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in TradableErc20._transfer(address,address,uint256) (0x0f6423618083e15989be7e4208c222cf759f99fb.sol#278-332):
+	External calls:
+	- swapTokensForEth(swapCount) (0x0f6423618083e15989be7e4208c222cf759f99fb.sol#323)
+		- _uniswapV2Router.swapExactTokensForETH(tokenAmount,0,path,address(this),block.timestamp) (0x0f6423618083e15989be7e4208c222cf759f99fb.sol#394-400)
+	Event emitted after the call(s):
+	- Transfer(from,to,amount) (0x0f6423618083e15989be7e4208c222cf759f99fb.sol#102)
+		- super._transfer(from,to,amount) (0x0f6423618083e15989be7e4208c222cf759f99fb.sol#330)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+TradableErc20._transfer(address,address,uint256) (0x0f6423618083e15989be7e4208c222cf759f99fb.sol#278-332) uses timestamp for comparisons
+	Dangerous comparisons:
+	- incrementCount > 0 (0x0f6423618083e15989be7e4208c222cf759f99fb.sol#290)
+	- maxBuy < _totalSupply (0x0f6423618083e15989be7e4208c222cf759f99fb.sol#291)
+	- require(bool)(_balances[to] + amount <= maxBuy) (0x0f6423618083e15989be7e4208c222cf759f99fb.sol#297)
+TradableErc20.getMaxBuy() (0x0f6423618083e15989be7e4208c222cf759f99fb.sol#377-383) uses timestamp for comparisons
+	Dangerous comparisons:
+	- incrementCount == 0 (0x0f6423618083e15989be7e4208c222cf759f99fb.sol#380)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+ERC20._burn(address,uint256) (0x0f6423618083e15989be7e4208c222cf759f99fb.sol#149-160) is never used and should be removed
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dead-code
+
+Version constraint ^0.8.7 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- VerbatimInvalidDeduplication
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- SignedImmutables.
+It is used by:
+	- ^0.8.7 (0x0f6423618083e15989be7e4208c222cf759f99fb.sol#10)
+	- ^0.8.7 (0x0f6423618083e15989be7e4208c222cf759f99fb.sol#175)
+	- ^0.8.7 (0x0f6423618083e15989be7e4208c222cf759f99fb.sol#208)
+	- ^0.8.7 (0x0f6423618083e15989be7e4208c222cf759f99fb.sol#441)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Constant ERC20._decimals (0x0f6423618083e15989be7e4208c222cf759f99fb.sol#46) is not in UPPER_CASE_WITH_UNDERSCORES
+Function IUniswapV2Router02.WETH() (0x0f6423618083e15989be7e4208c222cf759f99fb.sol#189) is not in mixedCase
+Constant TradableErc20._uniswapV2Router (0x0f6423618083e15989be7e4208c222cf759f99fb.sol#219-220) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant TradableErc20.maxBuyIncrementMinutesTimer (0x0f6423618083e15989be7e4208c222cf759f99fb.sol#229) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant TradableErc20.maxByyIncrementPercentil (0x0f6423618083e15989be7e4208c222cf759f99fb.sol#230) is not in UPPER_CASE_WITH_UNDERSCORES
+Contract theburningtoken (0x0f6423618083e15989be7e4208c222cf759f99fb.sol#443-482) is not in CapWords
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+theburningtoken._withdrawAddress (0x0f6423618083e15989be7e4208c222cf759f99fb.sol#445-446) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+./0x0f6423618083e15989be7e4208c222cf759f99fb.sol analyzed (6 contracts with 94 detectors), 22 result(s) found
+
+real	0m2.681s
+user	0m2.386s
+sys	0m0.294s

@@ -1,0 +1,244 @@
+'solc --version' running
+'solc ./0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+Reentrancy in PAPE._transfer(address,address,uint256) (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#803-896):
+	External calls:
+	- swapBack() (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#860)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityWallet,block.timestamp) (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#918-925)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#906-912)
+		- (success,None) = address(marketingWallet).call{value: address(this).balance}() (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#969-971)
+	External calls sending eth:
+	- swapBack() (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#860)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityWallet,block.timestamp) (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#918-925)
+		- (success,None) = address(marketingWallet).call{value: address(this).balance}() (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#969-971)
+	State variables written after the call(s):
+	- super._transfer(from,address(this),fees) (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#888)
+		- _balances[from] = fromBalance - amount (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#500)
+		- _balances[to] += amount (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#503)
+	ERC20._balances (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#269) can be used in cross function reentrancies:
+	- ERC20._mint(address,uint256) (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#509-519)
+	- ERC20._transfer(address,address,uint256) (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#489-507)
+	- ERC20.balanceOf(address) (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#331-339)
+	- super._transfer(from,to,amount) (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#894)
+		- _balances[from] = fromBalance - amount (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#500)
+		- _balances[to] += amount (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#503)
+	ERC20._balances (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#269) can be used in cross function reentrancies:
+	- ERC20._mint(address,uint256) (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#509-519)
+	- ERC20._transfer(address,address,uint256) (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#489-507)
+	- ERC20.balanceOf(address) (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#331-339)
+	- swapping = false (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#862)
+	PAPE.swapping (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#608) can be used in cross function reentrancies:
+	- PAPE._transfer(address,address,uint256) (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#803-896)
+	- tokensForLiquidity += (fees * sellLiquidityFee) / sellTotalFees (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#877)
+	PAPE.tokensForLiquidity (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#629) can be used in cross function reentrancies:
+	- PAPE._transfer(address,address,uint256) (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#803-896)
+	- PAPE.swapBack() (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#928-972)
+	- tokensForLiquidity += (fees * buyLiquidityFee) / buyTotalFees (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#883)
+	PAPE.tokensForLiquidity (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#629) can be used in cross function reentrancies:
+	- PAPE._transfer(address,address,uint256) (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#803-896)
+	- PAPE.swapBack() (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#928-972)
+	- tokensForMarketing += (fees * sellMarketingFee) / sellTotalFees (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#878)
+	PAPE.tokensForMarketing (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#628) can be used in cross function reentrancies:
+	- PAPE._transfer(address,address,uint256) (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#803-896)
+	- PAPE.swapBack() (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#928-972)
+	- tokensForMarketing += (fees * buyMarketingFee) / buyTotalFees (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#884)
+	PAPE.tokensForMarketing (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#628) can be used in cross function reentrancies:
+	- PAPE._transfer(address,address,uint256) (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#803-896)
+	- PAPE.swapBack() (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#928-972)
+Reentrancy in PAPE.openTrading() (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#687-713):
+	External calls:
+	- uniswapV2Pair = IUniswapV2Factory(uniswapV2Router.factory()).createPair(address(this),uniswapV2Router.WETH()) (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#690-693)
+	- IERC20(uniswapV2Pair).approve(address(uniswapV2Router),type()(uint256).max) (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#695-698)
+	- uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,_msgSender(),block.timestamp) (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#703-710)
+	External calls sending eth:
+	- uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,_msgSender(),block.timestamp) (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#703-710)
+	State variables written after the call(s):
+	- tradingActive = true (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#711)
+	PAPE.tradingActive (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#617) can be used in cross function reentrancies:
+	- PAPE._transfer(address,address,uint256) (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#803-896)
+	- PAPE.openTrading() (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#687-713)
+	- PAPE.tradingActive (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#617)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+PAPE.withdrawStuckTokens(address) (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#789-793) ignores return value by IERC20(tkn).transfer(msg.sender,amount) (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#792)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+PAPE._transfer(address,address,uint256) (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#803-896) performs a multiplication on the result of a division:
+	- fees = amount * buyTotalFees / 100 (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#882)
+	- tokensForLiquidity += (fees * buyLiquidityFee) / buyTotalFees (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#883)
+PAPE._transfer(address,address,uint256) (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#803-896) performs a multiplication on the result of a division:
+	- fees = amount * buyTotalFees / 100 (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#882)
+	- tokensForMarketing += (fees * buyMarketingFee) / buyTotalFees (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#884)
+PAPE._transfer(address,address,uint256) (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#803-896) performs a multiplication on the result of a division:
+	- fees = amount * sellTotalFees / 100 (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#876)
+	- tokensForLiquidity += (fees * sellLiquidityFee) / sellTotalFees (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#877)
+PAPE._transfer(address,address,uint256) (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#803-896) performs a multiplication on the result of a division:
+	- fees = amount * sellTotalFees / 100 (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#876)
+	- tokensForMarketing += (fees * sellMarketingFee) / sellTotalFees (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#878)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+Reentrancy in PAPE.swapBack() (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#928-972):
+	External calls:
+	- swapTokensForEth(amountToSwapForETH) (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#949)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#906-912)
+	State variables written after the call(s):
+	- tokensForLiquidity = 0 (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#957)
+	PAPE.tokensForLiquidity (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#629) can be used in cross function reentrancies:
+	- PAPE._transfer(address,address,uint256) (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#803-896)
+	- PAPE.swapBack() (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#928-972)
+	- tokensForMarketing = 0 (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#958)
+	PAPE.tokensForMarketing (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#628) can be used in cross function reentrancies:
+	- PAPE._transfer(address,address,uint256) (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#803-896)
+	- PAPE.swapBack() (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#928-972)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+PAPE.openTrading() (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#687-713) ignores return value by IERC20(uniswapV2Pair).approve(address(uniswapV2Router),type()(uint256).max) (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#695-698)
+PAPE.openTrading() (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#687-713) ignores return value by uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,_msgSender(),block.timestamp) (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#703-710)
+PAPE.addLiquidity(uint256,uint256) (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#915-926) ignores return value by uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityWallet,block.timestamp) (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#918-925)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+PAPE.constructor().totalSupply (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#646) shadows:
+	- ERC20.totalSupply() (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#324-326) (function)
+	- IERC20.totalSupply() (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#150) (function)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#local-variable-shadowing
+
+PAPE.updateSwapTokensAtAmount(uint256) (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#715-724) should emit an event for: 
+	- swapTokensAtAmount = newAmount (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#722) 
+PAPE.updateMaxWalletAndTxnAmount(uint256,uint256) (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#726-734) should emit an event for: 
+	- maxWallet = newMaxWalletNum (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#732) 
+	- maxTransactionAmount = newTxnNum (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#733) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+Reentrancy in PAPE._transfer(address,address,uint256) (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#803-896):
+	External calls:
+	- swapBack() (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#860)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityWallet,block.timestamp) (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#918-925)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#906-912)
+		- (success,None) = address(marketingWallet).call{value: address(this).balance}() (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#969-971)
+	External calls sending eth:
+	- swapBack() (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#860)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityWallet,block.timestamp) (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#918-925)
+		- (success,None) = address(marketingWallet).call{value: address(this).balance}() (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#969-971)
+	State variables written after the call(s):
+	- sellTotalFees = previousFee (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#895)
+Reentrancy in PAPE.openTrading() (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#687-713):
+	External calls:
+	- uniswapV2Pair = IUniswapV2Factory(uniswapV2Router.factory()).createPair(address(this),uniswapV2Router.WETH()) (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#690-693)
+	State variables written after the call(s):
+	- _approve(address(this),address(uniswapV2Pair),type()(uint256).max) (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#694)
+		- _allowances[owner][spender] = amount (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#538)
+Reentrancy in PAPE.openTrading() (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#687-713):
+	External calls:
+	- uniswapV2Pair = IUniswapV2Factory(uniswapV2Router.factory()).createPair(address(this),uniswapV2Router.WETH()) (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#690-693)
+	- IERC20(uniswapV2Pair).approve(address(uniswapV2Router),type()(uint256).max) (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#695-698)
+	State variables written after the call(s):
+	- excludeFromMaxTransaction(address(uniswapV2Pair),true) (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#701)
+		- _isExcludedMaxTransactionAmount[updAds] = isEx (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#738)
+	- _setAutomatedMarketMakerPair(address(uniswapV2Pair),true) (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#700)
+		- automatedMarketMakerPairs[pair] = value (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#796)
+Reentrancy in PAPE.openTrading() (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#687-713):
+	External calls:
+	- uniswapV2Pair = IUniswapV2Factory(uniswapV2Router.factory()).createPair(address(this),uniswapV2Router.WETH()) (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#690-693)
+	- IERC20(uniswapV2Pair).approve(address(uniswapV2Router),type()(uint256).max) (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#695-698)
+	- uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,_msgSender(),block.timestamp) (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#703-710)
+	External calls sending eth:
+	- uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,_msgSender(),block.timestamp) (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#703-710)
+	State variables written after the call(s):
+	- swapEnabled = true (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#712)
+Reentrancy in PAPE.swapBack() (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#928-972):
+	External calls:
+	- swapTokensForEth(amountToSwapForETH) (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#949)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#906-912)
+	- addLiquidity(liquidityTokens,ethForLiquidity) (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#961)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityWallet,block.timestamp) (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#918-925)
+	External calls sending eth:
+	- addLiquidity(liquidityTokens,ethForLiquidity) (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#961)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityWallet,block.timestamp) (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#918-925)
+	State variables written after the call(s):
+	- addLiquidity(liquidityTokens,ethForLiquidity) (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#961)
+		- _allowances[owner][spender] = amount (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#538)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in PAPE._transfer(address,address,uint256) (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#803-896):
+	External calls:
+	- swapBack() (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#860)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityWallet,block.timestamp) (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#918-925)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#906-912)
+		- (success,None) = address(marketingWallet).call{value: address(this).balance}() (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#969-971)
+	External calls sending eth:
+	- swapBack() (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#860)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityWallet,block.timestamp) (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#918-925)
+		- (success,None) = address(marketingWallet).call{value: address(this).balance}() (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#969-971)
+	Event emitted after the call(s):
+	- Transfer(from,to,amount) (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#506)
+		- super._transfer(from,to,amount) (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#894)
+	- Transfer(from,to,amount) (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#506)
+		- super._transfer(from,address(this),fees) (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#888)
+Reentrancy in PAPE.openTrading() (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#687-713):
+	External calls:
+	- uniswapV2Pair = IUniswapV2Factory(uniswapV2Router.factory()).createPair(address(this),uniswapV2Router.WETH()) (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#690-693)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#539)
+		- _approve(address(this),address(uniswapV2Pair),type()(uint256).max) (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#694)
+Reentrancy in PAPE.swapBack() (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#928-972):
+	External calls:
+	- swapTokensForEth(amountToSwapForETH) (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#949)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#906-912)
+	- addLiquidity(liquidityTokens,ethForLiquidity) (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#961)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityWallet,block.timestamp) (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#918-925)
+	External calls sending eth:
+	- addLiquidity(liquidityTokens,ethForLiquidity) (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#961)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityWallet,block.timestamp) (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#918-925)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#539)
+		- addLiquidity(liquidityTokens,ethForLiquidity) (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#961)
+	- SwapAndLiquify(amountToSwapForETH,ethForLiquidity,tokensForLiquidity) (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#962-966)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+PAPE._transfer(address,address,uint256) (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#803-896) has a high cyclomatic complexity (12).
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#cyclomatic-complexity
+
+Context._msgData() (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#29-31) is never used and should be removed
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dead-code
+
+Version constraint ^0.8.9 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- VerbatimInvalidDeduplication
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation.
+It is used by:
+	- ^0.8.9 (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#6)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in PAPE.withdrawStuckETH() (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#782-787):
+	- (success,None) = address(msg.sender).call{value: address(this).balance}() (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#784-786)
+Low level call in PAPE.swapBack() (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#928-972):
+	- (success,None) = address(marketingWallet).call{value: address(this).balance}() (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#969-971)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Function IUniswapV2Router01.WETH() (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#574) is not in mixedCase
+Parameter PAPE.automateBuyFees(uint256,uint256,uint256,uint256)._buyMarketingFee (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#742) is not in mixedCase
+Parameter PAPE.automateBuyFees(uint256,uint256,uint256,uint256)._buyLiquidityFee (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#743) is not in mixedCase
+Parameter PAPE.automateBuyFees(uint256,uint256,uint256,uint256)._sellMarketingFee (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#744) is not in mixedCase
+Parameter PAPE.automateBuyFees(uint256,uint256,uint256,uint256)._sellLiquidityFee (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#745) is not in mixedCase
+Parameter PAPE.updateBuyFees(uint256,uint256)._marketingFee (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#758) is not in mixedCase
+Parameter PAPE.updateBuyFees(uint256,uint256)._liquidityFee (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#759) is not in mixedCase
+Parameter PAPE.updateSellFees(uint256,uint256)._marketingFee (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#768) is not in mixedCase
+Parameter PAPE.updateSellFees(uint256,uint256)._liquidityFee (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#769) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+PAPE.updateSwapTokensAtAmount(uint256) (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#715-724) uses literals with too many digits:
+	- require(bool)(newAmount >= (totalSupply() * 1) / 100000) (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#720)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+PAPE.liquidityWallet (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#611) should be immutable 
+PAPE.marketingWallet (0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol#610) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+./0x214a8abb5fd89d3605c6cadb178f1748c36f6b8d.sol analyzed (9 contracts with 94 detectors), 39 result(s) found
+
+real	0m3.091s
+user	0m2.802s
+sys	0m0.291s

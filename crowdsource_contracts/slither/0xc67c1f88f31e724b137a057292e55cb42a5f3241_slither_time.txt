@@ -1,0 +1,78 @@
+'solc --version' running
+'solc ./0xc67c1f88f31e724b137a057292e55cb42a5f3241.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+token (0xc67c1f88f31e724b137a057292e55cb42a5f3241.sol#3-5) has incorrect ERC20 function interface:token.transfer(address,uint256) (0xc67c1f88f31e724b137a057292e55cb42a5f3241.sol#4)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-erc20-interface
+
+Crowdsale.Crowdsale(address,uint256,address).teamMultisig (0xc67c1f88f31e724b137a057292e55cb42a5f3241.sol#25) lacks a zero-check on :
+		- beneficiary = teamMultisig (0xc67c1f88f31e724b137a057292e55cb42a5f3241.sol#29)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Modifier Crowdsale.afterDeadline() (0xc67c1f88f31e724b137a057292e55cb42a5f3241.sol#56) does not always execute _; or revert
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-modifier
+
+Reentrancy in Crowdsale.fallback() (0xc67c1f88f31e724b137a057292e55cb42a5f3241.sol#39-54):
+	External calls:
+	- tokenReward.transfer(msg.sender,amount * 10000) (0xc67c1f88f31e724b137a057292e55cb42a5f3241.sol#44)
+	External calls sending eth:
+	- beneficiary.send(amount) (0xc67c1f88f31e724b137a057292e55cb42a5f3241.sol#46)
+	State variables written after the call(s):
+	- amountLeft += amountLeft (0xc67c1f88f31e724b137a057292e55cb42a5f3241.sol#52)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in Crowdsale.fallback() (0xc67c1f88f31e724b137a057292e55cb42a5f3241.sol#39-54):
+	External calls:
+	- tokenReward.transfer(msg.sender,amount * 10000) (0xc67c1f88f31e724b137a057292e55cb42a5f3241.sol#44)
+	Event emitted after the call(s):
+	- FundTransfer(msg.sender,amount,true) (0xc67c1f88f31e724b137a057292e55cb42a5f3241.sol#45)
+Reentrancy in Crowdsale.fallback() (0xc67c1f88f31e724b137a057292e55cb42a5f3241.sol#39-54):
+	External calls:
+	- tokenReward.transfer(msg.sender,amount * 10000) (0xc67c1f88f31e724b137a057292e55cb42a5f3241.sol#44)
+	External calls sending eth:
+	- beneficiary.send(amount) (0xc67c1f88f31e724b137a057292e55cb42a5f3241.sol#46)
+	Event emitted after the call(s):
+	- FundTransfer(beneficiary,amount,false) (0xc67c1f88f31e724b137a057292e55cb42a5f3241.sol#48)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+Version constraint ^0.4.16 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ExpExponentCleanup
+	- NestedArrayFunctionCallDecoder
+	- ZeroFunctionSelector.
+It is used by:
+	- ^0.4.16 (0xc67c1f88f31e724b137a057292e55cb42a5f3241.sol#1)
+solc-0.4.16 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Contract token (0xc67c1f88f31e724b137a057292e55cb42a5f3241.sol#3-5) is not in CapWords
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in Crowdsale.fallback() (0xc67c1f88f31e724b137a057292e55cb42a5f3241.sol#39-54):
+	External calls:
+	- beneficiary.send(amount) (0xc67c1f88f31e724b137a057292e55cb42a5f3241.sol#46)
+	Event emitted after the call(s):
+	- FundTransfer(beneficiary,amount,false) (0xc67c1f88f31e724b137a057292e55cb42a5f3241.sol#48)
+Reentrancy in Crowdsale.safeWithdrawal() (0xc67c1f88f31e724b137a057292e55cb42a5f3241.sol#75-82):
+	External calls:
+	- beneficiary.send(amountLeft) (0xc67c1f88f31e724b137a057292e55cb42a5f3241.sol#77)
+	Event emitted after the call(s):
+	- FundTransfer(beneficiary,amountLeft,false) (0xc67c1f88f31e724b137a057292e55cb42a5f3241.sol#78)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+./0xc67c1f88f31e724b137a057292e55cb42a5f3241.sol analyzed (2 contracts with 94 detectors), 11 result(s) found
+
+real	0m1.451s
+user	0m1.238s
+sys	0m0.215s

@@ -1,0 +1,257 @@
+'solc --version' running
+'solc ./0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+NeverJeet.sendETHToFee(uint256) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#389-392) sends eth to arbitrary user
+	Dangerous calls:
+	- _MarketTax.transfer(amount.div(10).mul(3)) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#390)
+	- _DevTax.transfer(amount.div(10).mul(7)) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#391)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+Reentrancy in NeverJeet._transfer(address,address,uint256) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#314-359):
+	External calls:
+	- swapTokensForEth(contractTokenBalance) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#344)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#380-386)
+	External calls sending eth:
+	- sendETHToFee(address(this).balance) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#348)
+		- _MarketTax.transfer(amount.div(10).mul(3)) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#390)
+		- _DevTax.transfer(amount.div(10).mul(7)) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#391)
+	State variables written after the call(s):
+	- _tokenTransfer(from,to,amount,takeFee) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#358)
+		- _rOwned[address(this)] = _rOwned[address(this)].add(rTeam) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#486)
+		- _rOwned[sender] = _rOwned[sender].sub(rAmount) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#476)
+		- _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#477)
+	NeverJeet._rOwned (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#159) can be used in cross function reentrancies:
+	- NeverJeet._takeTeam(uint256) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#483-487)
+	- NeverJeet._transferStandard(address,address,uint256) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#463-481)
+	- NeverJeet.balanceOf(address) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#227-229)
+	- NeverJeet.constructor(address,address,address) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#198-209)
+	- _tokenTransfer(from,to,amount,takeFee) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#358)
+		- _rTotal = _rTotal.sub(rFee) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#490)
+	NeverJeet._rTotal (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#165) can be used in cross function reentrancies:
+	- NeverJeet._getCurrentSupply() (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#561-566)
+	- NeverJeet._reflectFee(uint256,uint256) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#489-492)
+	- NeverJeet.constructor(address,address,address) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#198-209)
+	- NeverJeet.tokenFromReflection(uint256) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#275-286)
+Reentrancy in NeverJeet.openTrading() (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#394-418):
+	External calls:
+	- uniswapV2Pair = IUniswapV2Factory(_uniswapV2Router.factory()).createPair(address(this),_uniswapV2Router.WETH()) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#400-401)
+	- uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#402-409)
+	External calls sending eth:
+	- uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#402-409)
+	State variables written after the call(s):
+	- tradingOpen = true (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#413)
+	NeverJeet.tradingOpen (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#185) can be used in cross function reentrancies:
+	- NeverJeet.openTrading() (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#394-418)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+NeverJeet.whitelist (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#178) is never initialized. It is used in:
+	- NeverJeet.isWhiteListed(address) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#368-370)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#uninitialized-state-variables
+
+NeverJeet.sendETHToFee(uint256) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#389-392) performs a multiplication on the result of a division:
+	- _MarketTax.transfer(amount.div(10).mul(3)) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#390)
+NeverJeet.sendETHToFee(uint256) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#389-392) performs a multiplication on the result of a division:
+	- _DevTax.transfer(amount.div(10).mul(7)) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#391)
+NeverJeet.manualswapcustom(uint256) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#431-436) performs a multiplication on the result of a division:
+	- swapbalance = contractBalance.div(10 ** 5).mul(percentage) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#434)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+NeverJeet._setSellTax(uint256) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#579-582) contains a tautology or contradiction:
+	- require(bool,string)(selltax >= 0 && selltax <= 40,selltax should be in 0 - 40) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#580)
+NeverJeet._setBuyTax(uint256) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#584-587) contains a tautology or contradiction:
+	- require(bool,string)(buytax >= 0 && buytax <= 10,buytax should be in 0 - 10) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#585)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#tautology-or-contradiction
+
+NeverJeet.openTrading() (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#394-418) ignores return value by uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#402-409)
+NeverJeet.openTrading() (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#394-418) ignores return value by IERC20(uniswapV2Pair).approve(address(uniswapV2Router),type()(uint256).max) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#414-417)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+NeverJeet.allowance(address,address).owner (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#240) shadows:
+	- Ownable.owner() (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#100-102) (function)
+NeverJeet._approve(address,address,uint256).owner (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#304) shadows:
+	- Ownable.owner() (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#100-102) (function)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#local-variable-shadowing
+
+NeverJeet._setSellTax(uint256) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#579-582) should emit an event for: 
+	- _sellTax = selltax (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#581) 
+NeverJeet._setBuyTax(uint256) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#584-587) should emit an event for: 
+	- _buytax = buytax (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#586) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+Ownable.constructor().msgSender (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#95) lacks a zero-check on :
+		- _owner = msgSender (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#96)
+NeverJeet.constructor(address,address,address).markettax (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#198) lacks a zero-check on :
+		- _MarketTax = markettax (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#199)
+NeverJeet.constructor(address,address,address).dev (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#198) lacks a zero-check on :
+		- _Dev = dev (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#200)
+NeverJeet.constructor(address,address,address).devtax (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#198) lacks a zero-check on :
+		- _DevTax = devtax (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#201)
+NeverJeet.setMarket(address).account (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#592) lacks a zero-check on :
+		- _MarketTax = account (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#594)
+NeverJeet.setDev(address).account (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#597) lacks a zero-check on :
+		- _Dev = account (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#599)
+NeverJeet.setDevpay(address).account (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#601) lacks a zero-check on :
+		- _DevTax = account (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#603)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in NeverJeet._transfer(address,address,uint256) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#314-359):
+	External calls:
+	- swapTokensForEth(contractTokenBalance) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#344)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#380-386)
+	External calls sending eth:
+	- sendETHToFee(address(this).balance) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#348)
+		- _MarketTax.transfer(amount.div(10).mul(3)) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#390)
+		- _DevTax.transfer(amount.div(10).mul(7)) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#391)
+	State variables written after the call(s):
+	- _tokenTransfer(from,to,amount,takeFee) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#358)
+		- _previousTaxFee = _taxFee (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#291)
+	- _tokenTransfer(from,to,amount,takeFee) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#358)
+		- _previousteamFee = _teamFee (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#292)
+	- _tokenTransfer(from,to,amount,takeFee) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#358)
+		- _tFeeTotal = _tFeeTotal.add(tFee) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#491)
+	- _tokenTransfer(from,to,amount,takeFee) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#358)
+		- _taxFee = _previousTaxFee (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#299)
+		- _taxFee = 0 (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#294)
+	- _tokenTransfer(from,to,amount,takeFee) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#358)
+		- _teamFee = _previousteamFee (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#300)
+		- _teamFee = 0 (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#295)
+Reentrancy in NeverJeet.openTrading() (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#394-418):
+	External calls:
+	- uniswapV2Pair = IUniswapV2Factory(_uniswapV2Router.factory()).createPair(address(this),_uniswapV2Router.WETH()) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#400-401)
+	- uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#402-409)
+	External calls sending eth:
+	- uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#402-409)
+	State variables written after the call(s):
+	- _maxTxAmount = 20000000000 * 10 ** 9 (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#411)
+	- launchBlock = block.number (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#412)
+	- swapEnabled = true (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#410)
+Reentrancy in NeverJeet.transferFrom(address,address,uint256) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#258-273):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#263)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#380-386)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#263)
+		- _MarketTax.transfer(amount.div(10).mul(3)) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#390)
+		- _DevTax.transfer(amount.div(10).mul(7)) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#391)
+	State variables written after the call(s):
+	- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#264-271)
+		- _allowances[owner][spender] = amount (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#310)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in NeverJeet._transfer(address,address,uint256) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#314-359):
+	External calls:
+	- swapTokensForEth(contractTokenBalance) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#344)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#380-386)
+	External calls sending eth:
+	- sendETHToFee(address(this).balance) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#348)
+		- _MarketTax.transfer(amount.div(10).mul(3)) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#390)
+		- _DevTax.transfer(amount.div(10).mul(7)) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#391)
+	Event emitted after the call(s):
+	- Transfer(sender,recipient,tTransferAmount) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#480)
+		- _tokenTransfer(from,to,amount,takeFee) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#358)
+Reentrancy in NeverJeet.transferFrom(address,address,uint256) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#258-273):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#263)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#380-386)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#263)
+		- _MarketTax.transfer(amount.div(10).mul(3)) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#390)
+		- _DevTax.transfer(amount.div(10).mul(7)) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#391)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#311)
+		- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#264-271)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+NeverJeet._previousTaxFee (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#171) is set pre-construction with a non-constant function or state variable:
+	- _taxFee
+NeverJeet._previousteamFee (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#172) is set pre-construction with a non-constant function or state variable:
+	- _teamFee
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#function-initializing-state
+
+Version constraint ^0.8.4 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- SignedImmutables.
+It is used by:
+	- ^0.8.4 (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#3)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Function IUniswapV2Router02.WETH() (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#132) is not in mixedCase
+Function NeverJeet._setSellTax(uint256) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#579-582) is not in mixedCase
+Function NeverJeet._setBuyTax(uint256) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#584-587) is not in mixedCase
+Function NeverJeet._ZeroSellTax() (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#605-608) is not in mixedCase
+Function NeverJeet._ZeroBuyTax() (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#609-612) is not in mixedCase
+Constant NeverJeet._name (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#154) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant NeverJeet._symbol (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#155) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant NeverJeet._decimals (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#156) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant NeverJeet._tTotal (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#164) is not in UPPER_CASE_WITH_UNDERSCORES
+Variable NeverJeet._MarketTax (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#180) is not in mixedCase
+Variable NeverJeet._Dev (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#181) is not in mixedCase
+Variable NeverJeet._DevTax (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#182) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in NeverJeet._transfer(address,address,uint256) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#314-359):
+	External calls:
+	- sendETHToFee(address(this).balance) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#348)
+		- _MarketTax.transfer(amount.div(10).mul(3)) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#390)
+		- _DevTax.transfer(amount.div(10).mul(7)) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#391)
+	State variables written after the call(s):
+	- _tokenTransfer(from,to,amount,takeFee) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#358)
+		- _previousTaxFee = _taxFee (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#291)
+	- _tokenTransfer(from,to,amount,takeFee) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#358)
+		- _previousteamFee = _teamFee (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#292)
+	- _tokenTransfer(from,to,amount,takeFee) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#358)
+		- _rOwned[address(this)] = _rOwned[address(this)].add(rTeam) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#486)
+		- _rOwned[sender] = _rOwned[sender].sub(rAmount) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#476)
+		- _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#477)
+	- _tokenTransfer(from,to,amount,takeFee) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#358)
+		- _rTotal = _rTotal.sub(rFee) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#490)
+	- _tokenTransfer(from,to,amount,takeFee) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#358)
+		- _tFeeTotal = _tFeeTotal.add(tFee) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#491)
+	- _tokenTransfer(from,to,amount,takeFee) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#358)
+		- _taxFee = _previousTaxFee (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#299)
+		- _taxFee = 0 (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#294)
+	- _tokenTransfer(from,to,amount,takeFee) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#358)
+		- _teamFee = _previousteamFee (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#300)
+		- _teamFee = 0 (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#295)
+	Event emitted after the call(s):
+	- Transfer(sender,recipient,tTransferAmount) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#480)
+		- _tokenTransfer(from,to,amount,takeFee) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#358)
+Reentrancy in NeverJeet.transferFrom(address,address,uint256) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#258-273):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#263)
+		- _MarketTax.transfer(amount.div(10).mul(3)) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#390)
+		- _DevTax.transfer(amount.div(10).mul(7)) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#391)
+	State variables written after the call(s):
+	- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#264-271)
+		- _allowances[owner][spender] = amount (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#310)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#311)
+		- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#264-271)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+NeverJeet.openTrading() (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#394-418) uses literals with too many digits:
+	- _maxTxAmount = 20000000000 * 10 ** 9 (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#411)
+NeverJeet.slitherConstructorVariables() (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#151-614) uses literals with too many digits:
+	- _numOfTokensToExchangeForTeam = 500000 * 10 ** 9 (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#173)
+NeverJeet.slitherConstructorVariables() (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#151-614) uses literals with too many digits:
+	- _routermax = 5000000000 * 10 ** 9 (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#174)
+NeverJeet.slitherConstructorConstantVariables() (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#151-614) uses literals with too many digits:
+	- _tTotal = 1000000000000 * 10 ** 9 (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#164)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+NeverJeet._tOwned (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#160) is never used in NeverJeet (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#151-614)
+NeverJeet.cooldown (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#179) is never used in NeverJeet (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#151-614)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-state-variable
+
+NeverJeet._numOfTokensToExchangeForTeam (0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol#173) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+./0x0003ed19f80564745e84b4cc411a7b6be4f0cf31.sol analyzed (7 contracts with 94 detectors), 51 result(s) found
+
+real	0m3.385s
+user	0m3.123s
+sys	0m0.264s

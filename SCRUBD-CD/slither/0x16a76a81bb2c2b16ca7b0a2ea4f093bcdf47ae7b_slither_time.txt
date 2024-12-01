@@ -1,0 +1,362 @@
+'solc --version' running
+'solc ./0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol:
+Warning: Return value of low-level calls not used.
+    --> ./0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol:1178:5:
+     |
+1178 |     _MCCWalletAddress.call{ value: amount.div(2) }('');
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: Return value of low-level calls not used.
+    --> ./0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol:1179:5:
+     |
+1179 |     _marketingWalletAddress.call{ value: amount.div(2) }('');
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+
+MultiChainCapital.sendETHToTeam(uint256) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1177-1180) sends eth to arbitrary user
+	Dangerous calls:
+	- _MCCWalletAddress.call{value: amount.div(2)}() (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1178)
+	- _marketingWalletAddress.call{value: amount.div(2)}() (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1179)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+Reentrancy in MultiChainCapital._transfer(address,address,uint256) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1099-1157):
+	External calls:
+	- swapTokensForEth(contractTokenBalance) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1133)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1168-1174)
+	- sendETHToTeam(address(this).balance) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1137)
+		- _MCCWalletAddress.call{value: amount.div(2)}() (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1178)
+		- _marketingWalletAddress.call{value: amount.div(2)}() (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1179)
+	External calls sending eth:
+	- sendETHToTeam(address(this).balance) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1137)
+		- _MCCWalletAddress.call{value: amount.div(2)}() (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1178)
+		- _marketingWalletAddress.call{value: amount.div(2)}() (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1179)
+	State variables written after the call(s):
+	- _tokenTransfer(sender,recipient,amount,takeFee) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1156)
+		- _rOwned[address(this)] = _rOwned[address(this)].add(rTeam) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1306)
+		- _rOwned[sender] = _rOwned[sender].sub(rAmount) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1232)
+		- _rOwned[sender] = _rOwned[sender].sub(rAmount) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1252)
+		- _rOwned[sender] = _rOwned[sender].sub(rAmount) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1295)
+		- _rOwned[sender] = _rOwned[sender].sub(rAmount) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1274)
+		- _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1233)
+		- _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1275)
+		- _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1254)
+		- _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1297)
+	MultiChainCapital._rOwned (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#820) can be used in cross function reentrancies:
+	- MultiChainCapital._getCurrentSupply() (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1396-1407)
+	- MultiChainCapital._takeTeam(uint256) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1303-1309)
+	- MultiChainCapital._transferBothExcluded(address,address,uint256) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1281-1301)
+	- MultiChainCapital._transferFromExcluded(address,address,uint256) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1260-1279)
+	- MultiChainCapital._transferStandard(address,address,uint256) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1219-1237)
+	- MultiChainCapital._transferToExcluded(address,address,uint256) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1239-1258)
+	- MultiChainCapital.balanceOf(address) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#916-919)
+	- MultiChainCapital.constructor(address,address) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#873-898)
+	- MultiChainCapital.deliver(uint256) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1009-1019)
+	- MultiChainCapital.excludeAccount(address) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1042-1053)
+	- _tokenTransfer(sender,recipient,amount,takeFee) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1156)
+		- _rTotal = _rTotal.sub(rFee) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1312)
+	MultiChainCapital._rTotal (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#831) can be used in cross function reentrancies:
+	- MultiChainCapital._getCurrentSupply() (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1396-1407)
+	- MultiChainCapital._reflectFee(uint256,uint256) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1311-1314)
+	- MultiChainCapital.constructor(address,address) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#873-898)
+	- MultiChainCapital.deliver(uint256) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1009-1019)
+	- MultiChainCapital.tokenFromReflection(uint256) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1036-1040)
+	- _tokenTransfer(sender,recipient,amount,takeFee) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1156)
+		- _tOwned[address(this)] = _tOwned[address(this)].add(tTeam) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1308)
+		- _tOwned[sender] = _tOwned[sender].sub(tAmount) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1294)
+		- _tOwned[sender] = _tOwned[sender].sub(tAmount) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1273)
+		- _tOwned[recipient] = _tOwned[recipient].add(tTransferAmount) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1253)
+		- _tOwned[recipient] = _tOwned[recipient].add(tTransferAmount) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1296)
+	MultiChainCapital._tOwned (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#821) can be used in cross function reentrancies:
+	- MultiChainCapital._getCurrentSupply() (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1396-1407)
+	- MultiChainCapital._takeTeam(uint256) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1303-1309)
+	- MultiChainCapital._transferBothExcluded(address,address,uint256) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1281-1301)
+	- MultiChainCapital._transferFromExcluded(address,address,uint256) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1260-1279)
+	- MultiChainCapital._transferToExcluded(address,address,uint256) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1239-1258)
+	- MultiChainCapital.balanceOf(address) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#916-919)
+	- MultiChainCapital.excludeAccount(address) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1042-1053)
+	- MultiChainCapital.includeAccount(address) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1055-1066)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+MultiChainCapital.sendETHToTeam(uint256) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1177-1180) ignores return value by _MCCWalletAddress.call{value: amount.div(2)}() (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1178)
+MultiChainCapital.sendETHToTeam(uint256) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1177-1180) ignores return value by _marketingWalletAddress.call{value: amount.div(2)}() (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1179)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-low-level-calls
+
+MultiChainCapital.allowance(address,address).owner (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#930) shadows:
+	- Ownable.owner() (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#358-360) (function)
+MultiChainCapital._approve(address,address,uint256).owner (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1088) shadows:
+	- Ownable.owner() (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#358-360) (function)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#local-variable-shadowing
+
+MultiChainCapital._setTaxFee(uint256) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1425-1428) should emit an event for: 
+	- _taxFee = taxFee (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1427) 
+MultiChainCapital._setTeamFee(uint256) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1430-1433) should emit an event for: 
+	- _teamFee = teamFee (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1432) 
+MultiChainCapital._setSellTaxMultiplier(uint8) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1435-1438) should emit an event for: 
+	- _sellTaxMultiplier = mult (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1437) 
+MultiChainCapital._setMaxTxAmount(uint256) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1451-1457) should emit an event for: 
+	- _maxTxAmount = maxTxAmount (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1456) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+MultiChainCapital.constructor(address,address).MCCWalletAddress (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#874) lacks a zero-check on :
+		- _MCCWalletAddress = MCCWalletAddress (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#877)
+MultiChainCapital.constructor(address,address).marketingWalletAddress (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#875) lacks a zero-check on :
+		- _marketingWalletAddress = marketingWalletAddress (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#878)
+MultiChainCapital._setMCCWallet(address).MCCWalletAddress (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1440) lacks a zero-check on :
+		- _MCCWalletAddress = MCCWalletAddress (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1441)
+MultiChainCapital._setMarketingWallet(address).marketingWalletAddress (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1444) lacks a zero-check on :
+		- _marketingWalletAddress = marketingWalletAddress (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1448)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+MultiChainCapital.swapTokensForEth(uint256) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1159-1175) has external calls inside a loop: path[1] = uniswapV2Router.WETH() (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1163)
+MultiChainCapital.swapTokensForEth(uint256) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1159-1175) has external calls inside a loop: uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1168-1174)
+MultiChainCapital.sendETHToTeam(uint256) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1177-1180) has external calls inside a loop: _MCCWalletAddress.call{value: amount.div(2)}() (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1178)
+MultiChainCapital.sendETHToTeam(uint256) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1177-1180) has external calls inside a loop: _marketingWalletAddress.call{value: amount.div(2)}() (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1179)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation/#calls-inside-a-loop
+
+Reentrancy in MultiChainCapital._transfer(address,address,uint256) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1099-1157):
+	External calls:
+	- swapTokensForEth(contractTokenBalance) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1133)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1168-1174)
+	- sendETHToTeam(address(this).balance) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1137)
+		- _MCCWalletAddress.call{value: amount.div(2)}() (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1178)
+		- _marketingWalletAddress.call{value: amount.div(2)}() (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1179)
+	External calls sending eth:
+	- sendETHToTeam(address(this).balance) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1137)
+		- _MCCWalletAddress.call{value: amount.div(2)}() (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1178)
+		- _marketingWalletAddress.call{value: amount.div(2)}() (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1179)
+	State variables written after the call(s):
+	- _tokenTransfer(sender,recipient,amount,takeFee) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1156)
+		- _previousTaxFee = _taxFee (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1071)
+	- _tokenTransfer(sender,recipient,amount,takeFee) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1156)
+		- _previousTeamFee = _teamFee (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1072)
+	- _tokenTransfer(sender,recipient,amount,takeFee) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1156)
+		- _tFeeTotal = _tFeeTotal.add(tFee) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1313)
+	- _tokenTransfer(sender,recipient,amount,takeFee) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1156)
+		- _taxFee = _previousTaxFee (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1079)
+		- _taxFee = 0 (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1074)
+	- _tokenTransfer(sender,recipient,amount,takeFee) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1156)
+		- _teamFee = _previousTeamFee (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1080)
+		- _teamFee = 0 (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1075)
+Reentrancy in MultiChainCapital.transferFrom(address,address,uint256) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#948-963):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#953)
+		- _MCCWalletAddress.call{value: amount.div(2)}() (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1178)
+		- _marketingWalletAddress.call{value: amount.div(2)}() (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1179)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1168-1174)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#953)
+		- _MCCWalletAddress.call{value: amount.div(2)}() (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1178)
+		- _marketingWalletAddress.call{value: amount.div(2)}() (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1179)
+	State variables written after the call(s):
+	- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#954-961)
+		- _allowances[owner][spender] = amount (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1095)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in MultiChainCapital._transfer(address,address,uint256) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1099-1157):
+	External calls:
+	- swapTokensForEth(contractTokenBalance) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1133)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1168-1174)
+	- sendETHToTeam(address(this).balance) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1137)
+		- _MCCWalletAddress.call{value: amount.div(2)}() (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1178)
+		- _marketingWalletAddress.call{value: amount.div(2)}() (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1179)
+	External calls sending eth:
+	- sendETHToTeam(address(this).balance) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1137)
+		- _MCCWalletAddress.call{value: amount.div(2)}() (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1178)
+		- _marketingWalletAddress.call{value: amount.div(2)}() (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1179)
+	Event emitted after the call(s):
+	- Transfer(sender,recipient,tTransferAmount) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1236)
+		- _tokenTransfer(sender,recipient,amount,takeFee) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1156)
+	- Transfer(sender,recipient,tTransferAmount) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1278)
+		- _tokenTransfer(sender,recipient,amount,takeFee) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1156)
+	- Transfer(sender,recipient,tTransferAmount) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1257)
+		- _tokenTransfer(sender,recipient,amount,takeFee) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1156)
+	- Transfer(sender,recipient,tTransferAmount) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1300)
+		- _tokenTransfer(sender,recipient,amount,takeFee) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1156)
+Reentrancy in MultiChainCapital.transferFrom(address,address,uint256) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#948-963):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#953)
+		- _MCCWalletAddress.call{value: amount.div(2)}() (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1178)
+		- _marketingWalletAddress.call{value: amount.div(2)}() (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1179)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1168-1174)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#953)
+		- _MCCWalletAddress.call{value: amount.div(2)}() (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1178)
+		- _marketingWalletAddress.call{value: amount.div(2)}() (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1179)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1096)
+		- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#954-961)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+Address.isContract(address) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#421-431) uses assembly
+	- INLINE ASM (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#427-429)
+Address._verifyCallResult(bool,bytes,string) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#584-604) uses assembly
+	- INLINE ASM (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#596-599)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#assembly-usage
+
+4 different versions of Solidity are used:
+	- Version constraint ^0.8.4 is used by:
+		-^0.8.4 (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#4)
+	- Version constraint ^0.8.0 is used by:
+		-^0.8.0 (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#86)
+		-^0.8.0 (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#398)
+	- Version constraint >=0.5.0 is used by:
+		->=0.5.0 (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#607)
+		->=0.5.0 (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#625)
+	- Version constraint >=0.6.2 is used by:
+		->=0.6.2 (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#678)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#different-pragma-directives-are-used
+
+MultiChainCapital.includeAccount(address) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1055-1066) has costly operations inside a loop:
+	- _excluded.pop() (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1062)
+MultiChainCapital.lockTheSwap() (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#867-871) has costly operations inside a loop:
+	- inSwap = true (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#868)
+MultiChainCapital.lockTheSwap() (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#867-871) has costly operations inside a loop:
+	- inSwap = false (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#870)
+MultiChainCapital.removeAllFee() (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1068-1076) has costly operations inside a loop:
+	- _previousTaxFee = _taxFee (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1071)
+MultiChainCapital.removeAllFee() (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1068-1076) has costly operations inside a loop:
+	- _previousTeamFee = _teamFee (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1072)
+MultiChainCapital.removeAllFee() (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1068-1076) has costly operations inside a loop:
+	- _taxFee = 0 (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1074)
+MultiChainCapital.removeAllFee() (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1068-1076) has costly operations inside a loop:
+	- _teamFee = 0 (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1075)
+MultiChainCapital._reflectFee(uint256,uint256) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1311-1314) has costly operations inside a loop:
+	- _rTotal = _rTotal.sub(rFee) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1312)
+MultiChainCapital._reflectFee(uint256,uint256) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1311-1314) has costly operations inside a loop:
+	- _tFeeTotal = _tFeeTotal.add(tFee) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1313)
+MultiChainCapital.restoreAllFee() (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1078-1081) has costly operations inside a loop:
+	- _taxFee = _previousTaxFee (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1079)
+MultiChainCapital.restoreAllFee() (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1078-1081) has costly operations inside a loop:
+	- _teamFee = _previousTeamFee (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1080)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#costly-operations-inside-a-loop
+
+Context._msgData() (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#326-328) is never used and should be removed
+MultiChainCapital._getMaxTxAmount() (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1413-1415) is never used and should be removed
+MultiChainCapital._getTaxFee() (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1409-1411) is never used and should be removed
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dead-code
+
+MultiChainCapital._rTotal (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#831) is set pre-construction with a non-constant function or state variable:
+	- (MAX - (MAX % _tTotal))
+MultiChainCapital._previousTaxFee (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#840) is set pre-construction with a non-constant function or state variable:
+	- _taxFee
+MultiChainCapital._previousTeamFee (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#841) is set pre-construction with a non-constant function or state variable:
+	- _teamFee
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#function-initializing-state
+
+Version constraint ^0.8.4 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- SignedImmutables.
+It is used by:
+	- ^0.8.4 (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#4)
+Version constraint ^0.8.0 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- SignedImmutables
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching.
+It is used by:
+	- ^0.8.0 (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#86)
+	- ^0.8.0 (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#398)
+Version constraint >=0.5.0 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor
+	- IncorrectEventSignatureInLibraries
+	- ABIEncoderV2PackedStorage.
+It is used by:
+	- >=0.5.0 (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#607)
+	- >=0.5.0 (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#625)
+Version constraint >=0.6.2 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- MissingEscapingInFormatting
+	- ArraySliceDynamicallyEncodedBaseType
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow.
+It is used by:
+	- >=0.6.2 (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#678)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in Address.sendValue(address,uint256) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#449-454):
+	- (success,None) = recipient.call{value: amount}() (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#452)
+Low level call in Address.functionCallWithValue(address,bytes,uint256,string) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#517-528):
+	- (success,returndata) = target.call{value: value}(data) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#526)
+Low level call in Address.functionStaticCall(address,bytes,string) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#546-555):
+	- (success,returndata) = target.staticcall(data) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#553)
+Low level call in Address.functionDelegateCall(address,bytes,string) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#573-582):
+	- (success,returndata) = target.delegatecall(data) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#580)
+Low level call in MultiChainCapital.sendETHToTeam(uint256) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1177-1180):
+	- _MCCWalletAddress.call{value: amount.div(2)}() (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1178)
+	- _marketingWalletAddress.call{value: amount.div(2)}() (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1179)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Function IUniswapV2Pair.DOMAIN_SEPARATOR() (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#642) is not in mixedCase
+Function IUniswapV2Pair.PERMIT_TYPEHASH() (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#643) is not in mixedCase
+Function IUniswapV2Pair.MINIMUM_LIQUIDITY() (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#660) is not in mixedCase
+Function IUniswapV2Router01.WETH() (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#682) is not in mixedCase
+Function MultiChainCapital._getETHBalance() (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1421-1423) is not in mixedCase
+Function MultiChainCapital._setTaxFee(uint256) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1425-1428) is not in mixedCase
+Function MultiChainCapital._setTeamFee(uint256) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1430-1433) is not in mixedCase
+Function MultiChainCapital._setSellTaxMultiplier(uint8) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1435-1438) is not in mixedCase
+Function MultiChainCapital._setMCCWallet(address) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1440-1442) is not in mixedCase
+Parameter MultiChainCapital._setMCCWallet(address).MCCWalletAddress (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1440) is not in mixedCase
+Function MultiChainCapital._setMarketingWallet(address) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1444-1449) is not in mixedCase
+Function MultiChainCapital._setMaxTxAmount(uint256) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1451-1457) is not in mixedCase
+Parameter MultiChainCapital.isUniswapPair(address)._pair (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1459) is not in mixedCase
+Parameter MultiChainCapital.addUniswapPair(address)._pair (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1464) is not in mixedCase
+Parameter MultiChainCapital.removeUniswapPair(address)._pair (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1468) is not in mixedCase
+Function MultiChainCapital.Airdrop(MultiChainCapital.AirdropReceiver[]) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1472-1477) is not in mixedCase
+Variable MultiChainCapital._MCCWalletAddress (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#843) is not in mixedCase
+Variable MultiChainCapital._marketingWalletAddress (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#844) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+MultiChainCapital._setMaxTxAmount(uint256) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1451-1457) uses literals with too many digits:
+	- require(bool,string)(maxTxAmount >= 100000000000000e9,maxTxAmount should be greater than 100000000000000e9) (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1452-1455)
+MultiChainCapital.slitherConstructorVariables() (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#816-1479) uses literals with too many digits:
+	- _tTotal = 4206900000000 * 10 ** 9 (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#830)
+MultiChainCapital.slitherConstructorVariables() (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#816-1479) uses literals with too many digits:
+	- _maxTxAmount = 300000000000000e9 (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#855)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+Loop condition i < _excluded.length (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#1399) should use cached array length instead of referencing `length` member of the storage array.
+ Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#cache-array-length
+
+MultiChainCapital._decimals (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#836) should be constant 
+MultiChainCapital._name (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#834) should be constant 
+MultiChainCapital._numOfTokensToExchangeForTeam (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#857) should be constant 
+MultiChainCapital._symbol (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#835) should be constant 
+MultiChainCapital._tTotal (0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol#830) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+./0x16a76a81bb2c2b16ca7b0a2ea4f093bcdf47ae7b.sol analyzed (10 contracts with 94 detectors), 78 result(s) found
+
+real	0m4.290s
+user	0m4.022s
+sys	0m0.270s

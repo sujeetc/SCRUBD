@@ -1,0 +1,890 @@
+'solc --version' running
+'solc ./0x1806b3527c18fb532c46405f6f014c1f381b499a.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x1806b3527c18fb532c46405f6f014c1f381b499a.sol:
+./0x1806b3527c18fb532c46405f6f014c1f381b499a.sol:1083:40: Warning: This looks like an address but has an invalid checksum. If this is not used as an address, please prepend '00'. Correct checksummed address: '0x8A511e355e4233F0ab14CdDbc1dD60a80a349f8B'. For more information please see https://solidity.readthedocs.io/en/develop/types.html#address-literals
+    address planetCryptoUtilsAddress = 0x8a511e355e4233f0ab14cddbc1dd60a80a349f8b; // mainnet
+                                       ^----------------------------------------^
+./0x1806b3527c18fb532c46405f6f014c1f381b499a.sol:2055:5: Warning: Function state mutability can be restricted to pure
+    function m() public {
+    ^ (Relevant source part starts here and spans across multiple lines).
+
+
+ERC721Enumerable_custom (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#632-775) contract sets array length with a user-controlled value:
+	- _ownedTokens[to].push(tokenId) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#708)
+PlanetCryptoToken (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#959-2060) contract sets array length with a user-controlled value:
+	- all_playerObjects.push(player(to,now,0,0)) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1868)
+PlanetCryptoToken (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#959-2060) contract sets array length with a user-controlled value:
+	- all_playerObjects.push(player(msg.sender,now,0,0)) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1043)
+PlanetCryptoToken (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#959-2060) contract sets array length with a user-controlled value:
+	- all_playerObjects.push(player(_playerAddress,_uint1,_uint2,_uint3)) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1204-1211)
+PlanetCryptoToken (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#959-2060) contract sets array length with a user-controlled value:
+	- tokenIDlatlngLookup_zoomAll[zoom][_token_id].push(plotBasic(lat,lng)) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1732)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#array-length-assignment
+
+Reentrancy in PlanetCryptoToken.buyLand(bytes32,int256[],int256[],address) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1353-1411):
+	External calls:
+	- processPurchase(_name,_plots_lat,_plots_lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1390)
+		- lat = planetCryptoUtils_interface.roundLatLngFull(zoom,lat) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1681)
+		- lng = planetCryptoUtils_interface.roundLatLngFull(zoom,lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1682)
+	- planetCryptoCoin_interface.transfer(msg.sender,_token_rewards) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1404)
+	- validatePurchase(_plots_lat,_plots_lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1357)
+		- require(bool,string)(planetCryptoUtils_interface.validatePurchase(msg.sender,msg.value,plots_lat,plots_lng) == true,Not enough ETH!) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1013)
+	- validateLand(_plots_lat,_plots_lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1358)
+		- require(bool,string)(planetCryptoUtils_interface.validateLand(msg.sender,plots_lat,plots_lng) == true,Some of this land already owned!) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1005)
+	External calls sending eth:
+	- _runningTotal = _runningTotal.sub(processReferer(_referrer)) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1366)
+		- _referrer.send(_referrerAmnt) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1417)
+	- processDevPayment(_runningTotal) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1381)
+		- ! devBankAddress.send(m_newPlot_devPercent.mul(_runningTotal)) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1427)
+	State variables written after the call(s):
+	- tokens_rewards_available = tokens_rewards_available - _token_rewards (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1408)
+	PlanetCryptoToken.tokens_rewards_available (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1113) can be used in cross function reentrancies:
+	- PlanetCryptoToken.buyLand(bytes32,int256[],int256[],address) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1353-1411)
+	- PlanetCryptoToken.constructor() (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1167-1189)
+	- PlanetCryptoToken.p_update_action(uint256,address,uint256,string) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1885-1970)
+	- PlanetCryptoToken.tokens_rewards_available (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1113)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+PlanetCryptoToken.buyLand(bytes32,int256[],int256[],address) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1353-1411) ignores return value by planetCryptoCoin_interface.transfer(msg.sender,_token_rewards) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1404)
+PlanetCryptoToken.burn(uint256) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1972-1984) ignores return value by planetCryptoCoin_interface.transfer(msg.sender,_cardSize) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1980)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+Address.isContract(address) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#233-244) is declared view but contains assembly code
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#constant-functions-using-assembly-code
+
+PlanetCryptoToken.calcPlayerDivs(uint256) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1596-1636) performs a multiplication on the result of a division:
+	- _playersPercent = (all_playerObjects[c].totalEmpireScore * 10000000 / total_empire_score * 10000000) / 10000000 (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1610-1611)
+PlanetCryptoToken.calcPlayerDivs(uint256) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1596-1636) performs a multiplication on the result of a division:
+	- _playersPercent = (all_playerObjects[c].totalEmpireScore * 10000000 / total_empire_score * 10000000) / 10000000 (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1610-1611)
+	- _playerShare = _taxToDivide / 10000000 * _playersPercent (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1613)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+PlanetCryptoToken.process_swap(address,address,uint256) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1844-1878) uses a dangerous strict equality:
+	- _playerObject_idx == 0 (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1867)
+PlanetCryptoToken.updateUsersLastAccess() (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1038-1050) uses a dangerous strict equality:
+	- allPlyersIdx == 0 (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1041)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-strict-equalities
+
+Reentrancy in PlanetCryptoToken.processPurchase(bytes32,int256[],int256[]) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1507-1553):
+	External calls:
+	- setupPlotOwnership(_token_id,_plots_lat,_plots_lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1531)
+		- lat = planetCryptoUtils_interface.roundLatLngFull(zoom,lat) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1681)
+		- lng = planetCryptoUtils_interface.roundLatLngFull(zoom,lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1682)
+	State variables written after the call(s):
+	- current_plot_price = current_plot_price + (price_update_amount * _plots_lat.length) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1550)
+	PlanetCryptoToken.current_plot_price (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1122) can be used in cross function reentrancies:
+	- PlanetCryptoToken.constructor() (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1167-1189)
+	- PlanetCryptoToken.current_plot_price (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1122)
+	- PlanetCryptoToken.processPurchase(bytes32,int256[],int256[]) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1507-1553)
+Reentrancy in PlanetCryptoToken.transferTokens(uint256,uint256) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1216-1236):
+	External calls:
+	- (_playerAddress,name,orig_value,current_value,empire_score,plots_lat,plots_lng) = planetCryptoToken_I.getToken(c,false) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1221-1230)
+	- transferCards(c,_playerAddress,name,orig_value,current_value,empire_score,plots_lat,plots_lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1233)
+		- lat = planetCryptoUtils_interface.roundLatLngFull(zoom,lat) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1681)
+		- lng = planetCryptoUtils_interface.roundLatLngFull(zoom,lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1682)
+	State variables written after the call(s):
+	- transferCards(c,_playerAddress,name,orig_value,current_value,empire_score,plots_lat,plots_lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1233)
+		- _allTokens.push(tokenId) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#751)
+	ERC721Enumerable_custom._allTokens (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#640) can be used in cross function reentrancies:
+	- ERC721Enumerable_custom._mint(address,uint256) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#747-752)
+	- ERC721Enumerable_custom.tokenByIndex(uint256) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#693-696)
+	- ERC721Enumerable_custom.totalSupply() (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#683-685)
+	- transferCards(c,_playerAddress,name,orig_value,current_value,empire_score,plots_lat,plots_lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1233)
+		- _ownedTokens[to].push(tokenId) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#708)
+	ERC721Enumerable_custom._ownedTokens (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#634) can be used in cross function reentrancies:
+	- ERC721Enumerable_custom._addTokenTo(address,uint256) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#705-710)
+	- ERC721Enumerable_custom._removeTokenFrom(address,uint256) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#720-739)
+	- ERC721Enumerable_custom.tokenOfOwnerByIndex(address,uint256) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#667-677)
+	- transferCards(c,_playerAddress,name,orig_value,current_value,empire_score,plots_lat,plots_lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1233)
+		- _ownedTokensCount[to] = _ownedTokensCount[to].add(1) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#547)
+	ERC721_custom._ownedTokensCount (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#269) can be used in cross function reentrancies:
+	- ERC721_custom._addTokenTo(address,uint256) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#544-548)
+	- ERC721_custom._removeTokenFrom(address,uint256) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#558-562)
+	- ERC721_custom.balanceOf(address) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#300-303)
+	- ERC721_custom.internal_transferFrom(address,address,uint256) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#401-428)
+	- transferCards(c,_playerAddress,name,orig_value,current_value,empire_score,plots_lat,plots_lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1233)
+		- _tokenOwner[tokenId] = to (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#546)
+	ERC721_custom._tokenOwner (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#263) can be used in cross function reentrancies:
+	- ERC721_custom._addTokenTo(address,uint256) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#544-548)
+	- ERC721_custom._exists(uint256) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#483-486)
+	- ERC721_custom._removeTokenFrom(address,uint256) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#558-562)
+	- ERC721_custom.internal_transferFrom(address,address,uint256) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#401-428)
+	- ERC721_custom.ownerOf(uint256) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#310-314)
+	- transferCards(c,_playerAddress,name,orig_value,current_value,empire_score,plots_lat,plots_lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1233)
+		- plotDetails.push(plotDetail(name,orig_value,current_value,empire_score,plots_lat,plots_lng,)) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1258-1264)
+	PlanetCryptoToken.plotDetails (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1149) can be used in cross function reentrancies:
+	- PlanetCryptoToken.burn(uint256) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1972-1984)
+	- PlanetCryptoToken.buyCard(uint256,address) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1432-1505)
+	- PlanetCryptoToken.getToken(uint256,bool) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1283-1302)
+	- PlanetCryptoToken.getTokenEnhanced(uint256,bool) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1303-1324)
+	- PlanetCryptoToken.p_update_action(uint256,address,uint256,string) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1885-1970)
+	- PlanetCryptoToken.processBurn(address,uint256) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1986-2041)
+	- PlanetCryptoToken.processPurchase(bytes32,int256[],int256[]) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1507-1553)
+	- PlanetCryptoToken.process_swap(address,address,uint256) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1844-1878)
+	- PlanetCryptoToken.transferCards(uint256,address,bytes32,uint256,uint256,uint256,int256[],int256[]) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1241-1273)
+	- PlanetCryptoToken.updateCardDetail(uint256,uint256,bytes32) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1555-1588)
+	- transferCards(c,_playerAddress,name,orig_value,current_value,empire_score,plots_lat,plots_lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1233)
+		- tokenIDlatlngLookup_zoomAll[zoom][_token_id].push(plotBasic(lat,lng)) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1732)
+	PlanetCryptoToken.tokenIDlatlngLookup_zoomAll (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1162) can be used in cross function reentrancies:
+	- PlanetCryptoToken.processBurn(address,uint256) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1986-2041)
+	- PlanetCryptoToken.setupZoomLvl(uint8,int256,int256,uint256) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1679-1736)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+ERC721Metadata_custom.constructor(string,string).name (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#810) shadows:
+	- ERC721Metadata_custom.name() (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#818-820) (function)
+	- IERC721Metadata.name() (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#783) (function)
+ERC721Metadata_custom.constructor(string,string).symbol (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#810) shadows:
+	- ERC721Metadata_custom.symbol() (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#823-825) (function)
+	- IERC721Metadata.symbol() (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#784) (function)
+ERC721Full_custom.constructor(string,string).name (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#852) shadows:
+	- ERC721Metadata_custom.name() (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#818-820) (function)
+	- IERC721Metadata.name() (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#783) (function)
+ERC721Full_custom.constructor(string,string).symbol (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#852) shadows:
+	- ERC721Metadata_custom.symbol() (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#823-825) (function)
+	- IERC721Metadata.symbol() (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#784) (function)
+PlanetCryptoToken.transferTokens(uint256,uint256).name (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1223) shadows:
+	- ERC721Metadata_custom.name() (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#818-820) (function)
+	- IERC721Metadata.name() (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#783) (function)
+PlanetCryptoToken.transferCards(uint256,address,bytes32,uint256,uint256,uint256,int256[],int256[]).name (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1244) shadows:
+	- ERC721Metadata_custom.name() (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#818-820) (function)
+	- IERC721Metadata.name() (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#783) (function)
+PlanetCryptoToken.getToken(uint256,bool).name (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1285) shadows:
+	- ERC721Metadata_custom.name() (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#818-820) (function)
+	- IERC721Metadata.name() (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#783) (function)
+PlanetCryptoToken.getTokenEnhanced(uint256,bool).name (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1305) shadows:
+	- ERC721Metadata_custom.name() (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#818-820) (function)
+	- IERC721Metadata.name() (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#783) (function)
+PlanetCryptoToken.buyLandWithTokens(bytes32,int256[],int256[])._name (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1342) shadows:
+	- ERC721Metadata_custom._name (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#791) (state variable)
+PlanetCryptoToken.buyLand(bytes32,int256[],int256[],address)._name (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1353) shadows:
+	- ERC721Metadata_custom._name (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#791) (state variable)
+PlanetCryptoToken.processPurchase(bytes32,int256[],int256[])._name (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1507) shadows:
+	- ERC721Metadata_custom._name (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#791) (state variable)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#local-variable-shadowing
+
+PlanetCryptoToken.p_update_action(uint256,address,uint256,string)._address (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1885) lacks a zero-check on :
+		- owner = _address (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1887)
+		- tokenBankAddress = _address (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1890)
+		- devBankAddress = _address (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1893)
+		- planetCryptoCoinAddress = _address (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1911)
+		- planetCryptoUtilsAddress = _address (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1917)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+PlanetCryptoToken.transferPlayer(uint256) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1199-1213) has external calls inside a loop: (_playerAddress,_uint1,_uint2,_uint3) = planetCryptoToken_I.all_playerObjects(_player_id) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1200-1201)
+PlanetCryptoToken.transferTokens(uint256,uint256) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1216-1236) has external calls inside a loop: (_playerAddress,name,orig_value,current_value,empire_score,plots_lat,plots_lng) = planetCryptoToken_I.getToken(c,false) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1221-1230)
+PlanetCryptoToken.setupZoomLvl(uint8,int256,int256,uint256) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1679-1736) has external calls inside a loop: lat = planetCryptoUtils_interface.roundLatLngFull(zoom,lat) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1681)
+PlanetCryptoToken.setupZoomLvl(uint8,int256,int256,uint256) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1679-1736) has external calls inside a loop: lng = planetCryptoUtils_interface.roundLatLngFull(zoom,lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1682)
+PlanetCryptoToken.queryMap(uint8,int256[],int256[]) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1749-1783) has external calls inside a loop: _outStr = planetCryptoUtils_interface.strConcat(_outStr,[,planetCryptoUtils_interface.int2str(lat_rows[y]),:,planetCryptoUtils_interface.int2str(lng_columns[x])) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1762-1763)
+PlanetCryptoToken.queryMap(uint8,int256[],int256[]) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1749-1783) has external calls inside a loop: _outStr = planetCryptoUtils_interface.strConcat(_outStr,:,planetCryptoUtils_interface.uint2str(latlngTokenID_grids[lat_rows[y]][lng_columns[x]]),]) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1764-1765)
+PlanetCryptoToken.queryMap(uint8,int256[],int256[]) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1749-1783) has external calls inside a loop: _outStr = planetCryptoUtils_interface.strConcat(_outStr,[,planetCryptoUtils_interface.int2str(lat_rows[y]),:,planetCryptoUtils_interface.int2str(lng_columns[x])) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1771)
+PlanetCryptoToken.queryMap(uint8,int256[],int256[]) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1749-1783) has external calls inside a loop: _outStr = planetCryptoUtils_interface.strConcat(_outStr,:,planetCryptoUtils_interface.uint2str(latlngTokenID_zoomAll[zoom][lat_rows[y]][lng_columns[x]]),]) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1772-1773)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation/#calls-inside-a-loop
+
+Reentrancy in PlanetCryptoToken.buyCard(uint256,address) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1432-1505):
+	External calls:
+	- validateResale(_token_id) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1432)
+		- require(bool,string)(planetCryptoUtils_interface.validateResale(msg.sender,msg.value,_token_id) == true,Not enough ETH to buy this card!) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1033)
+	External calls sending eth:
+	- _runningTotal = _runningTotal.sub(processReferer(_referrer)) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1437)
+		- _referrer.send(_referrerAmnt) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1417)
+	State variables written after the call(s):
+	- tax_fund = tax_fund.add(m_resalePlot_taxPercent.mul(_runningTotal)) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1449)
+Reentrancy in PlanetCryptoToken.buyCard(uint256,address) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1432-1505):
+	External calls:
+	- validateResale(_token_id) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1432)
+		- require(bool,string)(planetCryptoUtils_interface.validateResale(msg.sender,msg.value,_token_id) == true,Not enough ETH to buy this card!) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1033)
+	External calls sending eth:
+	- _runningTotal = _runningTotal.sub(processReferer(_referrer)) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1437)
+		- _referrer.send(_referrerAmnt) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1417)
+	- processDevPayment(_runningTotal) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1452)
+		- ! devBankAddress.send(m_newPlot_devPercent.mul(_runningTotal)) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1427)
+	State variables written after the call(s):
+	- processDevPayment(_runningTotal) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1452)
+		- devHoldings = devHoldings.add(m_newPlot_devPercent.mul(_runningTotal)) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1428)
+Reentrancy in PlanetCryptoToken.buyCard(uint256,address) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1432-1505):
+	External calls:
+	- validateResale(_token_id) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1432)
+		- require(bool,string)(planetCryptoUtils_interface.validateResale(msg.sender,msg.value,_token_id) == true,Not enough ETH to buy this card!) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1033)
+	External calls sending eth:
+	- _runningTotal = _runningTotal.sub(processReferer(_referrer)) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1437)
+		- _referrer.send(_referrerAmnt) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1417)
+	- processDevPayment(_runningTotal) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1452)
+		- ! devBankAddress.send(m_newPlot_devPercent.mul(_runningTotal)) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1427)
+	- ! from.send(m_resalePlot_ownerPercent.mul(_runningTotal)) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1462)
+	State variables written after the call(s):
+	- internal_transferFrom(from,msg.sender,_token_id) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1470)
+		- _ownedTokens[to].push(tokenId) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#708)
+	- internal_transferFrom(from,msg.sender,_token_id) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1470)
+		- _ownedTokensCount[to] = _ownedTokensCount[to].add(1) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#547)
+		- _ownedTokensCount[_from] = _ownedTokensCount[_from] - 1 (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#418)
+	- internal_transferFrom(from,msg.sender,_token_id) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1470)
+		- _ownedTokensIndex[tokenId] = length (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#709)
+	- internal_transferFrom(from,msg.sender,_token_id) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1470)
+		- _tokenApprovals[tokenId] = address(0) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#413)
+	- internal_transferFrom(from,msg.sender,_token_id) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1470)
+		- _tokenOwner[tokenId] = to (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#546)
+		- _tokenOwner[tokenId] = address(0) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#422)
+	- process_swap(from,msg.sender,_token_id) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1469)
+		- all_playerObjects[_playerObject_idx].totalEmpireScore = all_playerObjects[_playerObject_idx].totalEmpireScore - _empireScore (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1857-1858)
+		- all_playerObjects[_playerObject_idx].totalLand = all_playerObjects[_playerObject_idx].totalLand - _size (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1860-1861)
+		- all_playerObjects.push(player(to,now,0,0)) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1868)
+		- all_playerObjects[_playerObject_idx].totalEmpireScore = all_playerObjects[_playerObject_idx].totalEmpireScore + _empireScore (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1873-1874)
+		- all_playerObjects[_playerObject_idx].totalLand = all_playerObjects[_playerObject_idx].totalLand + _size (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1876-1877)
+	- all_playerObjects[playerAddressToPlayerObjectID[msg.sender]].totalEmpireScore = all_playerObjects[playerAddressToPlayerObjectID[msg.sender]].totalEmpireScore + (_newEmpireScore - _empireScore) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1481-1482)
+	- process_swap(from,msg.sender,_token_id) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1469)
+		- playerAddressToPlayerObjectID[to] = all_playerObjects.length - 1 (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1869)
+	- playersFundsOwed[from] = playersFundsOwed[from].add(m_resalePlot_ownerPercent.mul(_runningTotal)) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1463)
+	- calcPlayerDivs(m_resalePlot_taxPercent.mul(_runningTotal)) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1495)
+		- playersFundsOwed[all_playerObjects[c].playerAddress] = playersFundsOwed[all_playerObjects[c].playerAddress].add(_playerShare) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1620)
+	- plotDetails[tokenIDplotdetailsIndexId[_token_id]].empire_score = _newEmpireScore (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1485)
+	- plotDetails[tokenIDplotdetailsIndexId[_token_id]].current_value = m_resaleMultipler.mul(plotDetails[tokenIDplotdetailsIndexId[_token_id]].current_value) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1489-1490)
+	- calcPlayerDivs(m_resalePlot_taxPercent.mul(_runningTotal)) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1495)
+		- tax_carried_forward = 0 (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1629)
+		- tax_carried_forward = tax_carried_forward + _value (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1634)
+	- calcPlayerDivs(m_resalePlot_taxPercent.mul(_runningTotal)) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1495)
+		- tax_distributed = tax_distributed.add(_playerShare) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1621)
+	- total_empire_score = total_empire_score + (_newEmpireScore - _empireScore) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1487)
+	- total_trades = total_trades + 1 (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1492)
+Reentrancy in PlanetCryptoToken.buyCard(uint256,address) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1432-1505):
+	External calls:
+	- validateResale(_token_id) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1432)
+		- require(bool,string)(planetCryptoUtils_interface.validateResale(msg.sender,msg.value,_token_id) == true,Not enough ETH to buy this card!) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1033)
+	State variables written after the call(s):
+	- updateUsersLastAccess() (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1432)
+		- all_playerObjects.push(player(msg.sender,now,0,0)) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1043)
+		- all_playerObjects[allPlyersIdx].lastAccess = now (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1046)
+	- updateUsersLastAccess() (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1432)
+		- playerAddressToPlayerObjectID[msg.sender] = all_playerObjects.length - 1 (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1044)
+Reentrancy in PlanetCryptoToken.buyLand(bytes32,int256[],int256[],address) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1353-1411):
+	External calls:
+	- validatePurchase(_plots_lat,_plots_lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1357)
+		- require(bool,string)(planetCryptoUtils_interface.validatePurchase(msg.sender,msg.value,plots_lat,plots_lng) == true,Not enough ETH!) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1013)
+	- validateLand(_plots_lat,_plots_lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1358)
+		- require(bool,string)(planetCryptoUtils_interface.validateLand(msg.sender,plots_lat,plots_lng) == true,Some of this land already owned!) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1005)
+	External calls sending eth:
+	- _runningTotal = _runningTotal.sub(processReferer(_referrer)) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1366)
+		- _referrer.send(_referrerAmnt) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1417)
+	State variables written after the call(s):
+	- tax_fund = tax_fund.add(m_newPlot_taxPercent.mul(_runningTotal)) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1378)
+Reentrancy in PlanetCryptoToken.buyLand(bytes32,int256[],int256[],address) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1353-1411):
+	External calls:
+	- validatePurchase(_plots_lat,_plots_lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1357)
+		- require(bool,string)(planetCryptoUtils_interface.validatePurchase(msg.sender,msg.value,plots_lat,plots_lng) == true,Not enough ETH!) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1013)
+	- validateLand(_plots_lat,_plots_lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1358)
+		- require(bool,string)(planetCryptoUtils_interface.validateLand(msg.sender,plots_lat,plots_lng) == true,Some of this land already owned!) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1005)
+	External calls sending eth:
+	- _runningTotal = _runningTotal.sub(processReferer(_referrer)) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1366)
+		- _referrer.send(_referrerAmnt) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1417)
+	- processDevPayment(_runningTotal) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1381)
+		- ! devBankAddress.send(m_newPlot_devPercent.mul(_runningTotal)) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1427)
+	State variables written after the call(s):
+	- processDevPayment(_runningTotal) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1381)
+		- devHoldings = devHoldings.add(m_newPlot_devPercent.mul(_runningTotal)) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1428)
+Reentrancy in PlanetCryptoToken.buyLand(bytes32,int256[],int256[],address) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1353-1411):
+	External calls:
+	- processPurchase(_name,_plots_lat,_plots_lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1390)
+		- lat = planetCryptoUtils_interface.roundLatLngFull(zoom,lat) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1681)
+		- lng = planetCryptoUtils_interface.roundLatLngFull(zoom,lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1682)
+	- validatePurchase(_plots_lat,_plots_lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1357)
+		- require(bool,string)(planetCryptoUtils_interface.validatePurchase(msg.sender,msg.value,plots_lat,plots_lng) == true,Not enough ETH!) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1013)
+	- validateLand(_plots_lat,_plots_lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1358)
+		- require(bool,string)(planetCryptoUtils_interface.validateLand(msg.sender,plots_lat,plots_lng) == true,Some of this land already owned!) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1005)
+	External calls sending eth:
+	- _runningTotal = _runningTotal.sub(processReferer(_referrer)) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1366)
+		- _referrer.send(_referrerAmnt) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1417)
+	- processDevPayment(_runningTotal) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1381)
+		- ! devBankAddress.send(m_newPlot_devPercent.mul(_runningTotal)) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1427)
+	State variables written after the call(s):
+	- processPurchase(_name,_plots_lat,_plots_lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1390)
+		- _allTokensIndex[tokenId] = _allTokens.length (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#750)
+	- processPurchase(_name,_plots_lat,_plots_lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1390)
+		- _ownedTokensIndex[tokenId] = length (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#709)
+	- game_started = true (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1394)
+	- processPurchase(_name,_plots_lat,_plots_lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1390)
+		- latlngTokenID_grids[_plots_lat[c]][_plots_lng[c]] = _token_id (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1646-1647)
+	- processPurchase(_name,_plots_lat,_plots_lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1390)
+		- latlngTokenID_zoomAll[zoom][lat][lng] = _token_id (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1731)
+	- calcPlayerDivs(m_newPlot_taxPercent.mul(_runningTotal)) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1392)
+		- playersFundsOwed[all_playerObjects[c].playerAddress] = playersFundsOwed[all_playerObjects[c].playerAddress].add(_playerShare) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1620)
+	- calcPlayerDivs(m_newPlot_taxPercent.mul(_runningTotal)) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1392)
+		- tax_carried_forward = 0 (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1629)
+		- tax_carried_forward = tax_carried_forward + _value (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1634)
+	- calcPlayerDivs(m_newPlot_taxPercent.mul(_runningTotal)) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1392)
+		- tax_distributed = tax_distributed.add(_playerShare) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1621)
+	- processPurchase(_name,_plots_lat,_plots_lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1390)
+		- tokenIDplotdetailsIndexId[_token_id] = plotDetails.length - 1 (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1528)
+Reentrancy in PlanetCryptoToken.buyLand(bytes32,int256[],int256[],address) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1353-1411):
+	External calls:
+	- processPurchase(_name,_plots_lat,_plots_lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1390)
+		- lat = planetCryptoUtils_interface.roundLatLngFull(zoom,lat) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1681)
+		- lng = planetCryptoUtils_interface.roundLatLngFull(zoom,lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1682)
+	- planetCryptoCoin_interface.transfer(msg.sender,_token_rewards) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1404)
+	- validatePurchase(_plots_lat,_plots_lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1357)
+		- require(bool,string)(planetCryptoUtils_interface.validatePurchase(msg.sender,msg.value,plots_lat,plots_lng) == true,Not enough ETH!) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1013)
+	- validateLand(_plots_lat,_plots_lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1358)
+		- require(bool,string)(planetCryptoUtils_interface.validateLand(msg.sender,plots_lat,plots_lng) == true,Some of this land already owned!) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1005)
+	External calls sending eth:
+	- _runningTotal = _runningTotal.sub(processReferer(_referrer)) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1366)
+		- _referrer.send(_referrerAmnt) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1417)
+	- processDevPayment(_runningTotal) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1381)
+		- ! devBankAddress.send(m_newPlot_devPercent.mul(_runningTotal)) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1427)
+	State variables written after the call(s):
+	- tokens_rewards_allocated = tokens_rewards_allocated + _token_rewards (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1407)
+Reentrancy in PlanetCryptoToken.buyLand(bytes32,int256[],int256[],address) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1353-1411):
+	External calls:
+	- validatePurchase(_plots_lat,_plots_lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1357)
+		- require(bool,string)(planetCryptoUtils_interface.validatePurchase(msg.sender,msg.value,plots_lat,plots_lng) == true,Not enough ETH!) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1013)
+	- validateLand(_plots_lat,_plots_lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1358)
+		- require(bool,string)(planetCryptoUtils_interface.validateLand(msg.sender,plots_lat,plots_lng) == true,Some of this land already owned!) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1005)
+	State variables written after the call(s):
+	- updateUsersLastAccess() (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1359)
+		- all_playerObjects.push(player(msg.sender,now,0,0)) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1043)
+		- all_playerObjects[allPlyersIdx].lastAccess = now (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1046)
+	- updateUsersLastAccess() (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1359)
+		- playerAddressToPlayerObjectID[msg.sender] = all_playerObjects.length - 1 (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1044)
+Reentrancy in PlanetCryptoToken.buyLandWithTokens(bytes32,int256[],int256[]) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1342-1349):
+	External calls:
+	- processPurchase(_name,_plots_lat,_plots_lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1347)
+		- lat = planetCryptoUtils_interface.roundLatLngFull(zoom,lat) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1681)
+		- lng = planetCryptoUtils_interface.roundLatLngFull(zoom,lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1682)
+	- validateTokenPurchase(_plots_lat,_plots_lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1343)
+		- require(bool,string)(planetCryptoUtils_interface.validateTokenPurchase(msg.sender,plots_lat,plots_lng) == true,Not enough COINS to buy these plots!) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1020)
+		- require(bool,string)(planetCryptoCoin_interface.transferFrom(msg.sender,tokenBankAddress,plots_lat.length) == true,Token transfer failed) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1025)
+	- validateLand(_plots_lat,_plots_lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1343)
+		- require(bool,string)(planetCryptoUtils_interface.validateLand(msg.sender,plots_lat,plots_lng) == true,Some of this land already owned!) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1005)
+	State variables written after the call(s):
+	- processPurchase(_name,_plots_lat,_plots_lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1347)
+		- _allTokensIndex[tokenId] = _allTokens.length (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#750)
+	- processPurchase(_name,_plots_lat,_plots_lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1347)
+		- _ownedTokensIndex[tokenId] = length (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#709)
+	- game_started = true (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1348)
+	- processPurchase(_name,_plots_lat,_plots_lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1347)
+		- latlngTokenID_grids[_plots_lat[c]][_plots_lng[c]] = _token_id (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1646-1647)
+	- processPurchase(_name,_plots_lat,_plots_lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1347)
+		- latlngTokenID_zoomAll[zoom][lat][lng] = _token_id (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1731)
+	- processPurchase(_name,_plots_lat,_plots_lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1347)
+		- tokenIDplotdetailsIndexId[_token_id] = plotDetails.length - 1 (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1528)
+Reentrancy in PlanetCryptoToken.buyLandWithTokens(bytes32,int256[],int256[]) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1342-1349):
+	External calls:
+	- validateTokenPurchase(_plots_lat,_plots_lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1343)
+		- require(bool,string)(planetCryptoUtils_interface.validateTokenPurchase(msg.sender,plots_lat,plots_lng) == true,Not enough COINS to buy these plots!) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1020)
+		- require(bool,string)(planetCryptoCoin_interface.transferFrom(msg.sender,tokenBankAddress,plots_lat.length) == true,Token transfer failed) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1025)
+	- validateLand(_plots_lat,_plots_lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1343)
+		- require(bool,string)(planetCryptoUtils_interface.validateLand(msg.sender,plots_lat,plots_lng) == true,Some of this land already owned!) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1005)
+	State variables written after the call(s):
+	- updateUsersLastAccess() (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1343)
+		- all_playerObjects.push(player(msg.sender,now,0,0)) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1043)
+		- all_playerObjects[allPlyersIdx].lastAccess = now (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1046)
+	- updateUsersLastAccess() (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1343)
+		- playerAddressToPlayerObjectID[msg.sender] = all_playerObjects.length - 1 (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1044)
+Reentrancy in PlanetCryptoToken.processPurchase(bytes32,int256[],int256[]) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1507-1553):
+	External calls:
+	- setupPlotOwnership(_token_id,_plots_lat,_plots_lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1531)
+		- lat = planetCryptoUtils_interface.roundLatLngFull(zoom,lat) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1681)
+		- lng = planetCryptoUtils_interface.roundLatLngFull(zoom,lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1682)
+	State variables written after the call(s):
+	- all_playerObjects[_playerObject_idx].totalEmpireScore = all_playerObjects[playerAddressToPlayerObjectID[msg.sender]].totalEmpireScore + (current_plot_empire_score * _plots_lng.length) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1536-1537)
+	- all_playerObjects[_playerObject_idx].totalLand = all_playerObjects[_playerObject_idx].totalLand + _plots_lat.length (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1541-1542)
+	- total_empire_score = total_empire_score + (current_plot_empire_score * _plots_lng.length) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1539)
+	- total_land_sold = total_land_sold + _plots_lat.length (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1551)
+Reentrancy in PlanetCryptoToken.setupZoomLvl(uint8,int256,int256,uint256) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1679-1736):
+	External calls:
+	- lat = planetCryptoUtils_interface.roundLatLngFull(zoom,lat) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1681)
+	- lng = planetCryptoUtils_interface.roundLatLngFull(zoom,lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1682)
+	State variables written after the call(s):
+	- latlngTokenID_zoomAll[zoom][lat][lng] = _token_id (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1731)
+	- tokenIDlatlngLookup_zoomAll[zoom][_token_id].push(plotBasic(lat,lng)) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1732)
+Reentrancy in PlanetCryptoToken.transferPlayer(uint256) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1199-1213):
+	External calls:
+	- (_playerAddress,_uint1,_uint2,_uint3) = planetCryptoToken_I.all_playerObjects(_player_id) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1200-1201)
+	State variables written after the call(s):
+	- all_playerObjects.push(player(_playerAddress,_uint1,_uint2,_uint3)) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1204-1211)
+	- playerAddressToPlayerObjectID[_playerAddress] = all_playerObjects.length - 1 (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1212)
+Reentrancy in PlanetCryptoToken.transferTokens(uint256,uint256) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1216-1236):
+	External calls:
+	- (_playerAddress,name,orig_value,current_value,empire_score,plots_lat,plots_lng) = planetCryptoToken_I.getToken(c,false) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1221-1230)
+	- transferCards(c,_playerAddress,name,orig_value,current_value,empire_score,plots_lat,plots_lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1233)
+		- lat = planetCryptoUtils_interface.roundLatLngFull(zoom,lat) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1681)
+		- lng = planetCryptoUtils_interface.roundLatLngFull(zoom,lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1682)
+	State variables written after the call(s):
+	- transferCards(c,_playerAddress,name,orig_value,current_value,empire_score,plots_lat,plots_lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1233)
+		- _allTokensIndex[tokenId] = _allTokens.length (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#750)
+	- transferCards(c,_playerAddress,name,orig_value,current_value,empire_score,plots_lat,plots_lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1233)
+		- _ownedTokensIndex[tokenId] = length (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#709)
+	- transferCards(c,_playerAddress,name,orig_value,current_value,empire_score,plots_lat,plots_lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1233)
+		- latlngTokenID_grids[_plots_lat[c]][_plots_lng[c]] = _token_id (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1646-1647)
+	- transferCards(c,_playerAddress,name,orig_value,current_value,empire_score,plots_lat,plots_lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1233)
+		- latlngTokenID_zoomAll[zoom][lat][lng] = _token_id (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1731)
+	- transferCards(c,_playerAddress,name,orig_value,current_value,empire_score,plots_lat,plots_lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1233)
+		- tokenIDplotdetailsIndexId[_cardID] = plotDetails.length - 1 (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1266)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in PlanetCryptoToken.buyCard(uint256,address) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1432-1505):
+	External calls:
+	- validateResale(_token_id) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1432)
+		- require(bool,string)(planetCryptoUtils_interface.validateResale(msg.sender,msg.value,_token_id) == true,Not enough ETH to buy this card!) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1033)
+	External calls sending eth:
+	- _runningTotal = _runningTotal.sub(processReferer(_referrer)) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1437)
+		- _referrer.send(_referrerAmnt) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1417)
+	Event emitted after the call(s):
+	- referralPaid(_referrer,_referrer,_referrerAmnt,now) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1418)
+		- _runningTotal = _runningTotal.sub(processReferer(_referrer)) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1437)
+Reentrancy in PlanetCryptoToken.buyCard(uint256,address) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1432-1505):
+	External calls:
+	- validateResale(_token_id) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1432)
+		- require(bool,string)(planetCryptoUtils_interface.validateResale(msg.sender,msg.value,_token_id) == true,Not enough ETH to buy this card!) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1033)
+	External calls sending eth:
+	- _runningTotal = _runningTotal.sub(processReferer(_referrer)) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1437)
+		- _referrer.send(_referrerAmnt) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1417)
+	- processDevPayment(_runningTotal) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1452)
+		- ! devBankAddress.send(m_newPlot_devPercent.mul(_runningTotal)) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1427)
+	- ! from.send(m_resalePlot_ownerPercent.mul(_runningTotal)) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1462)
+	Event emitted after the call(s):
+	- Transfer(_from,to,tokenId) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#426)
+		- internal_transferFrom(from,msg.sender,_token_id) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1470)
+	- cardBought(_token_id,from,msg.sender,_token_id,from,msg.sender,_plotDetail.name,_origValue,msg.value,_empireScore,_newEmpireScore,now) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1499-1504)
+	- taxDistributed(_totalDivs,_totalPlayers,now) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1630)
+		- calcPlayerDivs(m_resalePlot_taxPercent.mul(_runningTotal)) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1495)
+Reentrancy in PlanetCryptoToken.buyLand(bytes32,int256[],int256[],address) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1353-1411):
+	External calls:
+	- validatePurchase(_plots_lat,_plots_lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1357)
+		- require(bool,string)(planetCryptoUtils_interface.validatePurchase(msg.sender,msg.value,plots_lat,plots_lng) == true,Not enough ETH!) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1013)
+	- validateLand(_plots_lat,_plots_lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1358)
+		- require(bool,string)(planetCryptoUtils_interface.validateLand(msg.sender,plots_lat,plots_lng) == true,Some of this land already owned!) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1005)
+	External calls sending eth:
+	- _runningTotal = _runningTotal.sub(processReferer(_referrer)) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1366)
+		- _referrer.send(_referrerAmnt) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1417)
+	Event emitted after the call(s):
+	- referralPaid(_referrer,_referrer,_referrerAmnt,now) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1418)
+		- _runningTotal = _runningTotal.sub(processReferer(_referrer)) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1366)
+Reentrancy in PlanetCryptoToken.buyLand(bytes32,int256[],int256[],address) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1353-1411):
+	External calls:
+	- processPurchase(_name,_plots_lat,_plots_lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1390)
+		- lat = planetCryptoUtils_interface.roundLatLngFull(zoom,lat) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1681)
+		- lng = planetCryptoUtils_interface.roundLatLngFull(zoom,lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1682)
+	- validatePurchase(_plots_lat,_plots_lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1357)
+		- require(bool,string)(planetCryptoUtils_interface.validatePurchase(msg.sender,msg.value,plots_lat,plots_lng) == true,Not enough ETH!) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1013)
+	- validateLand(_plots_lat,_plots_lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1358)
+		- require(bool,string)(planetCryptoUtils_interface.validateLand(msg.sender,plots_lat,plots_lng) == true,Some of this land already owned!) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1005)
+	External calls sending eth:
+	- _runningTotal = _runningTotal.sub(processReferer(_referrer)) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1366)
+		- _referrer.send(_referrerAmnt) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1417)
+	- processDevPayment(_runningTotal) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1381)
+		- ! devBankAddress.send(m_newPlot_devPercent.mul(_runningTotal)) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1427)
+	Event emitted after the call(s):
+	- Transfer(address(0),to,tokenId) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#523)
+		- processPurchase(_name,_plots_lat,_plots_lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1390)
+	- landPurchased(_token_id,msg.sender,_token_id,msg.sender,_name,_plots_lat[0],_plots_lng[0],_plots_lat.length,current_plot_price,(current_plot_empire_score * _plots_lng.length),now) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1545-1547)
+		- processPurchase(_name,_plots_lat,_plots_lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1390)
+	- taxDistributed(_totalDivs,_totalPlayers,now) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1630)
+		- calcPlayerDivs(m_newPlot_taxPercent.mul(_runningTotal)) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1392)
+Reentrancy in PlanetCryptoToken.buyLand(bytes32,int256[],int256[],address) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1353-1411):
+	External calls:
+	- processPurchase(_name,_plots_lat,_plots_lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1390)
+		- lat = planetCryptoUtils_interface.roundLatLngFull(zoom,lat) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1681)
+		- lng = planetCryptoUtils_interface.roundLatLngFull(zoom,lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1682)
+	- planetCryptoCoin_interface.transfer(msg.sender,_token_rewards) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1404)
+	- validatePurchase(_plots_lat,_plots_lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1357)
+		- require(bool,string)(planetCryptoUtils_interface.validatePurchase(msg.sender,msg.value,plots_lat,plots_lng) == true,Not enough ETH!) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1013)
+	- validateLand(_plots_lat,_plots_lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1358)
+		- require(bool,string)(planetCryptoUtils_interface.validateLand(msg.sender,plots_lat,plots_lng) == true,Some of this land already owned!) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1005)
+	External calls sending eth:
+	- _runningTotal = _runningTotal.sub(processReferer(_referrer)) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1366)
+		- _referrer.send(_referrerAmnt) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1417)
+	- processDevPayment(_runningTotal) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1381)
+		- ! devBankAddress.send(m_newPlot_devPercent.mul(_runningTotal)) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1427)
+	Event emitted after the call(s):
+	- issueCoinTokens(msg.sender,msg.sender,_token_rewards,now) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1406)
+Reentrancy in PlanetCryptoToken.buyLandWithTokens(bytes32,int256[],int256[]) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1342-1349):
+	External calls:
+	- processPurchase(_name,_plots_lat,_plots_lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1347)
+		- lat = planetCryptoUtils_interface.roundLatLngFull(zoom,lat) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1681)
+		- lng = planetCryptoUtils_interface.roundLatLngFull(zoom,lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1682)
+	- validateTokenPurchase(_plots_lat,_plots_lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1343)
+		- require(bool,string)(planetCryptoUtils_interface.validateTokenPurchase(msg.sender,plots_lat,plots_lng) == true,Not enough COINS to buy these plots!) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1020)
+		- require(bool,string)(planetCryptoCoin_interface.transferFrom(msg.sender,tokenBankAddress,plots_lat.length) == true,Token transfer failed) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1025)
+	- validateLand(_plots_lat,_plots_lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1343)
+		- require(bool,string)(planetCryptoUtils_interface.validateLand(msg.sender,plots_lat,plots_lng) == true,Some of this land already owned!) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1005)
+	Event emitted after the call(s):
+	- Transfer(address(0),to,tokenId) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#523)
+		- processPurchase(_name,_plots_lat,_plots_lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1347)
+	- landPurchased(_token_id,msg.sender,_token_id,msg.sender,_name,_plots_lat[0],_plots_lng[0],_plots_lat.length,current_plot_price,(current_plot_empire_score * _plots_lng.length),now) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1545-1547)
+		- processPurchase(_name,_plots_lat,_plots_lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1347)
+Reentrancy in PlanetCryptoToken.processPurchase(bytes32,int256[],int256[]) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1507-1553):
+	External calls:
+	- setupPlotOwnership(_token_id,_plots_lat,_plots_lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1531)
+		- lat = planetCryptoUtils_interface.roundLatLngFull(zoom,lat) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1681)
+		- lng = planetCryptoUtils_interface.roundLatLngFull(zoom,lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1682)
+	Event emitted after the call(s):
+	- landPurchased(_token_id,msg.sender,_token_id,msg.sender,_name,_plots_lat[0],_plots_lng[0],_plots_lat.length,current_plot_price,(current_plot_empire_score * _plots_lng.length),now) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1545-1547)
+Reentrancy in PlanetCryptoToken.transferTokens(uint256,uint256) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1216-1236):
+	External calls:
+	- (_playerAddress,name,orig_value,current_value,empire_score,plots_lat,plots_lng) = planetCryptoToken_I.getToken(c,false) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1221-1230)
+	- transferCards(c,_playerAddress,name,orig_value,current_value,empire_score,plots_lat,plots_lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1233)
+		- lat = planetCryptoUtils_interface.roundLatLngFull(zoom,lat) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1681)
+		- lng = planetCryptoUtils_interface.roundLatLngFull(zoom,lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1682)
+	Event emitted after the call(s):
+	- Transfer(address(0),to,tokenId) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#523)
+		- transferCards(c,_playerAddress,name,orig_value,current_value,empire_score,plots_lat,plots_lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1233)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+PlanetCryptoToken.calcPlayerDivs(uint256) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1596-1636) uses timestamp for comparisons
+	Dangerous comparisons:
+	- c < all_playerObjects.length (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1606)
+	- _playerShare > 0 (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1617)
+PlanetCryptoToken.process_swap(address,address,uint256) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1844-1878) uses timestamp for comparisons
+	Dangerous comparisons:
+	- _playerObject_idx == 0 (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1867)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Address.isContract(address) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#233-244) uses assembly
+	- INLINE ASM (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#242-243)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#assembly-usage
+
+PlanetCryptoToken.initPlayers(uint32,uint32) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1191-1197) compares to a boolean constant:
+	-require(bool)(game_started == false) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1192)
+PlanetCryptoToken.transferTokens(uint256,uint256) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1216-1236) compares to a boolean constant:
+	-require(bool)(game_started == false) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1217)
+PlanetCryptoToken.validateLand(int256[],int256[]) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1003-1009) compares to a boolean constant:
+	-require(bool,string)(planetCryptoUtils_interface.validateLand(msg.sender,plots_lat,plots_lng) == true,Some of this land already owned!) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1005)
+PlanetCryptoToken.validatePurchase(int256[],int256[]) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1011-1015) compares to a boolean constant:
+	-require(bool,string)(planetCryptoUtils_interface.validatePurchase(msg.sender,msg.value,plots_lat,plots_lng) == true,Not enough ETH!) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1013)
+PlanetCryptoToken.validateTokenPurchase(int256[],int256[]) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1018-1029) compares to a boolean constant:
+	-require(bool,string)(planetCryptoUtils_interface.validateTokenPurchase(msg.sender,plots_lat,plots_lng) == true,Not enough COINS to buy these plots!) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1020)
+PlanetCryptoToken.validateTokenPurchase(int256[],int256[]) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1018-1029) compares to a boolean constant:
+	-require(bool,string)(planetCryptoCoin_interface.transferFrom(msg.sender,tokenBankAddress,plots_lat.length) == true,Token transfer failed) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1025)
+PlanetCryptoToken.validateResale(uint256) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1032-1035) compares to a boolean constant:
+	-require(bool,string)(planetCryptoUtils_interface.validateResale(msg.sender,msg.value,_token_id) == true,Not enough ETH to buy this card!) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1033)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#boolean-equality
+
+PlanetCryptoToken.p_update_action(uint256,address,uint256,string) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1885-1970) has a high cyclomatic complexity (25).
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#cyclomatic-complexity
+
+ERC721Enumerable_custom._burn(address,uint256) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#760-774) is never used and should be removed
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dead-code
+
+Version constraint ^0.4.24 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ABIEncoderV2PackedStorage_0.4.x
+	- ExpExponentCleanup
+	- EventStructWrongData.
+It is used by:
+	- ^0.4.24 (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1)
+solc-0.4.24 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Constant ERC165._InterfaceId_ERC165 (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#30) is not in UPPER_CASE_WITH_UNDERSCORES
+Contract ERC721_custom (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#253-604) is not in CapWords
+Function ERC721_custom.internal_transferFrom(address,address,uint256) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#401-428) is not in mixedCase
+Parameter ERC721_custom.internal_transferFrom(address,address,uint256)._from (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#402) is not in mixedCase
+Constant ERC721_custom._InterfaceId_ERC721 (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#274) is not in UPPER_CASE_WITH_UNDERSCORES
+Contract ERC721Enumerable_custom (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#632-775) is not in CapWords
+Constant ERC721Enumerable_custom._InterfaceId_ERC721Enumerable (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#645) is not in UPPER_CASE_WITH_UNDERSCORES
+Contract ERC721Metadata_custom (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#789-848) is not in CapWords
+Constant ERC721Metadata_custom.InterfaceId_ERC721Metadata (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#799) is not in UPPER_CASE_WITH_UNDERSCORES
+Contract ERC721Full_custom (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#851-856) is not in CapWords
+Contract PlanetCryptoCoin_I (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#859-863) is not in CapWords
+Contract PlanetCryptoUtils_I (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#865-885) is not in CapWords
+Parameter PlanetCryptoUtils_I.validateLand(address,int256[],int256[]).plots_lat (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#866) is not in mixedCase
+Parameter PlanetCryptoUtils_I.validateLand(address,int256[],int256[]).plots_lng (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#866) is not in mixedCase
+Parameter PlanetCryptoUtils_I.validatePurchase(address,uint256,int256[],int256[]).plots_lat (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#867) is not in mixedCase
+Parameter PlanetCryptoUtils_I.validatePurchase(address,uint256,int256[],int256[]).plots_lng (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#867) is not in mixedCase
+Parameter PlanetCryptoUtils_I.validateTokenPurchase(address,int256[],int256[]).plots_lat (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#868) is not in mixedCase
+Parameter PlanetCryptoUtils_I.validateTokenPurchase(address,int256[],int256[]).plots_lng (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#868) is not in mixedCase
+Parameter PlanetCryptoUtils_I.validateResale(address,uint256,uint256)._token_id (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#869) is not in mixedCase
+Parameter PlanetCryptoUtils_I.roundLatLngFull(uint8,int256).__in (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#884) is not in mixedCase
+Contract PlanetCryptoToken_I (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#887-925) is not in CapWords
+Function PlanetCryptoToken_I.all_playerObjects(uint256) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#889-893) is not in mixedCase
+Parameter PlanetCryptoToken_I.getToken(uint256,bool)._token_id (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#899) is not in mixedCase
+Function PlanetCryptoToken_I.tax_distributed() (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#910) is not in mixedCase
+Function PlanetCryptoToken_I.tax_fund() (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#911) is not in mixedCase
+Function PlanetCryptoToken_I.tokens_rewards_allocated() (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#915) is not in mixedCase
+Function PlanetCryptoToken_I.tokens_rewards_available() (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#916) is not in mixedCase
+Function PlanetCryptoToken_I.total_empire_score() (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#918) is not in mixedCase
+Function PlanetCryptoToken_I.total_land_sold() (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#919) is not in mixedCase
+Function PlanetCryptoToken_I.total_trades() (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#920) is not in mixedCase
+Function PlanetCryptoToken_I.current_plot_price() (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#922) is not in mixedCase
+Struct Percent.percent (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#930-933) is not in CapWords
+Struct PlanetCryptoToken.plotDetail (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1053-1061) is not in CapWords
+Struct PlanetCryptoToken.plotBasic (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1063-1066) is not in CapWords
+Struct PlanetCryptoToken.player (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1068-1075) is not in CapWords
+Event PlanetCryptoToken.referralPaid(address,address,uint256,uint256) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#966-967) is not in CapWords
+Event PlanetCryptoToken.issueCoinTokens(address,address,uint256,uint256) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#969-970) is not in CapWords
+Event PlanetCryptoToken.landPurchased(uint256,address,uint256,address,bytes32,int256,int256,uint256,uint256,uint256,uint256) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#972-973) is not in CapWords
+Event PlanetCryptoToken.taxDistributed(uint256,uint256,uint256) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#975) is not in CapWords
+Event PlanetCryptoToken.cardBought(uint256,address,address,uint256,address,address,bytes32,uint256,uint256,uint256,uint256,uint256) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#977-983) is not in CapWords
+Event PlanetCryptoToken.cardChange(uint256,address,uint256,address,uint256,bytes32,uint256) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#985-989) is not in CapWords
+Parameter PlanetCryptoToken.initPlayers(uint32,uint32)._start (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1191) is not in mixedCase
+Parameter PlanetCryptoToken.initPlayers(uint32,uint32)._end (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1191) is not in mixedCase
+Parameter PlanetCryptoToken.transferPlayer(uint256)._player_id (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1199) is not in mixedCase
+Parameter PlanetCryptoToken.transferTokens(uint256,uint256)._start (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1216) is not in mixedCase
+Parameter PlanetCryptoToken.transferTokens(uint256,uint256)._end (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1216) is not in mixedCase
+Parameter PlanetCryptoToken.transferCards(uint256,address,bytes32,uint256,uint256,uint256,int256[],int256[])._cardID (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1242) is not in mixedCase
+Parameter PlanetCryptoToken.transferCards(uint256,address,bytes32,uint256,uint256,uint256,int256[],int256[]).token_owner (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1243) is not in mixedCase
+Parameter PlanetCryptoToken.transferCards(uint256,address,bytes32,uint256,uint256,uint256,int256[],int256[]).orig_value (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1245) is not in mixedCase
+Parameter PlanetCryptoToken.transferCards(uint256,address,bytes32,uint256,uint256,uint256,int256[],int256[]).current_value (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1246) is not in mixedCase
+Parameter PlanetCryptoToken.transferCards(uint256,address,bytes32,uint256,uint256,uint256,int256[],int256[]).empire_score (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1247) is not in mixedCase
+Parameter PlanetCryptoToken.transferCards(uint256,address,bytes32,uint256,uint256,uint256,int256[],int256[]).plots_lat (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1248) is not in mixedCase
+Parameter PlanetCryptoToken.transferCards(uint256,address,bytes32,uint256,uint256,uint256,int256[],int256[]).plots_lng (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1249) is not in mixedCase
+Parameter PlanetCryptoToken.getToken(uint256,bool)._tokenId (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1283) is not in mixedCase
+Parameter PlanetCryptoToken.getTokenEnhanced(uint256,bool)._tokenId (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1303) is not in mixedCase
+Parameter PlanetCryptoToken.buyLandWithTokens(bytes32,int256[],int256[])._name (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1342) is not in mixedCase
+Parameter PlanetCryptoToken.buyLandWithTokens(bytes32,int256[],int256[])._plots_lat (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1342) is not in mixedCase
+Parameter PlanetCryptoToken.buyLandWithTokens(bytes32,int256[],int256[])._plots_lng (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1342) is not in mixedCase
+Parameter PlanetCryptoToken.buyLand(bytes32,int256[],int256[],address)._name (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1353) is not in mixedCase
+Parameter PlanetCryptoToken.buyLand(bytes32,int256[],int256[],address)._plots_lat (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1354) is not in mixedCase
+Parameter PlanetCryptoToken.buyLand(bytes32,int256[],int256[],address)._plots_lng (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1354) is not in mixedCase
+Parameter PlanetCryptoToken.buyLand(bytes32,int256[],int256[],address)._referrer (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1355) is not in mixedCase
+Parameter PlanetCryptoToken.processReferer(address)._referrer (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1413) is not in mixedCase
+Parameter PlanetCryptoToken.processDevPayment(uint256)._runningTotal (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1426) is not in mixedCase
+Parameter PlanetCryptoToken.buyCard(uint256,address)._token_id (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1432) is not in mixedCase
+Parameter PlanetCryptoToken.buyCard(uint256,address)._referrer (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1432) is not in mixedCase
+Parameter PlanetCryptoToken.processPurchase(bytes32,int256[],int256[])._name (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1507) is not in mixedCase
+Parameter PlanetCryptoToken.processPurchase(bytes32,int256[],int256[])._plots_lat (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1508) is not in mixedCase
+Parameter PlanetCryptoToken.processPurchase(bytes32,int256[],int256[])._plots_lng (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1508) is not in mixedCase
+Parameter PlanetCryptoToken.updateCardDetail(uint256,uint256,bytes32)._token_id (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1555) is not in mixedCase
+Parameter PlanetCryptoToken.updateCardDetail(uint256,uint256,bytes32)._updateType (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1555) is not in mixedCase
+Parameter PlanetCryptoToken.updateCardDetail(uint256,uint256,bytes32)._data (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1555) is not in mixedCase
+Parameter PlanetCryptoToken.calcPlayerDivs(uint256)._value (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1596) is not in mixedCase
+Parameter PlanetCryptoToken.setupPlotOwnership(uint256,int256[],int256[])._token_id (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1641) is not in mixedCase
+Parameter PlanetCryptoToken.setupPlotOwnership(uint256,int256[],int256[])._plots_lat (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1641) is not in mixedCase
+Parameter PlanetCryptoToken.setupPlotOwnership(uint256,int256[],int256[])._plots_lng (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1641) is not in mixedCase
+Parameter PlanetCryptoToken.setupZoomLvl(uint8,int256,int256,uint256)._token_id (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1679) is not in mixedCase
+Parameter PlanetCryptoToken.queryMap(uint8,int256[],int256[]).lat_rows (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1749) is not in mixedCase
+Parameter PlanetCryptoToken.queryMap(uint8,int256[],int256[]).lng_columns (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1749) is not in mixedCase
+Parameter PlanetCryptoToken.queryPlotExists(uint8,int256[],int256[]).lat_rows (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1785) is not in mixedCase
+Parameter PlanetCryptoToken.queryPlotExists(uint8,int256[],int256[]).lng_columns (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1785) is not in mixedCase
+Parameter PlanetCryptoToken.safeTransferFrom(address,address,uint256,bytes)._data (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1825) is not in mixedCase
+Function PlanetCryptoToken.process_swap(address,address,uint256) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1844-1878) is not in mixedCase
+Function PlanetCryptoToken.p_update_action(uint256,address,uint256,string) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1885-1970) is not in mixedCase
+Parameter PlanetCryptoToken.p_update_action(uint256,address,uint256,string)._type (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1885) is not in mixedCase
+Parameter PlanetCryptoToken.p_update_action(uint256,address,uint256,string)._address (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1885) is not in mixedCase
+Parameter PlanetCryptoToken.p_update_action(uint256,address,uint256,string)._val (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1885) is not in mixedCase
+Parameter PlanetCryptoToken.p_update_action(uint256,address,uint256,string)._strVal (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1885) is not in mixedCase
+Parameter PlanetCryptoToken.burn(uint256)._token_id (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1972) is not in mixedCase
+Parameter PlanetCryptoToken.processBurn(address,uint256)._token_owner (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1986) is not in mixedCase
+Parameter PlanetCryptoToken.processBurn(address,uint256)._val (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1986) is not in mixedCase
+Function PlanetCryptoToken.p_withdrawDevHoldings() (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#2043-2050) is not in mixedCase
+Variable PlanetCryptoToken.planetCryptoCoin_interface (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1080) is not in mixedCase
+Variable PlanetCryptoToken.planetCryptoUtils_interface (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1084) is not in mixedCase
+Variable PlanetCryptoToken.m_newPlot_devPercent (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1089) is not in mixedCase
+Variable PlanetCryptoToken.m_newPlot_taxPercent (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1090) is not in mixedCase
+Variable PlanetCryptoToken.m_resalePlot_devPercent (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1092) is not in mixedCase
+Variable PlanetCryptoToken.m_resalePlot_taxPercent (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1093) is not in mixedCase
+Variable PlanetCryptoToken.m_resalePlot_ownerPercent (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1094) is not in mixedCase
+Variable PlanetCryptoToken.m_refPercent (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1096) is not in mixedCase
+Variable PlanetCryptoToken.m_empireScoreMultiplier (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1098) is not in mixedCase
+Variable PlanetCryptoToken.m_resaleMultipler (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1099) is not in mixedCase
+Variable PlanetCryptoToken.tokens_rewards_available (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1113) is not in mixedCase
+Variable PlanetCryptoToken.tokens_rewards_allocated (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1114) is not in mixedCase
+Variable PlanetCryptoToken.min_plots_purchase_for_token_reward (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1117) is not in mixedCase
+Variable PlanetCryptoToken.plots_token_reward_divisor (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1118) is not in mixedCase
+Variable PlanetCryptoToken.current_plot_price (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1122) is not in mixedCase
+Variable PlanetCryptoToken.price_update_amount (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1123) is not in mixedCase
+Variable PlanetCryptoToken.current_plot_empire_score (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1127) is not in mixedCase
+Variable PlanetCryptoToken.tax_fund (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1132) is not in mixedCase
+Variable PlanetCryptoToken.tax_distributed (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1133) is not in mixedCase
+Variable PlanetCryptoToken.game_started (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1137) is not in mixedCase
+Variable PlanetCryptoToken.total_land_sold (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1138) is not in mixedCase
+Variable PlanetCryptoToken.total_trades (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1139) is not in mixedCase
+Variable PlanetCryptoToken.tax_carried_forward (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1140) is not in mixedCase
+Variable PlanetCryptoToken.total_empire_score (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1142) is not in mixedCase
+Variable PlanetCryptoToken.all_playerObjects (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1143) is not in mixedCase
+Variable PlanetCryptoToken.latlngTokenID_grids (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1155) is not in mixedCase
+Variable PlanetCryptoToken.latlngTokenID_zoomAll (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1160) is not in mixedCase
+Variable PlanetCryptoToken.tokenIDlatlngLookup_zoomAll (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1162) is not in mixedCase
+Variable PlanetCryptoToken.planetCryptoToken_I (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1165) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in PlanetCryptoToken.buyCard(uint256,address) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1432-1505):
+	External calls:
+	- _runningTotal = _runningTotal.sub(processReferer(_referrer)) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1437)
+		- _referrer.send(_referrerAmnt) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1417)
+	State variables written after the call(s):
+	- tax_fund = tax_fund.add(m_resalePlot_taxPercent.mul(_runningTotal)) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1449)
+Reentrancy in PlanetCryptoToken.buyCard(uint256,address) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1432-1505):
+	External calls:
+	- _runningTotal = _runningTotal.sub(processReferer(_referrer)) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1437)
+		- _referrer.send(_referrerAmnt) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1417)
+	- processDevPayment(_runningTotal) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1452)
+		- ! devBankAddress.send(m_newPlot_devPercent.mul(_runningTotal)) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1427)
+	State variables written after the call(s):
+	- processDevPayment(_runningTotal) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1452)
+		- devHoldings = devHoldings.add(m_newPlot_devPercent.mul(_runningTotal)) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1428)
+	- playersFundsOwed[from] = playersFundsOwed[from].add(m_resalePlot_ownerPercent.mul(_runningTotal)) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1463)
+Reentrancy in PlanetCryptoToken.buyCard(uint256,address) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1432-1505):
+	External calls:
+	- _runningTotal = _runningTotal.sub(processReferer(_referrer)) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1437)
+		- _referrer.send(_referrerAmnt) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1417)
+	- processDevPayment(_runningTotal) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1452)
+		- ! devBankAddress.send(m_newPlot_devPercent.mul(_runningTotal)) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1427)
+	- ! from.send(m_resalePlot_ownerPercent.mul(_runningTotal)) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1462)
+	State variables written after the call(s):
+	- internal_transferFrom(from,msg.sender,_token_id) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1470)
+		- _ownedTokens[to].push(tokenId) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#708)
+	- internal_transferFrom(from,msg.sender,_token_id) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1470)
+		- _ownedTokensCount[to] = _ownedTokensCount[to].add(1) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#547)
+		- _ownedTokensCount[_from] = _ownedTokensCount[_from] - 1 (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#418)
+	- internal_transferFrom(from,msg.sender,_token_id) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1470)
+		- _ownedTokensIndex[tokenId] = length (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#709)
+	- internal_transferFrom(from,msg.sender,_token_id) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1470)
+		- _tokenApprovals[tokenId] = address(0) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#413)
+	- internal_transferFrom(from,msg.sender,_token_id) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1470)
+		- _tokenOwner[tokenId] = to (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#546)
+		- _tokenOwner[tokenId] = address(0) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#422)
+	- process_swap(from,msg.sender,_token_id) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1469)
+		- all_playerObjects[_playerObject_idx].totalEmpireScore = all_playerObjects[_playerObject_idx].totalEmpireScore - _empireScore (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1857-1858)
+		- all_playerObjects[_playerObject_idx].totalLand = all_playerObjects[_playerObject_idx].totalLand - _size (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1860-1861)
+		- all_playerObjects.push(player(to,now,0,0)) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1868)
+		- all_playerObjects[_playerObject_idx].totalEmpireScore = all_playerObjects[_playerObject_idx].totalEmpireScore + _empireScore (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1873-1874)
+		- all_playerObjects[_playerObject_idx].totalLand = all_playerObjects[_playerObject_idx].totalLand + _size (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1876-1877)
+	- all_playerObjects[playerAddressToPlayerObjectID[msg.sender]].totalEmpireScore = all_playerObjects[playerAddressToPlayerObjectID[msg.sender]].totalEmpireScore + (_newEmpireScore - _empireScore) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1481-1482)
+	- process_swap(from,msg.sender,_token_id) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1469)
+		- playerAddressToPlayerObjectID[to] = all_playerObjects.length - 1 (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1869)
+	- calcPlayerDivs(m_resalePlot_taxPercent.mul(_runningTotal)) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1495)
+		- playersFundsOwed[all_playerObjects[c].playerAddress] = playersFundsOwed[all_playerObjects[c].playerAddress].add(_playerShare) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1620)
+	- plotDetails[tokenIDplotdetailsIndexId[_token_id]].empire_score = _newEmpireScore (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1485)
+	- plotDetails[tokenIDplotdetailsIndexId[_token_id]].current_value = m_resaleMultipler.mul(plotDetails[tokenIDplotdetailsIndexId[_token_id]].current_value) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1489-1490)
+	- calcPlayerDivs(m_resalePlot_taxPercent.mul(_runningTotal)) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1495)
+		- tax_carried_forward = 0 (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1629)
+		- tax_carried_forward = tax_carried_forward + _value (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1634)
+	- calcPlayerDivs(m_resalePlot_taxPercent.mul(_runningTotal)) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1495)
+		- tax_distributed = tax_distributed.add(_playerShare) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1621)
+	- total_empire_score = total_empire_score + (_newEmpireScore - _empireScore) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1487)
+	- total_trades = total_trades + 1 (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1492)
+	Event emitted after the call(s):
+	- Transfer(_from,to,tokenId) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#426)
+		- internal_transferFrom(from,msg.sender,_token_id) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1470)
+	- cardBought(_token_id,from,msg.sender,_token_id,from,msg.sender,_plotDetail.name,_origValue,msg.value,_empireScore,_newEmpireScore,now) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1499-1504)
+	- taxDistributed(_totalDivs,_totalPlayers,now) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1630)
+		- calcPlayerDivs(m_resalePlot_taxPercent.mul(_runningTotal)) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1495)
+Reentrancy in PlanetCryptoToken.buyLand(bytes32,int256[],int256[],address) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1353-1411):
+	External calls:
+	- _runningTotal = _runningTotal.sub(processReferer(_referrer)) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1366)
+		- _referrer.send(_referrerAmnt) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1417)
+	State variables written after the call(s):
+	- tax_fund = tax_fund.add(m_newPlot_taxPercent.mul(_runningTotal)) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1378)
+Reentrancy in PlanetCryptoToken.buyLand(bytes32,int256[],int256[],address) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1353-1411):
+	External calls:
+	- _runningTotal = _runningTotal.sub(processReferer(_referrer)) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1366)
+		- _referrer.send(_referrerAmnt) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1417)
+	- processDevPayment(_runningTotal) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1381)
+		- ! devBankAddress.send(m_newPlot_devPercent.mul(_runningTotal)) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1427)
+	State variables written after the call(s):
+	- processPurchase(_name,_plots_lat,_plots_lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1390)
+		- _allTokens.push(tokenId) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#751)
+	- processPurchase(_name,_plots_lat,_plots_lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1390)
+		- _allTokensIndex[tokenId] = _allTokens.length (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#750)
+	- processPurchase(_name,_plots_lat,_plots_lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1390)
+		- _ownedTokens[to].push(tokenId) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#708)
+	- processPurchase(_name,_plots_lat,_plots_lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1390)
+		- _ownedTokensCount[to] = _ownedTokensCount[to].add(1) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#547)
+	- processPurchase(_name,_plots_lat,_plots_lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1390)
+		- _ownedTokensIndex[tokenId] = length (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#709)
+	- processPurchase(_name,_plots_lat,_plots_lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1390)
+		- _tokenOwner[tokenId] = to (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#546)
+	- processPurchase(_name,_plots_lat,_plots_lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1390)
+		- all_playerObjects[_playerObject_idx].totalEmpireScore = all_playerObjects[playerAddressToPlayerObjectID[msg.sender]].totalEmpireScore + (current_plot_empire_score * _plots_lng.length) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1536-1537)
+		- all_playerObjects[_playerObject_idx].totalLand = all_playerObjects[_playerObject_idx].totalLand + _plots_lat.length (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1541-1542)
+	- processPurchase(_name,_plots_lat,_plots_lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1390)
+		- current_plot_price = current_plot_price + (price_update_amount * _plots_lat.length) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1550)
+	- processDevPayment(_runningTotal) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1381)
+		- devHoldings = devHoldings.add(m_newPlot_devPercent.mul(_runningTotal)) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1428)
+	- game_started = true (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1394)
+	- processPurchase(_name,_plots_lat,_plots_lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1390)
+		- latlngTokenID_grids[_plots_lat[c]][_plots_lng[c]] = _token_id (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1646-1647)
+	- processPurchase(_name,_plots_lat,_plots_lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1390)
+		- latlngTokenID_zoomAll[zoom][lat][lng] = _token_id (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1731)
+	- calcPlayerDivs(m_newPlot_taxPercent.mul(_runningTotal)) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1392)
+		- playersFundsOwed[all_playerObjects[c].playerAddress] = playersFundsOwed[all_playerObjects[c].playerAddress].add(_playerShare) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1620)
+	- processPurchase(_name,_plots_lat,_plots_lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1390)
+		- plotDetails.push(plotDetail(_name,current_plot_price * _plots_lat.length,current_plot_price * _plots_lat.length,current_plot_empire_score * _plots_lng.length,_plots_lat,_plots_lng,)) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1520-1526)
+	- calcPlayerDivs(m_newPlot_taxPercent.mul(_runningTotal)) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1392)
+		- tax_carried_forward = 0 (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1629)
+		- tax_carried_forward = tax_carried_forward + _value (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1634)
+	- calcPlayerDivs(m_newPlot_taxPercent.mul(_runningTotal)) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1392)
+		- tax_distributed = tax_distributed.add(_playerShare) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1621)
+	- processPurchase(_name,_plots_lat,_plots_lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1390)
+		- tokenIDlatlngLookup_zoomAll[zoom][_token_id].push(plotBasic(lat,lng)) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1732)
+	- processPurchase(_name,_plots_lat,_plots_lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1390)
+		- tokenIDplotdetailsIndexId[_token_id] = plotDetails.length - 1 (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1528)
+	- tokens_rewards_allocated = tokens_rewards_allocated + _token_rewards (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1407)
+	- tokens_rewards_available = tokens_rewards_available - _token_rewards (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1408)
+	- processPurchase(_name,_plots_lat,_plots_lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1390)
+		- total_empire_score = total_empire_score + (current_plot_empire_score * _plots_lng.length) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1539)
+	- processPurchase(_name,_plots_lat,_plots_lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1390)
+		- total_land_sold = total_land_sold + _plots_lat.length (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1551)
+	Event emitted after the call(s):
+	- Transfer(address(0),to,tokenId) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#523)
+		- processPurchase(_name,_plots_lat,_plots_lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1390)
+	- issueCoinTokens(msg.sender,msg.sender,_token_rewards,now) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1406)
+	- landPurchased(_token_id,msg.sender,_token_id,msg.sender,_name,_plots_lat[0],_plots_lng[0],_plots_lat.length,current_plot_price,(current_plot_empire_score * _plots_lng.length),now) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1545-1547)
+		- processPurchase(_name,_plots_lat,_plots_lng) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1390)
+	- taxDistributed(_totalDivs,_totalPlayers,now) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1630)
+		- calcPlayerDivs(m_newPlot_taxPercent.mul(_runningTotal)) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1392)
+Reentrancy in PlanetCryptoToken.processReferer(address) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1413-1423):
+	External calls:
+	- _referrer.send(_referrerAmnt) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1417)
+	Event emitted after the call(s):
+	- referralPaid(_referrer,_referrer,_referrerAmnt,now) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1418)
+Reentrancy in PlanetCryptoToken.updateCardDetail(uint256,uint256,bytes32) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1555-1588):
+	External calls:
+	- processDevPayment(msg.value) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1576)
+		- ! devBankAddress.send(m_newPlot_devPercent.mul(_runningTotal)) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1427)
+	Event emitted after the call(s):
+	- cardChange(_token_id,msg.sender,_token_id,msg.sender,_updateType,_data,now) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1583-1586)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+PlanetCryptoToken.calcPlayerDivs(uint256) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1596-1636) uses literals with too many digits:
+	- _playersPercent = (all_playerObjects[c].totalEmpireScore * 10000000 / total_empire_score * 10000000) / 10000000 (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1610-1611)
+PlanetCryptoToken.calcPlayerDivs(uint256) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1596-1636) uses literals with too many digits:
+	- _playerShare = _taxToDivide / 10000000 * _playersPercent (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1613)
+PlanetCryptoToken.slitherConstructorVariables() (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#959-2060) uses literals with too many digits:
+	- current_plot_price = 20000000000000000 (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1122)
+PlanetCryptoToken.slitherConstructorVariables() (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#959-2060) uses literals with too many digits:
+	- price_update_amount = 2000000000000 (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1123)
+PlanetCryptoToken.slitherConstructorVariables() (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#959-2060) uses literals with too many digits:
+	- cardChangeNameCost = 50000000000000000 (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1124)
+PlanetCryptoToken.slitherConstructorVariables() (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#959-2060) uses literals with too many digits:
+	- cardImageCost = 100000000000000000 (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1125)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+Loop condition c < all_playerObjects.length (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1606) should use cached array length instead of referencing `length` member of the storage array.
+ Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#cache-array-length
+
+PlanetCryptoToken.min_plots_purchase_for_token_reward (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1117) should be constant 
+PlanetCryptoToken.planetCryptoToken_I (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1165) should be constant 
+PlanetCryptoToken.plots_token_reward_divisor (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1118) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+
+onERC721Received(address,address,uint256,bytes) should be declared external:
+	- IERC721Receiver.onERC721Received(address,address,uint256,bytes) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#143-150)
+buyLandWithTokens(bytes32,int256[],int256[]) should be declared external:
+	- PlanetCryptoToken.buyLandWithTokens(bytes32,int256[],int256[]) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1342-1349)
+buyLand(bytes32,int256[],int256[],address) should be declared external:
+	- PlanetCryptoToken.buyLand(bytes32,int256[],int256[],address) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1353-1411)
+queryMap(uint8,int256[],int256[]) should be declared external:
+	- PlanetCryptoToken.queryMap(uint8,int256[],int256[]) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1749-1783)
+queryPlotExists(uint8,int256[],int256[]) should be declared external:
+	- PlanetCryptoToken.queryPlotExists(uint8,int256[],int256[]) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1785-1809)
+p_update_action(uint256,address,uint256,string) should be declared external:
+	- PlanetCryptoToken.p_update_action(uint256,address,uint256,string) (0x1806b3527c18fb532c46405f6f014c1f381b499a.sol#1885-1970)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#public-function-that-could-be-declared-external
+./0x1806b3527c18fb532c46405f6f014c1f381b499a.sol analyzed (17 contracts with 94 detectors), 216 result(s) found
+
+real	0m8.672s
+user	0m8.203s
+sys	0m0.467s

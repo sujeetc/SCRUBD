@@ -1,0 +1,925 @@
+'solc --version' running
+'solc ./0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol:
+Warning: Contract code size exceeds 24576 bytes (a limit introduced in Spurious Dragon). This contract may not be deployable on mainnet. Consider enabling the optimizer (with a low "runs" value!), turning off revert strings, or using libraries.
+   --> ./0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol:280:1:
+    |
+280 | contract YZYVault is Context, Ownable {
+    | ^ (Relevant source part starts here and spans across multiple lines).
+
+
+
+Reentrancy in YZYVault.stake() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#738-766):
+	External calls:
+	- require(bool,string)(swapAndLiquifyForYZY(msg.value),Vault: Failed to get LP tokens.) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#746)
+		- _yzy.approve(address(_uniswapV2Router),tokenAmount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#672)
+		- _uniswapV2Router.addLiquidityETH{value: ethAmount}(address(_yzy),tokenAmount,0,0,address(this),block.timestamp) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#675-682)
+		- _uniswapV2Router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: ethAmount}(0,path,address(this),block.timestamp) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#664-666)
+	- claimYzyReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#753)
+		- _yzy.transfer(to,yzyBal) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1092)
+		- _yzy.transfer(to,amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1094)
+		- _yzy.burnFromVault(burnAmount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#900)
+		- _yzy.transfer(_msgSender(),amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1070)
+	- claimSwapReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#754)
+		- IERC20(fromTokenAddress).approve(address(_uniswapV2Router),tokenAmount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#719-722)
+		- _uniswapV2Router.swapExactTokensForTokensSupportingFeeOnTransferTokens(tokenAmount,0,path,receivedAddress,block.timestamp) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#725-731)
+		- _yzy.burnFromVault(burnAmount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#940)
+		- require(bool,string)(IERC20(_weth).transfer(_msgSender(),wethTokenReward),Vault: Faild to WETH) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1003-1006)
+		- _yzy.transfer(_msgSender(),amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1070)
+	External calls sending eth:
+	- require(bool,string)(swapAndLiquifyForYZY(msg.value),Vault: Failed to get LP tokens.) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#746)
+		- _uniswapV2Router.addLiquidityETH{value: ethAmount}(address(_yzy),tokenAmount,0,0,address(this),block.timestamp) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#675-682)
+		- _uniswapV2Router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: ethAmount}(0,path,address(this),block.timestamp) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#664-666)
+	State variables written after the call(s):
+	- claimSwapReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#754)
+		- _lotteryAmount = _lotteryAmount.sub(amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1071)
+	YZYVault._lotteryAmount (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#327) can be used in cross function reentrancies:
+	- YZYVault._sendLotteryAmount() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1034-1086)
+	- claimSwapReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#754)
+		- _lotteryPaidOut = _lotteryPaidOut.add(amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1072)
+	YZYVault._lotteryPaidOut (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#334) can be used in cross function reentrancies:
+	- YZYVault._lotteryPaidOut (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#334)
+	- YZYVault._sendLotteryAmount() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1034-1086)
+	- claimSwapReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#754)
+		- staker.lastClimedBlockForSwapReward = block.number (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#951)
+		- staker.lastClimedBlockForSwapReward = _getLastAvailableClaimedBlock(staker.lastClimedBlockForSwapReward,block.number,_claimPeriodForSwapReward) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#953-957)
+	YZYVault._stakers (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#343) can be used in cross function reentrancies:
+	- YZYVault._stakers (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#343)
+	- YZYVault.claimSwapAvailableReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#916-932)
+	- YZYVault.claimSwapReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#934-961)
+	- YZYVault.claimYzyAvailableReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#861-882)
+	- YZYVault.claimYzyReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#884-914)
+	- YZYVault.getSwapReward(address) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#846-859)
+	- YZYVault.getYzyReward(address) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#831-844)
+	- YZYVault.stake() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#738-766)
+	- YZYVault.stakeLPToken(uint256) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#771-792)
+	- YZYVault.unstake(uint256) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#797-829)
+	- staker.stakedAmount = staker.stakedAmount.add(newBalance) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#760)
+	YZYVault._stakers (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#343) can be used in cross function reentrancies:
+	- YZYVault._stakers (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#343)
+	- YZYVault.claimSwapAvailableReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#916-932)
+	- YZYVault.claimSwapReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#934-961)
+	- YZYVault.claimYzyAvailableReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#861-882)
+	- YZYVault.claimYzyReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#884-914)
+	- YZYVault.getSwapReward(address) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#846-859)
+	- YZYVault.getYzyReward(address) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#831-844)
+	- YZYVault.stake() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#738-766)
+	- YZYVault.stakeLPToken(uint256) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#771-792)
+	- YZYVault.unstake(uint256) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#797-829)
+	- staker.lockedTo = _lockPeriod.add(block.timestamp) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#761)
+	YZYVault._stakers (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#343) can be used in cross function reentrancies:
+	- YZYVault._stakers (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#343)
+	- YZYVault.claimSwapAvailableReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#916-932)
+	- YZYVault.claimSwapReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#934-961)
+	- YZYVault.claimYzyAvailableReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#861-882)
+	- YZYVault.claimYzyReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#884-914)
+	- YZYVault.getSwapReward(address) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#846-859)
+	- YZYVault.getYzyReward(address) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#831-844)
+	- YZYVault.stake() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#738-766)
+	- YZYVault.stakeLPToken(uint256) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#771-792)
+	- YZYVault.unstake(uint256) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#797-829)
+	- claimSwapReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#754)
+		- winnerInfo.push(WinnerInfo({winner:_msgSender(),amount:amount,timestamp:block.timestamp})) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1076-1082)
+	YZYVault.winnerInfo (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#351) can be used in cross function reentrancies:
+	- YZYVault._sendLotteryAmount() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1034-1086)
+	- YZYVault.getWinners() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#586-588)
+Reentrancy in YZYVault.stake() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#738-766):
+	External calls:
+	- require(bool,string)(swapAndLiquifyForYZY(msg.value),Vault: Failed to get LP tokens.) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#746)
+		- _yzy.approve(address(_uniswapV2Router),tokenAmount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#672)
+		- _uniswapV2Router.addLiquidityETH{value: ethAmount}(address(_yzy),tokenAmount,0,0,address(this),block.timestamp) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#675-682)
+		- _uniswapV2Router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: ethAmount}(0,path,address(this),block.timestamp) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#664-666)
+	- claimYzyReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#753)
+		- _yzy.transfer(to,yzyBal) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1092)
+		- _yzy.transfer(to,amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1094)
+		- _yzy.burnFromVault(burnAmount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#900)
+		- _yzy.transfer(_msgSender(),amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1070)
+	- claimSwapReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#754)
+		- IERC20(fromTokenAddress).approve(address(_uniswapV2Router),tokenAmount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#719-722)
+		- _uniswapV2Router.swapExactTokensForTokensSupportingFeeOnTransferTokens(tokenAmount,0,path,receivedAddress,block.timestamp) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#725-731)
+		- _yzy.burnFromVault(burnAmount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#940)
+		- require(bool,string)(IERC20(_weth).transfer(_msgSender(),wethTokenReward),Vault: Faild to WETH) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1003-1006)
+		- _yzy.transfer(_msgSender(),amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1070)
+	- _sendLotteryAmount() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#765)
+		- _yzy.transfer(_msgSender(),amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1070)
+	External calls sending eth:
+	- require(bool,string)(swapAndLiquifyForYZY(msg.value),Vault: Failed to get LP tokens.) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#746)
+		- _uniswapV2Router.addLiquidityETH{value: ethAmount}(address(_yzy),tokenAmount,0,0,address(this),block.timestamp) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#675-682)
+		- _uniswapV2Router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: ethAmount}(0,path,address(this),block.timestamp) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#664-666)
+	State variables written after the call(s):
+	- _sendLotteryAmount() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#765)
+		- _lotteryAmount = _lotteryAmount.sub(amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1071)
+	YZYVault._lotteryAmount (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#327) can be used in cross function reentrancies:
+	- YZYVault._sendLotteryAmount() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1034-1086)
+	- _sendLotteryAmount() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#765)
+		- _lotteryPaidOut = _lotteryPaidOut.add(amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1072)
+	YZYVault._lotteryPaidOut (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#334) can be used in cross function reentrancies:
+	- YZYVault._lotteryPaidOut (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#334)
+	- YZYVault._sendLotteryAmount() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1034-1086)
+	- _sendLotteryAmount() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#765)
+		- winnerInfo.push(WinnerInfo({winner:_msgSender(),amount:amount,timestamp:block.timestamp})) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1076-1082)
+	YZYVault.winnerInfo (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#351) can be used in cross function reentrancies:
+	- YZYVault._sendLotteryAmount() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1034-1086)
+	- YZYVault.getWinners() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#586-588)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+YZYVault.addTaxFee(uint256) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#567-580) ignores return value by _yzy.transfer(_daoTreasury,daoTreasuryReward) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#569)
+YZYVault.stakeLPToken(uint256) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#771-792) ignores return value by _yzyETHV2Pair.transferFrom(_msgSender(),address(this),amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#774)
+YZYVault.unstake(uint256) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#797-829) ignores return value by _yzyETHV2Pair.transfer(_daoTreasury,feeAmount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#818)
+YZYVault.unstake(uint256) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#797-829) ignores return value by _yzyETHV2Pair.transfer(_msgSender(),amount.sub(feeAmount)) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#819)
+YZYVault.unstake(uint256) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#797-829) ignores return value by _yzyETHV2Pair.transfer(_msgSender(),amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#821)
+YZYVault.emergencyWithdrawToken() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#967-975) ignores return value by _yzy.transfer(_msgSender(),tokenAmount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#973)
+YZYVault._sendLotteryAmount() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1034-1086) ignores return value by _yzy.transfer(_msgSender(),amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1070)
+YZYVault.safeYzyTransfer(address,uint256) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1088-1098) ignores return value by _yzy.transfer(to,yzyBal) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1092)
+YZYVault.safeYzyTransfer(address,uint256) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1088-1098) ignores return value by _yzy.transfer(to,amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1094)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+YZYVault._sendLotteryAmount() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1034-1086) performs a multiplication on the result of a division:
+	- yzyPrice = usdcReserve.mul(1000000000000000000).div(ethReserve1).mul(ethReserve2).div(yzyReserve) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1061)
+YZYVault._sendLotteryAmount() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1034-1086) performs a multiplication on the result of a division:
+	- yzyPrice = usdcReserve.mul(1000000000000000000).div(ethReserve1).mul(ethReserve2).div(yzyReserve) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1061)
+	- lotteryValue = yzyPrice.mul(_lotteryAmount).div(1000000000000000000) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1062)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+YZYVault.getYzyPerBlockForSwapReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#615-637) uses a dangerous strict equality:
+	- multiplier == 0 || getTotalStakedAmount() == 0 (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#618)
+YZYVault.getYzyPerBlockForYzyReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#591-613) uses a dangerous strict equality:
+	- multiplier == 0 || getTotalStakedAmount() == 0 (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#594)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-strict-equalities
+
+Reentrancy in YZYVault._sendLotteryAmount() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1034-1086):
+	External calls:
+	- _yzy.transfer(_msgSender(),amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1070)
+	State variables written after the call(s):
+	- _lotteryAmount = _lotteryAmount.sub(amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1071)
+	YZYVault._lotteryAmount (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#327) can be used in cross function reentrancies:
+	- YZYVault._sendLotteryAmount() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1034-1086)
+Reentrancy in YZYVault.claimSwapAvailableReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#916-932):
+	External calls:
+	- _swapAndClaimTokens(available) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#920)
+		- IERC20(fromTokenAddress).approve(address(_uniswapV2Router),tokenAmount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#719-722)
+		- _uniswapV2Router.swapExactTokensForTokensSupportingFeeOnTransferTokens(tokenAmount,0,path,receivedAddress,block.timestamp) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#725-731)
+		- require(bool,string)(IERC20(_weth).transfer(_msgSender(),wethTokenReward),Vault: Faild to WETH) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1003-1006)
+	State variables written after the call(s):
+	- staker.lastClimedBlockForSwapReward = _getLastAvailableClaimedBlock(staker.lastClimedBlockForSwapReward,block.number,_claimPeriodForSwapReward) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#925-929)
+	YZYVault._stakers (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#343) can be used in cross function reentrancies:
+	- YZYVault._stakers (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#343)
+	- YZYVault.claimSwapAvailableReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#916-932)
+	- YZYVault.claimSwapReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#934-961)
+	- YZYVault.claimYzyAvailableReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#861-882)
+	- YZYVault.claimYzyReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#884-914)
+	- YZYVault.getSwapReward(address) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#846-859)
+	- YZYVault.getYzyReward(address) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#831-844)
+	- YZYVault.stake() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#738-766)
+	- YZYVault.stakeLPToken(uint256) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#771-792)
+	- YZYVault.unstake(uint256) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#797-829)
+Reentrancy in YZYVault.claimSwapReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#934-961):
+	External calls:
+	- _yzy.burnFromVault(burnAmount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#940)
+	- _swapAndClaimTokens(available.add(pending)) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#944)
+		- IERC20(fromTokenAddress).approve(address(_uniswapV2Router),tokenAmount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#719-722)
+		- _uniswapV2Router.swapExactTokensForTokensSupportingFeeOnTransferTokens(tokenAmount,0,path,receivedAddress,block.timestamp) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#725-731)
+		- require(bool,string)(IERC20(_weth).transfer(_msgSender(),wethTokenReward),Vault: Faild to WETH) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1003-1006)
+	State variables written after the call(s):
+	- staker.lastClimedBlockForSwapReward = block.number (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#951)
+	YZYVault._stakers (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#343) can be used in cross function reentrancies:
+	- YZYVault._stakers (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#343)
+	- YZYVault.claimSwapAvailableReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#916-932)
+	- YZYVault.claimSwapReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#934-961)
+	- YZYVault.claimYzyAvailableReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#861-882)
+	- YZYVault.claimYzyReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#884-914)
+	- YZYVault.getSwapReward(address) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#846-859)
+	- YZYVault.getYzyReward(address) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#831-844)
+	- YZYVault.stake() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#738-766)
+	- YZYVault.stakeLPToken(uint256) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#771-792)
+	- YZYVault.unstake(uint256) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#797-829)
+	- staker.lastClimedBlockForSwapReward = _getLastAvailableClaimedBlock(staker.lastClimedBlockForSwapReward,block.number,_claimPeriodForSwapReward) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#953-957)
+	YZYVault._stakers (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#343) can be used in cross function reentrancies:
+	- YZYVault._stakers (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#343)
+	- YZYVault.claimSwapAvailableReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#916-932)
+	- YZYVault.claimSwapReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#934-961)
+	- YZYVault.claimYzyAvailableReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#861-882)
+	- YZYVault.claimYzyReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#884-914)
+	- YZYVault.getSwapReward(address) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#846-859)
+	- YZYVault.getYzyReward(address) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#831-844)
+	- YZYVault.stake() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#738-766)
+	- YZYVault.stakeLPToken(uint256) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#771-792)
+	- YZYVault.unstake(uint256) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#797-829)
+Reentrancy in YZYVault.claimYzyAvailableReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#861-882):
+	External calls:
+	- require(bool,string)(safeYzyTransfer(_msgSender(),available),Vault: Failed to transfer.) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#867-870)
+		- _yzy.transfer(to,yzyBal) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1092)
+		- _yzy.transfer(to,amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1094)
+	State variables written after the call(s):
+	- staker.lastClimedBlockForYzyReward = _getLastAvailableClaimedBlock(staker.lastClimedBlockForYzyReward,block.number,_claimPeriodForYzyReward) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#875-879)
+	YZYVault._stakers (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#343) can be used in cross function reentrancies:
+	- YZYVault._stakers (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#343)
+	- YZYVault.claimSwapAvailableReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#916-932)
+	- YZYVault.claimSwapReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#934-961)
+	- YZYVault.claimYzyAvailableReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#861-882)
+	- YZYVault.claimYzyReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#884-914)
+	- YZYVault.getSwapReward(address) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#846-859)
+	- YZYVault.getYzyReward(address) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#831-844)
+	- YZYVault.stake() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#738-766)
+	- YZYVault.stakeLPToken(uint256) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#771-792)
+	- YZYVault.unstake(uint256) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#797-829)
+Reentrancy in YZYVault.claimYzyReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#884-914):
+	External calls:
+	- require(bool,string)(safeYzyTransfer(_msgSender(),available),Vault: Failed to transfer.) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#892-895)
+		- _yzy.transfer(to,yzyBal) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1092)
+		- _yzy.transfer(to,amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1094)
+	- _yzy.burnFromVault(burnAmount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#900)
+	- safeYzyTransfer(_msgSender(),pending.sub(burnAmount)) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#901)
+		- _yzy.transfer(to,yzyBal) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1092)
+		- _yzy.transfer(to,amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1094)
+	State variables written after the call(s):
+	- staker.lastClimedBlockForYzyReward = block.number (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#902)
+	YZYVault._stakers (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#343) can be used in cross function reentrancies:
+	- YZYVault._stakers (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#343)
+	- YZYVault.claimSwapAvailableReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#916-932)
+	- YZYVault.claimSwapReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#934-961)
+	- YZYVault.claimYzyAvailableReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#861-882)
+	- YZYVault.claimYzyReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#884-914)
+	- YZYVault.getSwapReward(address) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#846-859)
+	- YZYVault.getYzyReward(address) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#831-844)
+	- YZYVault.stake() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#738-766)
+	- YZYVault.stakeLPToken(uint256) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#771-792)
+	- YZYVault.unstake(uint256) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#797-829)
+Reentrancy in YZYVault.claimYzyReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#884-914):
+	External calls:
+	- require(bool,string)(safeYzyTransfer(_msgSender(),available),Vault: Failed to transfer.) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#892-895)
+		- _yzy.transfer(to,yzyBal) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1092)
+		- _yzy.transfer(to,amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1094)
+	State variables written after the call(s):
+	- staker.lastClimedBlockForYzyReward = _getLastAvailableClaimedBlock(staker.lastClimedBlockForYzyReward,block.number,_claimPeriodForYzyReward) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#904-908)
+	YZYVault._stakers (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#343) can be used in cross function reentrancies:
+	- YZYVault._stakers (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#343)
+	- YZYVault.claimSwapAvailableReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#916-932)
+	- YZYVault.claimSwapReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#934-961)
+	- YZYVault.claimYzyAvailableReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#861-882)
+	- YZYVault.claimYzyReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#884-914)
+	- YZYVault.getSwapReward(address) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#846-859)
+	- YZYVault.getYzyReward(address) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#831-844)
+	- YZYVault.stake() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#738-766)
+	- YZYVault.stakeLPToken(uint256) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#771-792)
+	- YZYVault.unstake(uint256) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#797-829)
+Reentrancy in YZYVault.stakeLPToken(uint256) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#771-792):
+	External calls:
+	- _yzyETHV2Pair.transferFrom(_msgSender(),address(this),amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#774)
+	- claimYzyReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#779)
+		- _yzy.transfer(to,yzyBal) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1092)
+		- _yzy.transfer(to,amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1094)
+		- _yzy.burnFromVault(burnAmount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#900)
+		- _yzy.transfer(_msgSender(),amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1070)
+	- claimSwapReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#780)
+		- IERC20(fromTokenAddress).approve(address(_uniswapV2Router),tokenAmount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#719-722)
+		- _uniswapV2Router.swapExactTokensForTokensSupportingFeeOnTransferTokens(tokenAmount,0,path,receivedAddress,block.timestamp) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#725-731)
+		- _yzy.burnFromVault(burnAmount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#940)
+		- require(bool,string)(IERC20(_weth).transfer(_msgSender(),wethTokenReward),Vault: Faild to WETH) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1003-1006)
+		- _yzy.transfer(_msgSender(),amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1070)
+	State variables written after the call(s):
+	- claimSwapReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#780)
+		- _lotteryAmount = _lotteryAmount.sub(amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1071)
+	YZYVault._lotteryAmount (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#327) can be used in cross function reentrancies:
+	- YZYVault._sendLotteryAmount() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1034-1086)
+	- claimSwapReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#780)
+		- _lotteryPaidOut = _lotteryPaidOut.add(amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1072)
+	YZYVault._lotteryPaidOut (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#334) can be used in cross function reentrancies:
+	- YZYVault._lotteryPaidOut (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#334)
+	- YZYVault._sendLotteryAmount() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1034-1086)
+	- claimSwapReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#780)
+		- staker.lastClimedBlockForSwapReward = block.number (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#951)
+		- staker.lastClimedBlockForSwapReward = _getLastAvailableClaimedBlock(staker.lastClimedBlockForSwapReward,block.number,_claimPeriodForSwapReward) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#953-957)
+	YZYVault._stakers (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#343) can be used in cross function reentrancies:
+	- YZYVault._stakers (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#343)
+	- YZYVault.claimSwapAvailableReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#916-932)
+	- YZYVault.claimSwapReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#934-961)
+	- YZYVault.claimYzyAvailableReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#861-882)
+	- YZYVault.claimYzyReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#884-914)
+	- YZYVault.getSwapReward(address) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#846-859)
+	- YZYVault.getYzyReward(address) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#831-844)
+	- YZYVault.stake() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#738-766)
+	- YZYVault.stakeLPToken(uint256) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#771-792)
+	- YZYVault.unstake(uint256) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#797-829)
+	- staker.stakedAmount = staker.stakedAmount.add(amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#786)
+	YZYVault._stakers (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#343) can be used in cross function reentrancies:
+	- YZYVault._stakers (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#343)
+	- YZYVault.claimSwapAvailableReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#916-932)
+	- YZYVault.claimSwapReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#934-961)
+	- YZYVault.claimYzyAvailableReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#861-882)
+	- YZYVault.claimYzyReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#884-914)
+	- YZYVault.getSwapReward(address) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#846-859)
+	- YZYVault.getYzyReward(address) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#831-844)
+	- YZYVault.stake() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#738-766)
+	- YZYVault.stakeLPToken(uint256) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#771-792)
+	- YZYVault.unstake(uint256) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#797-829)
+	- staker.lockedTo = _lockPeriod.add(block.timestamp) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#787)
+	YZYVault._stakers (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#343) can be used in cross function reentrancies:
+	- YZYVault._stakers (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#343)
+	- YZYVault.claimSwapAvailableReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#916-932)
+	- YZYVault.claimSwapReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#934-961)
+	- YZYVault.claimYzyAvailableReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#861-882)
+	- YZYVault.claimYzyReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#884-914)
+	- YZYVault.getSwapReward(address) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#846-859)
+	- YZYVault.getYzyReward(address) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#831-844)
+	- YZYVault.stake() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#738-766)
+	- YZYVault.stakeLPToken(uint256) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#771-792)
+	- YZYVault.unstake(uint256) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#797-829)
+	- claimSwapReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#780)
+		- winnerInfo.push(WinnerInfo({winner:_msgSender(),amount:amount,timestamp:block.timestamp})) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1076-1082)
+	YZYVault.winnerInfo (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#351) can be used in cross function reentrancies:
+	- YZYVault._sendLotteryAmount() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1034-1086)
+	- YZYVault.getWinners() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#586-588)
+Reentrancy in YZYVault.stakeLPToken(uint256) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#771-792):
+	External calls:
+	- _yzyETHV2Pair.transferFrom(_msgSender(),address(this),amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#774)
+	- claimYzyReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#779)
+		- _yzy.transfer(to,yzyBal) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1092)
+		- _yzy.transfer(to,amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1094)
+		- _yzy.burnFromVault(burnAmount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#900)
+		- _yzy.transfer(_msgSender(),amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1070)
+	- claimSwapReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#780)
+		- IERC20(fromTokenAddress).approve(address(_uniswapV2Router),tokenAmount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#719-722)
+		- _uniswapV2Router.swapExactTokensForTokensSupportingFeeOnTransferTokens(tokenAmount,0,path,receivedAddress,block.timestamp) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#725-731)
+		- _yzy.burnFromVault(burnAmount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#940)
+		- require(bool,string)(IERC20(_weth).transfer(_msgSender(),wethTokenReward),Vault: Faild to WETH) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1003-1006)
+		- _yzy.transfer(_msgSender(),amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1070)
+	- _sendLotteryAmount() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#791)
+		- _yzy.transfer(_msgSender(),amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1070)
+	State variables written after the call(s):
+	- _sendLotteryAmount() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#791)
+		- _lotteryAmount = _lotteryAmount.sub(amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1071)
+	YZYVault._lotteryAmount (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#327) can be used in cross function reentrancies:
+	- YZYVault._sendLotteryAmount() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1034-1086)
+	- _sendLotteryAmount() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#791)
+		- _lotteryPaidOut = _lotteryPaidOut.add(amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1072)
+	YZYVault._lotteryPaidOut (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#334) can be used in cross function reentrancies:
+	- YZYVault._lotteryPaidOut (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#334)
+	- YZYVault._sendLotteryAmount() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1034-1086)
+	- _sendLotteryAmount() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#791)
+		- winnerInfo.push(WinnerInfo({winner:_msgSender(),amount:amount,timestamp:block.timestamp})) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1076-1082)
+	YZYVault.winnerInfo (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#351) can be used in cross function reentrancies:
+	- YZYVault._sendLotteryAmount() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1034-1086)
+	- YZYVault.getWinners() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#586-588)
+Reentrancy in YZYVault.unstake(uint256) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#797-829):
+	External calls:
+	- claimYzyReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#809)
+		- _yzy.transfer(to,yzyBal) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1092)
+		- _yzy.transfer(to,amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1094)
+		- _yzy.burnFromVault(burnAmount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#900)
+		- _yzy.transfer(_msgSender(),amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1070)
+	- claimSwapReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#811)
+		- IERC20(fromTokenAddress).approve(address(_uniswapV2Router),tokenAmount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#719-722)
+		- _uniswapV2Router.swapExactTokensForTokensSupportingFeeOnTransferTokens(tokenAmount,0,path,receivedAddress,block.timestamp) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#725-731)
+		- _yzy.burnFromVault(burnAmount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#940)
+		- require(bool,string)(IERC20(_weth).transfer(_msgSender(),wethTokenReward),Vault: Faild to WETH) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1003-1006)
+		- _yzy.transfer(_msgSender(),amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1070)
+	State variables written after the call(s):
+	- claimSwapReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#811)
+		- _lotteryAmount = _lotteryAmount.sub(amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1071)
+	YZYVault._lotteryAmount (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#327) can be used in cross function reentrancies:
+	- YZYVault._sendLotteryAmount() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1034-1086)
+	- claimSwapReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#811)
+		- _lotteryPaidOut = _lotteryPaidOut.add(amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1072)
+	YZYVault._lotteryPaidOut (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#334) can be used in cross function reentrancies:
+	- YZYVault._lotteryPaidOut (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#334)
+	- YZYVault._sendLotteryAmount() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1034-1086)
+	- claimSwapReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#811)
+		- staker.lastClimedBlockForSwapReward = block.number (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#951)
+		- staker.lastClimedBlockForSwapReward = _getLastAvailableClaimedBlock(staker.lastClimedBlockForSwapReward,block.number,_claimPeriodForSwapReward) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#953-957)
+	YZYVault._stakers (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#343) can be used in cross function reentrancies:
+	- YZYVault._stakers (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#343)
+	- YZYVault.claimSwapAvailableReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#916-932)
+	- YZYVault.claimSwapReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#934-961)
+	- YZYVault.claimYzyAvailableReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#861-882)
+	- YZYVault.claimYzyReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#884-914)
+	- YZYVault.getSwapReward(address) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#846-859)
+	- YZYVault.getYzyReward(address) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#831-844)
+	- YZYVault.stake() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#738-766)
+	- YZYVault.stakeLPToken(uint256) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#771-792)
+	- YZYVault.unstake(uint256) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#797-829)
+	- claimSwapReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#811)
+		- winnerInfo.push(WinnerInfo({winner:_msgSender(),amount:amount,timestamp:block.timestamp})) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1076-1082)
+	YZYVault.winnerInfo (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#351) can be used in cross function reentrancies:
+	- YZYVault._sendLotteryAmount() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1034-1086)
+	- YZYVault.getWinners() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#586-588)
+Reentrancy in YZYVault.unstake(uint256) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#797-829):
+	External calls:
+	- claimYzyReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#809)
+		- _yzy.transfer(to,yzyBal) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1092)
+		- _yzy.transfer(to,amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1094)
+		- _yzy.burnFromVault(burnAmount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#900)
+		- _yzy.transfer(_msgSender(),amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1070)
+	- claimSwapReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#811)
+		- IERC20(fromTokenAddress).approve(address(_uniswapV2Router),tokenAmount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#719-722)
+		- _uniswapV2Router.swapExactTokensForTokensSupportingFeeOnTransferTokens(tokenAmount,0,path,receivedAddress,block.timestamp) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#725-731)
+		- _yzy.burnFromVault(burnAmount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#940)
+		- require(bool,string)(IERC20(_weth).transfer(_msgSender(),wethTokenReward),Vault: Faild to WETH) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1003-1006)
+		- _yzy.transfer(_msgSender(),amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1070)
+	- _yzyETHV2Pair.transfer(_daoTreasury,feeAmount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#818)
+	- _yzyETHV2Pair.transfer(_msgSender(),amount.sub(feeAmount)) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#819)
+	- _yzyETHV2Pair.transfer(_msgSender(),amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#821)
+	State variables written after the call(s):
+	- staker.stakedAmount = staker.stakedAmount.sub(amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#824)
+	YZYVault._stakers (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#343) can be used in cross function reentrancies:
+	- YZYVault._stakers (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#343)
+	- YZYVault.claimSwapAvailableReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#916-932)
+	- YZYVault.claimSwapReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#934-961)
+	- YZYVault.claimYzyAvailableReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#861-882)
+	- YZYVault.claimYzyReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#884-914)
+	- YZYVault.getSwapReward(address) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#846-859)
+	- YZYVault.getYzyReward(address) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#831-844)
+	- YZYVault.stake() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#738-766)
+	- YZYVault.stakeLPToken(uint256) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#771-792)
+	- YZYVault.unstake(uint256) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#797-829)
+Reentrancy in YZYVault.unstake(uint256) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#797-829):
+	External calls:
+	- claimYzyReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#809)
+		- _yzy.transfer(to,yzyBal) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1092)
+		- _yzy.transfer(to,amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1094)
+		- _yzy.burnFromVault(burnAmount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#900)
+		- _yzy.transfer(_msgSender(),amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1070)
+	- claimSwapReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#811)
+		- IERC20(fromTokenAddress).approve(address(_uniswapV2Router),tokenAmount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#719-722)
+		- _uniswapV2Router.swapExactTokensForTokensSupportingFeeOnTransferTokens(tokenAmount,0,path,receivedAddress,block.timestamp) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#725-731)
+		- _yzy.burnFromVault(burnAmount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#940)
+		- require(bool,string)(IERC20(_weth).transfer(_msgSender(),wethTokenReward),Vault: Faild to WETH) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1003-1006)
+		- _yzy.transfer(_msgSender(),amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1070)
+	- _yzyETHV2Pair.transfer(_daoTreasury,feeAmount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#818)
+	- _yzyETHV2Pair.transfer(_msgSender(),amount.sub(feeAmount)) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#819)
+	- _yzyETHV2Pair.transfer(_msgSender(),amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#821)
+	- _sendLotteryAmount() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#828)
+		- _yzy.transfer(_msgSender(),amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1070)
+	State variables written after the call(s):
+	- _sendLotteryAmount() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#828)
+		- _lotteryAmount = _lotteryAmount.sub(amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1071)
+	YZYVault._lotteryAmount (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#327) can be used in cross function reentrancies:
+	- YZYVault._sendLotteryAmount() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1034-1086)
+	- _sendLotteryAmount() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#828)
+		- _lotteryPaidOut = _lotteryPaidOut.add(amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1072)
+	YZYVault._lotteryPaidOut (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#334) can be used in cross function reentrancies:
+	- YZYVault._lotteryPaidOut (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#334)
+	- YZYVault._sendLotteryAmount() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1034-1086)
+	- _sendLotteryAmount() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#828)
+		- winnerInfo.push(WinnerInfo({winner:_msgSender(),amount:amount,timestamp:block.timestamp})) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1076-1082)
+	YZYVault.winnerInfo (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#351) can be used in cross function reentrancies:
+	- YZYVault._sendLotteryAmount() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1034-1086)
+	- YZYVault.getWinners() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#586-588)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+YZYVault.addLiquidityForEth(uint256,uint256) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#669-683) ignores return value by _yzy.approve(address(_uniswapV2Router),tokenAmount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#672)
+YZYVault.addLiquidityForEth(uint256,uint256) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#669-683) ignores return value by _uniswapV2Router.addLiquidityETH{value: ethAmount}(address(_yzy),tokenAmount,0,0,address(this),block.timestamp) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#675-682)
+YZYVault.swapTokensForTokens(address,address,uint256,address) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#709-734) ignores return value by IERC20(fromTokenAddress).approve(address(_uniswapV2Router),tokenAmount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#719-722)
+YZYVault.claimYzyReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#884-914) ignores return value by _yzy.burnFromVault(burnAmount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#900)
+YZYVault.claimSwapReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#934-961) ignores return value by _yzy.burnFromVault(burnAmount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#940)
+YZYVault._sendLotteryAmount() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1034-1086) ignores return value by (ethReserve1,usdcReserve,None) = _usdcETHV2Pair.getReserves() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1045)
+YZYVault._sendLotteryAmount() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1034-1086) ignores return value by (usdcReserve,ethReserve1,None) = _usdcETHV2Pair.getReserves() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1047)
+YZYVault._sendLotteryAmount() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1034-1086) ignores return value by (ethReserve2,yzyReserve,None) = _yzyETHV2Pair.getReserves() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1053)
+YZYVault._sendLotteryAmount() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1034-1086) ignores return value by (yzyReserve,ethReserve2,None) = _yzyETHV2Pair.getReserves() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1055)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+YZYVault.constructor(address,address,address,address,address).daoTreasury (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#390) lacks a zero-check on :
+		- _daoTreasury = daoTreasury (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#396)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in YZYVault._sendLotteryAmount() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1034-1086):
+	External calls:
+	- _yzy.transfer(_msgSender(),amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1070)
+	State variables written after the call(s):
+	- _lotteryPaidOut = _lotteryPaidOut.add(amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1072)
+	- winnerInfo.push(WinnerInfo({winner:_msgSender(),amount:amount,timestamp:block.timestamp})) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1076-1082)
+Reentrancy in YZYVault.addTaxFee(uint256) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#567-580):
+	External calls:
+	- _yzy.transfer(_daoTreasury,daoTreasuryReward) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#569)
+	State variables written after the call(s):
+	- _collectedAmountForLottery = _collectedAmountForLottery.add(lotteryReward) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#575)
+	- _collectedAmountForStakers = _collectedAmountForStakers.add(stakerReward) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#572)
+	- _collectedAmountForSwap = _collectedAmountForSwap.add(amount.sub(daoTreasuryReward).sub(stakerReward).sub(lotteryReward)) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#577)
+Reentrancy in YZYVault.stake() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#738-766):
+	External calls:
+	- require(bool,string)(swapAndLiquifyForYZY(msg.value),Vault: Failed to get LP tokens.) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#746)
+		- _yzy.approve(address(_uniswapV2Router),tokenAmount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#672)
+		- _uniswapV2Router.addLiquidityETH{value: ethAmount}(address(_yzy),tokenAmount,0,0,address(this),block.timestamp) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#675-682)
+		- _uniswapV2Router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: ethAmount}(0,path,address(this),block.timestamp) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#664-666)
+	External calls sending eth:
+	- require(bool,string)(swapAndLiquifyForYZY(msg.value),Vault: Failed to get LP tokens.) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#746)
+		- _uniswapV2Router.addLiquidityETH{value: ethAmount}(address(_yzy),tokenAmount,0,0,address(this),block.timestamp) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#675-682)
+		- _uniswapV2Router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: ethAmount}(0,path,address(this),block.timestamp) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#664-666)
+	State variables written after the call(s):
+	- staker.lastClimedBlockForYzyReward = block.number (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#756)
+	- staker.lastClimedBlockForSwapReward = block.number (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#757)
+Reentrancy in YZYVault.stakeLPToken(uint256) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#771-792):
+	External calls:
+	- _yzyETHV2Pair.transferFrom(_msgSender(),address(this),amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#774)
+	State variables written after the call(s):
+	- staker.lastClimedBlockForYzyReward = block.number (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#782)
+	- staker.lastClimedBlockForSwapReward = block.number (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#783)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in YZYVault._sendLotteryAmount() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1034-1086):
+	External calls:
+	- _yzy.transfer(_msgSender(),amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1070)
+	Event emitted after the call(s):
+	- SentLotteryAmount(_msgSender(),amount,true) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1074)
+Reentrancy in YZYVault.claimSwapAvailableReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#916-932):
+	External calls:
+	- _swapAndClaimTokens(available) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#920)
+		- IERC20(fromTokenAddress).approve(address(_uniswapV2Router),tokenAmount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#719-722)
+		- _uniswapV2Router.swapExactTokensForTokensSupportingFeeOnTransferTokens(tokenAmount,0,path,receivedAddress,block.timestamp) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#725-731)
+		- require(bool,string)(IERC20(_weth).transfer(_msgSender(),wethTokenReward),Vault: Faild to WETH) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1003-1006)
+	Event emitted after the call(s):
+	- ClaimedSwapAvailableReward(_msgSender(),available) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#922)
+Reentrancy in YZYVault.claimSwapAvailableReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#916-932):
+	External calls:
+	- _swapAndClaimTokens(available) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#920)
+		- IERC20(fromTokenAddress).approve(address(_uniswapV2Router),tokenAmount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#719-722)
+		- _uniswapV2Router.swapExactTokensForTokensSupportingFeeOnTransferTokens(tokenAmount,0,path,receivedAddress,block.timestamp) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#725-731)
+		- require(bool,string)(IERC20(_weth).transfer(_msgSender(),wethTokenReward),Vault: Faild to WETH) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1003-1006)
+	- _sendLotteryAmount() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#931)
+		- _yzy.transfer(_msgSender(),amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1070)
+	Event emitted after the call(s):
+	- SentLotteryAmount(_msgSender(),amount,true) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1074)
+		- _sendLotteryAmount() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#931)
+Reentrancy in YZYVault.claimSwapReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#934-961):
+	External calls:
+	- _yzy.burnFromVault(burnAmount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#940)
+	- _swapAndClaimTokens(available.add(pending)) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#944)
+		- IERC20(fromTokenAddress).approve(address(_uniswapV2Router),tokenAmount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#719-722)
+		- _uniswapV2Router.swapExactTokensForTokensSupportingFeeOnTransferTokens(tokenAmount,0,path,receivedAddress,block.timestamp) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#725-731)
+		- require(bool,string)(IERC20(_weth).transfer(_msgSender(),wethTokenReward),Vault: Faild to WETH) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1003-1006)
+	Event emitted after the call(s):
+	- ClaimedSwapReward(_msgSender(),available.add(pending)) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#946)
+Reentrancy in YZYVault.claimSwapReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#934-961):
+	External calls:
+	- _yzy.burnFromVault(burnAmount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#940)
+	- _swapAndClaimTokens(available.add(pending)) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#944)
+		- IERC20(fromTokenAddress).approve(address(_uniswapV2Router),tokenAmount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#719-722)
+		- _uniswapV2Router.swapExactTokensForTokensSupportingFeeOnTransferTokens(tokenAmount,0,path,receivedAddress,block.timestamp) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#725-731)
+		- require(bool,string)(IERC20(_weth).transfer(_msgSender(),wethTokenReward),Vault: Faild to WETH) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1003-1006)
+	- _sendLotteryAmount() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#960)
+		- _yzy.transfer(_msgSender(),amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1070)
+	Event emitted after the call(s):
+	- SentLotteryAmount(_msgSender(),amount,true) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1074)
+		- _sendLotteryAmount() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#960)
+Reentrancy in YZYVault.claimYzyAvailableReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#861-882):
+	External calls:
+	- require(bool,string)(safeYzyTransfer(_msgSender(),available),Vault: Failed to transfer.) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#867-870)
+		- _yzy.transfer(to,yzyBal) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1092)
+		- _yzy.transfer(to,amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1094)
+	Event emitted after the call(s):
+	- ClaimedYzyAvailableReward(_msgSender(),available) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#872)
+Reentrancy in YZYVault.claimYzyAvailableReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#861-882):
+	External calls:
+	- require(bool,string)(safeYzyTransfer(_msgSender(),available),Vault: Failed to transfer.) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#867-870)
+		- _yzy.transfer(to,yzyBal) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1092)
+		- _yzy.transfer(to,amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1094)
+	- _sendLotteryAmount() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#881)
+		- _yzy.transfer(_msgSender(),amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1070)
+	Event emitted after the call(s):
+	- SentLotteryAmount(_msgSender(),amount,true) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1074)
+		- _sendLotteryAmount() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#881)
+Reentrancy in YZYVault.claimYzyReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#884-914):
+	External calls:
+	- require(bool,string)(safeYzyTransfer(_msgSender(),available),Vault: Failed to transfer.) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#892-895)
+		- _yzy.transfer(to,yzyBal) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1092)
+		- _yzy.transfer(to,amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1094)
+	- _yzy.burnFromVault(burnAmount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#900)
+	- safeYzyTransfer(_msgSender(),pending.sub(burnAmount)) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#901)
+		- _yzy.transfer(to,yzyBal) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1092)
+		- _yzy.transfer(to,amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1094)
+	Event emitted after the call(s):
+	- ClaimedYzyReward(_msgSender(),available,pending) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#911)
+Reentrancy in YZYVault.claimYzyReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#884-914):
+	External calls:
+	- require(bool,string)(safeYzyTransfer(_msgSender(),available),Vault: Failed to transfer.) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#892-895)
+		- _yzy.transfer(to,yzyBal) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1092)
+		- _yzy.transfer(to,amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1094)
+	- _yzy.burnFromVault(burnAmount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#900)
+	- safeYzyTransfer(_msgSender(),pending.sub(burnAmount)) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#901)
+		- _yzy.transfer(to,yzyBal) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1092)
+		- _yzy.transfer(to,amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1094)
+	- _sendLotteryAmount() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#913)
+		- _yzy.transfer(_msgSender(),amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1070)
+	Event emitted after the call(s):
+	- SentLotteryAmount(_msgSender(),amount,true) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1074)
+		- _sendLotteryAmount() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#913)
+Reentrancy in YZYVault.emergencyWithdrawToken() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#967-975):
+	External calls:
+	- _yzy.transfer(_msgSender(),tokenAmount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#973)
+	Event emitted after the call(s):
+	- EmergencyWithdrawToken(address(this),_msgSender(),tokenAmount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#974)
+Reentrancy in YZYVault.stake() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#738-766):
+	External calls:
+	- require(bool,string)(swapAndLiquifyForYZY(msg.value),Vault: Failed to get LP tokens.) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#746)
+		- _yzy.approve(address(_uniswapV2Router),tokenAmount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#672)
+		- _uniswapV2Router.addLiquidityETH{value: ethAmount}(address(_yzy),tokenAmount,0,0,address(this),block.timestamp) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#675-682)
+		- _uniswapV2Router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: ethAmount}(0,path,address(this),block.timestamp) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#664-666)
+	- claimYzyReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#753)
+		- _yzy.transfer(to,yzyBal) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1092)
+		- _yzy.transfer(to,amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1094)
+		- _yzy.burnFromVault(burnAmount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#900)
+		- _yzy.transfer(_msgSender(),amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1070)
+	External calls sending eth:
+	- require(bool,string)(swapAndLiquifyForYZY(msg.value),Vault: Failed to get LP tokens.) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#746)
+		- _uniswapV2Router.addLiquidityETH{value: ethAmount}(address(_yzy),tokenAmount,0,0,address(this),block.timestamp) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#675-682)
+		- _uniswapV2Router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: ethAmount}(0,path,address(this),block.timestamp) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#664-666)
+	Event emitted after the call(s):
+	- ClaimedYzyReward(_msgSender(),available,pending) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#911)
+		- claimYzyReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#753)
+	- SentLotteryAmount(_msgSender(),amount,true) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1074)
+		- claimYzyReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#753)
+Reentrancy in YZYVault.stake() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#738-766):
+	External calls:
+	- require(bool,string)(swapAndLiquifyForYZY(msg.value),Vault: Failed to get LP tokens.) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#746)
+		- _yzy.approve(address(_uniswapV2Router),tokenAmount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#672)
+		- _uniswapV2Router.addLiquidityETH{value: ethAmount}(address(_yzy),tokenAmount,0,0,address(this),block.timestamp) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#675-682)
+		- _uniswapV2Router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: ethAmount}(0,path,address(this),block.timestamp) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#664-666)
+	- claimYzyReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#753)
+		- _yzy.transfer(to,yzyBal) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1092)
+		- _yzy.transfer(to,amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1094)
+		- _yzy.burnFromVault(burnAmount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#900)
+		- _yzy.transfer(_msgSender(),amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1070)
+	- claimSwapReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#754)
+		- IERC20(fromTokenAddress).approve(address(_uniswapV2Router),tokenAmount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#719-722)
+		- _uniswapV2Router.swapExactTokensForTokensSupportingFeeOnTransferTokens(tokenAmount,0,path,receivedAddress,block.timestamp) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#725-731)
+		- _yzy.burnFromVault(burnAmount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#940)
+		- require(bool,string)(IERC20(_weth).transfer(_msgSender(),wethTokenReward),Vault: Faild to WETH) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1003-1006)
+		- _yzy.transfer(_msgSender(),amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1070)
+	External calls sending eth:
+	- require(bool,string)(swapAndLiquifyForYZY(msg.value),Vault: Failed to get LP tokens.) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#746)
+		- _uniswapV2Router.addLiquidityETH{value: ethAmount}(address(_yzy),tokenAmount,0,0,address(this),block.timestamp) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#675-682)
+		- _uniswapV2Router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: ethAmount}(0,path,address(this),block.timestamp) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#664-666)
+	Event emitted after the call(s):
+	- ClaimedSwapReward(_msgSender(),available.add(pending)) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#946)
+		- claimSwapReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#754)
+	- SentLotteryAmount(_msgSender(),amount,true) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1074)
+		- claimSwapReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#754)
+	- Staked(_msgSender(),newBalance) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#763)
+Reentrancy in YZYVault.stake() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#738-766):
+	External calls:
+	- require(bool,string)(swapAndLiquifyForYZY(msg.value),Vault: Failed to get LP tokens.) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#746)
+		- _yzy.approve(address(_uniswapV2Router),tokenAmount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#672)
+		- _uniswapV2Router.addLiquidityETH{value: ethAmount}(address(_yzy),tokenAmount,0,0,address(this),block.timestamp) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#675-682)
+		- _uniswapV2Router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: ethAmount}(0,path,address(this),block.timestamp) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#664-666)
+	- claimYzyReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#753)
+		- _yzy.transfer(to,yzyBal) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1092)
+		- _yzy.transfer(to,amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1094)
+		- _yzy.burnFromVault(burnAmount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#900)
+		- _yzy.transfer(_msgSender(),amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1070)
+	- claimSwapReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#754)
+		- IERC20(fromTokenAddress).approve(address(_uniswapV2Router),tokenAmount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#719-722)
+		- _uniswapV2Router.swapExactTokensForTokensSupportingFeeOnTransferTokens(tokenAmount,0,path,receivedAddress,block.timestamp) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#725-731)
+		- _yzy.burnFromVault(burnAmount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#940)
+		- require(bool,string)(IERC20(_weth).transfer(_msgSender(),wethTokenReward),Vault: Faild to WETH) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1003-1006)
+		- _yzy.transfer(_msgSender(),amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1070)
+	- _sendLotteryAmount() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#765)
+		- _yzy.transfer(_msgSender(),amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1070)
+	External calls sending eth:
+	- require(bool,string)(swapAndLiquifyForYZY(msg.value),Vault: Failed to get LP tokens.) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#746)
+		- _uniswapV2Router.addLiquidityETH{value: ethAmount}(address(_yzy),tokenAmount,0,0,address(this),block.timestamp) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#675-682)
+		- _uniswapV2Router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: ethAmount}(0,path,address(this),block.timestamp) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#664-666)
+	Event emitted after the call(s):
+	- SentLotteryAmount(_msgSender(),amount,true) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1074)
+		- _sendLotteryAmount() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#765)
+Reentrancy in YZYVault.stakeLPToken(uint256) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#771-792):
+	External calls:
+	- _yzyETHV2Pair.transferFrom(_msgSender(),address(this),amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#774)
+	- claimYzyReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#779)
+		- _yzy.transfer(to,yzyBal) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1092)
+		- _yzy.transfer(to,amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1094)
+		- _yzy.burnFromVault(burnAmount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#900)
+		- _yzy.transfer(_msgSender(),amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1070)
+	Event emitted after the call(s):
+	- ClaimedYzyReward(_msgSender(),available,pending) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#911)
+		- claimYzyReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#779)
+	- SentLotteryAmount(_msgSender(),amount,true) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1074)
+		- claimYzyReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#779)
+Reentrancy in YZYVault.stakeLPToken(uint256) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#771-792):
+	External calls:
+	- _yzyETHV2Pair.transferFrom(_msgSender(),address(this),amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#774)
+	- claimYzyReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#779)
+		- _yzy.transfer(to,yzyBal) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1092)
+		- _yzy.transfer(to,amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1094)
+		- _yzy.burnFromVault(burnAmount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#900)
+		- _yzy.transfer(_msgSender(),amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1070)
+	- claimSwapReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#780)
+		- IERC20(fromTokenAddress).approve(address(_uniswapV2Router),tokenAmount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#719-722)
+		- _uniswapV2Router.swapExactTokensForTokensSupportingFeeOnTransferTokens(tokenAmount,0,path,receivedAddress,block.timestamp) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#725-731)
+		- _yzy.burnFromVault(burnAmount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#940)
+		- require(bool,string)(IERC20(_weth).transfer(_msgSender(),wethTokenReward),Vault: Faild to WETH) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1003-1006)
+		- _yzy.transfer(_msgSender(),amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1070)
+	Event emitted after the call(s):
+	- ClaimedSwapReward(_msgSender(),available.add(pending)) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#946)
+		- claimSwapReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#780)
+	- SentLotteryAmount(_msgSender(),amount,true) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1074)
+		- claimSwapReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#780)
+	- Staked(_msgSender(),amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#789)
+Reentrancy in YZYVault.stakeLPToken(uint256) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#771-792):
+	External calls:
+	- _yzyETHV2Pair.transferFrom(_msgSender(),address(this),amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#774)
+	- claimYzyReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#779)
+		- _yzy.transfer(to,yzyBal) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1092)
+		- _yzy.transfer(to,amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1094)
+		- _yzy.burnFromVault(burnAmount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#900)
+		- _yzy.transfer(_msgSender(),amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1070)
+	- claimSwapReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#780)
+		- IERC20(fromTokenAddress).approve(address(_uniswapV2Router),tokenAmount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#719-722)
+		- _uniswapV2Router.swapExactTokensForTokensSupportingFeeOnTransferTokens(tokenAmount,0,path,receivedAddress,block.timestamp) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#725-731)
+		- _yzy.burnFromVault(burnAmount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#940)
+		- require(bool,string)(IERC20(_weth).transfer(_msgSender(),wethTokenReward),Vault: Faild to WETH) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1003-1006)
+		- _yzy.transfer(_msgSender(),amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1070)
+	- _sendLotteryAmount() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#791)
+		- _yzy.transfer(_msgSender(),amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1070)
+	Event emitted after the call(s):
+	- SentLotteryAmount(_msgSender(),amount,true) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1074)
+		- _sendLotteryAmount() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#791)
+Reentrancy in YZYVault.swapAndLiquifyForYZY(uint256) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#685-707):
+	External calls:
+	- swapETHForTokens(otherHalfForYZY) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#696)
+		- _uniswapV2Router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: ethAmount}(0,path,address(this),block.timestamp) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#664-666)
+	- addLiquidityForEth(newBalance,halfForEth) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#702)
+		- _yzy.approve(address(_uniswapV2Router),tokenAmount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#672)
+		- _uniswapV2Router.addLiquidityETH{value: ethAmount}(address(_yzy),tokenAmount,0,0,address(this),block.timestamp) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#675-682)
+	External calls sending eth:
+	- swapETHForTokens(otherHalfForYZY) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#696)
+		- _uniswapV2Router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: ethAmount}(0,path,address(this),block.timestamp) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#664-666)
+	- addLiquidityForEth(newBalance,halfForEth) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#702)
+		- _uniswapV2Router.addLiquidityETH{value: ethAmount}(address(_yzy),tokenAmount,0,0,address(this),block.timestamp) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#675-682)
+	Event emitted after the call(s):
+	- SwapAndLiquifyForYZY(_msgSender(),amount,halfForEth,newBalance) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#704)
+Reentrancy in YZYVault.unstake(uint256) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#797-829):
+	External calls:
+	- claimYzyReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#809)
+		- _yzy.transfer(to,yzyBal) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1092)
+		- _yzy.transfer(to,amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1094)
+		- _yzy.burnFromVault(burnAmount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#900)
+		- _yzy.transfer(_msgSender(),amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1070)
+	- claimSwapReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#811)
+		- IERC20(fromTokenAddress).approve(address(_uniswapV2Router),tokenAmount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#719-722)
+		- _uniswapV2Router.swapExactTokensForTokensSupportingFeeOnTransferTokens(tokenAmount,0,path,receivedAddress,block.timestamp) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#725-731)
+		- _yzy.burnFromVault(burnAmount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#940)
+		- require(bool,string)(IERC20(_weth).transfer(_msgSender(),wethTokenReward),Vault: Faild to WETH) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1003-1006)
+		- _yzy.transfer(_msgSender(),amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1070)
+	Event emitted after the call(s):
+	- ClaimedSwapReward(_msgSender(),available.add(pending)) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#946)
+		- claimSwapReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#811)
+	- SentLotteryAmount(_msgSender(),amount,true) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1074)
+		- claimSwapReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#811)
+Reentrancy in YZYVault.unstake(uint256) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#797-829):
+	External calls:
+	- claimYzyReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#809)
+		- _yzy.transfer(to,yzyBal) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1092)
+		- _yzy.transfer(to,amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1094)
+		- _yzy.burnFromVault(burnAmount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#900)
+		- _yzy.transfer(_msgSender(),amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1070)
+	- claimSwapReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#811)
+		- IERC20(fromTokenAddress).approve(address(_uniswapV2Router),tokenAmount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#719-722)
+		- _uniswapV2Router.swapExactTokensForTokensSupportingFeeOnTransferTokens(tokenAmount,0,path,receivedAddress,block.timestamp) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#725-731)
+		- _yzy.burnFromVault(burnAmount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#940)
+		- require(bool,string)(IERC20(_weth).transfer(_msgSender(),wethTokenReward),Vault: Faild to WETH) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1003-1006)
+		- _yzy.transfer(_msgSender(),amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1070)
+	- _yzyETHV2Pair.transfer(_daoTreasury,feeAmount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#818)
+	- _yzyETHV2Pair.transfer(_msgSender(),amount.sub(feeAmount)) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#819)
+	- _yzyETHV2Pair.transfer(_msgSender(),amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#821)
+	Event emitted after the call(s):
+	- Unstaked(_msgSender(),amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#826)
+Reentrancy in YZYVault.unstake(uint256) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#797-829):
+	External calls:
+	- claimYzyReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#809)
+		- _yzy.transfer(to,yzyBal) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1092)
+		- _yzy.transfer(to,amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1094)
+		- _yzy.burnFromVault(burnAmount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#900)
+		- _yzy.transfer(_msgSender(),amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1070)
+	- claimSwapReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#811)
+		- IERC20(fromTokenAddress).approve(address(_uniswapV2Router),tokenAmount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#719-722)
+		- _uniswapV2Router.swapExactTokensForTokensSupportingFeeOnTransferTokens(tokenAmount,0,path,receivedAddress,block.timestamp) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#725-731)
+		- _yzy.burnFromVault(burnAmount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#940)
+		- require(bool,string)(IERC20(_weth).transfer(_msgSender(),wethTokenReward),Vault: Faild to WETH) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1003-1006)
+		- _yzy.transfer(_msgSender(),amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1070)
+	- _yzyETHV2Pair.transfer(_daoTreasury,feeAmount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#818)
+	- _yzyETHV2Pair.transfer(_msgSender(),amount.sub(feeAmount)) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#819)
+	- _yzyETHV2Pair.transfer(_msgSender(),amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#821)
+	- _sendLotteryAmount() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#828)
+		- _yzy.transfer(_msgSender(),amount) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1070)
+	Event emitted after the call(s):
+	- SentLotteryAmount(_msgSender(),amount,true) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1074)
+		- _sendLotteryAmount() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#828)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+YZYVault.getYzyPerBlockForYzyReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#591-613) uses timestamp for comparisons
+	Dangerous comparisons:
+	- multiplier == 0 || getTotalStakedAmount() == 0 (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#594)
+	- multiplier <= _firstRewardPeriod (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#596)
+	- multiplier > _firstRewardPeriod && multiplier <= _secondRewardPeriod (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#603)
+YZYVault.getYzyPerBlockForSwapReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#615-637) uses timestamp for comparisons
+	Dangerous comparisons:
+	- multiplier == 0 || getTotalStakedAmount() == 0 (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#618)
+	- multiplier <= _firstRewardPeriod (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#620)
+	- multiplier > _firstRewardPeriod && multiplier <= _secondRewardPeriod (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#627)
+YZYVault.unstake(uint256) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#797-829) uses timestamp for comparisons
+	Dangerous comparisons:
+	- _enabledLock && _stakers[_msgSender()].lockedTo > 0 && block.timestamp < _stakers[_msgSender()].lockedTo (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#813-815)
+YZYVault.getYzyReward(address) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#831-844) uses timestamp for comparisons
+	Dangerous comparisons:
+	- staker.stakedAmount <= 0 || multiplier <= 0 (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#835)
+YZYVault.getSwapReward(address) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#846-859) uses timestamp for comparisons
+	Dangerous comparisons:
+	- staker.stakedAmount <= 0 || multiplier <= 0 (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#850)
+YZYVault.claimYzyAvailableReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#861-882) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(available > 0,Vault: No available reward.) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#865)
+	- require(bool,string)(safeYzyTransfer(_msgSender(),available),Vault: Failed to transfer.) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#867-870)
+YZYVault.claimYzyReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#884-914) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(available > 0 || pending > 0,Vault: No rewards) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#887)
+	- available > 0 (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#891)
+	- require(bool,string)(safeYzyTransfer(_msgSender(),available),Vault: Failed to transfer.) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#892-895)
+	- pending > 0 (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#898)
+	- available > 0 (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#903)
+YZYVault.claimSwapReward() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#934-961) uses timestamp for comparisons
+	Dangerous comparisons:
+	- pending > 0 (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#938)
+	- pending > 0 (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#950)
+YZYVault._swapAndClaimTokens(uint256) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#977-1029) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(rewards > 0,Vault: No reward state) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#978)
+	- require(bool,string)(swapTokensForTokens(address(_yzy),address(_weth),rewards,address(this)),Vault: Failed to swap from YZY to WETH.) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#983-991)
+YZYVault.safeYzyTransfer(address,uint256) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1088-1098) uses timestamp for comparisons
+	Dangerous comparisons:
+	- amount > yzyBal (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1091)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+YZYVault.isContract(address) (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1100-1104) uses assembly
+	- INLINE ASM (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#1102)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#assembly-usage
+
+Context._msgData() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#10-13) is never used and should be removed
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dead-code
+
+Version constraint >=0.6.0<0.8.0 is too complex.
+It is used by:
+	- >=0.6.0<0.8.0 (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#3)
+solc-0.7.0 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Function IUniswapV2Pair.DOMAIN_SEPARATOR() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#131) is not in mixedCase
+Function IUniswapV2Pair.PERMIT_TYPEHASH() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#132) is not in mixedCase
+Function IUniswapV2Pair.MINIMUM_LIQUIDITY() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#156) is not in mixedCase
+Function IUniswapV2Router01.WETH() (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#188) is not in mixedCase
+Variable YZYVault._yzy (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#283) is not in mixedCase
+Variable YZYVault._yfi (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#284) is not in mixedCase
+Variable YZYVault._wbtc (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#285) is not in mixedCase
+Variable YZYVault._weth (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#286) is not in mixedCase
+Variable YZYVault._yzyETHV2Pair (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#288) is not in mixedCase
+Variable YZYVault._usdcETHV2Pair (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#289) is not in mixedCase
+Variable YZYVault._daoTreasury (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#293) is not in mixedCase
+Variable YZYVault._allocPointForYZYReward (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#295) is not in mixedCase
+Variable YZYVault._allocPointForSwapReward (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#296) is not in mixedCase
+Variable YZYVault._treasuryFee (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#298) is not in mixedCase
+Variable YZYVault._rewardFee (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#299) is not in mixedCase
+Variable YZYVault._lotteryFee (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#300) is not in mixedCase
+Variable YZYVault._swapRewardFee (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#301) is not in mixedCase
+Variable YZYVault._burnFee (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#302) is not in mixedCase
+Variable YZYVault._earlyUnstakeFee (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#303) is not in mixedCase
+Variable YZYVault._allocPointForYFI (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#305) is not in mixedCase
+Variable YZYVault._allocPointForWBTC (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#306) is not in mixedCase
+Variable YZYVault._allocPointForWETH (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#307) is not in mixedCase
+Variable YZYVault._firstRewardPeriod (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#309) is not in mixedCase
+Variable YZYVault._secondRewardPeriod (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#310) is not in mixedCase
+Variable YZYVault._firstRewardAmount (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#312) is not in mixedCase
+Variable YZYVault._secondRewardAmount (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#313) is not in mixedCase
+Variable YZYVault._claimPeriodForYzyReward (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#315) is not in mixedCase
+Variable YZYVault._claimPeriodForSwapReward (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#316) is not in mixedCase
+Variable YZYVault._lockPeriod (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#318) is not in mixedCase
+Variable YZYVault._minDepositETHAmount (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#320) is not in mixedCase
+Variable YZYVault._enabledLock (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#322) is not in mixedCase
+Variable YZYVault._enabledLottery (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#323) is not in mixedCase
+Variable YZYVault._startBlock (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#325) is not in mixedCase
+Variable YZYVault._lotteryLimit (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#328) is not in mixedCase
+Variable YZYVault._collectedAmountForStakers (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#330) is not in mixedCase
+Variable YZYVault._collectedAmountForSwap (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#331) is not in mixedCase
+Variable YZYVault._collectedAmountForLottery (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#332) is not in mixedCase
+Variable YZYVault._lotteryPaidOut (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#334) is not in mixedCase
+Variable YZYVault._stakers (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#343) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Redundant expression "this (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#11)" inContext (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#5-14)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#redundant-statements
+
+YZYVault._allocPointForSwapReward (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#296) should be immutable 
+YZYVault._allocPointForYZYReward (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#295) should be immutable 
+YZYVault._daoTreasury (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#293) should be immutable 
+YZYVault._firstRewardAmount (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#312) should be immutable 
+YZYVault._secondRewardAmount (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#313) should be immutable 
+YZYVault._startBlock (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#325) should be immutable 
+YZYVault._uniswapV2Router (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#291) should be immutable 
+YZYVault._usdcETHV2Pair (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#289) should be immutable 
+YZYVault._wbtc (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#285) should be immutable 
+YZYVault._weth (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#286) should be immutable 
+YZYVault._yfi (0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol#284) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+./0x0a5a0a14419f9db1da68cf2f550720e5df49d4fe.sol analyzed (9 contracts with 94 detectors), 125 result(s) found
+
+real	0m5.335s
+user	0m5.044s
+sys	0m0.293s

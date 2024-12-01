@@ -1,0 +1,114 @@
+'solc --version' running
+'solc ./0x41021442eab722c0a52c61738550faabfd0fca4e.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x41021442eab722c0a52c61738550faabfd0fca4e.sol:
+./0x41021442eab722c0a52c61738550faabfd0fca4e.sol:4:5: Warning: No visibility specified. Defaulting to "public".
+    function transfer(address receiver, uint amount);
+    ^-----------------------------------------------^
+./0x41021442eab722c0a52c61738550faabfd0fca4e.sol:27:5: Warning: No visibility specified. Defaulting to "public".
+    function Crowdsale() {
+    ^
+Spanning multiple lines.
+./0x41021442eab722c0a52c61738550faabfd0fca4e.sol:40:5: Warning: No visibility specified. Defaulting to "public".
+    function checkAdmin() onlyOwner {
+    ^
+Spanning multiple lines.
+./0x41021442eab722c0a52c61738550faabfd0fca4e.sol:47:5: Warning: No visibility specified. Defaulting to "public".
+    function changeStage(uint stage) onlyOwner {
+    ^
+Spanning multiple lines.
+./0x41021442eab722c0a52c61738550faabfd0fca4e.sol:54:5: Warning: No visibility specified. Defaulting to "public".
+    function getUnsoldTokens(uint val_) onlyOwner {
+    ^
+Spanning multiple lines.
+./0x41021442eab722c0a52c61738550faabfd0fca4e.sol:61:5: Warning: No visibility specified. Defaulting to "public".
+    function getUnsoldTokensWithDecimals(uint val_, uint dec_) onlyOwner {
+    ^
+Spanning multiple lines.
+./0x41021442eab722c0a52c61738550faabfd0fca4e.sol:69:5: Warning: No visibility specified. Defaulting to "public".
+    function closeCrowdsale(bool closeType) onlyOwner {
+    ^
+Spanning multiple lines.
+./0x41021442eab722c0a52c61738550faabfd0fca4e.sol:78:5: Warning: No visibility specified. Defaulting to "public".
+    function getPrice() returns (uint) {
+    ^
+Spanning multiple lines.
+./0x41021442eab722c0a52c61738550faabfd0fca4e.sol:94:5: Warning: No visibility specified. Defaulting to "public".
+    function () payable {
+    ^
+Spanning multiple lines.
+./0x41021442eab722c0a52c61738550faabfd0fca4e.sol:78:5: Warning: Function state mutability can be restricted to view
+    function getPrice() returns (uint) {
+    ^
+Spanning multiple lines.
+
+
+Crowdsale.fallback() (0x41021442eab722c0a52c61738550faabfd0fca4e.sol#94-105) performs a multiplication on the result of a division:
+	- sendTokens = (amount / price) * 10 ** uint256(18) (0x41021442eab722c0a52c61738550faabfd0fca4e.sol#100)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+token (0x41021442eab722c0a52c61738550faabfd0fca4e.sol#3-5) has incorrect ERC20 function interface:token.transfer(address,uint256) (0x41021442eab722c0a52c61738550faabfd0fca4e.sol#4)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-erc20-interface
+
+Crowdsale.changeStage(uint256) (0x41021442eab722c0a52c61738550faabfd0fca4e.sol#47-49) should emit an event for: 
+	- saleStage = stage (0x41021442eab722c0a52c61738550faabfd0fca4e.sol#48) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+Reentrancy in Crowdsale.fallback() (0x41021442eab722c0a52c61738550faabfd0fca4e.sol#94-105):
+	External calls:
+	- tokenReward.transfer(msg.sender,sendTokens) (0x41021442eab722c0a52c61738550faabfd0fca4e.sol#101)
+	State variables written after the call(s):
+	- soldTokensCounter += sendTokens (0x41021442eab722c0a52c61738550faabfd0fca4e.sol#102)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in Crowdsale.fallback() (0x41021442eab722c0a52c61738550faabfd0fca4e.sol#94-105):
+	External calls:
+	- tokenReward.transfer(msg.sender,sendTokens) (0x41021442eab722c0a52c61738550faabfd0fca4e.sol#101)
+	Event emitted after the call(s):
+	- FundTransfer(msg.sender,amount,price,true) (0x41021442eab722c0a52c61738550faabfd0fca4e.sol#103)
+Reentrancy in Crowdsale.fallback() (0x41021442eab722c0a52c61738550faabfd0fca4e.sol#94-105):
+	External calls:
+	- tokenReward.transfer(msg.sender,sendTokens) (0x41021442eab722c0a52c61738550faabfd0fca4e.sol#101)
+	External calls sending eth:
+	- beneficiary.send(amount) (0x41021442eab722c0a52c61738550faabfd0fca4e.sol#104)
+	Event emitted after the call(s):
+	- FundTransfer(beneficiary,amount,price,false) (0x41021442eab722c0a52c61738550faabfd0fca4e.sol#104)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+Version constraint ^0.4.19 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ABIEncoderV2PackedStorage_0.4.x
+	- ExpExponentCleanup
+	- EventStructWrongData
+	- NestedArrayFunctionCallDecoder.
+It is used by:
+	- ^0.4.19 (0x41021442eab722c0a52c61738550faabfd0fca4e.sol#1)
+solc-0.4.19 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Contract token (0x41021442eab722c0a52c61738550faabfd0fca4e.sol#3-5) is not in CapWords
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in Crowdsale.fallback() (0x41021442eab722c0a52c61738550faabfd0fca4e.sol#94-105):
+	External calls:
+	- beneficiary.send(amount) (0x41021442eab722c0a52c61738550faabfd0fca4e.sol#104)
+	Event emitted after the call(s):
+	- FundTransfer(beneficiary,amount,price,false) (0x41021442eab722c0a52c61738550faabfd0fca4e.sol#104)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+./0x41021442eab722c0a52c61738550faabfd0fca4e.sol analyzed (2 contracts with 94 detectors), 10 result(s) found
+
+real	0m1.460s
+user	0m1.250s
+sys	0m0.213s

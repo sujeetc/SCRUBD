@@ -1,0 +1,141 @@
+'solc --version' running
+'solc ./0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+HouseInfoListing.preOrder(address,address,bytes32,uint256,uint256,uint256) (0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol#291-318) uses arbitrary from in transferFrom: Token(tokenAddress).transferFrom(_guestaddress,preorder,transferPrice) (0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol#300)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#arbitrary-from-in-transferfrom
+
+HouseInfoListing (0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol#223-396) contract sets array length with a user-controlled value:
+	- PreOrders[_houseinfo].push(preorder) (0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol#303)
+HouseInfoListing (0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol#223-396) contract sets array length with a user-controlled value:
+	- districtcode.push(_districtcode) (0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol#247)
+HouseInfoListing (0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol#223-396) contract sets array length with a user-controlled value:
+	- uuids[_districtcode].push(_uuid) (0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol#333)
+HouseInfoListing (0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol#223-396) contract sets array length with a user-controlled value:
+	- GuestOrders[_guestaddress].push(preorder) (0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol#304)
+HouseInfoListing (0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol#223-396) contract sets array length with a user-controlled value:
+	- hostRoomList[msg.sender].push(_uuid) (0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol#334)
+HouseInfoListing (0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol#223-396) contract sets array length with a user-controlled value:
+	- HouseOwnerOrders[_hostaddress].push(preorder) (0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol#305)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#array-length-assignment
+
+Contract locking ether found:
+	Contract PopulStayToken (0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol#97-221) has payable functions:
+	 - PopulStayToken.fallback() (0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol#202-207)
+	But does not have a function to withdraw the ether
+Contract locking ether found:
+	Contract HouseInfoListing (0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol#223-396) has payable functions:
+	 - HouseInfoListing.HouseInfoListing(address) (0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol#233-238)
+	 - HouseInfoListing.preOrder(address,address,bytes32,uint256,uint256,uint256) (0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol#291-318)
+	But does not have a function to withdraw the ether
+Contract locking ether found:
+	Contract PreOrder (0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol#402-510) has payable functions:
+	 - PreOrder.PreOrder(address,address,address,bytes32,uint256,uint256,uint256,uint256,uint256) (0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol#414-436)
+	 - PreOrder.confirmOrder() (0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol#469-494)
+	But does not have a function to withdraw the ether
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#contracts-that-lock-ether
+
+Reentrancy in PreOrder.confirmOrder() (0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol#469-494):
+	External calls:
+	- Token(tokenAddress).transfer(owneraddress,price) (0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol#476)
+	State variables written after the call(s):
+	- status = 1 (0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol#479)
+	PreOrder.status (0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol#410) can be used in cross function reentrancies:
+	- PreOrder.PreOrder(address,address,address,bytes32,uint256,uint256,uint256,uint256,uint256) (0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol#414-436)
+	- PreOrder.confirmOrder() (0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol#469-494)
+	- PreOrder.getPreorderInfo() (0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol#438-465)
+	- PreOrder.status (0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol#410)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+Owned.transferOwnership(address)._newOwner (0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol#79) lacks a zero-check on :
+		- newOwner = _newOwner (0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol#83)
+HouseInfoListing.HouseInfoListing(address)._tokenAddress (0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol#233) lacks a zero-check on :
+		- tokenAddress = _tokenAddress (0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol#236)
+PreOrder.PreOrder(address,address,address,bytes32,uint256,uint256,uint256,uint256,uint256)._tokenAddress (0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol#415) lacks a zero-check on :
+		- tokenAddress = _tokenAddress (0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol#426)
+PreOrder.PreOrder(address,address,address,bytes32,uint256,uint256,uint256,uint256,uint256)._owneraddress (0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol#416) lacks a zero-check on :
+		- owneraddress = _owneraddress (0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol#427)
+PreOrder.PreOrder(address,address,address,bytes32,uint256,uint256,uint256,uint256,uint256)._guestaddress (0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol#417) lacks a zero-check on :
+		- guestaddress = _guestaddress (0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol#428)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in HouseInfoListing.preOrder(address,address,bytes32,uint256,uint256,uint256) (0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol#291-318):
+	External calls:
+	- Token(tokenAddress).transferFrom(_guestaddress,preorder,transferPrice) (0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol#300)
+	State variables written after the call(s):
+	- GuestOrders[_guestaddress].push(preorder) (0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol#304)
+	- HouseOwnerOrders[_hostaddress].push(preorder) (0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol#305)
+	- PreOrders[_houseinfo].push(preorder) (0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol#303)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Version constraint ^0.4.18 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ExpExponentCleanup
+	- EventStructWrongData
+	- NestedArrayFunctionCallDecoder.
+It is used by:
+	- ^0.4.18 (0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol#1)
+solc-0.4.21 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Parameter Owned.transferOwnership(address)._newOwner (0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol#79) is not in mixedCase
+Parameter PopulStayToken.approveAndCall(address,uint256,address,bytes32,uint256,uint256,uint256)._owneraddress (0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol#189) is not in mixedCase
+Parameter PopulStayToken.approveAndCall(address,uint256,address,bytes32,uint256,uint256,uint256)._houseinfo (0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol#189) is not in mixedCase
+Parameter PopulStayToken.approveAndCall(address,uint256,address,bytes32,uint256,uint256,uint256)._from (0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol#189) is not in mixedCase
+Parameter PopulStayToken.approveAndCall(address,uint256,address,bytes32,uint256,uint256,uint256)._to (0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol#189) is not in mixedCase
+Parameter PopulStayToken.approveAndCall(address,uint256,address,bytes32,uint256,uint256,uint256)._days (0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol#189) is not in mixedCase
+Variable PopulStayToken._totalSupply (0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol#104) is not in mixedCase
+Parameter HouseInfoListing.setDistrictCode(bytes32)._districtcode (0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol#241) is not in mixedCase
+Parameter HouseInfoListing.preOrder(address,address,bytes32,uint256,uint256,uint256)._guestaddress (0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol#291) is not in mixedCase
+Parameter HouseInfoListing.preOrder(address,address,bytes32,uint256,uint256,uint256)._hostaddress (0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol#291) is not in mixedCase
+Parameter HouseInfoListing.preOrder(address,address,bytes32,uint256,uint256,uint256)._houseinfo (0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol#291) is not in mixedCase
+Parameter HouseInfoListing.preOrder(address,address,bytes32,uint256,uint256,uint256)._from (0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol#291) is not in mixedCase
+Parameter HouseInfoListing.preOrder(address,address,bytes32,uint256,uint256,uint256)._to (0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol#291) is not in mixedCase
+Parameter HouseInfoListing.preOrder(address,address,bytes32,uint256,uint256,uint256)._days (0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol#291) is not in mixedCase
+Parameter HouseInfoListing.setHouseInfo(bytes32,uint256,string,bytes32)._uuid (0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol#320) is not in mixedCase
+Parameter HouseInfoListing.setHouseInfo(bytes32,uint256,string,bytes32)._price (0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol#320) is not in mixedCase
+Parameter HouseInfoListing.setHouseInfo(bytes32,uint256,string,bytes32)._roominfo (0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol#320) is not in mixedCase
+Parameter HouseInfoListing.setHouseInfo(bytes32,uint256,string,bytes32)._districtcode (0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol#320) is not in mixedCase
+Parameter HouseInfoListing.getHostRoomLists(address)._hostaddress (0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol#338) is not in mixedCase
+Parameter HouseInfoListing.getGuestOrders(address)._guestaddress (0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol#347) is not in mixedCase
+Parameter HouseInfoListing.getHostOrders(address)._hostaddress (0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol#355) is not in mixedCase
+Parameter HouseInfoListing.getPreorders(bytes32)._houseinfo (0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol#363) is not in mixedCase
+Parameter HouseInfoListing.getUUIDS(bytes32)._districtcode (0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol#373) is not in mixedCase
+Parameter HouseInfoListing.getHouseInfo(bytes32)._uuid (0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol#381) is not in mixedCase
+Variable HouseInfoListing.PreOrders (0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol#280) is not in mixedCase
+Variable HouseInfoListing.GuestOrders (0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol#284) is not in mixedCase
+Variable HouseInfoListing.HouseOwnerOrders (0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol#287) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+PopulStayToken.PopulStayToken() (0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol#109-118) uses literals with too many digits:
+	- _totalSupply = 5000000000 (0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol#115)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+PreOrder.houseOwnerAgreeToCancel (0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol#496) is never used in PreOrder (0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol#402-510)
+PreOrder.guestAgreeToCancel (0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol#497) is never used in PreOrder (0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol#402-510)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-state-variable
+
+PreOrder.guestAgreeToCancel (0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol#497) should be constant 
+PreOrder.houseOwnerAgreeToCancel (0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol#496) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+
+setHouseInfo(bytes32,uint256,string,bytes32) should be declared external:
+	- HouseInfoListing.setHouseInfo(bytes32,uint256,string,bytes32) (0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol#320-336)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#public-function-that-could-be-declared-external
+./0x0f7f8ca2c9b617b4dabb1a16c3e2dc5d83faf907.sol analyzed (7 contracts with 94 detectors), 52 result(s) found
+
+real	0m1.763s
+user	0m1.534s
+sys	0m0.231s

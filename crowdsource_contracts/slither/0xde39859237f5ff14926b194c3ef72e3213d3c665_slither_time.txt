@@ -1,0 +1,145 @@
+'solc --version' running
+'solc ./0xde39859237f5ff14926b194c3ef72e3213d3c665.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0xde39859237f5ff14926b194c3ef72e3213d3c665.sol:
+./0xde39859237f5ff14926b194c3ef72e3213d3c665.sol:181:5: Warning: No visibility specified. Defaulting to "public".
+    function () payable {
+    ^
+Spanning multiple lines.
+./0xde39859237f5ff14926b194c3ef72e3213d3c665.sol:159:37: Warning: This looks like an address but has an invalid checksum. If this is not used as an address, please prepend '00'.
+    ERC20 public etherERC20 = ERC20(0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee);
+                                    ^----------------------------------------^
+./0xde39859237f5ff14926b194c3ef72e3213d3c665.sol:260:13: Warning: Failure condition of 'send' ignored. Consider using 'transfer' instead.
+            msg.sender.send(destAmount);
+            ^-------------------------^
+./0xde39859237f5ff14926b194c3ef72e3213d3c665.sol:306:13: Warning: Failure condition of 'send' ignored. Consider using 'transfer' instead.
+            msg.sender.send(destAmount);
+            ^-------------------------^
+
+
+Dex._tradeEtherToToken(uint256,uint256,ERC20) (0xde39859237f5ff14926b194c3ef72e3213d3c665.sol#166-178) sends eth to arbitrary user
+	Dangerous calls:
+	- destAmount = tradingProxy.trade.value(srcAmount)(etherERC20,srcAmount,dest) (0xde39859237f5ff14926b194c3ef72e3213d3c665.sol#171-175)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+ERC20 (0xde39859237f5ff14926b194c3ef72e3213d3c665.sol#89-98) has incorrect ERC20 function interface:ERC20.transfer(address,uint256) (0xde39859237f5ff14926b194c3ef72e3213d3c665.sol#92)
+ERC20 (0xde39859237f5ff14926b194c3ef72e3213d3c665.sol#89-98) has incorrect ERC20 function interface:ERC20.transferFrom(address,address,uint256) (0xde39859237f5ff14926b194c3ef72e3213d3c665.sol#93)
+ERC20 (0xde39859237f5ff14926b194c3ef72e3213d3c665.sol#89-98) has incorrect ERC20 function interface:ERC20.approve(address,uint256) (0xde39859237f5ff14926b194c3ef72e3213d3c665.sol#94)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-erc20-interface
+
+Dex.trade(uint256,ERC20,uint256,ERC20,uint256) (0xde39859237f5ff14926b194c3ef72e3213d3c665.sol#233-270) ignores return value by msg.sender.send(destAmount) (0xde39859237f5ff14926b194c3ef72e3213d3c665.sol#260)
+Dex.tradeRoutes(ERC20,uint256,ERC20,uint256,address[]) (0xde39859237f5ff14926b194c3ef72e3213d3c665.sol#281-319) ignores return value by msg.sender.send(destAmount) (0xde39859237f5ff14926b194c3ef72e3213d3c665.sol#306)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-send
+
+Dex.trade(uint256,ERC20,uint256,ERC20,uint256).destAmount (0xde39859237f5ff14926b194c3ef72e3213d3c665.sol#234) is a local variable never initialized
+Dex._trade(uint256,ERC20,uint256,ERC20,uint256).destAmount (0xde39859237f5ff14926b194c3ef72e3213d3c665.sol#207) is a local variable never initialized
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#uninitialized-local-variables
+
+Dex.rate(uint256,ERC20,ERC20,uint256) (0xde39859237f5ff14926b194c3ef72e3213d3c665.sol#328-333) ignores return value by tradingProxy.rate(src,dest,srcAmount) (0xde39859237f5ff14926b194c3ef72e3213d3c665.sol#332)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+Ownable.transferOwnership(address) (0xde39859237f5ff14926b194c3ef72e3213d3c665.sol#80-84) should emit an event for: 
+	- owner = newOwner (0xde39859237f5ff14926b194c3ef72e3213d3c665.sol#82) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-access-control
+
+Dex._tradeEtherToToken(uint256,uint256,ERC20) (0xde39859237f5ff14926b194c3ef72e3213d3c665.sol#166-178) has external calls inside a loop: destAmount = tradingProxy.trade.value(srcAmount)(etherERC20,srcAmount,dest) (0xde39859237f5ff14926b194c3ef72e3213d3c665.sol#171-175)
+Dex._tradeTokenToEther(uint256,ERC20,uint256) (0xde39859237f5ff14926b194c3ef72e3213d3c665.sol#185-199) has external calls inside a loop: src.approve(tradingProxy,amount) (0xde39859237f5ff14926b194c3ef72e3213d3c665.sol#190)
+Dex._tradeTokenToEther(uint256,ERC20,uint256) (0xde39859237f5ff14926b194c3ef72e3213d3c665.sol#185-199) has external calls inside a loop: destAmount = tradingProxy.trade(src,amount,etherERC20) (0xde39859237f5ff14926b194c3ef72e3213d3c665.sol#193-196)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation/#calls-inside-a-loop
+
+Reentrancy in Dex.trade(uint256,ERC20,uint256,ERC20,uint256) (0xde39859237f5ff14926b194c3ef72e3213d3c665.sol#233-270):
+	External calls:
+	- destAmount = _trade(tradingProxyIndex,src,srcAmount,dest,1) (0xde39859237f5ff14926b194c3ef72e3213d3c665.sol#238)
+		- destAmount = tradingProxy.trade.value(srcAmount)(etherERC20,srcAmount,dest) (0xde39859237f5ff14926b194c3ef72e3213d3c665.sol#171-175)
+		- src.approve(tradingProxy,amount) (0xde39859237f5ff14926b194c3ef72e3213d3c665.sol#190)
+		- destAmount = tradingProxy.trade(src,amount,etherERC20) (0xde39859237f5ff14926b194c3ef72e3213d3c665.sol#193-196)
+	- dest.transfer(msg.sender,destAmount) (0xde39859237f5ff14926b194c3ef72e3213d3c665.sol#246)
+	- src.transferFrom(msg.sender,address(this),srcAmount) (0xde39859237f5ff14926b194c3ef72e3213d3c665.sol#251)
+	- destAmount = _trade(tradingProxyIndex,src,srcAmount,dest,1) (0xde39859237f5ff14926b194c3ef72e3213d3c665.sol#253)
+		- destAmount = tradingProxy.trade.value(srcAmount)(etherERC20,srcAmount,dest) (0xde39859237f5ff14926b194c3ef72e3213d3c665.sol#171-175)
+		- src.approve(tradingProxy,amount) (0xde39859237f5ff14926b194c3ef72e3213d3c665.sol#190)
+		- destAmount = tradingProxy.trade(src,amount,etherERC20) (0xde39859237f5ff14926b194c3ef72e3213d3c665.sol#193-196)
+	External calls sending eth:
+	- destAmount = _trade(tradingProxyIndex,src,srcAmount,dest,1) (0xde39859237f5ff14926b194c3ef72e3213d3c665.sol#238)
+		- destAmount = tradingProxy.trade.value(srcAmount)(etherERC20,srcAmount,dest) (0xde39859237f5ff14926b194c3ef72e3213d3c665.sol#171-175)
+	- destAmount = _trade(tradingProxyIndex,src,srcAmount,dest,1) (0xde39859237f5ff14926b194c3ef72e3213d3c665.sol#253)
+		- destAmount = tradingProxy.trade.value(srcAmount)(etherERC20,srcAmount,dest) (0xde39859237f5ff14926b194c3ef72e3213d3c665.sol#171-175)
+	- msg.sender.send(destAmount) (0xde39859237f5ff14926b194c3ef72e3213d3c665.sol#260)
+	Event emitted after the call(s):
+	- Trade(src,srcAmount,dest,destAmount) (0xde39859237f5ff14926b194c3ef72e3213d3c665.sol#267)
+Reentrancy in Dex.tradeRoutes(ERC20,uint256,ERC20,uint256,address[]) (0xde39859237f5ff14926b194c3ef72e3213d3c665.sol#281-319):
+	External calls:
+	- src.transferFrom(msg.sender,address(this),srcAmount) (0xde39859237f5ff14926b194c3ef72e3213d3c665.sol#286)
+	- destAmount = _trade(tradingProxyIndex,pathSrc,pathSrcAmount,pathDest,1) (0xde39859237f5ff14926b194c3ef72e3213d3c665.sol#295)
+		- destAmount = tradingProxy.trade.value(srcAmount)(etherERC20,srcAmount,dest) (0xde39859237f5ff14926b194c3ef72e3213d3c665.sol#171-175)
+		- src.approve(tradingProxy,amount) (0xde39859237f5ff14926b194c3ef72e3213d3c665.sol#190)
+		- destAmount = tradingProxy.trade(src,amount,etherERC20) (0xde39859237f5ff14926b194c3ef72e3213d3c665.sol#193-196)
+	- dest.transfer(msg.sender,destAmount) (0xde39859237f5ff14926b194c3ef72e3213d3c665.sol#313)
+	External calls sending eth:
+	- destAmount = _trade(tradingProxyIndex,pathSrc,pathSrcAmount,pathDest,1) (0xde39859237f5ff14926b194c3ef72e3213d3c665.sol#295)
+		- destAmount = tradingProxy.trade.value(srcAmount)(etherERC20,srcAmount,dest) (0xde39859237f5ff14926b194c3ef72e3213d3c665.sol#171-175)
+	- msg.sender.send(destAmount) (0xde39859237f5ff14926b194c3ef72e3213d3c665.sol#306)
+	Event emitted after the call(s):
+	- Trade(src,srcAmount,dest,destAmount) (0xde39859237f5ff14926b194c3ef72e3213d3c665.sol#316)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+Version constraint ^0.4.18 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ExpExponentCleanup
+	- EventStructWrongData
+	- NestedArrayFunctionCallDecoder.
+It is used by:
+	- ^0.4.18 (0xde39859237f5ff14926b194c3ef72e3213d3c665.sol#1)
+solc-0.4.18 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Parameter Dex.tradeRoutes(ERC20,uint256,ERC20,uint256,address[])._tradingPaths (0xde39859237f5ff14926b194c3ef72e3213d3c665.sol#281) is not in mixedCase
+Parameter Dex.addTradingProxy(KULAPTradingProxy)._proxyAddress (0xde39859237f5ff14926b194c3ef72e3213d3c665.sol#341) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in Dex.trade(uint256,ERC20,uint256,ERC20,uint256) (0xde39859237f5ff14926b194c3ef72e3213d3c665.sol#233-270):
+	External calls:
+	- msg.sender.send(destAmount) (0xde39859237f5ff14926b194c3ef72e3213d3c665.sol#260)
+	External calls sending eth:
+	- destAmount = _trade(tradingProxyIndex,src,srcAmount,dest,1) (0xde39859237f5ff14926b194c3ef72e3213d3c665.sol#238)
+		- destAmount = tradingProxy.trade.value(srcAmount)(etherERC20,srcAmount,dest) (0xde39859237f5ff14926b194c3ef72e3213d3c665.sol#171-175)
+	- destAmount = _trade(tradingProxyIndex,src,srcAmount,dest,1) (0xde39859237f5ff14926b194c3ef72e3213d3c665.sol#253)
+		- destAmount = tradingProxy.trade.value(srcAmount)(etherERC20,srcAmount,dest) (0xde39859237f5ff14926b194c3ef72e3213d3c665.sol#171-175)
+	- msg.sender.send(destAmount) (0xde39859237f5ff14926b194c3ef72e3213d3c665.sol#260)
+	Event emitted after the call(s):
+	- Trade(src,srcAmount,dest,destAmount) (0xde39859237f5ff14926b194c3ef72e3213d3c665.sol#267)
+Reentrancy in Dex.tradeRoutes(ERC20,uint256,ERC20,uint256,address[]) (0xde39859237f5ff14926b194c3ef72e3213d3c665.sol#281-319):
+	External calls:
+	- msg.sender.send(destAmount) (0xde39859237f5ff14926b194c3ef72e3213d3c665.sol#306)
+	External calls sending eth:
+	- destAmount = _trade(tradingProxyIndex,pathSrc,pathSrcAmount,pathDest,1) (0xde39859237f5ff14926b194c3ef72e3213d3c665.sol#295)
+		- destAmount = tradingProxy.trade.value(srcAmount)(etherERC20,srcAmount,dest) (0xde39859237f5ff14926b194c3ef72e3213d3c665.sol#171-175)
+	- msg.sender.send(destAmount) (0xde39859237f5ff14926b194c3ef72e3213d3c665.sol#306)
+	Event emitted after the call(s):
+	- Trade(src,srcAmount,dest,destAmount) (0xde39859237f5ff14926b194c3ef72e3213d3c665.sol#316)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+Dex.dexWallet (0xde39859237f5ff14926b194c3ef72e3213d3c665.sol#161) should be constant 
+Dex.etherERC20 (0xde39859237f5ff14926b194c3ef72e3213d3c665.sol#159) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+
+tradeRoutes(ERC20,uint256,ERC20,uint256,address[]) should be declared external:
+	- Dex.tradeRoutes(ERC20,uint256,ERC20,uint256,address[]) (0xde39859237f5ff14926b194c3ef72e3213d3c665.sol#281-319)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#public-function-that-could-be-declared-external
+./0xde39859237f5ff14926b194c3ef72e3213d3c665.sol analyzed (6 contracts with 94 detectors), 24 result(s) found
+
+real	0m1.846s
+user	0m1.580s
+sys	0m0.268s

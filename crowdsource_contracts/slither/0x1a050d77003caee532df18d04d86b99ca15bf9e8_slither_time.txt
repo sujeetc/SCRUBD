@@ -1,0 +1,923 @@
+'solc --version' running
+'solc ./0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol:
+./0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol:1169:9: Warning: Return value of low-level calls not used.
+        flushDivs.call.value(_POOH)(bytes4(keccak256("donate()")));  
+        ^--------------------------------------------------------^
+./0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol:1279:13: Warning: Return value of low-level calls not used.
+            flushDivs.call.value(_POOH)(bytes4(keccak256("donate()")));
+            ^--------------------------------------------------------^
+
+
+POOHMO.endRound(POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1131-1193) sends eth to arbitrary user
+	Dangerous calls:
+	- flushDivs.call.value(_POOH)(bytes4(keccak256()(donate()))) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1169)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+POOHMO.determineNextRoundLength() (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1195-1199) uses a weak PRNG: "roundTime = uint256(keccak256()(abi.encodePacked(blockhash(uint256)(block.number - 1)))) % 6 (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1197)" 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#weak-PRNG
+
+Reentrancy in POOHMO.buyCore(uint256,uint256,POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#810-858):
+	External calls:
+	- _eventData_ = endRound(_eventData_) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#832)
+		- flushDivs.call.value(_POOH)(bytes4(keccak256()(donate()))) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1169)
+	External calls sending eth:
+	- _eventData_ = endRound(_eventData_) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#832)
+		- admin.transfer(_dev) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1167)
+		- flushDivs.call.value(_POOH)(bytes4(keccak256()(donate()))) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1169)
+	State variables written after the call(s):
+	- plyr_[_pID].gen = plyr_[_pID].gen.add(msg.value) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#856)
+	POOHMO.plyr_ (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#151) can be used in cross function reentrancies:
+	- POOHMO.buyCore(uint256,uint256,POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#810-858)
+	- POOHMO.buyXaddr(address) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#277-312)
+	- POOHMO.buyXid(uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#247-275)
+	- POOHMO.buyXname(bytes32) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#314-350)
+	- POOHMO.core(uint256,uint256,uint256,uint256,uint256,POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#915-969)
+	- POOHMO.determinePID(POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1071-1102)
+	- POOHMO.distributeExternal(uint256,uint256,uint256,uint256,uint256,POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1245-1288)
+	- POOHMO.endRound(POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1131-1193)
+	- POOHMO.endTx(uint256,uint256,uint256,uint256,POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1389-1411)
+	- POOHMO.fallback() (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#223-238)
+	- POOHMO.getCurrentRoundInfo() (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#736-761)
+	- POOHMO.getPlayerInfoByAddress(address) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#776-800)
+	- POOHMO.getPlayerVaults(uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#667-706)
+	- POOHMO.managePlayer(uint256,POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1110-1126)
+	- POOHMO.plyr_ (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#151)
+	- POOHMO.reLoadCore(uint256,uint256,uint256,POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#864-909)
+	- POOHMO.reLoadXaddr(address,uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#390-425)
+	- POOHMO.reLoadXid(uint256,uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#361-388)
+	- POOHMO.reLoadXname(bytes32,uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#427-462)
+	- POOHMO.receivePlayerInfo(uint256,address,bytes32,uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1038-1054)
+	- POOHMO.registerNameXID(string,uint256,bool) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#560-574)
+	- POOHMO.registerNameXaddr(string,address,bool) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#576-590)
+	- POOHMO.registerNameXname(string,bytes32,bool) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#592-606)
+	- POOHMO.updateGenVault(uint256,uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1205-1216)
+	- POOHMO.withdraw() (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#468-534)
+	- POOHMO.withdrawEarnings(uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1367-1384)
+Reentrancy in POOHMO.core(uint256,uint256,uint256,uint256,uint256,POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#915-969):
+	External calls:
+	- _eventData_ = distributeExternal(_rID,_pID,_eth,_affID,0,_eventData_) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#963)
+		- ! address(admin).call.value(_dev)() (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1253)
+		- flushDivs.call.value(_POOH)(bytes4(keccak256()(donate()))) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1279)
+	State variables written after the call(s):
+	- _eventData_ = distributeInternal(_rID,_pID,_eth,0,_keys,_eventData_) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#964)
+		- plyrRnds_[_pID][_rID].mask = (((round_[_rID].mask.mul(_keys)) / (1000000000000000000)).sub(_pearn)).add(plyrRnds_[_pID][_rID].mask) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1357)
+	POOHMO.plyrRnds_ (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#152) can be used in cross function reentrancies:
+	- POOHMO.calcUnMaskedEarnings(uint256,uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#978-984)
+	- POOHMO.core(uint256,uint256,uint256,uint256,uint256,POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#915-969)
+	- POOHMO.getPlayerInfoByAddress(address) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#776-800)
+	- POOHMO.getPlayerVaults(uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#667-706)
+	- POOHMO.getPlayerVaultsHelper(uint256,uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#711-717)
+	- POOHMO.plyrRnds_ (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#152)
+	- POOHMO.updateGenVault(uint256,uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1205-1216)
+	- POOHMO.updateMasks(uint256,uint256,uint256,uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1335-1361)
+	- _eventData_ = distributeInternal(_rID,_pID,_eth,0,_keys,_eventData_) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#964)
+		- round_[_rID].mask = _ppt.add(round_[_rID].mask) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1352)
+		- round_[_rID].pot = _pot.add(_dust).add(round_[_rID].pot) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1322)
+	POOHMO.round_ (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#157) can be used in cross function reentrancies:
+	- POOHMO.activate() (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1420-1437)
+	- POOHMO.buyCore(uint256,uint256,POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#810-858)
+	- POOHMO.calcKeysReceived(uint256,uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#993-1006)
+	- POOHMO.calcUnMaskedEarnings(uint256,uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#978-984)
+	- POOHMO.core(uint256,uint256,uint256,uint256,uint256,POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#915-969)
+	- POOHMO.distributeInternal(uint256,uint256,uint256,uint256,uint256,POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1301-1329)
+	- POOHMO.endRound(POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1131-1193)
+	- POOHMO.getBuyPrice() (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#616-632)
+	- POOHMO.getCurrentRoundInfo() (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#736-761)
+	- POOHMO.getPlayerVaults(uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#667-706)
+	- POOHMO.getPlayerVaultsHelper(uint256,uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#711-717)
+	- POOHMO.getTimeLeft() (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#640-658)
+	- POOHMO.iWantXKeys(uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1014-1030)
+	- POOHMO.reLoadCore(uint256,uint256,uint256,POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#864-909)
+	- POOHMO.round_ (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#157)
+	- POOHMO.updateMasks(uint256,uint256,uint256,uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1335-1361)
+	- POOHMO.updateTimer(uint256,uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1221-1239)
+	- POOHMO.withdraw() (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#468-534)
+Reentrancy in POOHMO.endRound(POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1131-1193):
+	External calls:
+	- flushDivs.call.value(_POOH)(bytes4(keccak256()(donate()))) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1169)
+	External calls sending eth:
+	- admin.transfer(_dev) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1167)
+	- flushDivs.call.value(_POOH)(bytes4(keccak256()(donate()))) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1169)
+	State variables written after the call(s):
+	- rID_ ++ (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1185)
+	POOHMO.rID_ (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#145) can be used in cross function reentrancies:
+	- POOHMO.activate() (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1420-1437)
+	- POOHMO.buyCore(uint256,uint256,POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#810-858)
+	- POOHMO.endRound(POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1131-1193)
+	- POOHMO.endTx(uint256,uint256,uint256,uint256,POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1389-1411)
+	- POOHMO.getBuyPrice() (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#616-632)
+	- POOHMO.getCurrentRoundInfo() (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#736-761)
+	- POOHMO.getPlayerInfoByAddress(address) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#776-800)
+	- POOHMO.getPlayerVaults(uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#667-706)
+	- POOHMO.getTimeLeft() (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#640-658)
+	- POOHMO.iWantXKeys(uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1014-1030)
+	- POOHMO.managePlayer(uint256,POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1110-1126)
+	- POOHMO.rID_ (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#145)
+	- POOHMO.reLoadCore(uint256,uint256,uint256,POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#864-909)
+	- POOHMO.withdraw() (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#468-534)
+	- round_[_rID].mask = _ppt.add(round_[_rID].mask) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1172)
+	POOHMO.round_ (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#157) can be used in cross function reentrancies:
+	- POOHMO.activate() (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1420-1437)
+	- POOHMO.buyCore(uint256,uint256,POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#810-858)
+	- POOHMO.calcKeysReceived(uint256,uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#993-1006)
+	- POOHMO.calcUnMaskedEarnings(uint256,uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#978-984)
+	- POOHMO.core(uint256,uint256,uint256,uint256,uint256,POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#915-969)
+	- POOHMO.distributeInternal(uint256,uint256,uint256,uint256,uint256,POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1301-1329)
+	- POOHMO.endRound(POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1131-1193)
+	- POOHMO.getBuyPrice() (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#616-632)
+	- POOHMO.getCurrentRoundInfo() (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#736-761)
+	- POOHMO.getPlayerVaults(uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#667-706)
+	- POOHMO.getPlayerVaultsHelper(uint256,uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#711-717)
+	- POOHMO.getTimeLeft() (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#640-658)
+	- POOHMO.iWantXKeys(uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1014-1030)
+	- POOHMO.reLoadCore(uint256,uint256,uint256,POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#864-909)
+	- POOHMO.round_ (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#157)
+	- POOHMO.updateMasks(uint256,uint256,uint256,uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1335-1361)
+	- POOHMO.updateTimer(uint256,uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1221-1239)
+	- POOHMO.withdraw() (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#468-534)
+	- round_[_rID].strt = now (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1187)
+	POOHMO.round_ (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#157) can be used in cross function reentrancies:
+	- POOHMO.activate() (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1420-1437)
+	- POOHMO.buyCore(uint256,uint256,POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#810-858)
+	- POOHMO.calcKeysReceived(uint256,uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#993-1006)
+	- POOHMO.calcUnMaskedEarnings(uint256,uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#978-984)
+	- POOHMO.core(uint256,uint256,uint256,uint256,uint256,POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#915-969)
+	- POOHMO.distributeInternal(uint256,uint256,uint256,uint256,uint256,POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1301-1329)
+	- POOHMO.endRound(POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1131-1193)
+	- POOHMO.getBuyPrice() (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#616-632)
+	- POOHMO.getCurrentRoundInfo() (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#736-761)
+	- POOHMO.getPlayerVaults(uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#667-706)
+	- POOHMO.getPlayerVaultsHelper(uint256,uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#711-717)
+	- POOHMO.getTimeLeft() (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#640-658)
+	- POOHMO.iWantXKeys(uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1014-1030)
+	- POOHMO.reLoadCore(uint256,uint256,uint256,POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#864-909)
+	- POOHMO.round_ (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#157)
+	- POOHMO.updateMasks(uint256,uint256,uint256,uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1335-1361)
+	- POOHMO.updateTimer(uint256,uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1221-1239)
+	- POOHMO.withdraw() (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#468-534)
+	- round_[_rID].end = now.add(rndMax_) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1189)
+	POOHMO.round_ (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#157) can be used in cross function reentrancies:
+	- POOHMO.activate() (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1420-1437)
+	- POOHMO.buyCore(uint256,uint256,POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#810-858)
+	- POOHMO.calcKeysReceived(uint256,uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#993-1006)
+	- POOHMO.calcUnMaskedEarnings(uint256,uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#978-984)
+	- POOHMO.core(uint256,uint256,uint256,uint256,uint256,POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#915-969)
+	- POOHMO.distributeInternal(uint256,uint256,uint256,uint256,uint256,POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1301-1329)
+	- POOHMO.endRound(POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1131-1193)
+	- POOHMO.getBuyPrice() (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#616-632)
+	- POOHMO.getCurrentRoundInfo() (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#736-761)
+	- POOHMO.getPlayerVaults(uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#667-706)
+	- POOHMO.getPlayerVaultsHelper(uint256,uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#711-717)
+	- POOHMO.getTimeLeft() (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#640-658)
+	- POOHMO.iWantXKeys(uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1014-1030)
+	- POOHMO.reLoadCore(uint256,uint256,uint256,POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#864-909)
+	- POOHMO.round_ (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#157)
+	- POOHMO.updateMasks(uint256,uint256,uint256,uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1335-1361)
+	- POOHMO.updateTimer(uint256,uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1221-1239)
+	- POOHMO.withdraw() (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#468-534)
+	- round_[_rID].pot = _res (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1190)
+	POOHMO.round_ (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#157) can be used in cross function reentrancies:
+	- POOHMO.activate() (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1420-1437)
+	- POOHMO.buyCore(uint256,uint256,POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#810-858)
+	- POOHMO.calcKeysReceived(uint256,uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#993-1006)
+	- POOHMO.calcUnMaskedEarnings(uint256,uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#978-984)
+	- POOHMO.core(uint256,uint256,uint256,uint256,uint256,POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#915-969)
+	- POOHMO.distributeInternal(uint256,uint256,uint256,uint256,uint256,POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1301-1329)
+	- POOHMO.endRound(POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1131-1193)
+	- POOHMO.getBuyPrice() (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#616-632)
+	- POOHMO.getCurrentRoundInfo() (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#736-761)
+	- POOHMO.getPlayerVaults(uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#667-706)
+	- POOHMO.getPlayerVaultsHelper(uint256,uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#711-717)
+	- POOHMO.getTimeLeft() (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#640-658)
+	- POOHMO.iWantXKeys(uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1014-1030)
+	- POOHMO.reLoadCore(uint256,uint256,uint256,POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#864-909)
+	- POOHMO.round_ (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#157)
+	- POOHMO.updateMasks(uint256,uint256,uint256,uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1335-1361)
+	- POOHMO.updateTimer(uint256,uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1221-1239)
+	- POOHMO.withdraw() (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#468-534)
+Reentrancy in POOHMO.withdraw() (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#468-534):
+	External calls:
+	- _eventData_ = endRound(_eventData_) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#493)
+		- flushDivs.call.value(_POOH)(bytes4(keccak256()(donate()))) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1169)
+	External calls sending eth:
+	- _eventData_ = endRound(_eventData_) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#493)
+		- admin.transfer(_dev) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1167)
+		- flushDivs.call.value(_POOH)(bytes4(keccak256()(donate()))) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1169)
+	State variables written after the call(s):
+	- _eth = withdrawEarnings(_pID) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#496)
+		- plyr_[_pID].gen = _earnings.add(plyr_[_pID].gen) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1212)
+		- plyr_[_pID].win = 0 (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1378)
+		- plyr_[_pID].gen = 0 (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1379)
+		- plyr_[_pID].aff = 0 (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1380)
+	POOHMO.plyr_ (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#151) can be used in cross function reentrancies:
+	- POOHMO.buyCore(uint256,uint256,POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#810-858)
+	- POOHMO.buyXaddr(address) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#277-312)
+	- POOHMO.buyXid(uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#247-275)
+	- POOHMO.buyXname(bytes32) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#314-350)
+	- POOHMO.core(uint256,uint256,uint256,uint256,uint256,POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#915-969)
+	- POOHMO.determinePID(POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1071-1102)
+	- POOHMO.distributeExternal(uint256,uint256,uint256,uint256,uint256,POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1245-1288)
+	- POOHMO.endRound(POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1131-1193)
+	- POOHMO.endTx(uint256,uint256,uint256,uint256,POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1389-1411)
+	- POOHMO.fallback() (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#223-238)
+	- POOHMO.getCurrentRoundInfo() (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#736-761)
+	- POOHMO.getPlayerInfoByAddress(address) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#776-800)
+	- POOHMO.getPlayerVaults(uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#667-706)
+	- POOHMO.managePlayer(uint256,POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1110-1126)
+	- POOHMO.plyr_ (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#151)
+	- POOHMO.reLoadCore(uint256,uint256,uint256,POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#864-909)
+	- POOHMO.reLoadXaddr(address,uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#390-425)
+	- POOHMO.reLoadXid(uint256,uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#361-388)
+	- POOHMO.reLoadXname(bytes32,uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#427-462)
+	- POOHMO.receivePlayerInfo(uint256,address,bytes32,uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1038-1054)
+	- POOHMO.registerNameXID(string,uint256,bool) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#560-574)
+	- POOHMO.registerNameXaddr(string,address,bool) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#576-590)
+	- POOHMO.registerNameXname(string,bytes32,bool) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#592-606)
+	- POOHMO.updateGenVault(uint256,uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1205-1216)
+	- POOHMO.withdraw() (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#468-534)
+	- POOHMO.withdrawEarnings(uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1367-1384)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+NameFilter.nameFilter(string) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1585-1645) is declared view but contains assembly code
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#constant-functions-using-assembly-code
+
+POOHMO.getPlayerVaultsHelper(uint256,uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#711-717) performs a multiplication on the result of a division:
+	- (((((round_[_rID].mask).add(((((round_[_rID].pot).mul(potSplit_[round_[_rID].team].gen)) / 100).mul(1000000000000000000)) / (round_[_rID].keys))).mul(plyrRnds_[_pID][_rID].keys)) / 1000000000000000000)) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#716)
+POOHMO.endRound(POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1131-1193) performs a multiplication on the result of a division:
+	- _gen = (_pot.mul(potSplit_[_winTID].gen)) / 100 (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1149)
+	- _ppt = (_gen.mul(1000000000000000000)) / (round_[_rID].keys) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1154)
+POOHMO.endRound(POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1131-1193) performs a multiplication on the result of a division:
+	- _ppt = (_gen.mul(1000000000000000000)) / (round_[_rID].keys) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1154)
+	- _dust = _gen.sub((_ppt.mul(round_[_rID].keys)) / 1000000000000000000) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1155)
+POOHMO.updateTimer(uint256,uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1221-1239) performs a multiplication on the result of a division:
+	- _newTime = (((_keys) / (1000000000000000000)).mul(rndInc_)).add(round_[_rID].end) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1232)
+POOHMO.updateTimer(uint256,uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1221-1239) performs a multiplication on the result of a division:
+	- _newTime = (((_keys) / (1000000000000000000)).mul(rndInc_)).add(_now) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1230)
+POOHMO.updateMasks(uint256,uint256,uint256,uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1335-1361) performs a multiplication on the result of a division:
+	- _ppt = (_gen.mul(1000000000000000000)) / (round_[_rID].keys) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1351)
+	- _pearn = (_ppt.mul(_keys)) / (1000000000000000000) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1356)
+POOHMO.updateMasks(uint256,uint256,uint256,uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1335-1361) performs a multiplication on the result of a division:
+	- _ppt = (_gen.mul(1000000000000000000)) / (round_[_rID].keys) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1351)
+	- (_gen.sub((_ppt.mul(round_[_rID].keys)) / (1000000000000000000))) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1360)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+Reentrancy in POOHMO.buyXaddr(address) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#277-312):
+	External calls:
+	- _eventData_ = determinePID(_eventData_) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#285)
+		- _pID = PlayerBook.getPlayerID(msg.sender) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1080)
+		- _name = PlayerBook.getPlayerName(_pID) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1081)
+		- _laff = PlayerBook.getPlayerLAff(_pID) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1082)
+	State variables written after the call(s):
+	- plyr_[_pID].laff = _affID (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#307)
+	POOHMO.plyr_ (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#151) can be used in cross function reentrancies:
+	- POOHMO.buyCore(uint256,uint256,POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#810-858)
+	- POOHMO.buyXaddr(address) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#277-312)
+	- POOHMO.buyXid(uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#247-275)
+	- POOHMO.buyXname(bytes32) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#314-350)
+	- POOHMO.core(uint256,uint256,uint256,uint256,uint256,POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#915-969)
+	- POOHMO.determinePID(POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1071-1102)
+	- POOHMO.distributeExternal(uint256,uint256,uint256,uint256,uint256,POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1245-1288)
+	- POOHMO.endRound(POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1131-1193)
+	- POOHMO.endTx(uint256,uint256,uint256,uint256,POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1389-1411)
+	- POOHMO.fallback() (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#223-238)
+	- POOHMO.getCurrentRoundInfo() (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#736-761)
+	- POOHMO.getPlayerInfoByAddress(address) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#776-800)
+	- POOHMO.getPlayerVaults(uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#667-706)
+	- POOHMO.managePlayer(uint256,POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1110-1126)
+	- POOHMO.plyr_ (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#151)
+	- POOHMO.reLoadCore(uint256,uint256,uint256,POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#864-909)
+	- POOHMO.reLoadXaddr(address,uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#390-425)
+	- POOHMO.reLoadXid(uint256,uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#361-388)
+	- POOHMO.reLoadXname(bytes32,uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#427-462)
+	- POOHMO.receivePlayerInfo(uint256,address,bytes32,uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1038-1054)
+	- POOHMO.registerNameXID(string,uint256,bool) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#560-574)
+	- POOHMO.registerNameXaddr(string,address,bool) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#576-590)
+	- POOHMO.registerNameXname(string,bytes32,bool) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#592-606)
+	- POOHMO.updateGenVault(uint256,uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1205-1216)
+	- POOHMO.withdraw() (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#468-534)
+	- POOHMO.withdrawEarnings(uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1367-1384)
+Reentrancy in POOHMO.buyXid(uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#247-275):
+	External calls:
+	- _eventData_ = determinePID(_eventData_) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#255)
+		- _pID = PlayerBook.getPlayerID(msg.sender) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1080)
+		- _name = PlayerBook.getPlayerName(_pID) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1081)
+		- _laff = PlayerBook.getPlayerLAff(_pID) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1082)
+	State variables written after the call(s):
+	- plyr_[_pID].laff = _affCode (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#270)
+	POOHMO.plyr_ (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#151) can be used in cross function reentrancies:
+	- POOHMO.buyCore(uint256,uint256,POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#810-858)
+	- POOHMO.buyXaddr(address) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#277-312)
+	- POOHMO.buyXid(uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#247-275)
+	- POOHMO.buyXname(bytes32) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#314-350)
+	- POOHMO.core(uint256,uint256,uint256,uint256,uint256,POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#915-969)
+	- POOHMO.determinePID(POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1071-1102)
+	- POOHMO.distributeExternal(uint256,uint256,uint256,uint256,uint256,POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1245-1288)
+	- POOHMO.endRound(POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1131-1193)
+	- POOHMO.endTx(uint256,uint256,uint256,uint256,POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1389-1411)
+	- POOHMO.fallback() (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#223-238)
+	- POOHMO.getCurrentRoundInfo() (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#736-761)
+	- POOHMO.getPlayerInfoByAddress(address) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#776-800)
+	- POOHMO.getPlayerVaults(uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#667-706)
+	- POOHMO.managePlayer(uint256,POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1110-1126)
+	- POOHMO.plyr_ (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#151)
+	- POOHMO.reLoadCore(uint256,uint256,uint256,POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#864-909)
+	- POOHMO.reLoadXaddr(address,uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#390-425)
+	- POOHMO.reLoadXid(uint256,uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#361-388)
+	- POOHMO.reLoadXname(bytes32,uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#427-462)
+	- POOHMO.receivePlayerInfo(uint256,address,bytes32,uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1038-1054)
+	- POOHMO.registerNameXID(string,uint256,bool) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#560-574)
+	- POOHMO.registerNameXaddr(string,address,bool) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#576-590)
+	- POOHMO.registerNameXname(string,bytes32,bool) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#592-606)
+	- POOHMO.updateGenVault(uint256,uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1205-1216)
+	- POOHMO.withdraw() (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#468-534)
+	- POOHMO.withdrawEarnings(uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1367-1384)
+Reentrancy in POOHMO.buyXname(bytes32) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#314-350):
+	External calls:
+	- _eventData_ = determinePID(_eventData_) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#322)
+		- _pID = PlayerBook.getPlayerID(msg.sender) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1080)
+		- _name = PlayerBook.getPlayerName(_pID) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1081)
+		- _laff = PlayerBook.getPlayerLAff(_pID) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1082)
+	State variables written after the call(s):
+	- plyr_[_pID].laff = _affID (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#344)
+	POOHMO.plyr_ (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#151) can be used in cross function reentrancies:
+	- POOHMO.buyCore(uint256,uint256,POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#810-858)
+	- POOHMO.buyXaddr(address) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#277-312)
+	- POOHMO.buyXid(uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#247-275)
+	- POOHMO.buyXname(bytes32) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#314-350)
+	- POOHMO.core(uint256,uint256,uint256,uint256,uint256,POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#915-969)
+	- POOHMO.determinePID(POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1071-1102)
+	- POOHMO.distributeExternal(uint256,uint256,uint256,uint256,uint256,POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1245-1288)
+	- POOHMO.endRound(POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1131-1193)
+	- POOHMO.endTx(uint256,uint256,uint256,uint256,POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1389-1411)
+	- POOHMO.fallback() (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#223-238)
+	- POOHMO.getCurrentRoundInfo() (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#736-761)
+	- POOHMO.getPlayerInfoByAddress(address) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#776-800)
+	- POOHMO.getPlayerVaults(uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#667-706)
+	- POOHMO.managePlayer(uint256,POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1110-1126)
+	- POOHMO.plyr_ (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#151)
+	- POOHMO.reLoadCore(uint256,uint256,uint256,POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#864-909)
+	- POOHMO.reLoadXaddr(address,uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#390-425)
+	- POOHMO.reLoadXid(uint256,uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#361-388)
+	- POOHMO.reLoadXname(bytes32,uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#427-462)
+	- POOHMO.receivePlayerInfo(uint256,address,bytes32,uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1038-1054)
+	- POOHMO.registerNameXID(string,uint256,bool) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#560-574)
+	- POOHMO.registerNameXaddr(string,address,bool) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#576-590)
+	- POOHMO.registerNameXname(string,bytes32,bool) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#592-606)
+	- POOHMO.updateGenVault(uint256,uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1205-1216)
+	- POOHMO.withdraw() (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#468-534)
+	- POOHMO.withdrawEarnings(uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1367-1384)
+Reentrancy in POOHMO.determinePID(POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1071-1102):
+	External calls:
+	- _pID = PlayerBook.getPlayerID(msg.sender) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1080)
+	- _name = PlayerBook.getPlayerName(_pID) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1081)
+	- _laff = PlayerBook.getPlayerLAff(_pID) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1082)
+	State variables written after the call(s):
+	- pIDxAddr_[msg.sender] = _pID (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1085)
+	POOHMO.pIDxAddr_ (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#149) can be used in cross function reentrancies:
+	- POOHMO.buyXaddr(address) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#277-312)
+	- POOHMO.buyXid(uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#247-275)
+	- POOHMO.buyXname(bytes32) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#314-350)
+	- POOHMO.determinePID(POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1071-1102)
+	- POOHMO.fallback() (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#223-238)
+	- POOHMO.getPlayerInfoByAddress(address) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#776-800)
+	- POOHMO.pIDxAddr_ (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#149)
+	- POOHMO.reLoadXaddr(address,uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#390-425)
+	- POOHMO.reLoadXid(uint256,uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#361-388)
+	- POOHMO.reLoadXname(bytes32,uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#427-462)
+	- POOHMO.receivePlayerInfo(uint256,address,bytes32,uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1038-1054)
+	- POOHMO.registerNameXID(string,uint256,bool) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#560-574)
+	- POOHMO.registerNameXaddr(string,address,bool) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#576-590)
+	- POOHMO.registerNameXname(string,bytes32,bool) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#592-606)
+	- POOHMO.withdraw() (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#468-534)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+POOHMO.endRound(POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1131-1193) ignores return value by flushDivs.call.value(_POOH)(bytes4(keccak256()(donate()))) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1169)
+POOHMO.distributeExternal(uint256,uint256,uint256,uint256,uint256,POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1245-1288) ignores return value by flushDivs.call.value(_POOH)(bytes4(keccak256()(donate()))) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1279)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-low-level-calls
+
+POOHMO.reLoadXaddr(address,uint256)._eventData_ (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#397) is a local variable never initialized
+POOHMO.reLoadXid(uint256,uint256)._eventData_ (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#368) is a local variable never initialized
+POOHMO.withdraw()._eventData_ (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#489) is a local variable never initialized
+POOHMO.reLoadXname(bytes32,uint256)._eventData_ (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#434) is a local variable never initialized
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#uninitialized-local-variables
+
+POOHMO.constructor(address,address).whaleContract (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#168) lacks a zero-check on :
+		- flushDivs = whaleContract (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#171)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in POOHMO.determinePID(POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1071-1102):
+	External calls:
+	- _pID = PlayerBook.getPlayerID(msg.sender) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1080)
+	- _name = PlayerBook.getPlayerName(_pID) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1081)
+	- _laff = PlayerBook.getPlayerLAff(_pID) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1082)
+	State variables written after the call(s):
+	- pIDxName_[_name] = _pID (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1090)
+	- plyrNames_[_pID][_name] = true (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1092)
+	- plyr_[_pID].addr = msg.sender (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1086)
+	- plyr_[_pID].name = _name (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1091)
+	- plyr_[_pID].laff = _laff (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1096)
+Reentrancy in POOHMO.distributeExternal(uint256,uint256,uint256,uint256,uint256,POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1245-1288):
+	External calls:
+	- ! address(admin).call.value(_dev)() (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1253)
+	State variables written after the call(s):
+	- plyr_[_affID].aff = _aff.add(plyr_[_affID].aff) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1266)
+Reentrancy in POOHMO.endRound(POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1131-1193):
+	External calls:
+	- flushDivs.call.value(_POOH)(bytes4(keccak256()(donate()))) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1169)
+	External calls sending eth:
+	- admin.transfer(_dev) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1167)
+	- flushDivs.call.value(_POOH)(bytes4(keccak256()(donate()))) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1169)
+	State variables written after the call(s):
+	- rndMax_ = timerLengths[determineNextRoundLength()] (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1188)
+Reentrancy in POOHMO.withdraw() (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#468-534):
+	External calls:
+	- _eventData_ = endRound(_eventData_) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#493)
+		- flushDivs.call.value(_POOH)(bytes4(keccak256()(donate()))) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1169)
+	External calls sending eth:
+	- _eventData_ = endRound(_eventData_) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#493)
+		- admin.transfer(_dev) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1167)
+		- flushDivs.call.value(_POOH)(bytes4(keccak256()(donate()))) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1169)
+	State variables written after the call(s):
+	- _eth = withdrawEarnings(_pID) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#496)
+		- plyrRnds_[_pID][_rIDlast].mask = _earnings.add(plyrRnds_[_pID][_rIDlast].mask) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1214)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in POOHMO.buyCore(uint256,uint256,POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#810-858):
+	External calls:
+	- _eventData_ = endRound(_eventData_) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#832)
+		- flushDivs.call.value(_POOH)(bytes4(keccak256()(donate()))) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1169)
+	External calls sending eth:
+	- _eventData_ = endRound(_eventData_) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#832)
+		- admin.transfer(_dev) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1167)
+		- flushDivs.call.value(_POOH)(bytes4(keccak256()(donate()))) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1169)
+	Event emitted after the call(s):
+	- POOHMOevents.onBuyAndDistribute(msg.sender,plyr_[_pID].name,msg.value,_eventData_.compressedData,_eventData_.compressedIDs,_eventData_.winnerAddr,_eventData_.winnerName,_eventData_.amountWon,_eventData_.newPot,_eventData_.POOHAmount,_eventData_.genAmount) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#839-852)
+Reentrancy in POOHMO.buyXaddr(address) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#277-312):
+	External calls:
+	- _eventData_ = determinePID(_eventData_) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#285)
+		- _pID = PlayerBook.getPlayerID(msg.sender) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1080)
+		- _name = PlayerBook.getPlayerName(_pID) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1081)
+		- _laff = PlayerBook.getPlayerLAff(_pID) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1082)
+	- buyCore(_pID,_affID,_eventData_) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#311)
+		- ! address(admin).call.value(_dev)() (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1253)
+		- flushDivs.call.value(_POOH)(bytes4(keccak256()(donate()))) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1279)
+		- flushDivs.call.value(_POOH)(bytes4(keccak256()(donate()))) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1169)
+	External calls sending eth:
+	- buyCore(_pID,_affID,_eventData_) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#311)
+		- ! address(admin).call.value(_dev)() (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1253)
+		- flushDivs.call.value(_POOH)(bytes4(keccak256()(donate()))) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1279)
+		- admin.transfer(_dev) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1167)
+		- flushDivs.call.value(_POOH)(bytes4(keccak256()(donate()))) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1169)
+	Event emitted after the call(s):
+	- POOHMOevents.onAffiliatePayout(_affID,plyr_[_affID].addr,plyr_[_affID].name,_rID,_pID,_aff,now) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1267)
+		- buyCore(_pID,_affID,_eventData_) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#311)
+	- POOHMOevents.onBuyAndDistribute(msg.sender,plyr_[_pID].name,msg.value,_eventData_.compressedData,_eventData_.compressedIDs,_eventData_.winnerAddr,_eventData_.winnerName,_eventData_.amountWon,_eventData_.newPot,_eventData_.POOHAmount,_eventData_.genAmount) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#839-852)
+		- buyCore(_pID,_affID,_eventData_) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#311)
+	- POOHMOevents.onEndTx(_eventData_.compressedData,_eventData_.compressedIDs,plyr_[_pID].name,msg.sender,_eth,_keys,_eventData_.winnerAddr,_eventData_.winnerName,_eventData_.amountWon,_eventData_.newPot,_eventData_.POOHAmount,_eventData_.genAmount,_eventData_.potAmount) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1395-1410)
+		- buyCore(_pID,_affID,_eventData_) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#311)
+Reentrancy in POOHMO.buyXid(uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#247-275):
+	External calls:
+	- _eventData_ = determinePID(_eventData_) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#255)
+		- _pID = PlayerBook.getPlayerID(msg.sender) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1080)
+		- _name = PlayerBook.getPlayerName(_pID) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1081)
+		- _laff = PlayerBook.getPlayerLAff(_pID) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1082)
+	- buyCore(_pID,_affCode,_eventData_) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#274)
+		- ! address(admin).call.value(_dev)() (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1253)
+		- flushDivs.call.value(_POOH)(bytes4(keccak256()(donate()))) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1279)
+		- flushDivs.call.value(_POOH)(bytes4(keccak256()(donate()))) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1169)
+	External calls sending eth:
+	- buyCore(_pID,_affCode,_eventData_) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#274)
+		- ! address(admin).call.value(_dev)() (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1253)
+		- flushDivs.call.value(_POOH)(bytes4(keccak256()(donate()))) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1279)
+		- admin.transfer(_dev) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1167)
+		- flushDivs.call.value(_POOH)(bytes4(keccak256()(donate()))) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1169)
+	Event emitted after the call(s):
+	- POOHMOevents.onAffiliatePayout(_affID,plyr_[_affID].addr,plyr_[_affID].name,_rID,_pID,_aff,now) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1267)
+		- buyCore(_pID,_affCode,_eventData_) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#274)
+	- POOHMOevents.onBuyAndDistribute(msg.sender,plyr_[_pID].name,msg.value,_eventData_.compressedData,_eventData_.compressedIDs,_eventData_.winnerAddr,_eventData_.winnerName,_eventData_.amountWon,_eventData_.newPot,_eventData_.POOHAmount,_eventData_.genAmount) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#839-852)
+		- buyCore(_pID,_affCode,_eventData_) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#274)
+	- POOHMOevents.onEndTx(_eventData_.compressedData,_eventData_.compressedIDs,plyr_[_pID].name,msg.sender,_eth,_keys,_eventData_.winnerAddr,_eventData_.winnerName,_eventData_.amountWon,_eventData_.newPot,_eventData_.POOHAmount,_eventData_.genAmount,_eventData_.potAmount) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1395-1410)
+		- buyCore(_pID,_affCode,_eventData_) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#274)
+Reentrancy in POOHMO.buyXname(bytes32) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#314-350):
+	External calls:
+	- _eventData_ = determinePID(_eventData_) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#322)
+		- _pID = PlayerBook.getPlayerID(msg.sender) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1080)
+		- _name = PlayerBook.getPlayerName(_pID) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1081)
+		- _laff = PlayerBook.getPlayerLAff(_pID) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1082)
+	- buyCore(_pID,_affID,_eventData_) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#349)
+		- ! address(admin).call.value(_dev)() (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1253)
+		- flushDivs.call.value(_POOH)(bytes4(keccak256()(donate()))) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1279)
+		- flushDivs.call.value(_POOH)(bytes4(keccak256()(donate()))) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1169)
+	External calls sending eth:
+	- buyCore(_pID,_affID,_eventData_) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#349)
+		- ! address(admin).call.value(_dev)() (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1253)
+		- flushDivs.call.value(_POOH)(bytes4(keccak256()(donate()))) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1279)
+		- admin.transfer(_dev) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1167)
+		- flushDivs.call.value(_POOH)(bytes4(keccak256()(donate()))) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1169)
+	Event emitted after the call(s):
+	- POOHMOevents.onAffiliatePayout(_affID,plyr_[_affID].addr,plyr_[_affID].name,_rID,_pID,_aff,now) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1267)
+		- buyCore(_pID,_affID,_eventData_) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#349)
+	- POOHMOevents.onBuyAndDistribute(msg.sender,plyr_[_pID].name,msg.value,_eventData_.compressedData,_eventData_.compressedIDs,_eventData_.winnerAddr,_eventData_.winnerName,_eventData_.amountWon,_eventData_.newPot,_eventData_.POOHAmount,_eventData_.genAmount) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#839-852)
+		- buyCore(_pID,_affID,_eventData_) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#349)
+	- POOHMOevents.onEndTx(_eventData_.compressedData,_eventData_.compressedIDs,plyr_[_pID].name,msg.sender,_eth,_keys,_eventData_.winnerAddr,_eventData_.winnerName,_eventData_.amountWon,_eventData_.newPot,_eventData_.POOHAmount,_eventData_.genAmount,_eventData_.potAmount) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1395-1410)
+		- buyCore(_pID,_affID,_eventData_) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#349)
+Reentrancy in POOHMO.core(uint256,uint256,uint256,uint256,uint256,POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#915-969):
+	External calls:
+	- _eventData_ = distributeExternal(_rID,_pID,_eth,_affID,0,_eventData_) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#963)
+		- ! address(admin).call.value(_dev)() (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1253)
+		- flushDivs.call.value(_POOH)(bytes4(keccak256()(donate()))) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1279)
+	Event emitted after the call(s):
+	- POOHMOevents.onEndTx(_eventData_.compressedData,_eventData_.compressedIDs,plyr_[_pID].name,msg.sender,_eth,_keys,_eventData_.winnerAddr,_eventData_.winnerName,_eventData_.amountWon,_eventData_.newPot,_eventData_.POOHAmount,_eventData_.genAmount,_eventData_.potAmount) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1395-1410)
+		- endTx(_pID,0,_eth,_keys,_eventData_) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#967)
+Reentrancy in POOHMO.distributeExternal(uint256,uint256,uint256,uint256,uint256,POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1245-1288):
+	External calls:
+	- ! address(admin).call.value(_dev)() (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1253)
+	Event emitted after the call(s):
+	- POOHMOevents.onAffiliatePayout(_affID,plyr_[_affID].addr,plyr_[_affID].name,_rID,_pID,_aff,now) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1267)
+Reentrancy in POOHMO.fallback() (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#223-238):
+	External calls:
+	- _eventData_ = determinePID(_eventData_) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#231)
+		- _pID = PlayerBook.getPlayerID(msg.sender) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1080)
+		- _name = PlayerBook.getPlayerName(_pID) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1081)
+		- _laff = PlayerBook.getPlayerLAff(_pID) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1082)
+	- buyCore(_pID,plyr_[_pID].laff,_eventData_) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#237)
+		- ! address(admin).call.value(_dev)() (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1253)
+		- flushDivs.call.value(_POOH)(bytes4(keccak256()(donate()))) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1279)
+		- flushDivs.call.value(_POOH)(bytes4(keccak256()(donate()))) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1169)
+	External calls sending eth:
+	- buyCore(_pID,plyr_[_pID].laff,_eventData_) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#237)
+		- ! address(admin).call.value(_dev)() (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1253)
+		- flushDivs.call.value(_POOH)(bytes4(keccak256()(donate()))) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1279)
+		- admin.transfer(_dev) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1167)
+		- flushDivs.call.value(_POOH)(bytes4(keccak256()(donate()))) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1169)
+	Event emitted after the call(s):
+	- POOHMOevents.onAffiliatePayout(_affID,plyr_[_affID].addr,plyr_[_affID].name,_rID,_pID,_aff,now) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1267)
+		- buyCore(_pID,plyr_[_pID].laff,_eventData_) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#237)
+	- POOHMOevents.onBuyAndDistribute(msg.sender,plyr_[_pID].name,msg.value,_eventData_.compressedData,_eventData_.compressedIDs,_eventData_.winnerAddr,_eventData_.winnerName,_eventData_.amountWon,_eventData_.newPot,_eventData_.POOHAmount,_eventData_.genAmount) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#839-852)
+		- buyCore(_pID,plyr_[_pID].laff,_eventData_) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#237)
+	- POOHMOevents.onEndTx(_eventData_.compressedData,_eventData_.compressedIDs,plyr_[_pID].name,msg.sender,_eth,_keys,_eventData_.winnerAddr,_eventData_.winnerName,_eventData_.amountWon,_eventData_.newPot,_eventData_.POOHAmount,_eventData_.genAmount,_eventData_.potAmount) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1395-1410)
+		- buyCore(_pID,plyr_[_pID].laff,_eventData_) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#237)
+Reentrancy in POOHMO.reLoadCore(uint256,uint256,uint256,POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#864-909):
+	External calls:
+	- _eventData_ = endRound(_eventData_) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#888)
+		- flushDivs.call.value(_POOH)(bytes4(keccak256()(donate()))) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1169)
+	External calls sending eth:
+	- _eventData_ = endRound(_eventData_) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#888)
+		- admin.transfer(_dev) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1167)
+		- flushDivs.call.value(_POOH)(bytes4(keccak256()(donate()))) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1169)
+	Event emitted after the call(s):
+	- POOHMOevents.onReLoadAndDistribute(msg.sender,plyr_[_pID].name,_eventData_.compressedData,_eventData_.compressedIDs,_eventData_.winnerAddr,_eventData_.winnerName,_eventData_.amountWon,_eventData_.newPot,_eventData_.POOHAmount,_eventData_.genAmount) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#895-907)
+Reentrancy in POOHMO.registerNameXID(string,uint256,bool) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#560-574):
+	External calls:
+	- (_isNewPlayer,_affID) = PlayerBook.registerNameXIDFromDapp.value(_paid)(_addr,_name,_affCode,_all) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#568)
+	Event emitted after the call(s):
+	- POOHMOevents.onNewName(_pID,_addr,_name,_isNewPlayer,_affID,plyr_[_affID].addr,plyr_[_affID].name,_paid,now) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#573)
+Reentrancy in POOHMO.registerNameXaddr(string,address,bool) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#576-590):
+	External calls:
+	- (_isNewPlayer,_affID) = PlayerBook.registerNameXaddrFromDapp.value(msg.value)(msg.sender,_name,_affCode,_all) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#584)
+	Event emitted after the call(s):
+	- POOHMOevents.onNewName(_pID,_addr,_name,_isNewPlayer,_affID,plyr_[_affID].addr,plyr_[_affID].name,_paid,now) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#589)
+Reentrancy in POOHMO.registerNameXname(string,bytes32,bool) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#592-606):
+	External calls:
+	- (_isNewPlayer,_affID) = PlayerBook.registerNameXnameFromDapp.value(msg.value)(msg.sender,_name,_affCode,_all) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#600)
+	Event emitted after the call(s):
+	- POOHMOevents.onNewName(_pID,_addr,_name,_isNewPlayer,_affID,plyr_[_affID].addr,plyr_[_affID].name,_paid,now) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#605)
+Reentrancy in POOHMO.withdraw() (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#468-534):
+	External calls:
+	- _eventData_ = endRound(_eventData_) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#493)
+		- flushDivs.call.value(_POOH)(bytes4(keccak256()(donate()))) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1169)
+	External calls sending eth:
+	- _eventData_ = endRound(_eventData_) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#493)
+		- admin.transfer(_dev) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1167)
+		- flushDivs.call.value(_POOH)(bytes4(keccak256()(donate()))) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1169)
+	- plyr_[_pID].addr.transfer(_eth) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#500)
+	Event emitted after the call(s):
+	- POOHMOevents.onWithdrawAndDistribute(msg.sender,plyr_[_pID].name,_eth,_eventData_.compressedData,_eventData_.compressedIDs,_eventData_.winnerAddr,_eventData_.winnerName,_eventData_.amountWon,_eventData_.newPot,_eventData_.POOHAmount,_eventData_.genAmount) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#507-520)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+POOHMO.withdraw() (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#468-534) uses timestamp for comparisons
+	Dangerous comparisons:
+	- _now > round_[_rID].end && round_[_rID].ended == false && round_[_rID].plyr != 0 (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#486)
+POOHMO.getBuyPrice() (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#616-632) uses timestamp for comparisons
+	Dangerous comparisons:
+	- _now > round_[_rID].strt + rndGap_ && (_now <= round_[_rID].end || (_now > round_[_rID].end && round_[_rID].plyr == 0)) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#628)
+POOHMO.getTimeLeft() (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#640-658) uses timestamp for comparisons
+	Dangerous comparisons:
+	- _now < round_[_rID].end (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#651)
+	- _now > round_[_rID].strt + rndGap_ (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#652)
+POOHMO.getPlayerVaults(uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#667-706) uses timestamp for comparisons
+	Dangerous comparisons:
+	- now > round_[_rID].end && round_[_rID].ended == false && round_[_rID].plyr != 0 (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#676)
+POOHMO.buyCore(uint256,uint256,POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#810-858) uses timestamp for comparisons
+	Dangerous comparisons:
+	- _now > round_[_rID].strt + rndGap_ && (_now <= round_[_rID].end || (_now > round_[_rID].end && round_[_rID].plyr == 0)) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#820)
+	- _now > round_[_rID].end && round_[_rID].ended == false (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#828)
+POOHMO.reLoadCore(uint256,uint256,uint256,POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#864-909) uses timestamp for comparisons
+	Dangerous comparisons:
+	- _now > round_[_rID].strt + rndGap_ && (_now <= round_[_rID].end || (_now > round_[_rID].end && round_[_rID].plyr == 0)) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#874)
+	- _now > round_[_rID].end && round_[_rID].ended == false (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#885)
+POOHMO.calcKeysReceived(uint256,uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#993-1006) uses timestamp for comparisons
+	Dangerous comparisons:
+	- _now > round_[_rID].strt + rndGap_ && (_now <= round_[_rID].end || (_now > round_[_rID].end && round_[_rID].plyr == 0)) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1002)
+POOHMO.iWantXKeys(uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1014-1030) uses timestamp for comparisons
+	Dangerous comparisons:
+	- _now > round_[_rID].strt + rndGap_ && (_now <= round_[_rID].end || (_now > round_[_rID].end && round_[_rID].plyr == 0)) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1026)
+POOHMO.updateTimer(uint256,uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1221-1239) uses timestamp for comparisons
+	Dangerous comparisons:
+	- _now > round_[_rID].end && round_[_rID].plyr == 0 (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1229)
+	- _newTime < (rndMax_).add(_now) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1235)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+NameFilter.nameFilter(string) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1585-1645) uses assembly
+	- INLINE ASM (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1641-1644)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#assembly-usage
+
+POOHMO.withdraw() (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#468-534) compares to a boolean constant:
+	-_now > round_[_rID].end && round_[_rID].ended == false && round_[_rID].plyr != 0 (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#486)
+POOHMO.getPlayerVaults(uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#667-706) compares to a boolean constant:
+	-now > round_[_rID].end && round_[_rID].ended == false && round_[_rID].plyr != 0 (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#676)
+POOHMO.buyCore(uint256,uint256,POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#810-858) compares to a boolean constant:
+	-_now > round_[_rID].end && round_[_rID].ended == false (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#828)
+POOHMO.reLoadCore(uint256,uint256,uint256,POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#864-909) compares to a boolean constant:
+	-_now > round_[_rID].end && round_[_rID].ended == false (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#885)
+POOHMO.receivePlayerInfo(uint256,address,bytes32,uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1038-1054) compares to a boolean constant:
+	-plyrNames_[_pID][_name] == false (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1052)
+POOHMO.receivePlayerNameList(uint256,bytes32) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1059-1065) compares to a boolean constant:
+	-plyrNames_[_pID][_name] == false (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1063)
+POOHMO.activate() (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1420-1437) compares to a boolean constant:
+	-require(bool)(activated_ == false) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1428)
+POOHMO.isActivated() (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#189-192) compares to a boolean constant:
+	-require(bool)(activated_ == true) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#190)
+NameFilter.nameFilter(string) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1585-1645) compares to a boolean constant:
+	-_hasNonNumber == false && (_temp[i] < 0x30 || _temp[i] > 0x39) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1633)
+NameFilter.nameFilter(string) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1585-1645) compares to a boolean constant:
+	-require(bool)(_hasNonNumber == true) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1638)
+NameFilter.nameFilter(string) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1585-1645) compares to a boolean constant:
+	-_hasNonNumber == false (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1617)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#boolean-equality
+
+Version constraint ^0.4.24 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ABIEncoderV2PackedStorage_0.4.x
+	- ExpExponentCleanup
+	- EventStructWrongData.
+It is used by:
+	- ^0.4.24 (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1)
+solc-0.4.24 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in POOHMO.endRound(POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1131-1193):
+	- flushDivs.call.value(_POOH)(bytes4(keccak256()(donate()))) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1169)
+Low level call in POOHMO.distributeExternal(uint256,uint256,uint256,uint256,uint256,POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1245-1288):
+	- ! address(admin).call.value(_dev)() (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1253)
+	- flushDivs.call.value(_POOH)(bytes4(keccak256()(donate()))) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1279)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Event POOHMOevents.onNewName(uint256,address,bytes32,bool,uint256,address,bytes32,uint256,uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#5-16) is not in CapWords
+Event POOHMOevents.onEndTx(uint256,uint256,bytes32,address,uint256,uint256,address,bytes32,uint256,uint256,uint256,uint256,uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#19-34) is not in CapWords
+Event POOHMOevents.onWithdraw(uint256,address,bytes32,uint256,uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#37-44) is not in CapWords
+Event POOHMOevents.onWithdrawAndDistribute(address,bytes32,uint256,uint256,uint256,address,bytes32,uint256,uint256,uint256,uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#47-60) is not in CapWords
+Event POOHMOevents.onBuyAndDistribute(address,bytes32,uint256,uint256,uint256,address,bytes32,uint256,uint256,uint256,uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#64-77) is not in CapWords
+Event POOHMOevents.onReLoadAndDistribute(address,bytes32,uint256,uint256,address,bytes32,uint256,uint256,uint256,uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#81-93) is not in CapWords
+Event POOHMOevents.onAffiliatePayout(uint256,address,bytes32,uint256,uint256,uint256,uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#96-105) is not in CapWords
+Event POOHMOevents.onPotSwapDeposit(uint256,uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#108-112) is not in CapWords
+Parameter POOHMO.buyXid(uint256)._affCode (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#247) is not in mixedCase
+Parameter POOHMO.buyXaddr(address)._affCode (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#277) is not in mixedCase
+Parameter POOHMO.buyXname(bytes32)._affCode (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#314) is not in mixedCase
+Parameter POOHMO.reLoadXid(uint256,uint256)._affCode (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#361) is not in mixedCase
+Parameter POOHMO.reLoadXid(uint256,uint256)._eth (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#361) is not in mixedCase
+Parameter POOHMO.reLoadXaddr(address,uint256)._affCode (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#390) is not in mixedCase
+Parameter POOHMO.reLoadXaddr(address,uint256)._eth (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#390) is not in mixedCase
+Parameter POOHMO.reLoadXname(bytes32,uint256)._affCode (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#427) is not in mixedCase
+Parameter POOHMO.reLoadXname(bytes32,uint256)._eth (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#427) is not in mixedCase
+Parameter POOHMO.registerNameXID(string,uint256,bool)._nameString (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#560) is not in mixedCase
+Parameter POOHMO.registerNameXID(string,uint256,bool)._affCode (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#560) is not in mixedCase
+Parameter POOHMO.registerNameXID(string,uint256,bool)._all (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#560) is not in mixedCase
+Parameter POOHMO.registerNameXaddr(string,address,bool)._nameString (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#576) is not in mixedCase
+Parameter POOHMO.registerNameXaddr(string,address,bool)._affCode (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#576) is not in mixedCase
+Parameter POOHMO.registerNameXaddr(string,address,bool)._all (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#576) is not in mixedCase
+Parameter POOHMO.registerNameXname(string,bytes32,bool)._nameString (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#592) is not in mixedCase
+Parameter POOHMO.registerNameXname(string,bytes32,bool)._affCode (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#592) is not in mixedCase
+Parameter POOHMO.registerNameXname(string,bytes32,bool)._all (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#592) is not in mixedCase
+Parameter POOHMO.getPlayerVaults(uint256)._pID (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#667) is not in mixedCase
+Parameter POOHMO.getPlayerVaultsHelper(uint256,uint256)._pID (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#711) is not in mixedCase
+Parameter POOHMO.getPlayerVaultsHelper(uint256,uint256)._rID (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#711) is not in mixedCase
+Parameter POOHMO.getPlayerInfoByAddress(address)._addr (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#776) is not in mixedCase
+Parameter POOHMO.buyCore(uint256,uint256,POOHMODatasets.EventReturns)._pID (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#810) is not in mixedCase
+Parameter POOHMO.buyCore(uint256,uint256,POOHMODatasets.EventReturns)._affID (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#810) is not in mixedCase
+Parameter POOHMO.buyCore(uint256,uint256,POOHMODatasets.EventReturns)._eventData_ (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#810) is not in mixedCase
+Parameter POOHMO.reLoadCore(uint256,uint256,uint256,POOHMODatasets.EventReturns)._pID (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#864) is not in mixedCase
+Parameter POOHMO.reLoadCore(uint256,uint256,uint256,POOHMODatasets.EventReturns)._affID (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#864) is not in mixedCase
+Parameter POOHMO.reLoadCore(uint256,uint256,uint256,POOHMODatasets.EventReturns)._eth (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#864) is not in mixedCase
+Parameter POOHMO.reLoadCore(uint256,uint256,uint256,POOHMODatasets.EventReturns)._eventData_ (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#864) is not in mixedCase
+Parameter POOHMO.core(uint256,uint256,uint256,uint256,uint256,POOHMODatasets.EventReturns)._rID (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#915) is not in mixedCase
+Parameter POOHMO.core(uint256,uint256,uint256,uint256,uint256,POOHMODatasets.EventReturns)._pID (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#915) is not in mixedCase
+Parameter POOHMO.core(uint256,uint256,uint256,uint256,uint256,POOHMODatasets.EventReturns)._eth (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#915) is not in mixedCase
+Parameter POOHMO.core(uint256,uint256,uint256,uint256,uint256,POOHMODatasets.EventReturns)._affID (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#915) is not in mixedCase
+Parameter POOHMO.core(uint256,uint256,uint256,uint256,uint256,POOHMODatasets.EventReturns)._team (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#915) is not in mixedCase
+Parameter POOHMO.core(uint256,uint256,uint256,uint256,uint256,POOHMODatasets.EventReturns)._eventData_ (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#915) is not in mixedCase
+Parameter POOHMO.calcUnMaskedEarnings(uint256,uint256)._pID (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#978) is not in mixedCase
+Parameter POOHMO.calcUnMaskedEarnings(uint256,uint256)._rIDlast (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#978) is not in mixedCase
+Parameter POOHMO.calcKeysReceived(uint256,uint256)._rID (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#993) is not in mixedCase
+Parameter POOHMO.calcKeysReceived(uint256,uint256)._eth (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#993) is not in mixedCase
+Parameter POOHMO.iWantXKeys(uint256)._keys (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1014) is not in mixedCase
+Parameter POOHMO.receivePlayerInfo(uint256,address,bytes32,uint256)._pID (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1038) is not in mixedCase
+Parameter POOHMO.receivePlayerInfo(uint256,address,bytes32,uint256)._addr (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1038) is not in mixedCase
+Parameter POOHMO.receivePlayerInfo(uint256,address,bytes32,uint256)._name (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1038) is not in mixedCase
+Parameter POOHMO.receivePlayerInfo(uint256,address,bytes32,uint256)._laff (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1038) is not in mixedCase
+Parameter POOHMO.receivePlayerNameList(uint256,bytes32)._pID (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1059) is not in mixedCase
+Parameter POOHMO.receivePlayerNameList(uint256,bytes32)._name (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1059) is not in mixedCase
+Parameter POOHMO.determinePID(POOHMODatasets.EventReturns)._eventData_ (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1071) is not in mixedCase
+Parameter POOHMO.managePlayer(uint256,POOHMODatasets.EventReturns)._pID (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1110) is not in mixedCase
+Parameter POOHMO.managePlayer(uint256,POOHMODatasets.EventReturns)._eventData_ (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1110) is not in mixedCase
+Parameter POOHMO.endRound(POOHMODatasets.EventReturns)._eventData_ (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1131) is not in mixedCase
+Parameter POOHMO.updateGenVault(uint256,uint256)._pID (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1205) is not in mixedCase
+Parameter POOHMO.updateGenVault(uint256,uint256)._rIDlast (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1205) is not in mixedCase
+Parameter POOHMO.updateTimer(uint256,uint256)._keys (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1221) is not in mixedCase
+Parameter POOHMO.updateTimer(uint256,uint256)._rID (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1221) is not in mixedCase
+Parameter POOHMO.distributeExternal(uint256,uint256,uint256,uint256,uint256,POOHMODatasets.EventReturns)._rID (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1245) is not in mixedCase
+Parameter POOHMO.distributeExternal(uint256,uint256,uint256,uint256,uint256,POOHMODatasets.EventReturns)._pID (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1245) is not in mixedCase
+Parameter POOHMO.distributeExternal(uint256,uint256,uint256,uint256,uint256,POOHMODatasets.EventReturns)._eth (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1245) is not in mixedCase
+Parameter POOHMO.distributeExternal(uint256,uint256,uint256,uint256,uint256,POOHMODatasets.EventReturns)._affID (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1245) is not in mixedCase
+Parameter POOHMO.distributeExternal(uint256,uint256,uint256,uint256,uint256,POOHMODatasets.EventReturns)._team (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1245) is not in mixedCase
+Parameter POOHMO.distributeExternal(uint256,uint256,uint256,uint256,uint256,POOHMODatasets.EventReturns)._eventData_ (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1245) is not in mixedCase
+Parameter POOHMO.distributeInternal(uint256,uint256,uint256,uint256,uint256,POOHMODatasets.EventReturns)._rID (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1301) is not in mixedCase
+Parameter POOHMO.distributeInternal(uint256,uint256,uint256,uint256,uint256,POOHMODatasets.EventReturns)._pID (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1301) is not in mixedCase
+Parameter POOHMO.distributeInternal(uint256,uint256,uint256,uint256,uint256,POOHMODatasets.EventReturns)._eth (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1301) is not in mixedCase
+Parameter POOHMO.distributeInternal(uint256,uint256,uint256,uint256,uint256,POOHMODatasets.EventReturns)._team (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1301) is not in mixedCase
+Parameter POOHMO.distributeInternal(uint256,uint256,uint256,uint256,uint256,POOHMODatasets.EventReturns)._keys (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1301) is not in mixedCase
+Parameter POOHMO.distributeInternal(uint256,uint256,uint256,uint256,uint256,POOHMODatasets.EventReturns)._eventData_ (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1301) is not in mixedCase
+Parameter POOHMO.updateMasks(uint256,uint256,uint256,uint256)._rID (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1335) is not in mixedCase
+Parameter POOHMO.updateMasks(uint256,uint256,uint256,uint256)._pID (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1335) is not in mixedCase
+Parameter POOHMO.updateMasks(uint256,uint256,uint256,uint256)._gen (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1335) is not in mixedCase
+Parameter POOHMO.updateMasks(uint256,uint256,uint256,uint256)._keys (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1335) is not in mixedCase
+Parameter POOHMO.withdrawEarnings(uint256)._pID (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1367) is not in mixedCase
+Parameter POOHMO.endTx(uint256,uint256,uint256,uint256,POOHMODatasets.EventReturns)._pID (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1389) is not in mixedCase
+Parameter POOHMO.endTx(uint256,uint256,uint256,uint256,POOHMODatasets.EventReturns)._team (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1389) is not in mixedCase
+Parameter POOHMO.endTx(uint256,uint256,uint256,uint256,POOHMODatasets.EventReturns)._eth (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1389) is not in mixedCase
+Parameter POOHMO.endTx(uint256,uint256,uint256,uint256,POOHMODatasets.EventReturns)._keys (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1389) is not in mixedCase
+Parameter POOHMO.endTx(uint256,uint256,uint256,uint256,POOHMODatasets.EventReturns)._eventData_ (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1389) is not in mixedCase
+Variable POOHMO.PlayerBook (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#125) is not in mixedCase
+Constant POOHMO.rndInc_ (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#138) is not in UPPER_CASE_WITH_UNDERSCORES
+Parameter KeysCalc.keysRec(uint256,uint256)._curEth (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1508) is not in mixedCase
+Parameter KeysCalc.keysRec(uint256,uint256)._newEth (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1508) is not in mixedCase
+Parameter KeysCalc.ethRec(uint256,uint256)._curKeys (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1522) is not in mixedCase
+Parameter KeysCalc.ethRec(uint256,uint256)._sellKeys (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1522) is not in mixedCase
+Parameter KeysCalc.keys(uint256)._eth (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1535) is not in mixedCase
+Parameter KeysCalc.eth(uint256)._keys (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1548) is not in mixedCase
+Parameter NameFilter.nameFilter(string)._input (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1585) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in POOHMO.buyCore(uint256,uint256,POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#810-858):
+	External calls:
+	- _eventData_ = endRound(_eventData_) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#832)
+		- admin.transfer(_dev) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1167)
+	External calls sending eth:
+	- _eventData_ = endRound(_eventData_) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#832)
+		- admin.transfer(_dev) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1167)
+		- flushDivs.call.value(_POOH)(bytes4(keccak256()(donate()))) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1169)
+	State variables written after the call(s):
+	- plyr_[_pID].gen = plyr_[_pID].gen.add(msg.value) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#856)
+	Event emitted after the call(s):
+	- POOHMOevents.onBuyAndDistribute(msg.sender,plyr_[_pID].name,msg.value,_eventData_.compressedData,_eventData_.compressedIDs,_eventData_.winnerAddr,_eventData_.winnerName,_eventData_.amountWon,_eventData_.newPot,_eventData_.POOHAmount,_eventData_.genAmount) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#839-852)
+Reentrancy in POOHMO.endRound(POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1131-1193):
+	External calls:
+	- admin.transfer(_dev) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1167)
+	External calls sending eth:
+	- admin.transfer(_dev) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1167)
+	- flushDivs.call.value(_POOH)(bytes4(keccak256()(donate()))) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1169)
+	State variables written after the call(s):
+	- rID_ ++ (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1185)
+	- rndMax_ = timerLengths[determineNextRoundLength()] (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1188)
+	- round_[_rID].mask = _ppt.add(round_[_rID].mask) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1172)
+	- round_[_rID].strt = now (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1187)
+	- round_[_rID].end = now.add(rndMax_) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1189)
+	- round_[_rID].pot = _res (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1190)
+Reentrancy in POOHMO.reLoadCore(uint256,uint256,uint256,POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#864-909):
+	External calls:
+	- _eventData_ = endRound(_eventData_) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#888)
+		- admin.transfer(_dev) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1167)
+	External calls sending eth:
+	- _eventData_ = endRound(_eventData_) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#888)
+		- admin.transfer(_dev) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1167)
+		- flushDivs.call.value(_POOH)(bytes4(keccak256()(donate()))) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1169)
+	Event emitted after the call(s):
+	- POOHMOevents.onReLoadAndDistribute(msg.sender,plyr_[_pID].name,_eventData_.compressedData,_eventData_.compressedIDs,_eventData_.winnerAddr,_eventData_.winnerName,_eventData_.amountWon,_eventData_.newPot,_eventData_.POOHAmount,_eventData_.genAmount) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#895-907)
+Reentrancy in POOHMO.withdraw() (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#468-534):
+	External calls:
+	- _eventData_ = endRound(_eventData_) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#493)
+		- admin.transfer(_dev) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1167)
+	External calls sending eth:
+	- _eventData_ = endRound(_eventData_) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#493)
+		- admin.transfer(_dev) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1167)
+		- flushDivs.call.value(_POOH)(bytes4(keccak256()(donate()))) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1169)
+	State variables written after the call(s):
+	- _eth = withdrawEarnings(_pID) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#496)
+		- plyrRnds_[_pID][_rIDlast].mask = _earnings.add(plyrRnds_[_pID][_rIDlast].mask) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1214)
+	- _eth = withdrawEarnings(_pID) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#496)
+		- plyr_[_pID].gen = _earnings.add(plyr_[_pID].gen) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1212)
+		- plyr_[_pID].win = 0 (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1378)
+		- plyr_[_pID].gen = 0 (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1379)
+		- plyr_[_pID].aff = 0 (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1380)
+Reentrancy in POOHMO.withdraw() (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#468-534):
+	External calls:
+	- _eventData_ = endRound(_eventData_) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#493)
+		- admin.transfer(_dev) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1167)
+	- plyr_[_pID].addr.transfer(_eth) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#500)
+	External calls sending eth:
+	- _eventData_ = endRound(_eventData_) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#493)
+		- admin.transfer(_dev) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1167)
+		- flushDivs.call.value(_POOH)(bytes4(keccak256()(donate()))) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1169)
+	- plyr_[_pID].addr.transfer(_eth) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#500)
+	Event emitted after the call(s):
+	- POOHMOevents.onWithdrawAndDistribute(msg.sender,plyr_[_pID].name,_eth,_eventData_.compressedData,_eventData_.compressedIDs,_eventData_.winnerAddr,_eventData_.winnerName,_eventData_.amountWon,_eventData_.newPot,_eventData_.POOHAmount,_eventData_.genAmount) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#507-520)
+Reentrancy in POOHMO.withdraw() (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#468-534):
+	External calls:
+	- plyr_[_pID].addr.transfer(_eth) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#529)
+	Event emitted after the call(s):
+	- POOHMOevents.onWithdraw(_pID,msg.sender,plyr_[_pID].name,_eth,_now) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#532)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+POOHMO.withdraw() (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#468-534) uses literals with too many digits:
+	- _eventData_.compressedData = _eventData_.compressedData + (_now * 1000000000000000000) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#503)
+POOHMO.getBuyPrice() (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#616-632) uses literals with too many digits:
+	- ((round_[_rID].keys.add(1000000000000000000)).ethRec(1000000000000000000)) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#629)
+POOHMO.getBuyPrice() (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#616-632) uses literals with too many digits:
+	- (75000000000000) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#631)
+POOHMO.getPlayerVaultsHelper(uint256,uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#711-717) uses literals with too many digits:
+	- (((((round_[_rID].mask).add(((((round_[_rID].pot).mul(potSplit_[round_[_rID].team].gen)) / 100).mul(1000000000000000000)) / (round_[_rID].keys))).mul(plyrRnds_[_pID][_rID].keys)) / 1000000000000000000)) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#716)
+POOHMO.buyCore(uint256,uint256,POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#810-858) uses literals with too many digits:
+	- _eventData_.compressedData = _eventData_.compressedData + (_now * 1000000000000000000) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#835)
+POOHMO.reLoadCore(uint256,uint256,uint256,POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#864-909) uses literals with too many digits:
+	- _eventData_.compressedData = _eventData_.compressedData + (_now * 1000000000000000000) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#891)
+POOHMO.core(uint256,uint256,uint256,uint256,uint256,POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#915-969) uses literals with too many digits:
+	- round_[_rID].eth < 100000000000000000000 && plyrRnds_[_pID][_rID].eth.add(_eth) > 5000000000000000000 (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#923)
+POOHMO.core(uint256,uint256,uint256,uint256,uint256,POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#915-969) uses literals with too many digits:
+	- _availableLimit = (5000000000000000000).sub(plyrRnds_[_pID][_rID].eth) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#925)
+POOHMO.core(uint256,uint256,uint256,uint256,uint256,POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#915-969) uses literals with too many digits:
+	- _eth > 1000000000 (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#932)
+POOHMO.core(uint256,uint256,uint256,uint256,uint256,POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#915-969) uses literals with too many digits:
+	- _keys >= 1000000000000000000 (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#939)
+POOHMO.calcUnMaskedEarnings(uint256,uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#978-984) uses literals with too many digits:
+	- ((((round_[_rIDlast].mask).mul(plyrRnds_[_pID][_rIDlast].keys)) / (1000000000000000000)).sub(plyrRnds_[_pID][_rIDlast].mask)) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#983)
+POOHMO.endRound(POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1131-1193) uses literals with too many digits:
+	- _ppt = (_gen.mul(1000000000000000000)) / (round_[_rID].keys) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1154)
+POOHMO.endRound(POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1131-1193) uses literals with too many digits:
+	- _dust = _gen.sub((_ppt.mul(round_[_rID].keys)) / 1000000000000000000) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1155)
+POOHMO.endRound(POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1131-1193) uses literals with too many digits:
+	- _eventData_.compressedData = _eventData_.compressedData + (round_[_rID].end * 1000000) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1175)
+POOHMO.endRound(POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1131-1193) uses literals with too many digits:
+	- _eventData_.compressedIDs = _eventData_.compressedIDs + (_winPID * 100000000000000000000000000) + (_winTID * 100000000000000000) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1176)
+POOHMO.updateTimer(uint256,uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1221-1239) uses literals with too many digits:
+	- _newTime = (((_keys) / (1000000000000000000)).mul(rndInc_)).add(_now) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1230)
+POOHMO.updateTimer(uint256,uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1221-1239) uses literals with too many digits:
+	- _newTime = (((_keys) / (1000000000000000000)).mul(rndInc_)).add(round_[_rID].end) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1232)
+POOHMO.updateMasks(uint256,uint256,uint256,uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1335-1361) uses literals with too many digits:
+	- _ppt = (_gen.mul(1000000000000000000)) / (round_[_rID].keys) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1351)
+POOHMO.updateMasks(uint256,uint256,uint256,uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1335-1361) uses literals with too many digits:
+	- _pearn = (_ppt.mul(_keys)) / (1000000000000000000) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1356)
+POOHMO.updateMasks(uint256,uint256,uint256,uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1335-1361) uses literals with too many digits:
+	- plyrRnds_[_pID][_rID].mask = (((round_[_rID].mask.mul(_keys)) / (1000000000000000000)).sub(_pearn)).add(plyrRnds_[_pID][_rID].mask) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1357)
+POOHMO.updateMasks(uint256,uint256,uint256,uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1335-1361) uses literals with too many digits:
+	- (_gen.sub((_ppt.mul(round_[_rID].keys)) / (1000000000000000000))) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1360)
+POOHMO.endTx(uint256,uint256,uint256,uint256,POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1389-1411) uses literals with too many digits:
+	- _eventData_.compressedData = _eventData_.compressedData + (now * 1000000000000000000) + (_team * 100000000000000000000000000000) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1392)
+POOHMO.endTx(uint256,uint256,uint256,uint256,POOHMODatasets.EventReturns) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1389-1411) uses literals with too many digits:
+	- _eventData_.compressedIDs = _eventData_.compressedIDs + _pID + (rID_ * 10000000000000000000000000000000000000000000000000000) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1393)
+KeysCalc.keys(uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1535-1541) uses literals with too many digits:
+	- ((((((_eth).mul(1000000000000000000)).mul(312500000000000000000000000)).add(5624988281256103515625000000000000000000000000000000000000000000)).sqrt()).sub(74999921875000000000000000000000)) / (156250000) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1540)
+KeysCalc.eth(uint256) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1548-1554) uses literals with too many digits:
+	- ((78125000).mul(_keys.sq()).add(((149999843750000).mul(_keys.mul(1000000000000000000))) / (2))) / ((1000000000000000000).sq()) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#1553)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+POOHMO.rndExtra_ (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#135) should be constant 
+POOHMO.rndGap_ (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#136) should be constant 
+POOHMO.rndInit_ (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#137) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+
+registerNameXID(string,uint256,bool) should be declared external:
+	- POOHMO.registerNameXID(string,uint256,bool) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#560-574)
+registerNameXaddr(string,address,bool) should be declared external:
+	- POOHMO.registerNameXaddr(string,address,bool) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#576-590)
+registerNameXname(string,bytes32,bool) should be declared external:
+	- POOHMO.registerNameXname(string,bytes32,bool) (0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol#592-606)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#public-function-that-could-be-declared-external
+./0x1a050d77003caee532df18d04d86b99ca15bf9e8.sol analyzed (7 contracts with 94 detectors), 196 result(s) found
+
+real	0m9.645s
+user	0m9.317s
+sys	0m0.326s

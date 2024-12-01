@@ -1,0 +1,113 @@
+'solc --version' running
+'solc ./0x121726eaab9965b918f00b9871c25c4baf5cc960.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+Event (0x121726eaab9965b918f00b9871c25c4baf5cc960.sol#165-253) contract sets array length with a user-controlled value:
+	- attendees.push(_attendee) (0x121726eaab9965b918f00b9871c25c4baf5cc960.sol#204)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#array-length-assignment
+
+Reentrancy in Event.distribute() (0x121726eaab9965b918f00b9871c25c4baf5cc960.sol#235-252):
+	External calls:
+	- (success,None) = attendees[i].call.value(reward)() (0x121726eaab9965b918f00b9871c25c4baf5cc960.sol#247)
+	State variables written after the call(s):
+	- states[attendees[i]] = ATTENDEE_REWARDED (0x121726eaab9965b918f00b9871c25c4baf5cc960.sol#246)
+	Event.states (0x121726eaab9965b918f00b9871c25c4baf5cc960.sol#181) can be used in cross function reentrancies:
+	- Event.clap(address,address[],uint256[]) (0x121726eaab9965b918f00b9871c25c4baf5cc960.sol#211-228)
+	- Event.distribute() (0x121726eaab9965b918f00b9871c25c4baf5cc960.sol#235-252)
+	- Event.register(address,uint256) (0x121726eaab9965b918f00b9871c25c4baf5cc960.sol#198-205)
+	- Event.states (0x121726eaab9965b918f00b9871c25c4baf5cc960.sol#181)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+ProxyEvent.version (0x121726eaab9965b918f00b9871c25c4baf5cc960.sol#262) shadows:
+	- Event.version (0x121726eaab9965b918f00b9871c25c4baf5cc960.sol#169)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variable-shadowing
+
+Event.distribute() (0x121726eaab9965b918f00b9871c25c4baf5cc960.sol#235-252) has external calls inside a loop: (success,None) = attendees[i].call.value(reward)() (0x121726eaab9965b918f00b9871c25c4baf5cc960.sol#247)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation/#calls-inside-a-loop
+
+Reentrancy in Event.distribute() (0x121726eaab9965b918f00b9871c25c4baf5cc960.sol#235-252):
+	External calls:
+	- (success,None) = attendees[i].call.value(reward)() (0x121726eaab9965b918f00b9871c25c4baf5cc960.sol#247)
+	Event emitted after the call(s):
+	- Transfer(attendees[i],reward) (0x121726eaab9965b918f00b9871c25c4baf5cc960.sol#249)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+Event.constructor(uint64,uint32) (0x121726eaab9965b918f00b9871c25c4baf5cc960.sol#188-192) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(block.timestamp < _end) (0x121726eaab9965b918f00b9871c25c4baf5cc960.sol#189)
+Event.register(address,uint256) (0x121726eaab9965b918f00b9871c25c4baf5cc960.sol#198-205) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(block.timestamp < end) (0x121726eaab9965b918f00b9871c25c4baf5cc960.sol#202)
+Event.distribute() (0x121726eaab9965b918f00b9871c25c4baf5cc960.sol#235-252) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(block.timestamp >= end) (0x121726eaab9965b918f00b9871c25c4baf5cc960.sol#236)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+2 different versions of Solidity are used:
+	- Version constraint ^0.5.0 is used by:
+		-^0.5.0 (0x121726eaab9965b918f00b9871c25c4baf5cc960.sol#3)
+	- Version constraint 0.5.16 is used by:
+		-0.5.16 (0x121726eaab9965b918f00b9871c25c4baf5cc960.sol#162)
+		-0.5.16 (0x121726eaab9965b918f00b9871c25c4baf5cc960.sol#257)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#different-pragma-directives-are-used
+
+Version constraint ^0.5.0 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor
+	- IncorrectEventSignatureInLibraries
+	- ABIEncoderV2PackedStorage.
+It is used by:
+	- ^0.5.0 (0x121726eaab9965b918f00b9871c25c4baf5cc960.sol#3)
+Version constraint 0.5.16 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- MissingEscapingInFormatting
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden.
+It is used by:
+	- 0.5.16 (0x121726eaab9965b918f00b9871c25c4baf5cc960.sol#162)
+	- 0.5.16 (0x121726eaab9965b918f00b9871c25c4baf5cc960.sol#257)
+solc-0.5.16 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in Event.distribute() (0x121726eaab9965b918f00b9871c25c4baf5cc960.sol#235-252):
+	- (success,None) = attendees[i].call.value(reward)() (0x121726eaab9965b918f00b9871c25c4baf5cc960.sol#247)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Parameter Event.register(address,uint256)._attendee (0x121726eaab9965b918f00b9871c25c4baf5cc960.sol#198) is not in mixedCase
+Parameter Event.register(address,uint256)._fee (0x121726eaab9965b918f00b9871c25c4baf5cc960.sol#198) is not in mixedCase
+Parameter Event.clap(address,address[],uint256[])._clapper (0x121726eaab9965b918f00b9871c25c4baf5cc960.sol#212) is not in mixedCase
+Parameter Event.clap(address,address[],uint256[])._attendees (0x121726eaab9965b918f00b9871c25c4baf5cc960.sol#213) is not in mixedCase
+Parameter Event.clap(address,address[],uint256[])._claps (0x121726eaab9965b918f00b9871c25c4baf5cc960.sol#214) is not in mixedCase
+Parameter Event.clap(address[],uint256[])._attendees (0x121726eaab9965b918f00b9871c25c4baf5cc960.sol#230) is not in mixedCase
+Parameter Event.clap(address[],uint256[])._claps (0x121726eaab9965b918f00b9871c25c4baf5cc960.sol#230) is not in mixedCase
+Parameter ProxyEvent.registerFor(address)._attendee (0x121726eaab9965b918f00b9871c25c4baf5cc960.sol#267) is not in mixedCase
+Parameter ProxyEvent.clapFor(address,address[],uint256[])._clapper (0x121726eaab9965b918f00b9871c25c4baf5cc960.sol#273) is not in mixedCase
+Parameter ProxyEvent.clapFor(address,address[],uint256[])._attendees (0x121726eaab9965b918f00b9871c25c4baf5cc960.sol#274) is not in mixedCase
+Parameter ProxyEvent.clapFor(address,address[],uint256[])._claps (0x121726eaab9965b918f00b9871c25c4baf5cc960.sol#275) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Loop condition i < attendees.length (0x121726eaab9965b918f00b9871c25c4baf5cc960.sol#240) should use cached array length instead of referencing `length` member of the storage array.
+ Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#cache-array-length
+./0x121726eaab9965b918f00b9871c25c4baf5cc960.sol analyzed (3 contracts with 94 detectors), 25 result(s) found
+
+real	0m1.573s
+user	0m1.389s
+sys	0m0.188s

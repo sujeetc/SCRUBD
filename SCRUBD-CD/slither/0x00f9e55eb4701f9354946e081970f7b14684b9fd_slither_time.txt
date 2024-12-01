@@ -1,0 +1,387 @@
+'solc --version' running
+'solc ./0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+Reentrancy in $CHRIST._transfer(address,address,uint256) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#912-927):
+	External calls:
+	- amount = handleTax(sender,recipient,amount) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#923)
+		- uniswapV2Router02.swapExactTokensForETH(toSell,0,sellPath,address(this),block.timestamp) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#848-854)
+		- uniswapV2Router02.addLiquidityETH{value: liquidityETH}(address(this),liquidityToken,0,0,taxWallets[liquidity],block.timestamp) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#867-874)
+		- (success,None) = taxWallets[dev].call{value: devETH}() (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#883)
+		- (success1,None) = taxWallets[dev].call{value: ethGained - (devETH + liquidityETH)}() (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#888)
+	External calls sending eth:
+	- amount = handleTax(sender,recipient,amount) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#923)
+		- uniswapV2Router02.addLiquidityETH{value: liquidityETH}(address(this),liquidityToken,0,0,taxWallets[liquidity],block.timestamp) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#867-874)
+		- (success,None) = taxWallets[dev].call{value: devETH}() (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#883)
+		- (success1,None) = taxWallets[dev].call{value: ethGained - (devETH + liquidityETH)}() (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#888)
+	State variables written after the call(s):
+	- super._transfer(sender,recipient,amount) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#926)
+		- _balances[sender] = senderBalance - amount (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#265)
+		- _balances[recipient] += amount (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#267)
+	ERC20._balances (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#114) can be used in cross function reentrancies:
+	- ERC20._burn(address,uint256) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#306-321)
+	- ERC20._mint(address,uint256) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#283-293)
+	- ERC20._transfer(address,address,uint256) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#252-272)
+	- ERC20.balanceOf(address) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#163-165)
+Reentrancy in $CHRIST.handleTax(address,address,uint256) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#799-910):
+	External calls:
+	- _transfer(from,address(this),tax) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#813)
+		- uniswapV2Router02.swapExactTokensForETH(toSell,0,sellPath,address(this),block.timestamp) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#848-854)
+		- uniswapV2Router02.addLiquidityETH{value: liquidityETH}(address(this),liquidityToken,0,0,taxWallets[liquidity],block.timestamp) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#867-874)
+		- (success,None) = taxWallets[dev].call{value: devETH}() (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#883)
+		- (success1,None) = taxWallets[dev].call{value: ethGained - (devETH + liquidityETH)}() (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#888)
+	External calls sending eth:
+	- _transfer(from,address(this),tax) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#813)
+		- uniswapV2Router02.addLiquidityETH{value: liquidityETH}(address(this),liquidityToken,0,0,taxWallets[liquidity],block.timestamp) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#867-874)
+		- (success,None) = taxWallets[dev].call{value: devETH}() (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#883)
+		- (success1,None) = taxWallets[dev].call{value: ethGained - (devETH + liquidityETH)}() (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#888)
+	State variables written after the call(s):
+	- devTokens += baseUnit * buyTaxes[dev] (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#817)
+	$CHRIST.devTokens (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#792) can be used in cross function reentrancies:
+	- $CHRIST.handleTax(address,address,uint256) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#799-910)
+	- liquidityTokens += baseUnit * buyTaxes[liquidity] (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#818)
+	$CHRIST.liquidityTokens (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#793) can be used in cross function reentrancies:
+	- $CHRIST.handleTax(address,address,uint256) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#799-910)
+Reentrancy in $CHRIST.handleTax(address,address,uint256) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#799-910):
+	External calls:
+	- _transfer(from,address(this),tax) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#827)
+		- uniswapV2Router02.swapExactTokensForETH(toSell,0,sellPath,address(this),block.timestamp) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#848-854)
+		- uniswapV2Router02.addLiquidityETH{value: liquidityETH}(address(this),liquidityToken,0,0,taxWallets[liquidity],block.timestamp) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#867-874)
+		- (success,None) = taxWallets[dev].call{value: devETH}() (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#883)
+		- (success1,None) = taxWallets[dev].call{value: ethGained - (devETH + liquidityETH)}() (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#888)
+	External calls sending eth:
+	- _transfer(from,address(this),tax) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#827)
+		- uniswapV2Router02.addLiquidityETH{value: liquidityETH}(address(this),liquidityToken,0,0,taxWallets[liquidity],block.timestamp) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#867-874)
+		- (success,None) = taxWallets[dev].call{value: devETH}() (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#883)
+		- (success1,None) = taxWallets[dev].call{value: ethGained - (devETH + liquidityETH)}() (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#888)
+	State variables written after the call(s):
+	- devTokens += baseUnit * sellTaxes[dev] (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#831)
+	$CHRIST.devTokens (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#792) can be used in cross function reentrancies:
+	- $CHRIST.handleTax(address,address,uint256) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#799-910)
+	- liquidityTokens += baseUnit * sellTaxes[liquidity] (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#832)
+	$CHRIST.liquidityTokens (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#793) can be used in cross function reentrancies:
+	- $CHRIST.handleTax(address,address,uint256) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#799-910)
+Reentrancy in $CHRIST.handleTax(address,address,uint256) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#799-910):
+	External calls:
+	- _transfer(from,address(this),tax) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#827)
+		- uniswapV2Router02.swapExactTokensForETH(toSell,0,sellPath,address(this),block.timestamp) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#848-854)
+		- uniswapV2Router02.addLiquidityETH{value: liquidityETH}(address(this),liquidityToken,0,0,taxWallets[liquidity],block.timestamp) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#867-874)
+		- (success,None) = taxWallets[dev].call{value: devETH}() (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#883)
+		- (success1,None) = taxWallets[dev].call{value: ethGained - (devETH + liquidityETH)}() (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#888)
+	- uniswapV2Router02.swapExactTokensForETH(toSell,0,sellPath,address(this),block.timestamp) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#848-854)
+	- uniswapV2Router02.addLiquidityETH{value: liquidityETH}(address(this),liquidityToken,0,0,taxWallets[liquidity],block.timestamp) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#867-874)
+	- _transfer(address(this),taxWallets[dev],remainingTokens) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#879)
+		- uniswapV2Router02.swapExactTokensForETH(toSell,0,sellPath,address(this),block.timestamp) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#848-854)
+		- uniswapV2Router02.addLiquidityETH{value: liquidityETH}(address(this),liquidityToken,0,0,taxWallets[liquidity],block.timestamp) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#867-874)
+		- (success,None) = taxWallets[dev].call{value: devETH}() (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#883)
+		- (success1,None) = taxWallets[dev].call{value: ethGained - (devETH + liquidityETH)}() (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#888)
+	External calls sending eth:
+	- _transfer(from,address(this),tax) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#827)
+		- uniswapV2Router02.addLiquidityETH{value: liquidityETH}(address(this),liquidityToken,0,0,taxWallets[liquidity],block.timestamp) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#867-874)
+		- (success,None) = taxWallets[dev].call{value: devETH}() (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#883)
+		- (success1,None) = taxWallets[dev].call{value: ethGained - (devETH + liquidityETH)}() (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#888)
+	- uniswapV2Router02.addLiquidityETH{value: liquidityETH}(address(this),liquidityToken,0,0,taxWallets[liquidity],block.timestamp) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#867-874)
+	- _transfer(address(this),taxWallets[dev],remainingTokens) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#879)
+		- uniswapV2Router02.addLiquidityETH{value: liquidityETH}(address(this),liquidityToken,0,0,taxWallets[liquidity],block.timestamp) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#867-874)
+		- (success,None) = taxWallets[dev].call{value: devETH}() (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#883)
+		- (success1,None) = taxWallets[dev].call{value: ethGained - (devETH + liquidityETH)}() (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#888)
+	State variables written after the call(s):
+	- _transfer(address(this),taxWallets[dev],remainingTokens) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#879)
+		- _balances[sender] = senderBalance - amount (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#265)
+		- _balances[recipient] += amount (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#267)
+	ERC20._balances (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#114) can be used in cross function reentrancies:
+	- ERC20._burn(address,uint256) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#306-321)
+	- ERC20._mint(address,uint256) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#283-293)
+	- ERC20._transfer(address,address,uint256) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#252-272)
+	- ERC20.balanceOf(address) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#163-165)
+	- _transfer(address(this),taxWallets[dev],remainingTokens) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#879)
+		- devTokens += baseUnit * buyTaxes[dev] (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#817)
+		- devTokens += baseUnit * sellTaxes[dev] (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#831)
+		- devTokens = 0 (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#895)
+	$CHRIST.devTokens (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#792) can be used in cross function reentrancies:
+	- $CHRIST.handleTax(address,address,uint256) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#799-910)
+	- _transfer(address(this),taxWallets[dev],remainingTokens) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#879)
+		- liquidityTokens += baseUnit * buyTaxes[liquidity] (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#818)
+		- liquidityTokens += baseUnit * sellTaxes[liquidity] (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#832)
+		- liquidityTokens = 0 (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#896)
+	$CHRIST.liquidityTokens (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#793) can be used in cross function reentrancies:
+	- $CHRIST.handleTax(address,address,uint256) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#799-910)
+Reentrancy in $CHRIST.handleTax(address,address,uint256) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#799-910):
+	External calls:
+	- _transfer(from,address(this),tax) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#827)
+		- uniswapV2Router02.swapExactTokensForETH(toSell,0,sellPath,address(this),block.timestamp) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#848-854)
+		- uniswapV2Router02.addLiquidityETH{value: liquidityETH}(address(this),liquidityToken,0,0,taxWallets[liquidity],block.timestamp) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#867-874)
+		- (success,None) = taxWallets[dev].call{value: devETH}() (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#883)
+		- (success1,None) = taxWallets[dev].call{value: ethGained - (devETH + liquidityETH)}() (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#888)
+	- uniswapV2Router02.swapExactTokensForETH(toSell,0,sellPath,address(this),block.timestamp) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#848-854)
+	- uniswapV2Router02.addLiquidityETH{value: liquidityETH}(address(this),liquidityToken,0,0,taxWallets[liquidity],block.timestamp) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#867-874)
+	- _transfer(address(this),taxWallets[dev],remainingTokens) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#879)
+		- uniswapV2Router02.swapExactTokensForETH(toSell,0,sellPath,address(this),block.timestamp) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#848-854)
+		- uniswapV2Router02.addLiquidityETH{value: liquidityETH}(address(this),liquidityToken,0,0,taxWallets[liquidity],block.timestamp) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#867-874)
+		- (success,None) = taxWallets[dev].call{value: devETH}() (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#883)
+		- (success1,None) = taxWallets[dev].call{value: ethGained - (devETH + liquidityETH)}() (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#888)
+	- (success,None) = taxWallets[dev].call{value: devETH}() (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#883)
+	- (success1,None) = taxWallets[dev].call{value: ethGained - (devETH + liquidityETH)}() (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#888)
+	External calls sending eth:
+	- _transfer(from,address(this),tax) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#827)
+		- uniswapV2Router02.addLiquidityETH{value: liquidityETH}(address(this),liquidityToken,0,0,taxWallets[liquidity],block.timestamp) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#867-874)
+		- (success,None) = taxWallets[dev].call{value: devETH}() (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#883)
+		- (success1,None) = taxWallets[dev].call{value: ethGained - (devETH + liquidityETH)}() (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#888)
+	- uniswapV2Router02.addLiquidityETH{value: liquidityETH}(address(this),liquidityToken,0,0,taxWallets[liquidity],block.timestamp) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#867-874)
+	- _transfer(address(this),taxWallets[dev],remainingTokens) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#879)
+		- uniswapV2Router02.addLiquidityETH{value: liquidityETH}(address(this),liquidityToken,0,0,taxWallets[liquidity],block.timestamp) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#867-874)
+		- (success,None) = taxWallets[dev].call{value: devETH}() (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#883)
+		- (success1,None) = taxWallets[dev].call{value: ethGained - (devETH + liquidityETH)}() (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#888)
+	- (success,None) = taxWallets[dev].call{value: devETH}() (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#883)
+	- (success1,None) = taxWallets[dev].call{value: ethGained - (devETH + liquidityETH)}() (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#888)
+	State variables written after the call(s):
+	- devTokens = 0 (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#895)
+	$CHRIST.devTokens (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#792) can be used in cross function reentrancies:
+	- $CHRIST.handleTax(address,address,uint256) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#799-910)
+	- liquidityTokens = 0 (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#896)
+	$CHRIST.liquidityTokens (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#793) can be used in cross function reentrancies:
+	- $CHRIST.handleTax(address,address,uint256) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#799-910)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+$CHRIST.claimStuckTokens(address) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#1027-1036) ignores return value by erc20token.transfer(owner(),balance) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#1035)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+$CHRIST.devTaxWallet (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#753) is never initialized. It is used in:
+	- $CHRIST.constructor(string,string,uint256) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#773-789)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#uninitialized-state-variables
+
+$CHRIST.handleTax(address,address,uint256) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#799-910) performs a multiplication on the result of a division:
+	- baseUnit = amount / denominator (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#806)
+	- tax += baseUnit * sellTaxes[dev] (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#822)
+$CHRIST.handleTax(address,address,uint256) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#799-910) performs a multiplication on the result of a division:
+	- baseUnit = amount / denominator (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#806)
+	- tax += baseUnit * sellTaxes[liquidity] (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#823)
+$CHRIST.handleTax(address,address,uint256) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#799-910) performs a multiplication on the result of a division:
+	- baseUnit = amount / denominator (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#806)
+	- devTokens += baseUnit * sellTaxes[dev] (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#831)
+$CHRIST.handleTax(address,address,uint256) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#799-910) performs a multiplication on the result of a division:
+	- baseUnit = amount / denominator (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#806)
+	- liquidityTokens += baseUnit * sellTaxes[liquidity] (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#832)
+$CHRIST.handleTax(address,address,uint256) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#799-910) performs a multiplication on the result of a division:
+	- liquidityETH = (ethGained * ((liquidityTokens / 2 * 10 ** 18) / taxSum)) / 10 ** 18 (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#859)
+$CHRIST.handleTax(address,address,uint256) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#799-910) performs a multiplication on the result of a division:
+	- devETH = (ethGained * ((devTokens * 10 ** 18) / taxSum)) / 10 ** 18 (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#862)
+$CHRIST.handleTax(address,address,uint256) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#799-910) performs a multiplication on the result of a division:
+	- baseUnit = amount / denominator (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#806)
+	- tax += baseUnit * buyTaxes[dev] (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#808)
+$CHRIST.handleTax(address,address,uint256) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#799-910) performs a multiplication on the result of a division:
+	- baseUnit = amount / denominator (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#806)
+	- tax += baseUnit * buyTaxes[liquidity] (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#809)
+$CHRIST.handleTax(address,address,uint256) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#799-910) performs a multiplication on the result of a division:
+	- baseUnit = amount / denominator (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#806)
+	- devTokens += baseUnit * buyTaxes[dev] (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#817)
+$CHRIST.handleTax(address,address,uint256) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#799-910) performs a multiplication on the result of a division:
+	- baseUnit = amount / denominator (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#806)
+	- liquidityTokens += baseUnit * buyTaxes[liquidity] (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#818)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+$CHRIST._transfer(address,address,uint256) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#912-927) uses tx.origin for authorization: require(bool,string)(! isBlacklisted(tx.origin),ERC20: sender blacklisted) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#920)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-usage-of-txorigin
+
+$CHRIST.handleTax(address,address,uint256).tax (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#805) is a local variable never initialized
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#uninitialized-local-variables
+
+$CHRIST.handleTax(address,address,uint256) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#799-910) ignores return value by uniswapV2Router02.swapExactTokensForETH(toSell,0,sellPath,address(this),block.timestamp) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#848-854)
+$CHRIST.handleTax(address,address,uint256) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#799-910) ignores return value by uniswapV2Router02.addLiquidityETH{value: liquidityETH}(address(this),liquidityToken,0,0,taxWallets[liquidity],block.timestamp) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#867-874)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+Reentrancy in $CHRIST.handleTax(address,address,uint256) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#799-910):
+	External calls:
+	- _transfer(from,address(this),tax) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#827)
+		- uniswapV2Router02.swapExactTokensForETH(toSell,0,sellPath,address(this),block.timestamp) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#848-854)
+		- uniswapV2Router02.addLiquidityETH{value: liquidityETH}(address(this),liquidityToken,0,0,taxWallets[liquidity],block.timestamp) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#867-874)
+		- (success,None) = taxWallets[dev].call{value: devETH}() (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#883)
+		- (success1,None) = taxWallets[dev].call{value: ethGained - (devETH + liquidityETH)}() (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#888)
+	External calls sending eth:
+	- _transfer(from,address(this),tax) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#827)
+		- uniswapV2Router02.addLiquidityETH{value: liquidityETH}(address(this),liquidityToken,0,0,taxWallets[liquidity],block.timestamp) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#867-874)
+		- (success,None) = taxWallets[dev].call{value: devETH}() (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#883)
+		- (success1,None) = taxWallets[dev].call{value: ethGained - (devETH + liquidityETH)}() (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#888)
+	State variables written after the call(s):
+	- _approve(address(this),address(uniswapV2Router02),toSell) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#846)
+		- _allowances[owner][spender] = amount (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#344)
+Reentrancy in $CHRIST.handleTax(address,address,uint256) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#799-910):
+	External calls:
+	- _transfer(from,address(this),tax) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#827)
+		- uniswapV2Router02.swapExactTokensForETH(toSell,0,sellPath,address(this),block.timestamp) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#848-854)
+		- uniswapV2Router02.addLiquidityETH{value: liquidityETH}(address(this),liquidityToken,0,0,taxWallets[liquidity],block.timestamp) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#867-874)
+		- (success,None) = taxWallets[dev].call{value: devETH}() (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#883)
+		- (success1,None) = taxWallets[dev].call{value: ethGained - (devETH + liquidityETH)}() (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#888)
+	- uniswapV2Router02.swapExactTokensForETH(toSell,0,sellPath,address(this),block.timestamp) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#848-854)
+	External calls sending eth:
+	- _transfer(from,address(this),tax) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#827)
+		- uniswapV2Router02.addLiquidityETH{value: liquidityETH}(address(this),liquidityToken,0,0,taxWallets[liquidity],block.timestamp) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#867-874)
+		- (success,None) = taxWallets[dev].call{value: devETH}() (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#883)
+		- (success1,None) = taxWallets[dev].call{value: ethGained - (devETH + liquidityETH)}() (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#888)
+	State variables written after the call(s):
+	- _approve(address(this),address(uniswapV2Router02),liquidityToken) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#865)
+		- _allowances[owner][spender] = amount (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#344)
+Reentrancy in $CHRIST.handleTax(address,address,uint256) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#799-910):
+	External calls:
+	- _transfer(from,address(this),tax) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#827)
+		- uniswapV2Router02.swapExactTokensForETH(toSell,0,sellPath,address(this),block.timestamp) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#848-854)
+		- uniswapV2Router02.addLiquidityETH{value: liquidityETH}(address(this),liquidityToken,0,0,taxWallets[liquidity],block.timestamp) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#867-874)
+		- (success,None) = taxWallets[dev].call{value: devETH}() (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#883)
+		- (success1,None) = taxWallets[dev].call{value: ethGained - (devETH + liquidityETH)}() (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#888)
+	- uniswapV2Router02.swapExactTokensForETH(toSell,0,sellPath,address(this),block.timestamp) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#848-854)
+	- uniswapV2Router02.addLiquidityETH{value: liquidityETH}(address(this),liquidityToken,0,0,taxWallets[liquidity],block.timestamp) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#867-874)
+	- _transfer(address(this),taxWallets[dev],remainingTokens) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#879)
+		- uniswapV2Router02.swapExactTokensForETH(toSell,0,sellPath,address(this),block.timestamp) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#848-854)
+		- uniswapV2Router02.addLiquidityETH{value: liquidityETH}(address(this),liquidityToken,0,0,taxWallets[liquidity],block.timestamp) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#867-874)
+		- (success,None) = taxWallets[dev].call{value: devETH}() (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#883)
+		- (success1,None) = taxWallets[dev].call{value: ethGained - (devETH + liquidityETH)}() (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#888)
+	External calls sending eth:
+	- _transfer(from,address(this),tax) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#827)
+		- uniswapV2Router02.addLiquidityETH{value: liquidityETH}(address(this),liquidityToken,0,0,taxWallets[liquidity],block.timestamp) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#867-874)
+		- (success,None) = taxWallets[dev].call{value: devETH}() (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#883)
+		- (success1,None) = taxWallets[dev].call{value: ethGained - (devETH + liquidityETH)}() (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#888)
+	- uniswapV2Router02.addLiquidityETH{value: liquidityETH}(address(this),liquidityToken,0,0,taxWallets[liquidity],block.timestamp) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#867-874)
+	- _transfer(address(this),taxWallets[dev],remainingTokens) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#879)
+		- uniswapV2Router02.addLiquidityETH{value: liquidityETH}(address(this),liquidityToken,0,0,taxWallets[liquidity],block.timestamp) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#867-874)
+		- (success,None) = taxWallets[dev].call{value: devETH}() (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#883)
+		- (success1,None) = taxWallets[dev].call{value: ethGained - (devETH + liquidityETH)}() (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#888)
+	State variables written after the call(s):
+	- _transfer(address(this),taxWallets[dev],remainingTokens) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#879)
+		- _allowances[owner][spender] = amount (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#344)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in $CHRIST._transfer(address,address,uint256) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#912-927):
+	External calls:
+	- amount = handleTax(sender,recipient,amount) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#923)
+		- uniswapV2Router02.swapExactTokensForETH(toSell,0,sellPath,address(this),block.timestamp) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#848-854)
+		- uniswapV2Router02.addLiquidityETH{value: liquidityETH}(address(this),liquidityToken,0,0,taxWallets[liquidity],block.timestamp) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#867-874)
+		- (success,None) = taxWallets[dev].call{value: devETH}() (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#883)
+		- (success1,None) = taxWallets[dev].call{value: ethGained - (devETH + liquidityETH)}() (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#888)
+	External calls sending eth:
+	- amount = handleTax(sender,recipient,amount) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#923)
+		- uniswapV2Router02.addLiquidityETH{value: liquidityETH}(address(this),liquidityToken,0,0,taxWallets[liquidity],block.timestamp) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#867-874)
+		- (success,None) = taxWallets[dev].call{value: devETH}() (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#883)
+		- (success1,None) = taxWallets[dev].call{value: ethGained - (devETH + liquidityETH)}() (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#888)
+	Event emitted after the call(s):
+	- Transfer(sender,recipient,amount) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#269)
+		- super._transfer(sender,recipient,amount) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#926)
+Reentrancy in $CHRIST.handleTax(address,address,uint256) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#799-910):
+	External calls:
+	- _transfer(from,address(this),tax) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#827)
+		- uniswapV2Router02.swapExactTokensForETH(toSell,0,sellPath,address(this),block.timestamp) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#848-854)
+		- uniswapV2Router02.addLiquidityETH{value: liquidityETH}(address(this),liquidityToken,0,0,taxWallets[liquidity],block.timestamp) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#867-874)
+		- (success,None) = taxWallets[dev].call{value: devETH}() (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#883)
+		- (success1,None) = taxWallets[dev].call{value: ethGained - (devETH + liquidityETH)}() (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#888)
+	External calls sending eth:
+	- _transfer(from,address(this),tax) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#827)
+		- uniswapV2Router02.addLiquidityETH{value: liquidityETH}(address(this),liquidityToken,0,0,taxWallets[liquidity],block.timestamp) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#867-874)
+		- (success,None) = taxWallets[dev].call{value: devETH}() (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#883)
+		- (success1,None) = taxWallets[dev].call{value: ethGained - (devETH + liquidityETH)}() (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#888)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#345)
+		- _approve(address(this),address(uniswapV2Router02),toSell) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#846)
+Reentrancy in $CHRIST.handleTax(address,address,uint256) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#799-910):
+	External calls:
+	- _transfer(from,address(this),tax) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#827)
+		- uniswapV2Router02.swapExactTokensForETH(toSell,0,sellPath,address(this),block.timestamp) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#848-854)
+		- uniswapV2Router02.addLiquidityETH{value: liquidityETH}(address(this),liquidityToken,0,0,taxWallets[liquidity],block.timestamp) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#867-874)
+		- (success,None) = taxWallets[dev].call{value: devETH}() (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#883)
+		- (success1,None) = taxWallets[dev].call{value: ethGained - (devETH + liquidityETH)}() (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#888)
+	- uniswapV2Router02.swapExactTokensForETH(toSell,0,sellPath,address(this),block.timestamp) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#848-854)
+	External calls sending eth:
+	- _transfer(from,address(this),tax) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#827)
+		- uniswapV2Router02.addLiquidityETH{value: liquidityETH}(address(this),liquidityToken,0,0,taxWallets[liquidity],block.timestamp) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#867-874)
+		- (success,None) = taxWallets[dev].call{value: devETH}() (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#883)
+		- (success1,None) = taxWallets[dev].call{value: ethGained - (devETH + liquidityETH)}() (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#888)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#345)
+		- _approve(address(this),address(uniswapV2Router02),liquidityToken) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#865)
+Reentrancy in $CHRIST.handleTax(address,address,uint256) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#799-910):
+	External calls:
+	- _transfer(from,address(this),tax) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#827)
+		- uniswapV2Router02.swapExactTokensForETH(toSell,0,sellPath,address(this),block.timestamp) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#848-854)
+		- uniswapV2Router02.addLiquidityETH{value: liquidityETH}(address(this),liquidityToken,0,0,taxWallets[liquidity],block.timestamp) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#867-874)
+		- (success,None) = taxWallets[dev].call{value: devETH}() (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#883)
+		- (success1,None) = taxWallets[dev].call{value: ethGained - (devETH + liquidityETH)}() (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#888)
+	- uniswapV2Router02.swapExactTokensForETH(toSell,0,sellPath,address(this),block.timestamp) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#848-854)
+	- uniswapV2Router02.addLiquidityETH{value: liquidityETH}(address(this),liquidityToken,0,0,taxWallets[liquidity],block.timestamp) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#867-874)
+	- _transfer(address(this),taxWallets[dev],remainingTokens) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#879)
+		- uniswapV2Router02.swapExactTokensForETH(toSell,0,sellPath,address(this),block.timestamp) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#848-854)
+		- uniswapV2Router02.addLiquidityETH{value: liquidityETH}(address(this),liquidityToken,0,0,taxWallets[liquidity],block.timestamp) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#867-874)
+		- (success,None) = taxWallets[dev].call{value: devETH}() (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#883)
+		- (success1,None) = taxWallets[dev].call{value: ethGained - (devETH + liquidityETH)}() (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#888)
+	External calls sending eth:
+	- _transfer(from,address(this),tax) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#827)
+		- uniswapV2Router02.addLiquidityETH{value: liquidityETH}(address(this),liquidityToken,0,0,taxWallets[liquidity],block.timestamp) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#867-874)
+		- (success,None) = taxWallets[dev].call{value: devETH}() (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#883)
+		- (success1,None) = taxWallets[dev].call{value: ethGained - (devETH + liquidityETH)}() (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#888)
+	- uniswapV2Router02.addLiquidityETH{value: liquidityETH}(address(this),liquidityToken,0,0,taxWallets[liquidity],block.timestamp) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#867-874)
+	- _transfer(address(this),taxWallets[dev],remainingTokens) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#879)
+		- uniswapV2Router02.addLiquidityETH{value: liquidityETH}(address(this),liquidityToken,0,0,taxWallets[liquidity],block.timestamp) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#867-874)
+		- (success,None) = taxWallets[dev].call{value: devETH}() (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#883)
+		- (success1,None) = taxWallets[dev].call{value: ethGained - (devETH + liquidityETH)}() (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#888)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#345)
+		- _transfer(address(this),taxWallets[dev],remainingTokens) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#879)
+	- Transfer(sender,recipient,amount) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#269)
+		- _transfer(address(this),taxWallets[dev],remainingTokens) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#879)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+Context._msgData() (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#105-107) is never used and should be removed
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dead-code
+
+Version constraint ^0.8.9 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- VerbatimInvalidDeduplication
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation.
+It is used by:
+	- ^0.8.9 (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#12)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in $CHRIST.handleTax(address,address,uint256) (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#799-910):
+	- (success,None) = taxWallets[dev].call{value: devETH}() (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#883)
+	- (success1,None) = taxWallets[dev].call{value: ethGained - (devETH + liquidityETH)}() (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#888)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Function IUniswapV2Pair.DOMAIN_SEPARATOR() (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#548) is not in mixedCase
+Function IUniswapV2Pair.PERMIT_TYPEHASH() (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#549) is not in mixedCase
+Function IUniswapV2Pair.MINIMUM_LIQUIDITY() (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#566) is not in mixedCase
+Function IUniswapV2Router01.WETH() (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#602) is not in mixedCase
+Contract $CHRIST (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#735-1070) is not in CapWords
+Parameter $CHRIST.claimStuckTokens(address)._token (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#1027) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+$CHRIST.slitherConstructorVariables() (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#735-1070) uses literals with too many digits:
+	- swapThreshold = 5000000000000 (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#743)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+$CHRIST.devTaxBuy (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#745) is never used in $CHRIST (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#735-1070)
+$CHRIST.liquidityTaxBuy (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#746) is never used in $CHRIST (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#735-1070)
+$CHRIST.devTaxSell (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#749) is never used in $CHRIST (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#735-1070)
+$CHRIST.liquidityTaxSell (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#750) is never used in $CHRIST (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#735-1070)
+$CHRIST.liquidityTaxWallet (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#754) is never used in $CHRIST (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#735-1070)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-state-variable
+
+$CHRIST.denominator (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#741) should be constant 
+$CHRIST.devTaxBuy (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#745) should be constant 
+$CHRIST.devTaxSell (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#749) should be constant 
+$CHRIST.devTaxWallet (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#753) should be constant 
+$CHRIST.liquidityTaxBuy (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#746) should be constant 
+$CHRIST.liquidityTaxSell (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#750) should be constant 
+$CHRIST.liquidityTaxWallet (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#754) should be constant 
+$CHRIST.swapThreshold (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#743) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+
+$CHRIST.initialSupply (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#739) should be immutable 
+$CHRIST.uniswapV2Factory (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#770) should be immutable 
+$CHRIST.uniswapV2Pair (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#771) should be immutable 
+$CHRIST.uniswapV2Router02 (0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol#769) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+./0x00f9e55eb4701f9354946e081970f7b14684b9fd.sol analyzed (11 contracts with 94 detectors), 55 result(s) found
+
+real	0m6.059s
+user	0m5.759s
+sys	0m0.299s

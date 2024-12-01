@@ -1,0 +1,970 @@
+'solc --version' running
+'solc ./0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol:
+./0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol:1157:9: Warning: Return value of low-level calls not used.
+        address(ObokContract).call.value(_OBOK.sub((_OBOK / 3).mul(2)))(bytes4(keccak256("donateDivs()")));  //66%
+        ^------------------------------------------------------------------------------------------------^
+./0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol:1263:13: Warning: Return value of low-level calls not used.
+            address(ObokContract).call.value(_OBOK.sub(_potAmount))(bytes4(keccak256("donateDivs()")));
+            ^----------------------------------------------------------------------------------------^
+
+
+BATMO.endRound(BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1118-1182) sends eth to arbitrary user
+	Dangerous calls:
+	- admin2.transfer(_dev / 2) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1155)
+	- address(ObokContract).call.value(_OBOK.sub((_OBOK / 3).mul(2)))(bytes4(keccak256()(donateDivs()))) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1157)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+Reentrancy in BATMO.buyCore(uint256,uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#797-845):
+	External calls:
+	- _eventData_ = endRound(_eventData_) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#819)
+		- address(ObokContract).call.value(_OBOK.sub((_OBOK / 3).mul(2)))(bytes4(keccak256()(donateDivs()))) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1157)
+	External calls sending eth:
+	- _eventData_ = endRound(_eventData_) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#819)
+		- admin.transfer(_dev / 2) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1154)
+		- admin2.transfer(_dev / 2) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1155)
+		- address(ObokContract).call.value(_OBOK.sub((_OBOK / 3).mul(2)))(bytes4(keccak256()(donateDivs()))) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1157)
+	State variables written after the call(s):
+	- plyr_[_pID].gen = plyr_[_pID].gen.add(msg.value) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#843)
+	BATMO.plyr_ (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#144) can be used in cross function reentrancies:
+	- BATMO.buyCore(uint256,uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#797-845)
+	- BATMO.buyXaddr(address) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#270-305)
+	- BATMO.buyXid(uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#240-268)
+	- BATMO.buyXname(bytes32) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#307-343)
+	- BATMO.core(uint256,uint256,uint256,uint256,uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#902-956)
+	- BATMO.determinePID(BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1058-1089)
+	- BATMO.distributeExternal(uint256,uint256,uint256,uint256,uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1227-1272)
+	- BATMO.endRound(BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1118-1182)
+	- BATMO.endTx(uint256,uint256,uint256,uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1364-1386)
+	- BATMO.fallback() (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#216-231)
+	- BATMO.getCurrentRoundInfo() (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#726-748)
+	- BATMO.getPlayerInfoByAddress(address) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#763-787)
+	- BATMO.getPlayerVaults(uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#660-699)
+	- BATMO.managePlayer(uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1097-1113)
+	- BATMO.plyr_ (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#144)
+	- BATMO.reLoadCore(uint256,uint256,uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#851-896)
+	- BATMO.reLoadXaddr(address,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#383-418)
+	- BATMO.reLoadXid(uint256,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#354-381)
+	- BATMO.reLoadXname(bytes32,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#420-455)
+	- BATMO.receivePlayerInfo(uint256,address,bytes32,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1025-1041)
+	- BATMO.registerNameXID(string,uint256,bool) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#553-567)
+	- BATMO.registerNameXaddr(string,address,bool) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#569-583)
+	- BATMO.registerNameXname(string,bytes32,bool) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#585-599)
+	- BATMO.updateGenVault(uint256,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1187-1198)
+	- BATMO.withdraw() (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#461-527)
+	- BATMO.withdrawEarnings(uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1342-1359)
+Reentrancy in BATMO.core(uint256,uint256,uint256,uint256,uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#902-956):
+	External calls:
+	- _eventData_ = distributeExternal(_rID,_pID,_eth,_affID,0,_eventData_) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#950)
+		- ! address(admin).call.value(_dev / 2)() && ! address(admin2).call.value(_dev / 2)() (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1237)
+		- address(ObokContract).call.value(_OBOK.sub(_potAmount))(bytes4(keccak256()(donateDivs()))) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1263)
+	State variables written after the call(s):
+	- _eventData_ = distributeInternal(_rID,_pID,_eth,0,_keys,_eventData_) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#951)
+		- plyrRnds_[_pID][_rID].mask = (((round_[_rID].mask.mul(_keys)) / (1000000000000000000)).sub(_pearn)).add(plyrRnds_[_pID][_rID].mask) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1332)
+	BATMO.plyrRnds_ (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#145) can be used in cross function reentrancies:
+	- BATMO.calcUnMaskedEarnings(uint256,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#965-971)
+	- BATMO.core(uint256,uint256,uint256,uint256,uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#902-956)
+	- BATMO.getPlayerInfoByAddress(address) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#763-787)
+	- BATMO.getPlayerVaults(uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#660-699)
+	- BATMO.getPlayerVaultsHelper(uint256,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#704-710)
+	- BATMO.plyrRnds_ (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#145)
+	- BATMO.updateGenVault(uint256,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1187-1198)
+	- BATMO.updateMasks(uint256,uint256,uint256,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1310-1336)
+	- _eventData_ = distributeInternal(_rID,_pID,_eth,0,_keys,_eventData_) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#951)
+		- round_[_rID].mask = _ppt.add(round_[_rID].mask) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1327)
+		- round_[_rID].pot = _pot.add(_dust).add(round_[_rID].pot) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1297)
+	BATMO.round_ (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#150) can be used in cross function reentrancies:
+	- BATMO.activate() (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1395-1412)
+	- BATMO.buyCore(uint256,uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#797-845)
+	- BATMO.calcKeysReceived(uint256,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#980-993)
+	- BATMO.calcUnMaskedEarnings(uint256,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#965-971)
+	- BATMO.core(uint256,uint256,uint256,uint256,uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#902-956)
+	- BATMO.distributeExternal(uint256,uint256,uint256,uint256,uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1227-1272)
+	- BATMO.distributeInternal(uint256,uint256,uint256,uint256,uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1277-1304)
+	- BATMO.endRound(BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1118-1182)
+	- BATMO.getBuyPrice() (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#609-625)
+	- BATMO.getCurrentRoundInfo() (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#726-748)
+	- BATMO.getPlayerVaults(uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#660-699)
+	- BATMO.getPlayerVaultsHelper(uint256,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#704-710)
+	- BATMO.getTimeLeft() (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#633-651)
+	- BATMO.iWantXKeys(uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1001-1017)
+	- BATMO.reLoadCore(uint256,uint256,uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#851-896)
+	- BATMO.round_ (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#150)
+	- BATMO.updateMasks(uint256,uint256,uint256,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1310-1336)
+	- BATMO.updateTimer(uint256,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1203-1221)
+	- BATMO.withdraw() (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#461-527)
+Reentrancy in BATMO.endRound(BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1118-1182):
+	External calls:
+	- address(ObokContract).call.value(_OBOK.sub((_OBOK / 3).mul(2)))(bytes4(keccak256()(donateDivs()))) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1157)
+	External calls sending eth:
+	- admin.transfer(_dev / 2) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1154)
+	- admin2.transfer(_dev / 2) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1155)
+	- address(ObokContract).call.value(_OBOK.sub((_OBOK / 3).mul(2)))(bytes4(keccak256()(donateDivs()))) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1157)
+	State variables written after the call(s):
+	- rID_ ++ (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1175)
+	BATMO.rID_ (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#138) can be used in cross function reentrancies:
+	- BATMO.activate() (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1395-1412)
+	- BATMO.buyCore(uint256,uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#797-845)
+	- BATMO.endRound(BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1118-1182)
+	- BATMO.endTx(uint256,uint256,uint256,uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1364-1386)
+	- BATMO.getBuyPrice() (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#609-625)
+	- BATMO.getCurrentRoundInfo() (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#726-748)
+	- BATMO.getPlayerInfoByAddress(address) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#763-787)
+	- BATMO.getPlayerVaults(uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#660-699)
+	- BATMO.getTimeLeft() (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#633-651)
+	- BATMO.iWantXKeys(uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1001-1017)
+	- BATMO.managePlayer(uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1097-1113)
+	- BATMO.rID_ (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#138)
+	- BATMO.reLoadCore(uint256,uint256,uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#851-896)
+	- BATMO.withdraw() (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#461-527)
+	- round_[_rID].pot = _pot.add(_OBOK / 3) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1159)
+	BATMO.round_ (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#150) can be used in cross function reentrancies:
+	- BATMO.activate() (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1395-1412)
+	- BATMO.buyCore(uint256,uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#797-845)
+	- BATMO.calcKeysReceived(uint256,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#980-993)
+	- BATMO.calcUnMaskedEarnings(uint256,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#965-971)
+	- BATMO.core(uint256,uint256,uint256,uint256,uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#902-956)
+	- BATMO.distributeExternal(uint256,uint256,uint256,uint256,uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1227-1272)
+	- BATMO.distributeInternal(uint256,uint256,uint256,uint256,uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1277-1304)
+	- BATMO.endRound(BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1118-1182)
+	- BATMO.getBuyPrice() (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#609-625)
+	- BATMO.getCurrentRoundInfo() (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#726-748)
+	- BATMO.getPlayerVaults(uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#660-699)
+	- BATMO.getPlayerVaultsHelper(uint256,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#704-710)
+	- BATMO.getTimeLeft() (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#633-651)
+	- BATMO.iWantXKeys(uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1001-1017)
+	- BATMO.reLoadCore(uint256,uint256,uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#851-896)
+	- BATMO.round_ (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#150)
+	- BATMO.updateMasks(uint256,uint256,uint256,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1310-1336)
+	- BATMO.updateTimer(uint256,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1203-1221)
+	- BATMO.withdraw() (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#461-527)
+	- round_[_rID].mask = _ppt.add(round_[_rID].mask) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1162)
+	BATMO.round_ (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#150) can be used in cross function reentrancies:
+	- BATMO.activate() (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1395-1412)
+	- BATMO.buyCore(uint256,uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#797-845)
+	- BATMO.calcKeysReceived(uint256,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#980-993)
+	- BATMO.calcUnMaskedEarnings(uint256,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#965-971)
+	- BATMO.core(uint256,uint256,uint256,uint256,uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#902-956)
+	- BATMO.distributeExternal(uint256,uint256,uint256,uint256,uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1227-1272)
+	- BATMO.distributeInternal(uint256,uint256,uint256,uint256,uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1277-1304)
+	- BATMO.endRound(BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1118-1182)
+	- BATMO.getBuyPrice() (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#609-625)
+	- BATMO.getCurrentRoundInfo() (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#726-748)
+	- BATMO.getPlayerVaults(uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#660-699)
+	- BATMO.getPlayerVaultsHelper(uint256,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#704-710)
+	- BATMO.getTimeLeft() (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#633-651)
+	- BATMO.iWantXKeys(uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1001-1017)
+	- BATMO.reLoadCore(uint256,uint256,uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#851-896)
+	- BATMO.round_ (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#150)
+	- BATMO.updateMasks(uint256,uint256,uint256,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1310-1336)
+	- BATMO.updateTimer(uint256,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1203-1221)
+	- BATMO.withdraw() (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#461-527)
+	- round_[_rID].strt = now (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1177)
+	BATMO.round_ (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#150) can be used in cross function reentrancies:
+	- BATMO.activate() (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1395-1412)
+	- BATMO.buyCore(uint256,uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#797-845)
+	- BATMO.calcKeysReceived(uint256,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#980-993)
+	- BATMO.calcUnMaskedEarnings(uint256,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#965-971)
+	- BATMO.core(uint256,uint256,uint256,uint256,uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#902-956)
+	- BATMO.distributeExternal(uint256,uint256,uint256,uint256,uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1227-1272)
+	- BATMO.distributeInternal(uint256,uint256,uint256,uint256,uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1277-1304)
+	- BATMO.endRound(BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1118-1182)
+	- BATMO.getBuyPrice() (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#609-625)
+	- BATMO.getCurrentRoundInfo() (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#726-748)
+	- BATMO.getPlayerVaults(uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#660-699)
+	- BATMO.getPlayerVaultsHelper(uint256,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#704-710)
+	- BATMO.getTimeLeft() (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#633-651)
+	- BATMO.iWantXKeys(uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1001-1017)
+	- BATMO.reLoadCore(uint256,uint256,uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#851-896)
+	- BATMO.round_ (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#150)
+	- BATMO.updateMasks(uint256,uint256,uint256,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1310-1336)
+	- BATMO.updateTimer(uint256,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1203-1221)
+	- BATMO.withdraw() (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#461-527)
+	- round_[_rID].end = now.add(rndInit_).add(rndGap_) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1178)
+	BATMO.round_ (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#150) can be used in cross function reentrancies:
+	- BATMO.activate() (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1395-1412)
+	- BATMO.buyCore(uint256,uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#797-845)
+	- BATMO.calcKeysReceived(uint256,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#980-993)
+	- BATMO.calcUnMaskedEarnings(uint256,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#965-971)
+	- BATMO.core(uint256,uint256,uint256,uint256,uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#902-956)
+	- BATMO.distributeExternal(uint256,uint256,uint256,uint256,uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1227-1272)
+	- BATMO.distributeInternal(uint256,uint256,uint256,uint256,uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1277-1304)
+	- BATMO.endRound(BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1118-1182)
+	- BATMO.getBuyPrice() (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#609-625)
+	- BATMO.getCurrentRoundInfo() (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#726-748)
+	- BATMO.getPlayerVaults(uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#660-699)
+	- BATMO.getPlayerVaultsHelper(uint256,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#704-710)
+	- BATMO.getTimeLeft() (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#633-651)
+	- BATMO.iWantXKeys(uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1001-1017)
+	- BATMO.reLoadCore(uint256,uint256,uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#851-896)
+	- BATMO.round_ (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#150)
+	- BATMO.updateMasks(uint256,uint256,uint256,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1310-1336)
+	- BATMO.updateTimer(uint256,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1203-1221)
+	- BATMO.withdraw() (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#461-527)
+	- round_[_rID].pot += _res (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1179)
+	BATMO.round_ (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#150) can be used in cross function reentrancies:
+	- BATMO.activate() (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1395-1412)
+	- BATMO.buyCore(uint256,uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#797-845)
+	- BATMO.calcKeysReceived(uint256,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#980-993)
+	- BATMO.calcUnMaskedEarnings(uint256,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#965-971)
+	- BATMO.core(uint256,uint256,uint256,uint256,uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#902-956)
+	- BATMO.distributeExternal(uint256,uint256,uint256,uint256,uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1227-1272)
+	- BATMO.distributeInternal(uint256,uint256,uint256,uint256,uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1277-1304)
+	- BATMO.endRound(BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1118-1182)
+	- BATMO.getBuyPrice() (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#609-625)
+	- BATMO.getCurrentRoundInfo() (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#726-748)
+	- BATMO.getPlayerVaults(uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#660-699)
+	- BATMO.getPlayerVaultsHelper(uint256,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#704-710)
+	- BATMO.getTimeLeft() (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#633-651)
+	- BATMO.iWantXKeys(uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1001-1017)
+	- BATMO.reLoadCore(uint256,uint256,uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#851-896)
+	- BATMO.round_ (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#150)
+	- BATMO.updateMasks(uint256,uint256,uint256,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1310-1336)
+	- BATMO.updateTimer(uint256,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1203-1221)
+	- BATMO.withdraw() (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#461-527)
+Reentrancy in BATMO.withdraw() (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#461-527):
+	External calls:
+	- _eventData_ = endRound(_eventData_) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#486)
+		- address(ObokContract).call.value(_OBOK.sub((_OBOK / 3).mul(2)))(bytes4(keccak256()(donateDivs()))) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1157)
+	External calls sending eth:
+	- _eventData_ = endRound(_eventData_) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#486)
+		- admin.transfer(_dev / 2) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1154)
+		- admin2.transfer(_dev / 2) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1155)
+		- address(ObokContract).call.value(_OBOK.sub((_OBOK / 3).mul(2)))(bytes4(keccak256()(donateDivs()))) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1157)
+	State variables written after the call(s):
+	- _eth = withdrawEarnings(_pID) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#489)
+		- plyr_[_pID].gen = _earnings.add(plyr_[_pID].gen) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1194)
+		- plyr_[_pID].win = 0 (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1353)
+		- plyr_[_pID].gen = 0 (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1354)
+		- plyr_[_pID].aff = 0 (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1355)
+	BATMO.plyr_ (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#144) can be used in cross function reentrancies:
+	- BATMO.buyCore(uint256,uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#797-845)
+	- BATMO.buyXaddr(address) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#270-305)
+	- BATMO.buyXid(uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#240-268)
+	- BATMO.buyXname(bytes32) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#307-343)
+	- BATMO.core(uint256,uint256,uint256,uint256,uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#902-956)
+	- BATMO.determinePID(BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1058-1089)
+	- BATMO.distributeExternal(uint256,uint256,uint256,uint256,uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1227-1272)
+	- BATMO.endRound(BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1118-1182)
+	- BATMO.endTx(uint256,uint256,uint256,uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1364-1386)
+	- BATMO.fallback() (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#216-231)
+	- BATMO.getCurrentRoundInfo() (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#726-748)
+	- BATMO.getPlayerInfoByAddress(address) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#763-787)
+	- BATMO.getPlayerVaults(uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#660-699)
+	- BATMO.managePlayer(uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1097-1113)
+	- BATMO.plyr_ (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#144)
+	- BATMO.reLoadCore(uint256,uint256,uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#851-896)
+	- BATMO.reLoadXaddr(address,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#383-418)
+	- BATMO.reLoadXid(uint256,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#354-381)
+	- BATMO.reLoadXname(bytes32,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#420-455)
+	- BATMO.receivePlayerInfo(uint256,address,bytes32,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1025-1041)
+	- BATMO.registerNameXID(string,uint256,bool) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#553-567)
+	- BATMO.registerNameXaddr(string,address,bool) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#569-583)
+	- BATMO.registerNameXname(string,bytes32,bool) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#585-599)
+	- BATMO.updateGenVault(uint256,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1187-1198)
+	- BATMO.withdraw() (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#461-527)
+	- BATMO.withdrawEarnings(uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1342-1359)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+NameFilter.nameFilter(string) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1566-1626) is declared view but contains assembly code
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#constant-functions-using-assembly-code
+
+BATMO.getPlayerVaultsHelper(uint256,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#704-710) performs a multiplication on the result of a division:
+	- (((((round_[_rID].mask).add(((((round_[_rID].pot).mul(potSplit_[round_[_rID].team].gen)) / 100).mul(1000000000000000000)) / (round_[_rID].keys))).mul(plyrRnds_[_pID][_rID].keys)) / 1000000000000000000)) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#709)
+BATMO.endRound(BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1118-1182) performs a multiplication on the result of a division:
+	- _gen = (_pot.mul(potSplit_[_winTID].gen)) / 100 (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1136)
+	- _ppt = (_gen.mul(1000000000000000000)) / (round_[_rID].keys) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1141)
+BATMO.endRound(BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1118-1182) performs a multiplication on the result of a division:
+	- _ppt = (_gen.mul(1000000000000000000)) / (round_[_rID].keys) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1141)
+	- _dust = _gen.sub((_ppt.mul(round_[_rID].keys)) / 1000000000000000000) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1142)
+BATMO.endRound(BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1118-1182) performs a multiplication on the result of a division:
+	- address(ObokContract).call.value(_OBOK.sub((_OBOK / 3).mul(2)))(bytes4(keccak256()(donateDivs()))) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1157)
+BATMO.updateTimer(uint256,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1203-1221) performs a multiplication on the result of a division:
+	- _newTime = (((_keys) / (1000000000000000000)).mul(rndInc_)).add(round_[_rID].end) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1214)
+BATMO.updateTimer(uint256,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1203-1221) performs a multiplication on the result of a division:
+	- _newTime = (((_keys) / (1000000000000000000)).mul(rndInc_)).add(_now) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1212)
+BATMO.updateMasks(uint256,uint256,uint256,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1310-1336) performs a multiplication on the result of a division:
+	- _ppt = (_gen.mul(1000000000000000000)) / (round_[_rID].keys) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1326)
+	- _pearn = (_ppt.mul(_keys)) / (1000000000000000000) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1331)
+BATMO.updateMasks(uint256,uint256,uint256,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1310-1336) performs a multiplication on the result of a division:
+	- _ppt = (_gen.mul(1000000000000000000)) / (round_[_rID].keys) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1326)
+	- (_gen.sub((_ppt.mul(round_[_rID].keys)) / (1000000000000000000))) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1335)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+Reentrancy in BATMO.buyXaddr(address) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#270-305):
+	External calls:
+	- _eventData_ = determinePID(_eventData_) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#278)
+		- _pID = PlayerBook.getPlayerID(msg.sender) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1067)
+		- _name = PlayerBook.getPlayerName(_pID) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1068)
+		- _laff = PlayerBook.getPlayerLAff(_pID) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1069)
+	State variables written after the call(s):
+	- plyr_[_pID].laff = _affID (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#300)
+	BATMO.plyr_ (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#144) can be used in cross function reentrancies:
+	- BATMO.buyCore(uint256,uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#797-845)
+	- BATMO.buyXaddr(address) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#270-305)
+	- BATMO.buyXid(uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#240-268)
+	- BATMO.buyXname(bytes32) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#307-343)
+	- BATMO.core(uint256,uint256,uint256,uint256,uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#902-956)
+	- BATMO.determinePID(BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1058-1089)
+	- BATMO.distributeExternal(uint256,uint256,uint256,uint256,uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1227-1272)
+	- BATMO.endRound(BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1118-1182)
+	- BATMO.endTx(uint256,uint256,uint256,uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1364-1386)
+	- BATMO.fallback() (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#216-231)
+	- BATMO.getCurrentRoundInfo() (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#726-748)
+	- BATMO.getPlayerInfoByAddress(address) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#763-787)
+	- BATMO.getPlayerVaults(uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#660-699)
+	- BATMO.managePlayer(uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1097-1113)
+	- BATMO.plyr_ (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#144)
+	- BATMO.reLoadCore(uint256,uint256,uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#851-896)
+	- BATMO.reLoadXaddr(address,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#383-418)
+	- BATMO.reLoadXid(uint256,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#354-381)
+	- BATMO.reLoadXname(bytes32,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#420-455)
+	- BATMO.receivePlayerInfo(uint256,address,bytes32,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1025-1041)
+	- BATMO.registerNameXID(string,uint256,bool) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#553-567)
+	- BATMO.registerNameXaddr(string,address,bool) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#569-583)
+	- BATMO.registerNameXname(string,bytes32,bool) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#585-599)
+	- BATMO.updateGenVault(uint256,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1187-1198)
+	- BATMO.withdraw() (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#461-527)
+	- BATMO.withdrawEarnings(uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1342-1359)
+Reentrancy in BATMO.buyXid(uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#240-268):
+	External calls:
+	- _eventData_ = determinePID(_eventData_) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#248)
+		- _pID = PlayerBook.getPlayerID(msg.sender) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1067)
+		- _name = PlayerBook.getPlayerName(_pID) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1068)
+		- _laff = PlayerBook.getPlayerLAff(_pID) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1069)
+	State variables written after the call(s):
+	- plyr_[_pID].laff = _affCode (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#263)
+	BATMO.plyr_ (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#144) can be used in cross function reentrancies:
+	- BATMO.buyCore(uint256,uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#797-845)
+	- BATMO.buyXaddr(address) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#270-305)
+	- BATMO.buyXid(uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#240-268)
+	- BATMO.buyXname(bytes32) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#307-343)
+	- BATMO.core(uint256,uint256,uint256,uint256,uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#902-956)
+	- BATMO.determinePID(BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1058-1089)
+	- BATMO.distributeExternal(uint256,uint256,uint256,uint256,uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1227-1272)
+	- BATMO.endRound(BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1118-1182)
+	- BATMO.endTx(uint256,uint256,uint256,uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1364-1386)
+	- BATMO.fallback() (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#216-231)
+	- BATMO.getCurrentRoundInfo() (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#726-748)
+	- BATMO.getPlayerInfoByAddress(address) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#763-787)
+	- BATMO.getPlayerVaults(uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#660-699)
+	- BATMO.managePlayer(uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1097-1113)
+	- BATMO.plyr_ (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#144)
+	- BATMO.reLoadCore(uint256,uint256,uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#851-896)
+	- BATMO.reLoadXaddr(address,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#383-418)
+	- BATMO.reLoadXid(uint256,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#354-381)
+	- BATMO.reLoadXname(bytes32,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#420-455)
+	- BATMO.receivePlayerInfo(uint256,address,bytes32,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1025-1041)
+	- BATMO.registerNameXID(string,uint256,bool) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#553-567)
+	- BATMO.registerNameXaddr(string,address,bool) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#569-583)
+	- BATMO.registerNameXname(string,bytes32,bool) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#585-599)
+	- BATMO.updateGenVault(uint256,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1187-1198)
+	- BATMO.withdraw() (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#461-527)
+	- BATMO.withdrawEarnings(uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1342-1359)
+Reentrancy in BATMO.buyXname(bytes32) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#307-343):
+	External calls:
+	- _eventData_ = determinePID(_eventData_) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#315)
+		- _pID = PlayerBook.getPlayerID(msg.sender) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1067)
+		- _name = PlayerBook.getPlayerName(_pID) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1068)
+		- _laff = PlayerBook.getPlayerLAff(_pID) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1069)
+	State variables written after the call(s):
+	- plyr_[_pID].laff = _affID (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#337)
+	BATMO.plyr_ (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#144) can be used in cross function reentrancies:
+	- BATMO.buyCore(uint256,uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#797-845)
+	- BATMO.buyXaddr(address) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#270-305)
+	- BATMO.buyXid(uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#240-268)
+	- BATMO.buyXname(bytes32) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#307-343)
+	- BATMO.core(uint256,uint256,uint256,uint256,uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#902-956)
+	- BATMO.determinePID(BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1058-1089)
+	- BATMO.distributeExternal(uint256,uint256,uint256,uint256,uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1227-1272)
+	- BATMO.endRound(BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1118-1182)
+	- BATMO.endTx(uint256,uint256,uint256,uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1364-1386)
+	- BATMO.fallback() (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#216-231)
+	- BATMO.getCurrentRoundInfo() (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#726-748)
+	- BATMO.getPlayerInfoByAddress(address) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#763-787)
+	- BATMO.getPlayerVaults(uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#660-699)
+	- BATMO.managePlayer(uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1097-1113)
+	- BATMO.plyr_ (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#144)
+	- BATMO.reLoadCore(uint256,uint256,uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#851-896)
+	- BATMO.reLoadXaddr(address,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#383-418)
+	- BATMO.reLoadXid(uint256,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#354-381)
+	- BATMO.reLoadXname(bytes32,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#420-455)
+	- BATMO.receivePlayerInfo(uint256,address,bytes32,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1025-1041)
+	- BATMO.registerNameXID(string,uint256,bool) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#553-567)
+	- BATMO.registerNameXaddr(string,address,bool) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#569-583)
+	- BATMO.registerNameXname(string,bytes32,bool) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#585-599)
+	- BATMO.updateGenVault(uint256,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1187-1198)
+	- BATMO.withdraw() (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#461-527)
+	- BATMO.withdrawEarnings(uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1342-1359)
+Reentrancy in BATMO.determinePID(BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1058-1089):
+	External calls:
+	- _pID = PlayerBook.getPlayerID(msg.sender) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1067)
+	- _name = PlayerBook.getPlayerName(_pID) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1068)
+	- _laff = PlayerBook.getPlayerLAff(_pID) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1069)
+	State variables written after the call(s):
+	- pIDxAddr_[msg.sender] = _pID (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1072)
+	BATMO.pIDxAddr_ (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#142) can be used in cross function reentrancies:
+	- BATMO.buyXaddr(address) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#270-305)
+	- BATMO.buyXid(uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#240-268)
+	- BATMO.buyXname(bytes32) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#307-343)
+	- BATMO.determinePID(BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1058-1089)
+	- BATMO.fallback() (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#216-231)
+	- BATMO.getPlayerInfoByAddress(address) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#763-787)
+	- BATMO.pIDxAddr_ (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#142)
+	- BATMO.reLoadXaddr(address,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#383-418)
+	- BATMO.reLoadXid(uint256,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#354-381)
+	- BATMO.reLoadXname(bytes32,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#420-455)
+	- BATMO.receivePlayerInfo(uint256,address,bytes32,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1025-1041)
+	- BATMO.registerNameXID(string,uint256,bool) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#553-567)
+	- BATMO.registerNameXaddr(string,address,bool) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#569-583)
+	- BATMO.registerNameXname(string,bytes32,bool) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#585-599)
+	- BATMO.withdraw() (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#461-527)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+BATMO.endRound(BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1118-1182) ignores return value by address(ObokContract).call.value(_OBOK.sub((_OBOK / 3).mul(2)))(bytes4(keccak256()(donateDivs()))) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1157)
+BATMO.distributeExternal(uint256,uint256,uint256,uint256,uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1227-1272) ignores return value by address(ObokContract).call.value(_OBOK.sub(_potAmount))(bytes4(keccak256()(donateDivs()))) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1263)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-low-level-calls
+
+BATMO.reLoadXaddr(address,uint256)._eventData_ (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#390) is a local variable never initialized
+BATMO.distributeExternal(uint256,uint256,uint256,uint256,uint256,BATMODatasets.EventReturns)._OBOK (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1236) is a local variable never initialized
+BATMO.reLoadXid(uint256,uint256)._eventData_ (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#361) is a local variable never initialized
+BATMO.reLoadXname(bytes32,uint256)._eventData_ (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#427) is a local variable never initialized
+BATMO.withdraw()._eventData_ (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#482) is a local variable never initialized
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#uninitialized-local-variables
+
+BATMO.constructor(address,address,address).otherAdmin (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#161) lacks a zero-check on :
+		- admin2 = otherAdmin (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#164)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in BATMO.determinePID(BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1058-1089):
+	External calls:
+	- _pID = PlayerBook.getPlayerID(msg.sender) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1067)
+	- _name = PlayerBook.getPlayerName(_pID) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1068)
+	- _laff = PlayerBook.getPlayerLAff(_pID) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1069)
+	State variables written after the call(s):
+	- pIDxName_[_name] = _pID (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1077)
+	- plyrNames_[_pID][_name] = true (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1079)
+	- plyr_[_pID].addr = msg.sender (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1073)
+	- plyr_[_pID].name = _name (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1078)
+	- plyr_[_pID].laff = _laff (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1083)
+Reentrancy in BATMO.distributeExternal(uint256,uint256,uint256,uint256,uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1227-1272):
+	External calls:
+	- ! address(admin).call.value(_dev / 2)() && ! address(admin2).call.value(_dev / 2)() (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1237)
+	State variables written after the call(s):
+	- plyr_[_affID].aff = _aff.add(plyr_[_affID].aff) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1250)
+Reentrancy in BATMO.distributeExternal(uint256,uint256,uint256,uint256,uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1227-1272):
+	External calls:
+	- ! address(admin).call.value(_dev / 2)() && ! address(admin2).call.value(_dev / 2)() (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1237)
+	- address(ObokContract).call.value(_OBOK.sub(_potAmount))(bytes4(keccak256()(donateDivs()))) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1263)
+	State variables written after the call(s):
+	- round_[_rID].pot = round_[_rID].pot.add(_potAmount) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1265)
+Reentrancy in BATMO.withdraw() (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#461-527):
+	External calls:
+	- _eventData_ = endRound(_eventData_) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#486)
+		- address(ObokContract).call.value(_OBOK.sub((_OBOK / 3).mul(2)))(bytes4(keccak256()(donateDivs()))) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1157)
+	External calls sending eth:
+	- _eventData_ = endRound(_eventData_) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#486)
+		- admin.transfer(_dev / 2) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1154)
+		- admin2.transfer(_dev / 2) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1155)
+		- address(ObokContract).call.value(_OBOK.sub((_OBOK / 3).mul(2)))(bytes4(keccak256()(donateDivs()))) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1157)
+	State variables written after the call(s):
+	- _eth = withdrawEarnings(_pID) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#489)
+		- plyrRnds_[_pID][_rIDlast].mask = _earnings.add(plyrRnds_[_pID][_rIDlast].mask) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1196)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in BATMO.buyCore(uint256,uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#797-845):
+	External calls:
+	- _eventData_ = endRound(_eventData_) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#819)
+		- address(ObokContract).call.value(_OBOK.sub((_OBOK / 3).mul(2)))(bytes4(keccak256()(donateDivs()))) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1157)
+	External calls sending eth:
+	- _eventData_ = endRound(_eventData_) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#819)
+		- admin.transfer(_dev / 2) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1154)
+		- admin2.transfer(_dev / 2) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1155)
+		- address(ObokContract).call.value(_OBOK.sub((_OBOK / 3).mul(2)))(bytes4(keccak256()(donateDivs()))) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1157)
+	Event emitted after the call(s):
+	- FOMOEvents.onBuyAndDistribute(msg.sender,plyr_[_pID].name,msg.value,_eventData_.compressedData,_eventData_.compressedIDs,_eventData_.winnerAddr,_eventData_.winnerName,_eventData_.amountWon,_eventData_.newPot,_eventData_.tokenAmount,_eventData_.genAmount) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#826-839)
+Reentrancy in BATMO.buyXaddr(address) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#270-305):
+	External calls:
+	- _eventData_ = determinePID(_eventData_) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#278)
+		- _pID = PlayerBook.getPlayerID(msg.sender) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1067)
+		- _name = PlayerBook.getPlayerName(_pID) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1068)
+		- _laff = PlayerBook.getPlayerLAff(_pID) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1069)
+	- buyCore(_pID,_affID,_eventData_) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#304)
+		- ! address(admin).call.value(_dev / 2)() && ! address(admin2).call.value(_dev / 2)() (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1237)
+		- address(ObokContract).call.value(_OBOK.sub(_potAmount))(bytes4(keccak256()(donateDivs()))) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1263)
+		- address(ObokContract).call.value(_OBOK.sub((_OBOK / 3).mul(2)))(bytes4(keccak256()(donateDivs()))) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1157)
+	External calls sending eth:
+	- buyCore(_pID,_affID,_eventData_) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#304)
+		- ! address(admin).call.value(_dev / 2)() && ! address(admin2).call.value(_dev / 2)() (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1237)
+		- admin.transfer(_dev / 2) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1154)
+		- admin2.transfer(_dev / 2) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1155)
+		- address(ObokContract).call.value(_OBOK.sub(_potAmount))(bytes4(keccak256()(donateDivs()))) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1263)
+		- address(ObokContract).call.value(_OBOK.sub((_OBOK / 3).mul(2)))(bytes4(keccak256()(donateDivs()))) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1157)
+	Event emitted after the call(s):
+	- FOMOEvents.onAffiliatePayout(_affID,plyr_[_affID].addr,plyr_[_affID].name,_rID,_pID,_aff,now) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1251)
+		- buyCore(_pID,_affID,_eventData_) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#304)
+	- FOMOEvents.onBuyAndDistribute(msg.sender,plyr_[_pID].name,msg.value,_eventData_.compressedData,_eventData_.compressedIDs,_eventData_.winnerAddr,_eventData_.winnerName,_eventData_.amountWon,_eventData_.newPot,_eventData_.tokenAmount,_eventData_.genAmount) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#826-839)
+		- buyCore(_pID,_affID,_eventData_) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#304)
+	- FOMOEvents.onEndTx(_eventData_.compressedData,_eventData_.compressedIDs,plyr_[_pID].name,msg.sender,_eth,_keys,_eventData_.winnerAddr,_eventData_.winnerName,_eventData_.amountWon,_eventData_.newPot,_eventData_.tokenAmount,_eventData_.genAmount,_eventData_.potAmount) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1370-1385)
+		- buyCore(_pID,_affID,_eventData_) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#304)
+Reentrancy in BATMO.buyXid(uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#240-268):
+	External calls:
+	- _eventData_ = determinePID(_eventData_) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#248)
+		- _pID = PlayerBook.getPlayerID(msg.sender) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1067)
+		- _name = PlayerBook.getPlayerName(_pID) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1068)
+		- _laff = PlayerBook.getPlayerLAff(_pID) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1069)
+	- buyCore(_pID,_affCode,_eventData_) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#267)
+		- ! address(admin).call.value(_dev / 2)() && ! address(admin2).call.value(_dev / 2)() (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1237)
+		- address(ObokContract).call.value(_OBOK.sub(_potAmount))(bytes4(keccak256()(donateDivs()))) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1263)
+		- address(ObokContract).call.value(_OBOK.sub((_OBOK / 3).mul(2)))(bytes4(keccak256()(donateDivs()))) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1157)
+	External calls sending eth:
+	- buyCore(_pID,_affCode,_eventData_) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#267)
+		- ! address(admin).call.value(_dev / 2)() && ! address(admin2).call.value(_dev / 2)() (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1237)
+		- admin.transfer(_dev / 2) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1154)
+		- admin2.transfer(_dev / 2) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1155)
+		- address(ObokContract).call.value(_OBOK.sub(_potAmount))(bytes4(keccak256()(donateDivs()))) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1263)
+		- address(ObokContract).call.value(_OBOK.sub((_OBOK / 3).mul(2)))(bytes4(keccak256()(donateDivs()))) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1157)
+	Event emitted after the call(s):
+	- FOMOEvents.onAffiliatePayout(_affID,plyr_[_affID].addr,plyr_[_affID].name,_rID,_pID,_aff,now) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1251)
+		- buyCore(_pID,_affCode,_eventData_) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#267)
+	- FOMOEvents.onBuyAndDistribute(msg.sender,plyr_[_pID].name,msg.value,_eventData_.compressedData,_eventData_.compressedIDs,_eventData_.winnerAddr,_eventData_.winnerName,_eventData_.amountWon,_eventData_.newPot,_eventData_.tokenAmount,_eventData_.genAmount) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#826-839)
+		- buyCore(_pID,_affCode,_eventData_) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#267)
+	- FOMOEvents.onEndTx(_eventData_.compressedData,_eventData_.compressedIDs,plyr_[_pID].name,msg.sender,_eth,_keys,_eventData_.winnerAddr,_eventData_.winnerName,_eventData_.amountWon,_eventData_.newPot,_eventData_.tokenAmount,_eventData_.genAmount,_eventData_.potAmount) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1370-1385)
+		- buyCore(_pID,_affCode,_eventData_) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#267)
+Reentrancy in BATMO.buyXname(bytes32) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#307-343):
+	External calls:
+	- _eventData_ = determinePID(_eventData_) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#315)
+		- _pID = PlayerBook.getPlayerID(msg.sender) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1067)
+		- _name = PlayerBook.getPlayerName(_pID) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1068)
+		- _laff = PlayerBook.getPlayerLAff(_pID) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1069)
+	- buyCore(_pID,_affID,_eventData_) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#342)
+		- ! address(admin).call.value(_dev / 2)() && ! address(admin2).call.value(_dev / 2)() (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1237)
+		- address(ObokContract).call.value(_OBOK.sub(_potAmount))(bytes4(keccak256()(donateDivs()))) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1263)
+		- address(ObokContract).call.value(_OBOK.sub((_OBOK / 3).mul(2)))(bytes4(keccak256()(donateDivs()))) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1157)
+	External calls sending eth:
+	- buyCore(_pID,_affID,_eventData_) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#342)
+		- ! address(admin).call.value(_dev / 2)() && ! address(admin2).call.value(_dev / 2)() (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1237)
+		- admin.transfer(_dev / 2) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1154)
+		- admin2.transfer(_dev / 2) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1155)
+		- address(ObokContract).call.value(_OBOK.sub(_potAmount))(bytes4(keccak256()(donateDivs()))) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1263)
+		- address(ObokContract).call.value(_OBOK.sub((_OBOK / 3).mul(2)))(bytes4(keccak256()(donateDivs()))) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1157)
+	Event emitted after the call(s):
+	- FOMOEvents.onAffiliatePayout(_affID,plyr_[_affID].addr,plyr_[_affID].name,_rID,_pID,_aff,now) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1251)
+		- buyCore(_pID,_affID,_eventData_) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#342)
+	- FOMOEvents.onBuyAndDistribute(msg.sender,plyr_[_pID].name,msg.value,_eventData_.compressedData,_eventData_.compressedIDs,_eventData_.winnerAddr,_eventData_.winnerName,_eventData_.amountWon,_eventData_.newPot,_eventData_.tokenAmount,_eventData_.genAmount) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#826-839)
+		- buyCore(_pID,_affID,_eventData_) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#342)
+	- FOMOEvents.onEndTx(_eventData_.compressedData,_eventData_.compressedIDs,plyr_[_pID].name,msg.sender,_eth,_keys,_eventData_.winnerAddr,_eventData_.winnerName,_eventData_.amountWon,_eventData_.newPot,_eventData_.tokenAmount,_eventData_.genAmount,_eventData_.potAmount) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1370-1385)
+		- buyCore(_pID,_affID,_eventData_) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#342)
+Reentrancy in BATMO.core(uint256,uint256,uint256,uint256,uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#902-956):
+	External calls:
+	- _eventData_ = distributeExternal(_rID,_pID,_eth,_affID,0,_eventData_) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#950)
+		- ! address(admin).call.value(_dev / 2)() && ! address(admin2).call.value(_dev / 2)() (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1237)
+		- address(ObokContract).call.value(_OBOK.sub(_potAmount))(bytes4(keccak256()(donateDivs()))) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1263)
+	Event emitted after the call(s):
+	- FOMOEvents.onEndTx(_eventData_.compressedData,_eventData_.compressedIDs,plyr_[_pID].name,msg.sender,_eth,_keys,_eventData_.winnerAddr,_eventData_.winnerName,_eventData_.amountWon,_eventData_.newPot,_eventData_.tokenAmount,_eventData_.genAmount,_eventData_.potAmount) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1370-1385)
+		- endTx(_pID,0,_eth,_keys,_eventData_) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#954)
+Reentrancy in BATMO.distributeExternal(uint256,uint256,uint256,uint256,uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1227-1272):
+	External calls:
+	- ! address(admin).call.value(_dev / 2)() && ! address(admin2).call.value(_dev / 2)() (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1237)
+	Event emitted after the call(s):
+	- FOMOEvents.onAffiliatePayout(_affID,plyr_[_affID].addr,plyr_[_affID].name,_rID,_pID,_aff,now) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1251)
+Reentrancy in BATMO.fallback() (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#216-231):
+	External calls:
+	- _eventData_ = determinePID(_eventData_) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#224)
+		- _pID = PlayerBook.getPlayerID(msg.sender) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1067)
+		- _name = PlayerBook.getPlayerName(_pID) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1068)
+		- _laff = PlayerBook.getPlayerLAff(_pID) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1069)
+	- buyCore(_pID,plyr_[_pID].laff,_eventData_) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#230)
+		- ! address(admin).call.value(_dev / 2)() && ! address(admin2).call.value(_dev / 2)() (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1237)
+		- address(ObokContract).call.value(_OBOK.sub(_potAmount))(bytes4(keccak256()(donateDivs()))) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1263)
+		- address(ObokContract).call.value(_OBOK.sub((_OBOK / 3).mul(2)))(bytes4(keccak256()(donateDivs()))) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1157)
+	External calls sending eth:
+	- buyCore(_pID,plyr_[_pID].laff,_eventData_) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#230)
+		- ! address(admin).call.value(_dev / 2)() && ! address(admin2).call.value(_dev / 2)() (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1237)
+		- admin.transfer(_dev / 2) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1154)
+		- admin2.transfer(_dev / 2) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1155)
+		- address(ObokContract).call.value(_OBOK.sub(_potAmount))(bytes4(keccak256()(donateDivs()))) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1263)
+		- address(ObokContract).call.value(_OBOK.sub((_OBOK / 3).mul(2)))(bytes4(keccak256()(donateDivs()))) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1157)
+	Event emitted after the call(s):
+	- FOMOEvents.onAffiliatePayout(_affID,plyr_[_affID].addr,plyr_[_affID].name,_rID,_pID,_aff,now) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1251)
+		- buyCore(_pID,plyr_[_pID].laff,_eventData_) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#230)
+	- FOMOEvents.onBuyAndDistribute(msg.sender,plyr_[_pID].name,msg.value,_eventData_.compressedData,_eventData_.compressedIDs,_eventData_.winnerAddr,_eventData_.winnerName,_eventData_.amountWon,_eventData_.newPot,_eventData_.tokenAmount,_eventData_.genAmount) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#826-839)
+		- buyCore(_pID,plyr_[_pID].laff,_eventData_) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#230)
+	- FOMOEvents.onEndTx(_eventData_.compressedData,_eventData_.compressedIDs,plyr_[_pID].name,msg.sender,_eth,_keys,_eventData_.winnerAddr,_eventData_.winnerName,_eventData_.amountWon,_eventData_.newPot,_eventData_.tokenAmount,_eventData_.genAmount,_eventData_.potAmount) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1370-1385)
+		- buyCore(_pID,plyr_[_pID].laff,_eventData_) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#230)
+Reentrancy in BATMO.reLoadCore(uint256,uint256,uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#851-896):
+	External calls:
+	- _eventData_ = endRound(_eventData_) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#875)
+		- address(ObokContract).call.value(_OBOK.sub((_OBOK / 3).mul(2)))(bytes4(keccak256()(donateDivs()))) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1157)
+	External calls sending eth:
+	- _eventData_ = endRound(_eventData_) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#875)
+		- admin.transfer(_dev / 2) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1154)
+		- admin2.transfer(_dev / 2) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1155)
+		- address(ObokContract).call.value(_OBOK.sub((_OBOK / 3).mul(2)))(bytes4(keccak256()(donateDivs()))) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1157)
+	Event emitted after the call(s):
+	- FOMOEvents.onReLoadAndDistribute(msg.sender,plyr_[_pID].name,_eventData_.compressedData,_eventData_.compressedIDs,_eventData_.winnerAddr,_eventData_.winnerName,_eventData_.amountWon,_eventData_.newPot,_eventData_.tokenAmount,_eventData_.genAmount) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#882-894)
+Reentrancy in BATMO.registerNameXID(string,uint256,bool) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#553-567):
+	External calls:
+	- (_isNewPlayer,_affID) = PlayerBook.registerNameXIDFromDapp.value(_paid)(_addr,_name,_affCode,_all) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#561)
+	Event emitted after the call(s):
+	- FOMOEvents.onNewName(_pID,_addr,_name,_isNewPlayer,_affID,plyr_[_affID].addr,plyr_[_affID].name,_paid,now) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#566)
+Reentrancy in BATMO.registerNameXaddr(string,address,bool) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#569-583):
+	External calls:
+	- (_isNewPlayer,_affID) = PlayerBook.registerNameXaddrFromDapp.value(msg.value)(msg.sender,_name,_affCode,_all) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#577)
+	Event emitted after the call(s):
+	- FOMOEvents.onNewName(_pID,_addr,_name,_isNewPlayer,_affID,plyr_[_affID].addr,plyr_[_affID].name,_paid,now) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#582)
+Reentrancy in BATMO.registerNameXname(string,bytes32,bool) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#585-599):
+	External calls:
+	- (_isNewPlayer,_affID) = PlayerBook.registerNameXnameFromDapp.value(msg.value)(msg.sender,_name,_affCode,_all) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#593)
+	Event emitted after the call(s):
+	- FOMOEvents.onNewName(_pID,_addr,_name,_isNewPlayer,_affID,plyr_[_affID].addr,plyr_[_affID].name,_paid,now) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#598)
+Reentrancy in BATMO.withdraw() (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#461-527):
+	External calls:
+	- _eventData_ = endRound(_eventData_) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#486)
+		- address(ObokContract).call.value(_OBOK.sub((_OBOK / 3).mul(2)))(bytes4(keccak256()(donateDivs()))) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1157)
+	External calls sending eth:
+	- _eventData_ = endRound(_eventData_) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#486)
+		- admin.transfer(_dev / 2) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1154)
+		- admin2.transfer(_dev / 2) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1155)
+		- address(ObokContract).call.value(_OBOK.sub((_OBOK / 3).mul(2)))(bytes4(keccak256()(donateDivs()))) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1157)
+	- plyr_[_pID].addr.transfer(_eth) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#493)
+	Event emitted after the call(s):
+	- FOMOEvents.onWithdrawAndDistribute(msg.sender,plyr_[_pID].name,_eth,_eventData_.compressedData,_eventData_.compressedIDs,_eventData_.winnerAddr,_eventData_.winnerName,_eventData_.amountWon,_eventData_.newPot,_eventData_.tokenAmount,_eventData_.genAmount) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#500-513)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+BATMO.withdraw() (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#461-527) uses timestamp for comparisons
+	Dangerous comparisons:
+	- _now > round_[_rID].end && round_[_rID].ended == false && round_[_rID].plyr != 0 (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#479)
+BATMO.getBuyPrice() (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#609-625) uses timestamp for comparisons
+	Dangerous comparisons:
+	- _now > round_[_rID].strt + rndGap_ && (_now <= round_[_rID].end || (_now > round_[_rID].end && round_[_rID].plyr == 0)) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#621)
+BATMO.getTimeLeft() (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#633-651) uses timestamp for comparisons
+	Dangerous comparisons:
+	- _now < round_[_rID].end (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#644)
+	- _now > round_[_rID].strt + rndGap_ (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#645)
+BATMO.getPlayerVaults(uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#660-699) uses timestamp for comparisons
+	Dangerous comparisons:
+	- now > round_[_rID].end && round_[_rID].ended == false && round_[_rID].plyr != 0 (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#669)
+BATMO.buyCore(uint256,uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#797-845) uses timestamp for comparisons
+	Dangerous comparisons:
+	- _now > round_[_rID].strt + rndGap_ && (_now <= round_[_rID].end || (_now > round_[_rID].end && round_[_rID].plyr == 0)) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#807)
+	- _now > round_[_rID].end && round_[_rID].ended == false (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#815)
+BATMO.reLoadCore(uint256,uint256,uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#851-896) uses timestamp for comparisons
+	Dangerous comparisons:
+	- _now > round_[_rID].strt + rndGap_ && (_now <= round_[_rID].end || (_now > round_[_rID].end && round_[_rID].plyr == 0)) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#861)
+	- _now > round_[_rID].end && round_[_rID].ended == false (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#872)
+BATMO.calcKeysReceived(uint256,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#980-993) uses timestamp for comparisons
+	Dangerous comparisons:
+	- _now > round_[_rID].strt + rndGap_ && (_now <= round_[_rID].end || (_now > round_[_rID].end && round_[_rID].plyr == 0)) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#989)
+BATMO.iWantXKeys(uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1001-1017) uses timestamp for comparisons
+	Dangerous comparisons:
+	- _now > round_[_rID].strt + rndGap_ && (_now <= round_[_rID].end || (_now > round_[_rID].end && round_[_rID].plyr == 0)) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1013)
+BATMO.updateTimer(uint256,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1203-1221) uses timestamp for comparisons
+	Dangerous comparisons:
+	- _now > round_[_rID].end && round_[_rID].plyr == 0 (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1211)
+	- _newTime < (rndMax_).add(_now) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1217)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+NameFilter.nameFilter(string) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1566-1626) uses assembly
+	- INLINE ASM (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1622-1625)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#assembly-usage
+
+BATMO.withdraw() (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#461-527) compares to a boolean constant:
+	-_now > round_[_rID].end && round_[_rID].ended == false && round_[_rID].plyr != 0 (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#479)
+BATMO.getPlayerVaults(uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#660-699) compares to a boolean constant:
+	-now > round_[_rID].end && round_[_rID].ended == false && round_[_rID].plyr != 0 (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#669)
+BATMO.buyCore(uint256,uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#797-845) compares to a boolean constant:
+	-_now > round_[_rID].end && round_[_rID].ended == false (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#815)
+BATMO.reLoadCore(uint256,uint256,uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#851-896) compares to a boolean constant:
+	-_now > round_[_rID].end && round_[_rID].ended == false (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#872)
+BATMO.receivePlayerInfo(uint256,address,bytes32,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1025-1041) compares to a boolean constant:
+	-plyrNames_[_pID][_name] == false (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1039)
+BATMO.receivePlayerNameList(uint256,bytes32) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1046-1052) compares to a boolean constant:
+	-plyrNames_[_pID][_name] == false (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1050)
+BATMO.activate() (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1395-1412) compares to a boolean constant:
+	-require(bool,string)(activated_ == false,FOMO Short already activated) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1403)
+BATMO.isActivated() (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#182-185) compares to a boolean constant:
+	-require(bool)(activated_ == true) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#183)
+NameFilter.nameFilter(string) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1566-1626) compares to a boolean constant:
+	-_hasNonNumber == false (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1598)
+NameFilter.nameFilter(string) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1566-1626) compares to a boolean constant:
+	-require(bool)(_hasNonNumber == true) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1619)
+NameFilter.nameFilter(string) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1566-1626) compares to a boolean constant:
+	-_hasNonNumber == false && (_temp[i] < 0x30 || _temp[i] > 0x39) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1614)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#boolean-equality
+
+Version constraint ^0.4.24 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ABIEncoderV2PackedStorage_0.4.x
+	- ExpExponentCleanup
+	- EventStructWrongData.
+It is used by:
+	- ^0.4.24 (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1)
+solc-0.4.24 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in BATMO.endRound(BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1118-1182):
+	- address(ObokContract).call.value(_OBOK.sub((_OBOK / 3).mul(2)))(bytes4(keccak256()(donateDivs()))) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1157)
+Low level call in BATMO.distributeExternal(uint256,uint256,uint256,uint256,uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1227-1272):
+	- ! address(admin).call.value(_dev / 2)() && ! address(admin2).call.value(_dev / 2)() (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1237)
+	- address(ObokContract).call.value(_OBOK.sub(_potAmount))(bytes4(keccak256()(donateDivs()))) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1263)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Event FOMOEvents.onNewName(uint256,address,bytes32,bool,uint256,address,bytes32,uint256,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#5-16) is not in CapWords
+Event FOMOEvents.onEndTx(uint256,uint256,bytes32,address,uint256,uint256,address,bytes32,uint256,uint256,uint256,uint256,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#19-34) is not in CapWords
+Event FOMOEvents.onWithdraw(uint256,address,bytes32,uint256,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#37-44) is not in CapWords
+Event FOMOEvents.onWithdrawAndDistribute(address,bytes32,uint256,uint256,uint256,address,bytes32,uint256,uint256,uint256,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#47-60) is not in CapWords
+Event FOMOEvents.onBuyAndDistribute(address,bytes32,uint256,uint256,uint256,address,bytes32,uint256,uint256,uint256,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#64-77) is not in CapWords
+Event FOMOEvents.onReLoadAndDistribute(address,bytes32,uint256,uint256,address,bytes32,uint256,uint256,uint256,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#81-93) is not in CapWords
+Event FOMOEvents.onAffiliatePayout(uint256,address,bytes32,uint256,uint256,uint256,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#96-105) is not in CapWords
+Parameter BATMO.buyXid(uint256)._affCode (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#240) is not in mixedCase
+Parameter BATMO.buyXaddr(address)._affCode (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#270) is not in mixedCase
+Parameter BATMO.buyXname(bytes32)._affCode (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#307) is not in mixedCase
+Parameter BATMO.reLoadXid(uint256,uint256)._affCode (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#354) is not in mixedCase
+Parameter BATMO.reLoadXid(uint256,uint256)._eth (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#354) is not in mixedCase
+Parameter BATMO.reLoadXaddr(address,uint256)._affCode (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#383) is not in mixedCase
+Parameter BATMO.reLoadXaddr(address,uint256)._eth (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#383) is not in mixedCase
+Parameter BATMO.reLoadXname(bytes32,uint256)._affCode (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#420) is not in mixedCase
+Parameter BATMO.reLoadXname(bytes32,uint256)._eth (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#420) is not in mixedCase
+Parameter BATMO.registerNameXID(string,uint256,bool)._nameString (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#553) is not in mixedCase
+Parameter BATMO.registerNameXID(string,uint256,bool)._affCode (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#553) is not in mixedCase
+Parameter BATMO.registerNameXID(string,uint256,bool)._all (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#553) is not in mixedCase
+Parameter BATMO.registerNameXaddr(string,address,bool)._nameString (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#569) is not in mixedCase
+Parameter BATMO.registerNameXaddr(string,address,bool)._affCode (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#569) is not in mixedCase
+Parameter BATMO.registerNameXaddr(string,address,bool)._all (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#569) is not in mixedCase
+Parameter BATMO.registerNameXname(string,bytes32,bool)._nameString (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#585) is not in mixedCase
+Parameter BATMO.registerNameXname(string,bytes32,bool)._affCode (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#585) is not in mixedCase
+Parameter BATMO.registerNameXname(string,bytes32,bool)._all (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#585) is not in mixedCase
+Parameter BATMO.getPlayerVaults(uint256)._pID (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#660) is not in mixedCase
+Parameter BATMO.getPlayerVaultsHelper(uint256,uint256)._pID (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#704) is not in mixedCase
+Parameter BATMO.getPlayerVaultsHelper(uint256,uint256)._rID (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#704) is not in mixedCase
+Parameter BATMO.getPlayerInfoByAddress(address)._addr (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#763) is not in mixedCase
+Parameter BATMO.buyCore(uint256,uint256,BATMODatasets.EventReturns)._pID (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#797) is not in mixedCase
+Parameter BATMO.buyCore(uint256,uint256,BATMODatasets.EventReturns)._affID (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#797) is not in mixedCase
+Parameter BATMO.buyCore(uint256,uint256,BATMODatasets.EventReturns)._eventData_ (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#797) is not in mixedCase
+Parameter BATMO.reLoadCore(uint256,uint256,uint256,BATMODatasets.EventReturns)._pID (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#851) is not in mixedCase
+Parameter BATMO.reLoadCore(uint256,uint256,uint256,BATMODatasets.EventReturns)._affID (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#851) is not in mixedCase
+Parameter BATMO.reLoadCore(uint256,uint256,uint256,BATMODatasets.EventReturns)._eth (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#851) is not in mixedCase
+Parameter BATMO.reLoadCore(uint256,uint256,uint256,BATMODatasets.EventReturns)._eventData_ (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#851) is not in mixedCase
+Parameter BATMO.core(uint256,uint256,uint256,uint256,uint256,BATMODatasets.EventReturns)._rID (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#902) is not in mixedCase
+Parameter BATMO.core(uint256,uint256,uint256,uint256,uint256,BATMODatasets.EventReturns)._pID (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#902) is not in mixedCase
+Parameter BATMO.core(uint256,uint256,uint256,uint256,uint256,BATMODatasets.EventReturns)._eth (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#902) is not in mixedCase
+Parameter BATMO.core(uint256,uint256,uint256,uint256,uint256,BATMODatasets.EventReturns)._affID (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#902) is not in mixedCase
+Parameter BATMO.core(uint256,uint256,uint256,uint256,uint256,BATMODatasets.EventReturns)._team (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#902) is not in mixedCase
+Parameter BATMO.core(uint256,uint256,uint256,uint256,uint256,BATMODatasets.EventReturns)._eventData_ (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#902) is not in mixedCase
+Parameter BATMO.calcUnMaskedEarnings(uint256,uint256)._pID (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#965) is not in mixedCase
+Parameter BATMO.calcUnMaskedEarnings(uint256,uint256)._rIDlast (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#965) is not in mixedCase
+Parameter BATMO.calcKeysReceived(uint256,uint256)._rID (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#980) is not in mixedCase
+Parameter BATMO.calcKeysReceived(uint256,uint256)._eth (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#980) is not in mixedCase
+Parameter BATMO.iWantXKeys(uint256)._keys (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1001) is not in mixedCase
+Parameter BATMO.receivePlayerInfo(uint256,address,bytes32,uint256)._pID (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1025) is not in mixedCase
+Parameter BATMO.receivePlayerInfo(uint256,address,bytes32,uint256)._addr (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1025) is not in mixedCase
+Parameter BATMO.receivePlayerInfo(uint256,address,bytes32,uint256)._name (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1025) is not in mixedCase
+Parameter BATMO.receivePlayerInfo(uint256,address,bytes32,uint256)._laff (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1025) is not in mixedCase
+Parameter BATMO.receivePlayerNameList(uint256,bytes32)._pID (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1046) is not in mixedCase
+Parameter BATMO.receivePlayerNameList(uint256,bytes32)._name (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1046) is not in mixedCase
+Parameter BATMO.determinePID(BATMODatasets.EventReturns)._eventData_ (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1058) is not in mixedCase
+Parameter BATMO.managePlayer(uint256,BATMODatasets.EventReturns)._pID (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1097) is not in mixedCase
+Parameter BATMO.managePlayer(uint256,BATMODatasets.EventReturns)._eventData_ (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1097) is not in mixedCase
+Parameter BATMO.endRound(BATMODatasets.EventReturns)._eventData_ (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1118) is not in mixedCase
+Parameter BATMO.updateGenVault(uint256,uint256)._pID (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1187) is not in mixedCase
+Parameter BATMO.updateGenVault(uint256,uint256)._rIDlast (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1187) is not in mixedCase
+Parameter BATMO.updateTimer(uint256,uint256)._keys (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1203) is not in mixedCase
+Parameter BATMO.updateTimer(uint256,uint256)._rID (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1203) is not in mixedCase
+Parameter BATMO.distributeExternal(uint256,uint256,uint256,uint256,uint256,BATMODatasets.EventReturns)._rID (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1227) is not in mixedCase
+Parameter BATMO.distributeExternal(uint256,uint256,uint256,uint256,uint256,BATMODatasets.EventReturns)._pID (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1227) is not in mixedCase
+Parameter BATMO.distributeExternal(uint256,uint256,uint256,uint256,uint256,BATMODatasets.EventReturns)._eth (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1227) is not in mixedCase
+Parameter BATMO.distributeExternal(uint256,uint256,uint256,uint256,uint256,BATMODatasets.EventReturns)._affID (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1227) is not in mixedCase
+Parameter BATMO.distributeExternal(uint256,uint256,uint256,uint256,uint256,BATMODatasets.EventReturns)._team (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1227) is not in mixedCase
+Parameter BATMO.distributeExternal(uint256,uint256,uint256,uint256,uint256,BATMODatasets.EventReturns)._eventData_ (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1227) is not in mixedCase
+Parameter BATMO.distributeInternal(uint256,uint256,uint256,uint256,uint256,BATMODatasets.EventReturns)._rID (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1277) is not in mixedCase
+Parameter BATMO.distributeInternal(uint256,uint256,uint256,uint256,uint256,BATMODatasets.EventReturns)._pID (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1277) is not in mixedCase
+Parameter BATMO.distributeInternal(uint256,uint256,uint256,uint256,uint256,BATMODatasets.EventReturns)._eth (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1277) is not in mixedCase
+Parameter BATMO.distributeInternal(uint256,uint256,uint256,uint256,uint256,BATMODatasets.EventReturns)._team (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1277) is not in mixedCase
+Parameter BATMO.distributeInternal(uint256,uint256,uint256,uint256,uint256,BATMODatasets.EventReturns)._keys (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1277) is not in mixedCase
+Parameter BATMO.distributeInternal(uint256,uint256,uint256,uint256,uint256,BATMODatasets.EventReturns)._eventData_ (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1277) is not in mixedCase
+Parameter BATMO.updateMasks(uint256,uint256,uint256,uint256)._rID (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1310) is not in mixedCase
+Parameter BATMO.updateMasks(uint256,uint256,uint256,uint256)._pID (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1310) is not in mixedCase
+Parameter BATMO.updateMasks(uint256,uint256,uint256,uint256)._gen (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1310) is not in mixedCase
+Parameter BATMO.updateMasks(uint256,uint256,uint256,uint256)._keys (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1310) is not in mixedCase
+Parameter BATMO.withdrawEarnings(uint256)._pID (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1342) is not in mixedCase
+Parameter BATMO.endTx(uint256,uint256,uint256,uint256,BATMODatasets.EventReturns)._pID (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1364) is not in mixedCase
+Parameter BATMO.endTx(uint256,uint256,uint256,uint256,BATMODatasets.EventReturns)._team (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1364) is not in mixedCase
+Parameter BATMO.endTx(uint256,uint256,uint256,uint256,BATMODatasets.EventReturns)._eth (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1364) is not in mixedCase
+Parameter BATMO.endTx(uint256,uint256,uint256,uint256,BATMODatasets.EventReturns)._keys (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1364) is not in mixedCase
+Parameter BATMO.endTx(uint256,uint256,uint256,uint256,BATMODatasets.EventReturns)._eventData_ (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1364) is not in mixedCase
+Variable BATMO.PlayerBook (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#118) is not in mixedCase
+Variable BATMO.ObokContract (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#124) is not in mixedCase
+Constant BATMO.rndInit_ (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#131) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant BATMO.rndInc_ (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#132) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant BATMO.rndMax_ (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#133) is not in UPPER_CASE_WITH_UNDERSCORES
+Parameter KeysCalc.keysRec(uint256,uint256)._curEth (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1483) is not in mixedCase
+Parameter KeysCalc.keysRec(uint256,uint256)._newEth (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1483) is not in mixedCase
+Parameter KeysCalc.ethRec(uint256,uint256)._curKeys (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1497) is not in mixedCase
+Parameter KeysCalc.ethRec(uint256,uint256)._sellKeys (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1497) is not in mixedCase
+Parameter KeysCalc.keys(uint256)._eth (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1510) is not in mixedCase
+Parameter KeysCalc.eth(uint256)._keys (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1523) is not in mixedCase
+Parameter NameFilter.nameFilter(string)._input (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1566) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in BATMO.buyCore(uint256,uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#797-845):
+	External calls:
+	- _eventData_ = endRound(_eventData_) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#819)
+		- admin.transfer(_dev / 2) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1154)
+		- admin2.transfer(_dev / 2) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1155)
+	External calls sending eth:
+	- _eventData_ = endRound(_eventData_) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#819)
+		- admin.transfer(_dev / 2) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1154)
+		- admin2.transfer(_dev / 2) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1155)
+		- address(ObokContract).call.value(_OBOK.sub((_OBOK / 3).mul(2)))(bytes4(keccak256()(donateDivs()))) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1157)
+	State variables written after the call(s):
+	- plyr_[_pID].gen = plyr_[_pID].gen.add(msg.value) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#843)
+	Event emitted after the call(s):
+	- FOMOEvents.onBuyAndDistribute(msg.sender,plyr_[_pID].name,msg.value,_eventData_.compressedData,_eventData_.compressedIDs,_eventData_.winnerAddr,_eventData_.winnerName,_eventData_.amountWon,_eventData_.newPot,_eventData_.tokenAmount,_eventData_.genAmount) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#826-839)
+Reentrancy in BATMO.endRound(BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1118-1182):
+	External calls:
+	- admin.transfer(_dev / 2) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1154)
+	- admin2.transfer(_dev / 2) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1155)
+	External calls sending eth:
+	- admin.transfer(_dev / 2) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1154)
+	- admin2.transfer(_dev / 2) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1155)
+	- address(ObokContract).call.value(_OBOK.sub((_OBOK / 3).mul(2)))(bytes4(keccak256()(donateDivs()))) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1157)
+	State variables written after the call(s):
+	- rID_ ++ (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1175)
+	- round_[_rID].pot = _pot.add(_OBOK / 3) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1159)
+	- round_[_rID].mask = _ppt.add(round_[_rID].mask) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1162)
+	- round_[_rID].strt = now (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1177)
+	- round_[_rID].end = now.add(rndInit_).add(rndGap_) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1178)
+	- round_[_rID].pot += _res (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1179)
+Reentrancy in BATMO.reLoadCore(uint256,uint256,uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#851-896):
+	External calls:
+	- _eventData_ = endRound(_eventData_) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#875)
+		- admin.transfer(_dev / 2) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1154)
+		- admin2.transfer(_dev / 2) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1155)
+	External calls sending eth:
+	- _eventData_ = endRound(_eventData_) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#875)
+		- admin.transfer(_dev / 2) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1154)
+		- admin2.transfer(_dev / 2) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1155)
+		- address(ObokContract).call.value(_OBOK.sub((_OBOK / 3).mul(2)))(bytes4(keccak256()(donateDivs()))) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1157)
+	Event emitted after the call(s):
+	- FOMOEvents.onReLoadAndDistribute(msg.sender,plyr_[_pID].name,_eventData_.compressedData,_eventData_.compressedIDs,_eventData_.winnerAddr,_eventData_.winnerName,_eventData_.amountWon,_eventData_.newPot,_eventData_.tokenAmount,_eventData_.genAmount) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#882-894)
+Reentrancy in BATMO.withdraw() (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#461-527):
+	External calls:
+	- _eventData_ = endRound(_eventData_) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#486)
+		- admin.transfer(_dev / 2) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1154)
+		- admin2.transfer(_dev / 2) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1155)
+	External calls sending eth:
+	- _eventData_ = endRound(_eventData_) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#486)
+		- admin.transfer(_dev / 2) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1154)
+		- admin2.transfer(_dev / 2) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1155)
+		- address(ObokContract).call.value(_OBOK.sub((_OBOK / 3).mul(2)))(bytes4(keccak256()(donateDivs()))) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1157)
+	State variables written after the call(s):
+	- _eth = withdrawEarnings(_pID) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#489)
+		- plyrRnds_[_pID][_rIDlast].mask = _earnings.add(plyrRnds_[_pID][_rIDlast].mask) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1196)
+	- _eth = withdrawEarnings(_pID) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#489)
+		- plyr_[_pID].gen = _earnings.add(plyr_[_pID].gen) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1194)
+		- plyr_[_pID].win = 0 (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1353)
+		- plyr_[_pID].gen = 0 (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1354)
+		- plyr_[_pID].aff = 0 (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1355)
+Reentrancy in BATMO.withdraw() (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#461-527):
+	External calls:
+	- _eventData_ = endRound(_eventData_) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#486)
+		- admin.transfer(_dev / 2) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1154)
+		- admin2.transfer(_dev / 2) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1155)
+	- plyr_[_pID].addr.transfer(_eth) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#493)
+	External calls sending eth:
+	- _eventData_ = endRound(_eventData_) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#486)
+		- admin.transfer(_dev / 2) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1154)
+		- admin2.transfer(_dev / 2) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1155)
+		- address(ObokContract).call.value(_OBOK.sub((_OBOK / 3).mul(2)))(bytes4(keccak256()(donateDivs()))) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1157)
+	- plyr_[_pID].addr.transfer(_eth) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#493)
+	Event emitted after the call(s):
+	- FOMOEvents.onWithdrawAndDistribute(msg.sender,plyr_[_pID].name,_eth,_eventData_.compressedData,_eventData_.compressedIDs,_eventData_.winnerAddr,_eventData_.winnerName,_eventData_.amountWon,_eventData_.newPot,_eventData_.tokenAmount,_eventData_.genAmount) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#500-513)
+Reentrancy in BATMO.withdraw() (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#461-527):
+	External calls:
+	- plyr_[_pID].addr.transfer(_eth) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#522)
+	Event emitted after the call(s):
+	- FOMOEvents.onWithdraw(_pID,msg.sender,plyr_[_pID].name,_eth,_now) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#525)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+BATMO.withdraw() (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#461-527) uses literals with too many digits:
+	- _eventData_.compressedData = _eventData_.compressedData + (_now * 1000000000000000000) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#496)
+BATMO.getBuyPrice() (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#609-625) uses literals with too many digits:
+	- ((round_[_rID].keys.add(1000000000000000000)).ethRec(1000000000000000000)) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#622)
+BATMO.getBuyPrice() (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#609-625) uses literals with too many digits:
+	- (75000000000000) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#624)
+BATMO.getPlayerVaultsHelper(uint256,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#704-710) uses literals with too many digits:
+	- (((((round_[_rID].mask).add(((((round_[_rID].pot).mul(potSplit_[round_[_rID].team].gen)) / 100).mul(1000000000000000000)) / (round_[_rID].keys))).mul(plyrRnds_[_pID][_rID].keys)) / 1000000000000000000)) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#709)
+BATMO.buyCore(uint256,uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#797-845) uses literals with too many digits:
+	- _eventData_.compressedData = _eventData_.compressedData + (_now * 1000000000000000000) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#822)
+BATMO.reLoadCore(uint256,uint256,uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#851-896) uses literals with too many digits:
+	- _eventData_.compressedData = _eventData_.compressedData + (_now * 1000000000000000000) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#878)
+BATMO.core(uint256,uint256,uint256,uint256,uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#902-956) uses literals with too many digits:
+	- round_[_rID].eth < 100000000000000000000 && plyrRnds_[_pID][_rID].eth.add(_eth) > 1000000000000000000 (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#910)
+BATMO.core(uint256,uint256,uint256,uint256,uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#902-956) uses literals with too many digits:
+	- _availableLimit = (1000000000000000000).sub(plyrRnds_[_pID][_rID].eth) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#912)
+BATMO.core(uint256,uint256,uint256,uint256,uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#902-956) uses literals with too many digits:
+	- _eth > 1000000000 (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#919)
+BATMO.core(uint256,uint256,uint256,uint256,uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#902-956) uses literals with too many digits:
+	- _keys >= 1000000000000000000 (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#926)
+BATMO.calcUnMaskedEarnings(uint256,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#965-971) uses literals with too many digits:
+	- ((((round_[_rIDlast].mask).mul(plyrRnds_[_pID][_rIDlast].keys)) / (1000000000000000000)).sub(plyrRnds_[_pID][_rIDlast].mask)) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#970)
+BATMO.endRound(BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1118-1182) uses literals with too many digits:
+	- _ppt = (_gen.mul(1000000000000000000)) / (round_[_rID].keys) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1141)
+BATMO.endRound(BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1118-1182) uses literals with too many digits:
+	- _dust = _gen.sub((_ppt.mul(round_[_rID].keys)) / 1000000000000000000) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1142)
+BATMO.endRound(BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1118-1182) uses literals with too many digits:
+	- _eventData_.compressedData = _eventData_.compressedData + (round_[_rID].end * 1000000) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1165)
+BATMO.endRound(BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1118-1182) uses literals with too many digits:
+	- _eventData_.compressedIDs = _eventData_.compressedIDs + (_winPID * 100000000000000000000000000) + (_winTID * 100000000000000000) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1166)
+BATMO.updateTimer(uint256,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1203-1221) uses literals with too many digits:
+	- _newTime = (((_keys) / (1000000000000000000)).mul(rndInc_)).add(_now) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1212)
+BATMO.updateTimer(uint256,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1203-1221) uses literals with too many digits:
+	- _newTime = (((_keys) / (1000000000000000000)).mul(rndInc_)).add(round_[_rID].end) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1214)
+BATMO.updateMasks(uint256,uint256,uint256,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1310-1336) uses literals with too many digits:
+	- _ppt = (_gen.mul(1000000000000000000)) / (round_[_rID].keys) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1326)
+BATMO.updateMasks(uint256,uint256,uint256,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1310-1336) uses literals with too many digits:
+	- _pearn = (_ppt.mul(_keys)) / (1000000000000000000) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1331)
+BATMO.updateMasks(uint256,uint256,uint256,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1310-1336) uses literals with too many digits:
+	- plyrRnds_[_pID][_rID].mask = (((round_[_rID].mask.mul(_keys)) / (1000000000000000000)).sub(_pearn)).add(plyrRnds_[_pID][_rID].mask) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1332)
+BATMO.updateMasks(uint256,uint256,uint256,uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1310-1336) uses literals with too many digits:
+	- (_gen.sub((_ppt.mul(round_[_rID].keys)) / (1000000000000000000))) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1335)
+BATMO.endTx(uint256,uint256,uint256,uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1364-1386) uses literals with too many digits:
+	- _eventData_.compressedData = _eventData_.compressedData + (now * 1000000000000000000) + (_team * 100000000000000000000000000000) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1367)
+BATMO.endTx(uint256,uint256,uint256,uint256,BATMODatasets.EventReturns) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1364-1386) uses literals with too many digits:
+	- _eventData_.compressedIDs = _eventData_.compressedIDs + _pID + (rID_ * 10000000000000000000000000000000000000000000000000000) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1368)
+KeysCalc.keys(uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1510-1516) uses literals with too many digits:
+	- ((((((_eth).mul(1000000000000000000)).mul(312500000000000000000000000)).add(5624988281256103515625000000000000000000000000000000000000000000)).sqrt()).sub(74999921875000000000000000000000)) / (156250000) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1515)
+KeysCalc.eth(uint256) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1523-1529) uses literals with too many digits:
+	- ((78125000).mul(_keys.sq()).add(((149999843750000).mul(_keys.mul(1000000000000000000))) / (2))) / ((1000000000000000000).sq()) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#1528)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+BATMO.rndExtra_ (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#129) should be constant 
+BATMO.rndGap_ (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#130) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+
+registerNameXID(string,uint256,bool) should be declared external:
+	- BATMO.registerNameXID(string,uint256,bool) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#553-567)
+registerNameXaddr(string,address,bool) should be declared external:
+	- BATMO.registerNameXaddr(string,address,bool) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#569-583)
+registerNameXname(string,bytes32,bool) should be declared external:
+	- BATMO.registerNameXname(string,bytes32,bool) (0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol#585-599)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#public-function-that-could-be-declared-external
+./0x37238583c041a2f51964f23fde2710c4fbd29e9e.sol analyzed (8 contracts with 94 detectors), 198 result(s) found
+
+real	0m11.524s
+user	0m11.175s
+sys	0m0.346s

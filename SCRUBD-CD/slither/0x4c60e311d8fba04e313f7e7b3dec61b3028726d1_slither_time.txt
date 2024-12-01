@@ -1,0 +1,154 @@
+'solc --version' running
+'solc ./0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol:
+./0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol:372:9: Warning: Failure condition of 'send' ignored. Consider using 'transfer' instead.
+        administrator.send(fivePercent);
+        ^-----------------------------^
+./0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol:643:9: Warning: Failure condition of 'send' ignored. Consider using 'transfer' instead.
+        givethAddress.send(givethPool);
+        ^----------------------------^
+./0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol:646:9: Warning: Failure condition of 'send' ignored. Consider using 'transfer' instead.
+        _first.send (tenth.mul(4));
+        ^------------------------^
+./0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol:647:9: Warning: Failure condition of 'send' ignored. Consider using 'transfer' instead.
+        _second.send(tenth.mul(3));
+        ^------------------------^
+./0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol:648:9: Warning: Failure condition of 'send' ignored. Consider using 'transfer' instead.
+        _third.send (tenth.mul(2));
+        ^------------------------^
+./0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol:650:9: Warning: Failure condition of 'send' ignored. Consider using 'transfer' instead.
+        _fourth.send(address(this).balance);
+        ^---------------------------------^
+./0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol:666:13: Warning: Failure condition of 'send' ignored. Consider using 'transfer' instead.
+            _toRefund.send(0.19171 ether);
+            ^---------------------------^
+
+
+EtherWorldCup.concludeTournament(address,address,address,address) (0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol#629-653) sends eth to arbitrary user
+	Dangerous calls:
+	- _first.send(tenth.mul(4)) (0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol#646)
+	- _second.send(tenth.mul(3)) (0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol#647)
+	- _third.send(tenth.mul(2)) (0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol#648)
+	- _fourth.send(address(this).balance) (0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol#650)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+EtherWorldCup.concludeTournament(address,address,address,address) (0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol#629-653) allows anyone to destruct the contract
+EtherWorldCup.pullRipCord() (0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol#659-670) allows anyone to destruct the contract
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#suicidal
+
+EtherWorldCup.concludeTournament(address,address,address,address) (0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol#629-653) performs a multiplication on the result of a division:
+	- tenth = prizePool.div(10) (0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol#645)
+	- _first.send(tenth.mul(4)) (0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol#646)
+EtherWorldCup.concludeTournament(address,address,address,address) (0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol#629-653) performs a multiplication on the result of a division:
+	- tenth = prizePool.div(10) (0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol#645)
+	- _second.send(tenth.mul(3)) (0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol#647)
+EtherWorldCup.concludeTournament(address,address,address,address) (0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol#629-653) performs a multiplication on the result of a division:
+	- tenth = prizePool.div(10) (0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol#645)
+	- _third.send(tenth.mul(2)) (0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol#648)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+EtherWorldCup.register() (0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol#354-374) uses tx.origin for authorization: require(bool)(tx.origin == _customerAddress && ! playerRegistered[_customerAddress] && _isCorrectBuyin(msg.value)) (0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol#359-361)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-usage-of-txorigin
+
+EtherWorldCup.register() (0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol#354-374) ignores return value by administrator.send(fivePercent) (0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol#372)
+EtherWorldCup.concludeTournament(address,address,address,address) (0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol#629-653) ignores return value by givethAddress.send(givethPool) (0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol#643)
+EtherWorldCup.concludeTournament(address,address,address,address) (0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol#629-653) ignores return value by _first.send(tenth.mul(4)) (0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol#646)
+EtherWorldCup.concludeTournament(address,address,address,address) (0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol#629-653) ignores return value by _second.send(tenth.mul(3)) (0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol#647)
+EtherWorldCup.concludeTournament(address,address,address,address) (0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol#629-653) ignores return value by _third.send(tenth.mul(2)) (0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol#648)
+EtherWorldCup.concludeTournament(address,address,address,address) (0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol#629-653) ignores return value by _fourth.send(address(this).balance) (0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol#650)
+EtherWorldCup.pullRipCord() (0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol#659-670) ignores return value by _toRefund.send(191710000000000000) (0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol#666)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-send
+
+EtherWorldCup.pullRipCord() (0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol#659-670) has external calls inside a loop: _toRefund.send(191710000000000000) (0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol#666)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation/#calls-inside-a-loop
+
+EtherWorldCup.makePrediction(int8,string) (0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol#380-395) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(playerRegistered[_customerAddress] && ! gameFinished[_gameID] && predictionTime < gameLocked[_gameID]) (0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol#384-386)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Version constraint ^0.4.24 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ABIEncoderV2PackedStorage_0.4.x
+	- ExpExponentCleanup
+	- EventStructWrongData.
+It is used by:
+	- ^0.4.24 (0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol#1)
+solc-0.4.24 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Parameter EtherWorldCup.makePrediction(int8,string)._gameID (0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol#380) is not in mixedCase
+Parameter EtherWorldCup.makePrediction(int8,string)._prediction (0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol#380) is not in mixedCase
+Parameter EtherWorldCup.showPlayerScores(address)._participant (0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol#398) is not in mixedCase
+Parameter EtherWorldCup.calculateScore(address)._participant (0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol#416) is not in mixedCase
+Parameter EtherWorldCup.updateScore(address)._participant (0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol#441) is not in mixedCase
+Parameter EtherWorldCup.playerLastScoredGame(address)._player (0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol#510) is not in mixedCase
+Parameter EtherWorldCup.playerIsRegistered(address)._player (0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol#519) is not in mixedCase
+Parameter EtherWorldCup.correctResult(int8)._gameID (0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol#528) is not in mixedCase
+Parameter EtherWorldCup.playerGuess(int8)._gameID (0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol#537) is not in mixedCase
+Parameter EtherWorldCup.viewScore(address)._participant (0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol#547) is not in mixedCase
+Parameter EtherWorldCup.addNewGame(string,int8)._opponents (0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol#604) is not in mixedCase
+Parameter EtherWorldCup.addNewGame(string,int8)._gameID (0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol#604) is not in mixedCase
+Parameter EtherWorldCup.logResult(int8,string)._gameID (0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol#611) is not in mixedCase
+Parameter EtherWorldCup.logResult(int8,string)._winner (0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol#611) is not in mixedCase
+Parameter EtherWorldCup.concludeTournament(address,address,address,address)._first (0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol#629) is not in mixedCase
+Parameter EtherWorldCup.concludeTournament(address,address,address,address)._second (0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol#630) is not in mixedCase
+Parameter EtherWorldCup.concludeTournament(address,address,address,address)._third (0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol#631) is not in mixedCase
+Parameter EtherWorldCup.concludeTournament(address,address,address,address)._fourth (0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol#632) is not in mixedCase
+Parameter EtherWorldCup.compare(string,string)._a (0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol#683) is not in mixedCase
+Parameter EtherWorldCup.compare(string,string)._b (0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol#683) is not in mixedCase
+Parameter EtherWorldCup.equalStrings(string,string)._a (0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol#706) is not in mixedCase
+Parameter EtherWorldCup.equalStrings(string,string)._b (0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol#706) is not in mixedCase
+Constant EtherWorldCup.administrator (0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol#79) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant EtherWorldCup.givethAddress (0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol#80) is not in UPPER_CASE_WITH_UNDERSCORES
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in EtherWorldCup.pullRipCord() (0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol#659-670):
+	External calls:
+	- _toRefund.send(191710000000000000) (0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol#666)
+	Event emitted after the call(s):
+	- RipcordRefund(_toRefund) (0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol#667)
+Reentrancy in EtherWorldCup.register() (0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol#354-374):
+	External calls:
+	- administrator.send(fivePercent) (0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol#372)
+	Event emitted after the call(s):
+	- Registration(_customerAddress) (0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol#373)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+EtherWorldCup.constructor() (0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol#152-347) uses literals with too many digits:
+	- gameLocked[58] = 1530900000 (0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol#317)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+EtherWorldCup.name (0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol#82) is never used in EtherWorldCup (0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol#74-710)
+EtherWorldCup.symbol (0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol#83) is never used in EtherWorldCup (0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol#74-710)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-state-variable
+
+EtherWorldCup.name (0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol#82) should be constant 
+EtherWorldCup.symbol (0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol#83) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+
+makePrediction(int8,string) should be declared external:
+	- EtherWorldCup.makePrediction(int8,string) (0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol#380-395)
+addNewGame(string,int8) should be declared external:
+	- EtherWorldCup.addNewGame(string,int8) (0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol#604-608)
+logResult(int8,string) should be declared external:
+	- EtherWorldCup.logResult(int8,string) (0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol#611-626)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#public-function-that-could-be-declared-external
+./0x4c60e311d8fba04e313f7e7b3dec61b3028726d1.sol analyzed (2 contracts with 94 detectors), 52 result(s) found
+
+real	0m2.660s
+user	0m2.375s
+sys	0m0.288s

@@ -1,0 +1,255 @@
+'solc --version' running
+'solc ./0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol:
+./0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol:2:1: Warning: Experimental features are turned on. Do not use experimental features on live deployments.
+pragma experimental ABIEncoderV2;
+^-------------------------------^
+
+
+yDAI.buyNBurn(uint256) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#567-574) sends eth to arbitrary user
+	Dangerous calls:
+	- amounts = IUniswap(uniswapRouter).swapExactETHForTokens.value(_ethToSwap)(uint256(0),path,address(0),now.add(1800)) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#572)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+Reentrancy in yDAI.withdraw(uint256) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#577-633):
+	External calls:
+	- _withdrawSome(stablecoinsToWithdraw.sub(b,#2 Withdraw some sub error)) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#595)
+		- AToken(aaveToken).redeem(amount) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#867)
+		- require(bool,string)(Fulcrum(fulcrum).burn(address(this),amount) > 0,FULCRUM: withdraw failed) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#870)
+		- require(bool,string)(Compound(compound).redeem(amount) == 0,COMPOUND: withdraw failed) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#873)
+		- DyDx(dydx).operate(infos,args) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#891)
+	- yeldToken.transfer(msg.sender,generatedYelds) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#603)
+	- stakingProfits = daiToETH(combined) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#607)
+		- IERC20(dai).safeApprove(uniswapRouter,0) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#552)
+		- IERC20(dai).safeApprove(uniswapRouter,_amount) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#553)
+		- (success,returndata) = address(token).call(data) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#276)
+		- amounts = IUniswap(uniswapRouter).swapExactTokensForETH(_amount,uint256(0),path,address(this),now.add(1800)) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#561)
+	- buyNBurn(ethToSwap) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#614)
+		- amounts = IUniswap(uniswapRouter).swapExactETHForTokens.value(_ethToSwap)(uint256(0),path,address(0),now.add(1800)) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#572)
+	- (success,None) = devTreasury.call.value(devTreasuryAmount)() (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#626)
+	- IERC20(token).safeTransfer(msg.sender,stablecoinsToWithdraw.sub(combined)) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#628)
+	External calls sending eth:
+	- buyNBurn(ethToSwap) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#614)
+		- amounts = IUniswap(uniswapRouter).swapExactETHForTokens.value(_ethToSwap)(uint256(0),path,address(0),now.add(1800)) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#572)
+	- retirementYeldTreasury.transfer(retirementYeld) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#618)
+	- retirementYeldTreasury.transfer(retirementYeld_scope_0) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#623)
+	- (success,None) = devTreasury.call.value(devTreasuryAmount)() (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#626)
+	State variables written after the call(s):
+	- pool = calcPoolValueInToken() (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#631)
+	yDAI.pool (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#421) can be used in cross function reentrancies:
+	- yDAI.pool (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#421)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+yDAI.extractTokensIfStuck(address,uint256) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#491-493) ignores return value by IERC20(_token).transfer(msg.sender,_amount) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#492)
+yDAI.withdraw(uint256) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#577-633) ignores return value by yeldToken.transfer(msg.sender,generatedYelds) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#603)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+yDAI.getGeneratedYelds() (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#503-512) performs a multiplication on the result of a division:
+	- generatedYelds = depositAmount[msg.sender].div(oneMillion).mul(yeldToRewardPerDay).div(1e18).mul(blocksPassed).div(oneDayInBlocks) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#510)
+yDAI.withdraw(uint256) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#577-633) performs a multiplication on the result of a division:
+	- stablecoinsToWithdraw = (pool.mul(_shares)).div(_totalSupply) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#589)
+	- combined = stablecoinsToWithdraw.mul(totalPercentage).div(1e20) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#600)
+yDAI.withdraw(uint256) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#577-633) performs a multiplication on the result of a division:
+	- devTreasuryAmount = stakingProfits.mul(uint256(100e18).mul(percentageDevTreasury).div(totalPercentage)).div(100e18) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#609)
+yDAI.withdraw(uint256) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#577-633) performs a multiplication on the result of a division:
+	- ethToSwap = stakingProfits.mul(uint256(100e18).mul(percentageBuyBurn).div(totalPercentage)).div(100e18) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#612)
+yDAI.withdraw(uint256) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#577-633) performs a multiplication on the result of a division:
+	- retirementYeld = stakingProfits.mul(uint256(100e18).mul(percentageRetirementYield).div(totalPercentage)).div(100e18) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#616)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+yDAI._supplyCompound(uint256) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#863-865) uses a dangerous strict equality:
+	- require(bool,string)(Compound(compound).mint(amount) == 0,COMPOUND: supply failed) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#864)
+yDAI._withdrawCompound(uint256) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#872-874) uses a dangerous strict equality:
+	- require(bool,string)(Compound(compound).redeem(amount) == 0,COMPOUND: withdraw failed) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#873)
+yDAI.deposit(uint256) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#518-548) uses a dangerous strict equality:
+	- pool == 0 (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#539)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-strict-equalities
+
+Reentrancy in yDAI.rebalance() (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#719-739):
+	External calls:
+	- _withdrawAll() (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#723)
+		- AToken(aaveToken).redeem(amount) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#867)
+		- require(bool,string)(Fulcrum(fulcrum).burn(address(this),amount) > 0,FULCRUM: withdraw failed) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#870)
+		- require(bool,string)(Compound(compound).redeem(amount) == 0,COMPOUND: withdraw failed) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#873)
+		- DyDx(dydx).operate(infos,args) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#891)
+	- _supplyDydx(balance()) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#728)
+		- DyDx(dydx).operate(infos,args) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#854)
+	- _supplyFulcrum(balance()) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#730)
+		- require(bool,string)(Fulcrum(fulcrum).mint(address(this),amount) > 0,FULCRUM: supply failed) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#861)
+	- _supplyCompound(balance()) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#732)
+		- require(bool,string)(Compound(compound).mint(amount) == 0,COMPOUND: supply failed) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#864)
+	- _supplyAave(balance()) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#734)
+		- Aave(getAave()).deposit(token,amount,0) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#858)
+	State variables written after the call(s):
+	- provider = newProvider (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#738)
+	yDAI.provider (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#456) can be used in cross function reentrancies:
+	- yDAI.provider (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#456)
+	- yDAI.rebalance() (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#719-739)
+Reentrancy in yDAI.withdraw(uint256) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#577-633):
+	External calls:
+	- _withdrawSome(stablecoinsToWithdraw.sub(b,#2 Withdraw some sub error)) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#595)
+		- require(bool,string)(Fulcrum(fulcrum).burn(address(this),amount) > 0,FULCRUM: withdraw failed) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#870)
+		- AToken(aaveToken).redeem(amount) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#867)
+		- require(bool,string)(Compound(compound).redeem(amount) == 0,COMPOUND: withdraw failed) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#873)
+		- DyDx(dydx).operate(infos,args) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#891)
+	State variables written after the call(s):
+	- depositAmount[msg.sender] = depositAmount[msg.sender].sub(stablecoinsToWithdraw) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#602)
+	yDAI.depositAmount (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#441) can be used in cross function reentrancies:
+	- yDAI.depositAmount (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#441)
+	- yDAI.getGeneratedYelds() (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#503-512)
+	- depositBlockStarts[msg.sender] = block.number (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#601)
+	yDAI.depositBlockStarts (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#440) can be used in cross function reentrancies:
+	- yDAI.depositBlockStarts (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#440)
+	- yDAI.getGeneratedYelds() (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#503-512)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+yDAI._supplyDydx(uint256).act (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#844) is a local variable never initialized
+yDAI._withdrawDydx(uint256).act (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#881) is a local variable never initialized
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#uninitialized-local-variables
+
+yDAI.recommend() (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#635-662) ignores return value by (None,capr,iapr,aapr,dapr) = IIEarnManager(apr).recommend(token) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#636)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+yDAI._withdrawSome(uint256).amount (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#791) is written in both
+	amount = balanceFulcrumAvailable().sub(1) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#816)
+	amount = balanceAave() (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#825)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#write-after-write
+
+ERC20Detailed.constructor(string,string,uint8).name (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#148) shadows:
+	- ERC20Detailed.name() (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#153-155) (function)
+ERC20Detailed.constructor(string,string,uint8).symbol (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#148) shadows:
+	- ERC20Detailed.symbol() (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#156-158) (function)
+ERC20Detailed.constructor(string,string,uint8).decimals (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#148) shadows:
+	- ERC20Detailed.decimals() (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#159-161) (function)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#local-variable-shadowing
+
+yDAI.changeYeldToRewardPerDay(uint256) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#499-501) should emit an event for: 
+	- yeldToRewardPerDay = _amount (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#500) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+yDAI.constructor(address,address,address)._retirementYeldTreasury (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#458) lacks a zero-check on :
+		- retirementYeldTreasury = _retirementYeldTreasury (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#470)
+yDAI.constructor(address,address,address)._devTreasury (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#458) lacks a zero-check on :
+		- devTreasury = _devTreasury (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#471)
+yDAI.setRetirementYeldTreasury(address)._treasury (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#478) lacks a zero-check on :
+		- retirementYeldTreasury = _treasury (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#479)
+yDAI.setUniswapRouter(address)._uniswapRouter (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#483) lacks a zero-check on :
+		- uniswapRouter = _uniswapRouter (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#484)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in yDAI.deposit(uint256) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#518-548):
+	External calls:
+	- IERC20(token).safeTransferFrom(msg.sender,address(this),_amount) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#530)
+	State variables written after the call(s):
+	- _mint(msg.sender,shares) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#546)
+		- _balances[account] = _balances[account].add(amount) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#120)
+	- _mint(msg.sender,shares) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#546)
+		- _totalSupply = _totalSupply.add(amount) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#119)
+	- depositAmount[msg.sender] = depositAmount[msg.sender].add(_amount) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#534)
+	- depositBlockStarts[msg.sender] = block.number (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#533)
+	- pool = _amount (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#541)
+	- pool = calcPoolValueInToken() (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#545)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+yDAI.withdraw(uint256) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#577-633) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(success,Dev treasury transfer failed) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#627)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Address.isContract(address) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#225-231) uses assembly
+	- INLINE ASM (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#229)
+CommonFunctionality.isContract(address) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#384-393) uses assembly
+	- INLINE ASM (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#391)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#assembly-usage
+
+CommonFunctionality.noContract() (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#395-398) compares to a boolean constant:
+	-require(bool,string)(isContract(msg.sender) == false,Contracts are not allowed to interact with the farm) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#396)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#boolean-equality
+
+Context._msgData() (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#32-35) is never used and should be removed
+ERC20._burn(address,uint256) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#123-129) is never used and should be removed
+ERC20._burnFrom(address,uint256) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#137-140) is never used and should be removed
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dead-code
+
+Version constraint 0.5.17 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- MissingEscapingInFormatting
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow.
+It is used by:
+	- 0.5.17 (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#1)
+solc-0.5.17 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in Address.sendValue(address,uint256) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#235-241):
+	- (success,None) = recipient.call.value(amount)() (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#239)
+Low level call in SafeERC20.callOptionalReturn(IERC20,bytes) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#272-283):
+	- (success,returndata) = address(token).call(data) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#276)
+Low level call in yDAI.withdraw(uint256) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#577-633):
+	- (success,None) = devTreasury.call.value(devTreasuryAmount)() (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#626)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Parameter CommonFunctionality.getYeldPriceInDai(address,address,address,address)._yeld (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#406) is not in mixedCase
+Parameter CommonFunctionality.getYeldPriceInDai(address,address,address,address)._weth (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#406) is not in mixedCase
+Parameter CommonFunctionality.getYeldPriceInDai(address,address,address,address)._dai (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#406) is not in mixedCase
+Parameter CommonFunctionality.getYeldPriceInDai(address,address,address,address)._uniswap (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#406) is not in mixedCase
+Contract yDAI (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#416-907) is not in CapWords
+Parameter yDAI.setRetirementYeldTreasury(address)._treasury (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#478) is not in mixedCase
+Parameter yDAI.setUniswapRouter(address)._uniswapRouter (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#483) is not in mixedCase
+Parameter yDAI.setYeldToken(address)._yeldToken (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#487) is not in mixedCase
+Parameter yDAI.extractTokensIfStuck(address,uint256)._token (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#491) is not in mixedCase
+Parameter yDAI.extractTokensIfStuck(address,uint256)._amount (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#491) is not in mixedCase
+Parameter yDAI.changeYeldToRewardPerDay(uint256)._amount (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#499) is not in mixedCase
+Parameter yDAI.setHoldPercentage(uint256)._holdPercentage (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#514) is not in mixedCase
+Parameter yDAI.deposit(uint256)._amount (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#518) is not in mixedCase
+Parameter yDAI.daiToETH(uint256)._amount (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#551) is not in mixedCase
+Parameter yDAI.buyNBurn(uint256)._ethToSwap (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#567) is not in mixedCase
+Parameter yDAI.withdraw(uint256)._shares (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#577) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Redundant expression "this (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#33)" inContext (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#24-36)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#redundant-statements
+
+Reentrancy in yDAI.withdraw(uint256) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#577-633):
+	External calls:
+	- retirementYeldTreasury.transfer(retirementYeld) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#618)
+	- retirementYeldTreasury.transfer(retirementYeld_scope_0) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#623)
+	External calls sending eth:
+	- buyNBurn(ethToSwap) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#614)
+		- amounts = IUniswap(uniswapRouter).swapExactETHForTokens.value(_ethToSwap)(uint256(0),path,address(0),now.add(1800)) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#572)
+	- retirementYeldTreasury.transfer(retirementYeld) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#618)
+	- retirementYeldTreasury.transfer(retirementYeld_scope_0) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#623)
+	- (success,None) = devTreasury.call.value(devTreasuryAmount)() (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#626)
+	State variables written after the call(s):
+	- pool = calcPoolValueInToken() (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#631)
+	- rebalance() (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#632)
+		- provider = newProvider (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#738)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+yDAI.dai (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#434) should be constant 
+yDAI.maximumTokensToBurn (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#438) should be constant 
+yDAI.weth (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#435) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+
+getAccountWei(Structs.Info,uint256) should be declared external:
+	- DyDx.getAccountWei(Structs.Info,uint256) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#368)
+Moreover, the following function parameters should change its data location:
+account location should be calldata
+operate(Structs.Info[],Structs.ActionArgs[]) should be declared external:
+	- DyDx.operate(Structs.Info[],Structs.ActionArgs[]) (0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol#369)
+Moreover, the following function parameters should change its data location:
+ location should be calldata
+ location should be calldata
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#public-function-that-could-be-declared-external
+./0x1c3f78372a8c3e01970b85e1b26b885803011da3.sol analyzed (21 contracts with 94 detectors), 62 result(s) found
+
+real	0m3.713s
+user	0m3.480s
+sys	0m0.236s

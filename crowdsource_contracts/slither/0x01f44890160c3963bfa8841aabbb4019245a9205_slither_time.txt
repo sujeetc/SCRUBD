@@ -1,0 +1,179 @@
+'solc --version' running
+'solc ./0x01f44890160c3963bfa8841aabbb4019245a9205.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+Reentrancy in BABYCHAD._transfer(address,address,uint256) (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#222-253):
+	External calls:
+	- swapTokensForEth(contractTokenBalance) (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#244)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#260-266)
+	External calls sending eth:
+	- sendETHToFee(address(this).balance) (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#247)
+		- _feeAddrWallet1.transfer(amount.div(2)) (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#270)
+		- _feeAddrWallet2.transfer(amount.div(2)) (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#271)
+	State variables written after the call(s):
+	- _tokenTransfer(from,to,amount) (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#252)
+		- _rOwned[address(this)] = _rOwned[address(this)].add(rTeam) (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#314)
+		- _rOwned[sender] = _rOwned[sender].sub(rAmount) (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#304)
+		- _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount) (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#305)
+	BABYCHAD._rOwned (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#121) can be used in cross function reentrancies:
+	- BABYCHAD._takeTeam(uint256) (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#311-315)
+	- BABYCHAD._transferStandard(address,address,uint256) (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#302-309)
+	- BABYCHAD.balanceOf(address) (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#181-183)
+	- BABYCHAD.constructor() (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#154-163)
+	- _tokenTransfer(from,to,amount) (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#252)
+		- _rTotal = _rTotal.sub(rFee) (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#318)
+	BABYCHAD._rTotal (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#129) can be used in cross function reentrancies:
+	- BABYCHAD._getCurrentSupply() (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#364-369)
+	- BABYCHAD._reflectFee(uint256,uint256) (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#317-320)
+	- BABYCHAD.constructor() (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#154-163)
+	- BABYCHAD.tokenFromReflection(uint256) (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#209-213)
+Reentrancy in BABYCHAD.openTrading() (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#274-286):
+	External calls:
+	- uniswapV2Pair = IUniswapV2Factory(_uniswapV2Router.factory()).createPair(address(this),_uniswapV2Router.WETH()) (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#279)
+	- uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#280)
+	External calls sending eth:
+	- uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#280)
+	State variables written after the call(s):
+	- tradingOpen = true (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#284)
+	BABYCHAD.tradingOpen (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#143) can be used in cross function reentrancies:
+	- BABYCHAD.openTrading() (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#274-286)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+BABYCHAD.openTrading() (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#274-286) ignores return value by uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#280)
+BABYCHAD.openTrading() (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#274-286) ignores return value by IERC20(uniswapV2Pair).approve(address(uniswapV2Router),type()(uint256).max) (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#285)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+BABYCHAD.allowance(address,address).owner (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#190) shadows:
+	- Ownable.owner() (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#79-81) (function)
+BABYCHAD._approve(address,address,uint256).owner (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#215) shadows:
+	- Ownable.owner() (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#79-81) (function)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#local-variable-shadowing
+
+Reentrancy in BABYCHAD._transfer(address,address,uint256) (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#222-253):
+	External calls:
+	- swapTokensForEth(contractTokenBalance) (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#244)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#260-266)
+	External calls sending eth:
+	- sendETHToFee(address(this).balance) (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#247)
+		- _feeAddrWallet1.transfer(amount.div(2)) (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#270)
+		- _feeAddrWallet2.transfer(amount.div(2)) (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#271)
+	State variables written after the call(s):
+	- _tokenTransfer(from,to,amount) (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#252)
+		- _tFeeTotal = _tFeeTotal.add(tFee) (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#319)
+Reentrancy in BABYCHAD.openTrading() (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#274-286):
+	External calls:
+	- uniswapV2Pair = IUniswapV2Factory(_uniswapV2Router.factory()).createPair(address(this),_uniswapV2Router.WETH()) (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#279)
+	- uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#280)
+	External calls sending eth:
+	- uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#280)
+	State variables written after the call(s):
+	- _maxTxAmount = 50000000 * 10 ** 9 (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#283)
+	- cooldownEnabled = true (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#282)
+	- swapEnabled = true (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#281)
+Reentrancy in BABYCHAD.transferFrom(address,address,uint256) (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#199-203):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#200)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#260-266)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#200)
+		- _feeAddrWallet1.transfer(amount.div(2)) (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#270)
+		- _feeAddrWallet2.transfer(amount.div(2)) (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#271)
+	State variables written after the call(s):
+	- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#201)
+		- _allowances[owner][spender] = amount (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#218)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in BABYCHAD._transfer(address,address,uint256) (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#222-253):
+	External calls:
+	- swapTokensForEth(contractTokenBalance) (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#244)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#260-266)
+	External calls sending eth:
+	- sendETHToFee(address(this).balance) (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#247)
+		- _feeAddrWallet1.transfer(amount.div(2)) (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#270)
+		- _feeAddrWallet2.transfer(amount.div(2)) (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#271)
+	Event emitted after the call(s):
+	- Transfer(sender,recipient,tTransferAmount) (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#308)
+		- _tokenTransfer(from,to,amount) (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#252)
+Reentrancy in BABYCHAD.transferFrom(address,address,uint256) (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#199-203):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#200)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#260-266)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#200)
+		- _feeAddrWallet1.transfer(amount.div(2)) (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#270)
+		- _feeAddrWallet2.transfer(amount.div(2)) (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#271)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#219)
+		- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#201)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+BABYCHAD._transfer(address,address,uint256) (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#222-253) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(cooldown[to] < block.timestamp) (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#233)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Version constraint ^0.8.4 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- SignedImmutables.
+It is used by:
+	- ^0.8.4 (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#11)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Function IUniswapV2Router02.WETH() (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#108) is not in mixedCase
+Constant BABYCHAD._tTotal (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#128) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant BABYCHAD._name (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#137) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant BABYCHAD._symbol (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#138) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant BABYCHAD._decimals (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#139) is not in UPPER_CASE_WITH_UNDERSCORES
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in BABYCHAD._transfer(address,address,uint256) (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#222-253):
+	External calls:
+	- sendETHToFee(address(this).balance) (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#247)
+		- _feeAddrWallet1.transfer(amount.div(2)) (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#270)
+		- _feeAddrWallet2.transfer(amount.div(2)) (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#271)
+	State variables written after the call(s):
+	- _tokenTransfer(from,to,amount) (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#252)
+		- _rOwned[address(this)] = _rOwned[address(this)].add(rTeam) (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#314)
+		- _rOwned[sender] = _rOwned[sender].sub(rAmount) (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#304)
+		- _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount) (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#305)
+	- _tokenTransfer(from,to,amount) (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#252)
+		- _rTotal = _rTotal.sub(rFee) (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#318)
+	- _tokenTransfer(from,to,amount) (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#252)
+		- _tFeeTotal = _tFeeTotal.add(tFee) (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#319)
+	Event emitted after the call(s):
+	- Transfer(sender,recipient,tTransferAmount) (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#308)
+		- _tokenTransfer(from,to,amount) (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#252)
+Reentrancy in BABYCHAD.transferFrom(address,address,uint256) (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#199-203):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#200)
+		- _feeAddrWallet1.transfer(amount.div(2)) (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#270)
+		- _feeAddrWallet2.transfer(amount.div(2)) (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#271)
+	State variables written after the call(s):
+	- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#201)
+		- _allowances[owner][spender] = amount (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#218)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#219)
+		- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#201)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+BABYCHAD.openTrading() (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#274-286) uses literals with too many digits:
+	- _maxTxAmount = 50000000 * 10 ** 9 (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#283)
+BABYCHAD.slitherConstructorConstantVariables() (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#119-371) uses literals with too many digits:
+	- _tTotal = 1000000000 * 10 ** 9 (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#128)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+BABYCHAD._tOwned (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#122) is never used in BABYCHAD (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#119-371)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-state-variable
+
+BABYCHAD._feeAddrWallet1 (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#134) should be immutable 
+BABYCHAD._feeAddrWallet2 (0x01f44890160c3963bfa8841aabbb4019245a9205.sol#135) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+./0x01f44890160c3963bfa8841aabbb4019245a9205.sol analyzed (7 contracts with 94 detectors), 25 result(s) found
+
+real	0m2.453s
+user	0m2.236s
+sys	0m0.218s

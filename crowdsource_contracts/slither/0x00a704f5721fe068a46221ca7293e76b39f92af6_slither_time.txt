@@ -1,0 +1,189 @@
+'solc --version' running
+'solc ./0x00a704f5721fe068a46221ca7293e76b39f92af6.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+Reentrancy in BabyRyoshi._transfer(address,address,uint256) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#221-243):
+	External calls:
+	- swapTokensForEth(contractTokenBalance) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#234)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#250-256)
+	External calls sending eth:
+	- sendETHToFee(address(this).balance) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#237)
+		- _feeAddrWallet1.transfer(amount / 3) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#262)
+		- _feeAddrWallet2.transfer(amount / 3) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#263)
+		- _feeAddrWallet3.transfer(amount / 3) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#264)
+	State variables written after the call(s):
+	- _tokenTransfer(from,to,amount) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#242)
+		- _rOwned[address(this)] = _rOwned[address(this)].add(rTeam) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#298)
+		- _rOwned[sender] = _rOwned[sender].sub(rAmount) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#288)
+		- _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#289)
+	BabyRyoshi._rOwned (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#119) can be used in cross function reentrancies:
+	- BabyRyoshi._takeTeam(uint256) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#295-299)
+	- BabyRyoshi._transferStandard(address,address,uint256) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#286-293)
+	- BabyRyoshi.balanceOf(address) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#180-182)
+	- BabyRyoshi.constructor() (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#153-162)
+	- _tokenTransfer(from,to,amount) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#242)
+		- _rTotal = _rTotal.sub(rFee) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#302)
+	BabyRyoshi._rTotal (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#127) can be used in cross function reentrancies:
+	- BabyRyoshi._getCurrentSupply() (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#348-353)
+	- BabyRyoshi._reflectFee(uint256,uint256) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#301-304)
+	- BabyRyoshi.constructor() (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#153-162)
+	- BabyRyoshi.tokenFromReflection(uint256) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#208-212)
+Reentrancy in BabyRyoshi.openTrading() (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#267-279):
+	External calls:
+	- uniswapV2Pair = IUniswapV2Factory(_uniswapV2Router.factory()).createPair(address(this),_uniswapV2Router.WETH()) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#272)
+	- uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#273)
+	External calls sending eth:
+	- uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#273)
+	State variables written after the call(s):
+	- tradingOpen = true (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#277)
+	BabyRyoshi.tradingOpen (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#142) can be used in cross function reentrancies:
+	- BabyRyoshi.openTrading() (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#267-279)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+BabyRyoshi.bots (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#123) is never initialized. It is used in:
+	- BabyRyoshi._transfer(address,address,uint256) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#221-243)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#uninitialized-state-variables
+
+BabyRyoshi.openTrading() (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#267-279) ignores return value by uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#273)
+BabyRyoshi.openTrading() (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#267-279) ignores return value by IERC20(uniswapV2Pair).approve(address(uniswapV2Router),type()(uint256).max) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#278)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+BabyRyoshi.allowance(address,address).owner (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#189) shadows:
+	- Ownable.owner() (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#77-79) (function)
+BabyRyoshi._approve(address,address,uint256).owner (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#214) shadows:
+	- Ownable.owner() (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#77-79) (function)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#local-variable-shadowing
+
+Reentrancy in BabyRyoshi._transfer(address,address,uint256) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#221-243):
+	External calls:
+	- swapTokensForEth(contractTokenBalance) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#234)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#250-256)
+	External calls sending eth:
+	- sendETHToFee(address(this).balance) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#237)
+		- _feeAddrWallet1.transfer(amount / 3) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#262)
+		- _feeAddrWallet2.transfer(amount / 3) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#263)
+		- _feeAddrWallet3.transfer(amount / 3) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#264)
+	State variables written after the call(s):
+	- _tokenTransfer(from,to,amount) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#242)
+		- _tFeeTotal = _tFeeTotal.add(tFee) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#303)
+Reentrancy in BabyRyoshi.openTrading() (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#267-279):
+	External calls:
+	- uniswapV2Pair = IUniswapV2Factory(_uniswapV2Router.factory()).createPair(address(this),_uniswapV2Router.WETH()) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#272)
+	- uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#273)
+	External calls sending eth:
+	- uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#273)
+	State variables written after the call(s):
+	- _maxTxAmount = 3000000000 * 10 ** 9 (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#276)
+	- cooldownEnabled = true (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#275)
+	- swapEnabled = true (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#274)
+Reentrancy in BabyRyoshi.transferFrom(address,address,uint256) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#198-202):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#199)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#250-256)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#199)
+		- _feeAddrWallet1.transfer(amount / 3) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#262)
+		- _feeAddrWallet2.transfer(amount / 3) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#263)
+		- _feeAddrWallet3.transfer(amount / 3) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#264)
+	State variables written after the call(s):
+	- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#200)
+		- _allowances[owner][spender] = amount (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#217)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in BabyRyoshi._transfer(address,address,uint256) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#221-243):
+	External calls:
+	- swapTokensForEth(contractTokenBalance) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#234)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#250-256)
+	External calls sending eth:
+	- sendETHToFee(address(this).balance) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#237)
+		- _feeAddrWallet1.transfer(amount / 3) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#262)
+		- _feeAddrWallet2.transfer(amount / 3) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#263)
+		- _feeAddrWallet3.transfer(amount / 3) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#264)
+	Event emitted after the call(s):
+	- Transfer(sender,recipient,tTransferAmount) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#292)
+		- _tokenTransfer(from,to,amount) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#242)
+Reentrancy in BabyRyoshi.transferFrom(address,address,uint256) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#198-202):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#199)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#250-256)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#199)
+		- _feeAddrWallet1.transfer(amount / 3) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#262)
+		- _feeAddrWallet2.transfer(amount / 3) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#263)
+		- _feeAddrWallet3.transfer(amount / 3) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#264)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#218)
+		- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#200)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+Version constraint ^0.8.4 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- SignedImmutables.
+It is used by:
+	- ^0.8.4 (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#9)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Function IUniswapV2Router02.WETH() (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#106) is not in mixedCase
+Constant BabyRyoshi._tTotal (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#126) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant BabyRyoshi._name (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#136) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant BabyRyoshi._symbol (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#137) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant BabyRyoshi._decimals (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#138) is not in UPPER_CASE_WITH_UNDERSCORES
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in BabyRyoshi._transfer(address,address,uint256) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#221-243):
+	External calls:
+	- sendETHToFee(address(this).balance) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#237)
+		- _feeAddrWallet1.transfer(amount / 3) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#262)
+		- _feeAddrWallet2.transfer(amount / 3) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#263)
+		- _feeAddrWallet3.transfer(amount / 3) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#264)
+	State variables written after the call(s):
+	- _tokenTransfer(from,to,amount) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#242)
+		- _rOwned[address(this)] = _rOwned[address(this)].add(rTeam) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#298)
+		- _rOwned[sender] = _rOwned[sender].sub(rAmount) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#288)
+		- _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#289)
+	- _tokenTransfer(from,to,amount) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#242)
+		- _rTotal = _rTotal.sub(rFee) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#302)
+	- _tokenTransfer(from,to,amount) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#242)
+		- _tFeeTotal = _tFeeTotal.add(tFee) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#303)
+	Event emitted after the call(s):
+	- Transfer(sender,recipient,tTransferAmount) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#292)
+		- _tokenTransfer(from,to,amount) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#242)
+Reentrancy in BabyRyoshi.transferFrom(address,address,uint256) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#198-202):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#199)
+		- _feeAddrWallet1.transfer(amount / 3) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#262)
+		- _feeAddrWallet2.transfer(amount / 3) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#263)
+		- _feeAddrWallet3.transfer(amount / 3) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#264)
+	State variables written after the call(s):
+	- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#200)
+		- _allowances[owner][spender] = amount (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#217)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#218)
+		- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#200)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+BabyRyoshi._transfer(address,address,uint256) (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#221-243) uses literals with too many digits:
+	- contractETHBalance > 300000000000000000 (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#236)
+BabyRyoshi.openTrading() (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#267-279) uses literals with too many digits:
+	- _maxTxAmount = 3000000000 * 10 ** 9 (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#276)
+BabyRyoshi.slitherConstructorConstantVariables() (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#117-355) uses literals with too many digits:
+	- _tTotal = 100000000000 * 10 ** 9 (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#126)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+BabyRyoshi._tOwned (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#120) is never used in BabyRyoshi (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#117-355)
+BabyRyoshi.cooldown (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#124) is never used in BabyRyoshi (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#117-355)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-state-variable
+
+BabyRyoshi._feeAddrWallet1 (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#132) should be immutable 
+BabyRyoshi._feeAddrWallet2 (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#133) should be immutable 
+BabyRyoshi._feeAddrWallet3 (0x00a704f5721fe068a46221ca7293e76b39f92af6.sol#134) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+./0x00a704f5721fe068a46221ca7293e76b39f92af6.sol analyzed (7 contracts with 94 detectors), 28 result(s) found
+
+real	0m2.326s
+user	0m2.097s
+sys	0m0.231s

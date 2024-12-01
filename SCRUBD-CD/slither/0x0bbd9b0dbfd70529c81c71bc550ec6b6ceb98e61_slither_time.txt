@@ -1,0 +1,395 @@
+'solc --version' running
+'solc ./0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+BoltInu.sendETHToFee(uint256) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#478-494) sends eth to arbitrary user
+	Dangerous calls:
+	- _marketingAddress.transfer(marketingPortion) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#485)
+	- _teamAddress.transfer(teamPortion) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#488)
+	- _ecosystemAddress.transfer(ecoPortion) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#491)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+Reentrancy in BoltInu._transfer(address,address,uint256) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#376-431):
+	External calls:
+	- swapAndLiquify(autoLPamount,minusLP) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#408)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,_lpRecipient,block.timestamp) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#445-452)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#438)
+	External calls sending eth:
+	- swapAndLiquify(autoLPamount,minusLP) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#408)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,_lpRecipient,block.timestamp) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#445-452)
+	- sendETHToFee(address(this).balance) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#413)
+		- _marketingAddress.transfer(marketingPortion) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#485)
+		- _teamAddress.transfer(teamPortion) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#488)
+		- _ecosystemAddress.transfer(ecoPortion) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#491)
+	State variables written after the call(s):
+	- _tokenTransfer(from,to,amount,takeFee) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#430)
+		- _balances[sender] = _balances[sender].sub(amount) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#565)
+		- _balances[recipient] = _balances[recipient].add(fees.tAmount) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#566)
+		- _balances[address(this)] = _balances[address(this)].add(fees.tMarketing.add(fees.tLiquidity).add(fees.tTeam).add(fees.tEcosystem)) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#567)
+	BoltInu._balances (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#209) can be used in cross function reentrancies:
+	- BoltInu._transferStandard(address,address,uint256) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#542-570)
+	- BoltInu.balanceOf(address) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#307-309)
+	- BoltInu.constructor() (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#272-289)
+	- _tokenTransfer(from,to,amount,takeFee) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#430)
+		- _sellEcosystemFee = _previousSellEcosystemFee (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#366)
+		- _sellEcosystemFee = 0 (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#354)
+	BoltInu._sellEcosystemFee (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#234) can be used in cross function reentrancies:
+	- BoltInu._sellEcosystemFee (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#234)
+	- BoltInu._transfer(address,address,uint256) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#376-431)
+	- BoltInu._transferStandard(address,address,uint256) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#542-570)
+	- BoltInu.removeAllFee() (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#335-355)
+	- BoltInu.restoreAllFee() (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#357-367)
+	- BoltInu.sendETHToFee(uint256) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#478-494)
+	- BoltInu.setSellTaxes(uint256,uint256,uint256,uint256) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#617-632)
+	- _tokenTransfer(from,to,amount,takeFee) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#430)
+		- _sellLiquidityFee = _previousSellLiquidityFee (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#364)
+		- _sellLiquidityFee = 0 (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#352)
+	BoltInu._sellLiquidityFee (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#232) can be used in cross function reentrancies:
+	- BoltInu._sellLiquidityFee (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#232)
+	- BoltInu._transfer(address,address,uint256) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#376-431)
+	- BoltInu._transferStandard(address,address,uint256) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#542-570)
+	- BoltInu.removeAllFee() (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#335-355)
+	- BoltInu.restoreAllFee() (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#357-367)
+	- BoltInu.setSellTaxes(uint256,uint256,uint256,uint256) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#617-632)
+	- _tokenTransfer(from,to,amount,takeFee) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#430)
+		- _sellMarketingFee = _previousSellMarketingFee (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#363)
+		- _sellMarketingFee = 0 (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#351)
+	BoltInu._sellMarketingFee (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#236) can be used in cross function reentrancies:
+	- BoltInu._sellMarketingFee (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#236)
+	- BoltInu._transfer(address,address,uint256) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#376-431)
+	- BoltInu._transferStandard(address,address,uint256) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#542-570)
+	- BoltInu.removeAllFee() (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#335-355)
+	- BoltInu.restoreAllFee() (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#357-367)
+	- BoltInu.sendETHToFee(uint256) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#478-494)
+	- BoltInu.setSellTaxes(uint256,uint256,uint256,uint256) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#617-632)
+	- _tokenTransfer(from,to,amount,takeFee) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#430)
+		- _sellTeamFee = _previousSellTeamFee (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#365)
+		- _sellTeamFee = 0 (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#353)
+	BoltInu._sellTeamFee (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#238) can be used in cross function reentrancies:
+	- BoltInu._sellTeamFee (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#238)
+	- BoltInu._transfer(address,address,uint256) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#376-431)
+	- BoltInu._transferStandard(address,address,uint256) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#542-570)
+	- BoltInu.removeAllFee() (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#335-355)
+	- BoltInu.restoreAllFee() (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#357-367)
+	- BoltInu.sendETHToFee(uint256) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#478-494)
+	- BoltInu.setSellTaxes(uint256,uint256,uint256,uint256) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#617-632)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+BoltInu.manualSendToken(address) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#529-532) ignores return value by IERC20(token).transfer(owner(),amount) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#531)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+BoltInu.swapAndLiquify(uint256,uint256) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#455-476) performs a multiplication on the result of a division:
+	- half = lpAmount.div(2) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#457)
+	- addLiquidity(otherHalf,newBalance.mul(half).div(contractTokenBalance.add(half))) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#474)
+BoltInu._transferStandard(address,address,uint256) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#542-570) performs a multiplication on the result of a division:
+	- fees.tMarketing = (amount.mul(_sellMarketingFee).div(1000)).mul(transferFeeIncreaseFactor).div(100) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#557)
+BoltInu._transferStandard(address,address,uint256) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#542-570) performs a multiplication on the result of a division:
+	- fees.tLiquidity = (amount.mul(_sellLiquidityFee).div(1000)).mul(transferFeeIncreaseFactor).div(100) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#558)
+BoltInu._transferStandard(address,address,uint256) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#542-570) performs a multiplication on the result of a division:
+	- fees.tTeam = (amount.mul(_sellTeamFee).div(1000)).mul(transferFeeIncreaseFactor).div(100) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#559)
+BoltInu._transferStandard(address,address,uint256) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#542-570) performs a multiplication on the result of a division:
+	- fees.tEcosystem = (amount.mul(_sellEcosystemFee).div(1000)).mul(transferFeeIncreaseFactor).div(100) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#560)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+BoltInu._transferStandard(address,address,uint256).fees (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#543) is a local variable never initialized
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#uninitialized-local-variables
+
+BoltInu.constructor() (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#272-289) ignores return value by IERC20(uniswapV2Pair).approve(address(uniswapV2Router),type()(uint256).max) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#277)
+BoltInu.addLiquidity(uint256,uint256) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#441-453) ignores return value by uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,_lpRecipient,block.timestamp) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#445-452)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+BoltInu.allowance(address,address).owner (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#320) shadows:
+	- Ownable.owner() (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#77-79) (function)
+BoltInu._approve(address,address,uint256).owner (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#369) shadows:
+	- Ownable.owner() (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#77-79) (function)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#local-variable-shadowing
+
+BoltInu.openTrading(uint256) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#496-500) should emit an event for: 
+	- _botBlocks = botBlocks (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#498) 
+BoltInu.setTransferTransactionMultiplier(uint256) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#590-592) should emit an event for: 
+	- transferFeeIncreaseFactor = _multiplier (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#591) 
+BoltInu.setMaxWalletAmount(uint256) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#594-598) should emit an event for: 
+	- _maxWalletAmount = maxWalletAmount (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#597) 
+BoltInu.updateMaxSell(uint256) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#634-637) should emit an event for: 
+	- _maxSell = maxSell (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#636) 
+BoltInu.updateMaxBuy(uint256) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#639-642) should emit an event for: 
+	- _maxBuy = maxBuy (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#641) 
+BoltInu.updateNumTokensToSwap(uint256) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#660-662) should emit an event for: 
+	- numTokensToSwap = numTokens (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#661) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+BoltInu.updateEcosystemAddress(address).ecosystemAddress (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#644) lacks a zero-check on :
+		- _ecosystemAddress = ecosystemAddress (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#645)
+BoltInu.updateMarketingAddress(address).marketingAddress (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#648) lacks a zero-check on :
+		- _marketingAddress = marketingAddress (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#649)
+BoltInu.updateTeamAddress(address).teamAddress (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#652) lacks a zero-check on :
+		- _teamAddress = teamAddress (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#653)
+BoltInu.updateLpRecipient(address).lpRecipient (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#656) lacks a zero-check on :
+		- _lpRecipient = lpRecipient (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#657)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in BoltInu._transfer(address,address,uint256) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#376-431):
+	External calls:
+	- swapAndLiquify(autoLPamount,minusLP) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#408)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,_lpRecipient,block.timestamp) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#445-452)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#438)
+	External calls sending eth:
+	- swapAndLiquify(autoLPamount,minusLP) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#408)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,_lpRecipient,block.timestamp) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#445-452)
+	- sendETHToFee(address(this).balance) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#413)
+		- _marketingAddress.transfer(marketingPortion) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#485)
+		- _teamAddress.transfer(teamPortion) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#488)
+		- _ecosystemAddress.transfer(ecoPortion) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#491)
+	State variables written after the call(s):
+	- _tokenTransfer(from,to,amount,takeFee) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#430)
+		- _buyEcosystemFee = _previousBuyEcosystemFee (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#361)
+		- _buyEcosystemFee = 0 (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#344)
+	- _tokenTransfer(from,to,amount,takeFee) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#430)
+		- _buyLiquidityFee = _previousBuyLiquidityFee (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#359)
+		- _buyLiquidityFee = 0 (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#342)
+	- _tokenTransfer(from,to,amount,takeFee) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#430)
+		- _buyMarketingFee = _previousBuyMarketingFee (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#358)
+		- _buyMarketingFee = 0 (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#341)
+	- _tokenTransfer(from,to,amount,takeFee) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#430)
+		- _buyTeamFee = _previousBuyTeamFee (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#360)
+		- _buyTeamFee = 0 (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#343)
+	- _tokenTransfer(from,to,amount,takeFee) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#430)
+		- _previousBuyEcosystemFee = _buyEcosystemFee (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#339)
+	- _tokenTransfer(from,to,amount,takeFee) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#430)
+		- _previousBuyLiquidityFee = _buyLiquidityFee (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#337)
+	- _tokenTransfer(from,to,amount,takeFee) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#430)
+		- _previousBuyMarketingFee = _buyMarketingFee (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#336)
+	- _tokenTransfer(from,to,amount,takeFee) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#430)
+		- _previousBuyTeamFee = _buyTeamFee (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#338)
+	- _tokenTransfer(from,to,amount,takeFee) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#430)
+		- _previousSellEcosystemFee = _sellEcosystemFee (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#349)
+	- _tokenTransfer(from,to,amount,takeFee) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#430)
+		- _previousSellLiquidityFee = _sellLiquidityFee (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#347)
+	- _tokenTransfer(from,to,amount,takeFee) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#430)
+		- _previousSellMarketingFee = _sellMarketingFee (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#346)
+	- _tokenTransfer(from,to,amount,takeFee) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#430)
+		- _previousSellTeamFee = _sellTeamFee (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#348)
+Reentrancy in BoltInu.swapAndLiquify(uint256,uint256) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#455-476):
+	External calls:
+	- swapTokensForEth(contractTokenBalance.add(half)) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#467)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#438)
+	- addLiquidity(otherHalf,newBalance.mul(half).div(contractTokenBalance.add(half))) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#474)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,_lpRecipient,block.timestamp) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#445-452)
+	External calls sending eth:
+	- addLiquidity(otherHalf,newBalance.mul(half).div(contractTokenBalance.add(half))) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#474)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,_lpRecipient,block.timestamp) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#445-452)
+	State variables written after the call(s):
+	- addLiquidity(otherHalf,newBalance.mul(half).div(contractTokenBalance.add(half))) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#474)
+		- _allowances[owner][spender] = amount (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#372)
+Reentrancy in BoltInu.transferFrom(address,address,uint256) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#329-333):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#330)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,_lpRecipient,block.timestamp) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#445-452)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#438)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#330)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,_lpRecipient,block.timestamp) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#445-452)
+		- _marketingAddress.transfer(marketingPortion) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#485)
+		- _teamAddress.transfer(teamPortion) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#488)
+		- _ecosystemAddress.transfer(ecoPortion) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#491)
+	State variables written after the call(s):
+	- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#331)
+		- _allowances[owner][spender] = amount (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#372)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in BoltInu._transfer(address,address,uint256) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#376-431):
+	External calls:
+	- swapAndLiquify(autoLPamount,minusLP) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#408)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,_lpRecipient,block.timestamp) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#445-452)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#438)
+	External calls sending eth:
+	- swapAndLiquify(autoLPamount,minusLP) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#408)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,_lpRecipient,block.timestamp) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#445-452)
+	- sendETHToFee(address(this).balance) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#413)
+		- _marketingAddress.transfer(marketingPortion) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#485)
+		- _teamAddress.transfer(teamPortion) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#488)
+		- _ecosystemAddress.transfer(ecoPortion) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#491)
+	Event emitted after the call(s):
+	- Transfer(sender,recipient,fees.tAmount) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#569)
+		- _tokenTransfer(from,to,amount,takeFee) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#430)
+Reentrancy in BoltInu.swapAndLiquify(uint256,uint256) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#455-476):
+	External calls:
+	- swapTokensForEth(contractTokenBalance.add(half)) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#467)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#438)
+	- addLiquidity(otherHalf,newBalance.mul(half).div(contractTokenBalance.add(half))) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#474)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,_lpRecipient,block.timestamp) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#445-452)
+	External calls sending eth:
+	- addLiquidity(otherHalf,newBalance.mul(half).div(contractTokenBalance.add(half))) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#474)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,_lpRecipient,block.timestamp) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#445-452)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#373)
+		- addLiquidity(otherHalf,newBalance.mul(half).div(contractTokenBalance.add(half))) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#474)
+Reentrancy in BoltInu.transferFrom(address,address,uint256) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#329-333):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#330)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,_lpRecipient,block.timestamp) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#445-452)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#438)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#330)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,_lpRecipient,block.timestamp) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#445-452)
+		- _marketingAddress.transfer(marketingPortion) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#485)
+		- _teamAddress.transfer(teamPortion) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#488)
+		- _ecosystemAddress.transfer(ecoPortion) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#491)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#373)
+		- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#331)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+BoltInu._transfer(address,address,uint256) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#376-431) uses timestamp for comparisons
+	Dangerous comparisons:
+	- block.timestamp <= _firstBlock.add(_botBlocks) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#387)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+BoltInu._transfer(address,address,uint256) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#376-431) has a high cyclomatic complexity (12).
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#cyclomatic-complexity
+
+BoltInu._previousBuyLiquidityFee (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#223) is set pre-construction with a non-constant function or state variable:
+	- _buyLiquidityFee
+BoltInu._previousBuyEcosystemFee (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#225) is set pre-construction with a non-constant function or state variable:
+	- _buyEcosystemFee
+BoltInu._previousBuyMarketingFee (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#227) is set pre-construction with a non-constant function or state variable:
+	- _buyMarketingFee
+BoltInu._previousBuyTeamFee (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#229) is set pre-construction with a non-constant function or state variable:
+	- _buyTeamFee
+BoltInu._previousSellLiquidityFee (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#233) is set pre-construction with a non-constant function or state variable:
+	- _sellLiquidityFee
+BoltInu._previousSellEcosystemFee (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#235) is set pre-construction with a non-constant function or state variable:
+	- _sellEcosystemFee
+BoltInu._previousSellMarketingFee (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#237) is set pre-construction with a non-constant function or state variable:
+	- _sellMarketingFee
+BoltInu._previousSellTeamFee (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#239) is set pre-construction with a non-constant function or state variable:
+	- _sellTeamFee
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#function-initializing-state
+
+Version constraint ^0.8.4 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- SignedImmutables.
+It is used by:
+	- ^0.8.4 (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#10)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Function IUniswapV2Pair.DOMAIN_SEPARATOR() (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#126) is not in mixedCase
+Function IUniswapV2Pair.PERMIT_TYPEHASH() (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#127) is not in mixedCase
+Function IUniswapV2Pair.MINIMUM_LIQUIDITY() (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#144) is not in mixedCase
+Function IUniswapV2Router02.WETH() (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#182) is not in mixedCase
+Parameter BoltInu.setTransferTransactionMultiplier(uint256)._multiplier (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#590) is not in mixedCase
+Constant BoltInu._name (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#206) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant BoltInu._symbol (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#207) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant BoltInu._decimals (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#208) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant BoltInu._tTotal (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#213) is not in UPPER_CASE_WITH_UNDERSCORES
+Variable BoltInu._maxWalletAmount (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#216) is not in mixedCase
+Variable BoltInu._buyLiquidityFee (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#222) is not in mixedCase
+Variable BoltInu._buyEcosystemFee (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#224) is not in mixedCase
+Variable BoltInu._buyMarketingFee (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#226) is not in mixedCase
+Variable BoltInu._buyTeamFee (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#228) is not in mixedCase
+Variable BoltInu._sellLiquidityFee (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#232) is not in mixedCase
+Variable BoltInu._sellEcosystemFee (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#234) is not in mixedCase
+Variable BoltInu._sellMarketingFee (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#236) is not in mixedCase
+Variable BoltInu._sellTeamFee (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#238) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in BoltInu._transfer(address,address,uint256) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#376-431):
+	External calls:
+	- sendETHToFee(address(this).balance) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#413)
+		- _marketingAddress.transfer(marketingPortion) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#485)
+		- _teamAddress.transfer(teamPortion) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#488)
+		- _ecosystemAddress.transfer(ecoPortion) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#491)
+	External calls sending eth:
+	- swapAndLiquify(autoLPamount,minusLP) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#408)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,_lpRecipient,block.timestamp) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#445-452)
+	- sendETHToFee(address(this).balance) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#413)
+		- _marketingAddress.transfer(marketingPortion) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#485)
+		- _teamAddress.transfer(teamPortion) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#488)
+		- _ecosystemAddress.transfer(ecoPortion) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#491)
+	State variables written after the call(s):
+	- _tokenTransfer(from,to,amount,takeFee) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#430)
+		- _balances[sender] = _balances[sender].sub(amount) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#565)
+		- _balances[recipient] = _balances[recipient].add(fees.tAmount) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#566)
+		- _balances[address(this)] = _balances[address(this)].add(fees.tMarketing.add(fees.tLiquidity).add(fees.tTeam).add(fees.tEcosystem)) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#567)
+	- _tokenTransfer(from,to,amount,takeFee) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#430)
+		- _buyEcosystemFee = _previousBuyEcosystemFee (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#361)
+		- _buyEcosystemFee = 0 (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#344)
+	- _tokenTransfer(from,to,amount,takeFee) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#430)
+		- _buyLiquidityFee = _previousBuyLiquidityFee (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#359)
+		- _buyLiquidityFee = 0 (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#342)
+	- _tokenTransfer(from,to,amount,takeFee) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#430)
+		- _buyMarketingFee = _previousBuyMarketingFee (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#358)
+		- _buyMarketingFee = 0 (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#341)
+	- _tokenTransfer(from,to,amount,takeFee) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#430)
+		- _buyTeamFee = _previousBuyTeamFee (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#360)
+		- _buyTeamFee = 0 (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#343)
+	- _tokenTransfer(from,to,amount,takeFee) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#430)
+		- _previousBuyEcosystemFee = _buyEcosystemFee (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#339)
+	- _tokenTransfer(from,to,amount,takeFee) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#430)
+		- _previousBuyLiquidityFee = _buyLiquidityFee (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#337)
+	- _tokenTransfer(from,to,amount,takeFee) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#430)
+		- _previousBuyMarketingFee = _buyMarketingFee (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#336)
+	- _tokenTransfer(from,to,amount,takeFee) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#430)
+		- _previousBuyTeamFee = _buyTeamFee (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#338)
+	- _tokenTransfer(from,to,amount,takeFee) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#430)
+		- _previousSellEcosystemFee = _sellEcosystemFee (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#349)
+	- _tokenTransfer(from,to,amount,takeFee) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#430)
+		- _previousSellLiquidityFee = _sellLiquidityFee (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#347)
+	- _tokenTransfer(from,to,amount,takeFee) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#430)
+		- _previousSellMarketingFee = _sellMarketingFee (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#346)
+	- _tokenTransfer(from,to,amount,takeFee) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#430)
+		- _previousSellTeamFee = _sellTeamFee (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#348)
+	- _tokenTransfer(from,to,amount,takeFee) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#430)
+		- _sellEcosystemFee = _previousSellEcosystemFee (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#366)
+		- _sellEcosystemFee = 0 (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#354)
+	- _tokenTransfer(from,to,amount,takeFee) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#430)
+		- _sellLiquidityFee = _previousSellLiquidityFee (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#364)
+		- _sellLiquidityFee = 0 (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#352)
+	- _tokenTransfer(from,to,amount,takeFee) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#430)
+		- _sellMarketingFee = _previousSellMarketingFee (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#363)
+		- _sellMarketingFee = 0 (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#351)
+	- _tokenTransfer(from,to,amount,takeFee) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#430)
+		- _sellTeamFee = _previousSellTeamFee (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#365)
+		- _sellTeamFee = 0 (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#353)
+	Event emitted after the call(s):
+	- Transfer(sender,recipient,fees.tAmount) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#569)
+		- _tokenTransfer(from,to,amount,takeFee) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#430)
+Reentrancy in BoltInu.transferFrom(address,address,uint256) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#329-333):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#330)
+		- _marketingAddress.transfer(marketingPortion) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#485)
+		- _teamAddress.transfer(teamPortion) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#488)
+		- _ecosystemAddress.transfer(ecoPortion) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#491)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#330)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,_lpRecipient,block.timestamp) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#445-452)
+		- _marketingAddress.transfer(marketingPortion) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#485)
+		- _teamAddress.transfer(teamPortion) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#488)
+		- _ecosystemAddress.transfer(ecoPortion) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#491)
+	State variables written after the call(s):
+	- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#331)
+		- _allowances[owner][spender] = amount (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#372)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#373)
+		- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#331)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+BoltInu.slitherConstructorVariables() (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#204-664) uses literals with too many digits:
+	- numTokensToSwap = 200000000 * 10 ** 18 (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#219)
+BoltInu.slitherConstructorConstantVariables() (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#204-664) uses literals with too many digits:
+	- _tTotal = 100000000000 * 10 ** 18 (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#213)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+BoltInu._maxTxAmount (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#257) should be immutable 
+BoltInu.uniswapV2Pair (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#256) should be immutable 
+BoltInu.uniswapV2Router (0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol#255) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+./0x0bbd9b0dbfd70529c81c71bc550ec6b6ceb98e61.sol analyzed (9 contracts with 94 detectors), 65 result(s) found
+
+real	0m3.771s
+user	0m3.494s
+sys	0m0.279s

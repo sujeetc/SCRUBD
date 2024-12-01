@@ -1,0 +1,386 @@
+'solc --version' running
+'solc ./0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol:
+Warning: Contract code size exceeds 24576 bytes (a limit introduced in Spurious Dragon). This contract may not be deployable on mainnet. Consider enabling the optimizer (with a low "runs" value!), turning off revert strings, or using libraries.
+   --> 0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol:453:1:
+    |
+453 | contract TYRANT is Context, IERC20, ERC20Ownable {
+    | ^ (Relevant source part starts here and spans across multiple lines).
+
+
+
+Reentrancy in TYRANT.GoLive() (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#586-608):
+	External calls:
+	- uniV2Pair = IUniswapV2Factory(_uniV2Router.factory()).createPair(address(this),_uniV2Router.WETH()) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#597)
+	- addLiquidity(balanceOf(address(this)),address(this).balance) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#601)
+		- uniV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#704-711)
+	External calls sending eth:
+	- addLiquidity(balanceOf(address(this)),address(this).balance) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#601)
+		- uniV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#704-711)
+	State variables written after the call(s):
+	- launchSetLiquidityAddress(dead) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#602)
+		- liquidityAddress = address(LPAddress) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#736)
+	TYRANT.liquidityAddress (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#470) can be used in cross function reentrancies:
+	- TYRANT.addLiquidity(uint256,uint256) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#702-712)
+	- TYRANT.constructor() (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#507-535)
+	- TYRANT.launchSetLiquidityAddress(address) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#735-738)
+	- live = true (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#606)
+	TYRANT.live (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#498) can be used in cross function reentrancies:
+	- TYRANT.GoLive() (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#586-608)
+	- TYRANT.internalTransfer(address,address,uint256) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#609-668)
+	- TYRANT.live (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#498)
+Reentrancy in TYRANT.internalTransfer(address,address,uint256) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#609-668):
+	External calls:
+	- taxTokenSwap() (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#641)
+		- uniV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#704-711)
+		- uniV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#694-700)
+		- (success,None) = address(marketingAddress).call{value: ethForMarketing}() (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#681)
+		- (success,None) = address(devAddress).call{value: address(this).balance}() (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#686)
+	External calls sending eth:
+	- taxTokenSwap() (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#641)
+		- uniV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#704-711)
+		- (success,None) = address(marketingAddress).call{value: ethForMarketing}() (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#681)
+		- (success,None) = address(devAddress).call{value: address(this).balance}() (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#686)
+	State variables written after the call(s):
+	- tokenTransfer(from,to,amount) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#667)
+		- liquidityTokens += taxTokens.mul(liquidityTax).div(divForSplitTax) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#718)
+	TYRANT.liquidityTokens (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#481) can be used in cross function reentrancies:
+	- TYRANT.internalTransfer(address,address,uint256) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#609-668)
+	- TYRANT.splitTaxTokens(uint256) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#716-719)
+	- TYRANT.taxTokenSwap() (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#669-688)
+	- tokenTransfer(from,to,amount) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#667)
+		- marketingTokens += taxTokens.mul(marketingTax).div(divForSplitTax) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#717)
+	TYRANT.marketingTokens (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#480) can be used in cross function reentrancies:
+	- TYRANT.internalTransfer(address,address,uint256) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#609-668)
+	- TYRANT.splitTaxTokens(uint256) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#716-719)
+	- TYRANT.taxTokenSwap() (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#669-688)
+	- tokenTransfer(from,to,amount) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#667)
+		- tokenBalance[sender] -= amount (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#725)
+		- tokenBalance[recipient] += transferTokens (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#726)
+		- tokenBalance[address(this)] += taxTokens (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#727)
+		- tokenBalance[sender] -= amount (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#730)
+		- tokenBalance[recipient] += amount (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#731)
+	TYRANT.tokenBalance (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#463) can be used in cross function reentrancies:
+	- TYRANT.balanceOf(address) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#549-551)
+	- TYRANT.constructor() (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#507-535)
+	- TYRANT.tokenTransfer(address,address,uint256) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#720-734)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+TYRANT.internalTransfer(address,address,uint256) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#609-668) uses a dangerous strict equality:
+	- block.number == activeTradingBlock.add(x) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#623)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-strict-equalities
+
+Reentrancy in TYRANT.taxTokenSwap() (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#669-688):
+	External calls:
+	- swapTokensForETH(amountToSwapForETH) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#675)
+		- uniV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#694-700)
+	State variables written after the call(s):
+	- liquidityTokens = 0 (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#680)
+	TYRANT.liquidityTokens (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#481) can be used in cross function reentrancies:
+	- TYRANT.internalTransfer(address,address,uint256) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#609-668)
+	- TYRANT.splitTaxTokens(uint256) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#716-719)
+	- TYRANT.taxTokenSwap() (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#669-688)
+	- marketingTokens = 0 (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#679)
+	TYRANT.marketingTokens (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#480) can be used in cross function reentrancies:
+	- TYRANT.internalTransfer(address,address,uint256) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#609-668)
+	- TYRANT.splitTaxTokens(uint256) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#716-719)
+	- TYRANT.taxTokenSwap() (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#669-688)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+TYRANT.addLiquidity(uint256,uint256) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#702-712) ignores return value by uniV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#704-711)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+TYRANT.allowance(address,address).owner (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#552) shadows:
+	- ERC20Ownable.owner() (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#23-25) (function)
+TYRANT.internalApprove(address,address,uint256).owner (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#562) shadows:
+	- ERC20Ownable.owner() (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#23-25) (function)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#local-variable-shadowing
+
+TYRANT.setMaxWalletAmount(uint256,uint256) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#799-802) should emit an event for: 
+	- maxWallet = tokenSupply.mul(percent).div(divider) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#800) 
+TYRANT.setTaxes(uint256,uint256,uint256,uint256) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#815-820) should emit an event for: 
+	- taxBuyMarketing = buyMarketingTax (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#816) 
+	- taxBuyLiquidity = buyLiquidityTax (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#817) 
+	- taxSellMarketing = sellMarketingTax (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#818) 
+	- taxSellLiquidity = sellLiquidityTax (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#819) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+TYRANT.swapTokensForETH(uint256) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#689-701) has external calls inside a loop: path[1] = uniV2Router.WETH() (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#692)
+TYRANT.swapTokensForETH(uint256) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#689-701) has external calls inside a loop: uniV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#694-700)
+TYRANT.taxTokenSwap() (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#669-688) has external calls inside a loop: (success,None) = address(marketingAddress).call{value: ethForMarketing}() (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#681)
+TYRANT.addLiquidity(uint256,uint256) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#702-712) has external calls inside a loop: uniV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#704-711)
+TYRANT.taxTokenSwap() (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#669-688) has external calls inside a loop: (success,None) = address(devAddress).call{value: address(this).balance}() (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#686)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation/#calls-inside-a-loop
+
+Reentrancy in TYRANT.GoLive() (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#586-608):
+	External calls:
+	- uniV2Pair = IUniswapV2Factory(_uniV2Router.factory()).createPair(address(this),_uniV2Router.WETH()) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#597)
+	State variables written after the call(s):
+	- isContractsExcluded[address(uniV2Pair)] = true (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#598)
+	- isMaxWalletExcluded[address(uniV2Pair)] = true (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#599)
+Reentrancy in TYRANT.GoLive() (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#586-608):
+	External calls:
+	- uniV2Pair = IUniswapV2Factory(_uniV2Router.factory()).createPair(address(this),_uniV2Router.WETH()) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#597)
+	- addLiquidity(balanceOf(address(this)),address(this).balance) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#601)
+		- uniV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#704-711)
+	External calls sending eth:
+	- addLiquidity(balanceOf(address(this)),address(this).balance) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#601)
+		- uniV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#704-711)
+	State variables written after the call(s):
+	- launchSetLiquidityAddress(dead) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#602)
+		- isTaxExcluded[liquidityAddress] = true (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#737)
+	- limitsOn = true (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#605)
+	- maxWalletOn = true (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#603)
+	- swapAndLiquifyStatus = true (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#604)
+	- addLiquidity(balanceOf(address(this)),address(this).balance) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#601)
+		- tokenAllowances[owner][spender] = amount (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#565)
+Reentrancy in TYRANT.internalTransfer(address,address,uint256) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#609-668):
+	External calls:
+	- taxTokenSwap() (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#641)
+		- uniV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#704-711)
+		- uniV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#694-700)
+		- (success,None) = address(marketingAddress).call{value: ethForMarketing}() (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#681)
+		- (success,None) = address(devAddress).call{value: address(this).balance}() (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#686)
+	External calls sending eth:
+	- taxTokenSwap() (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#641)
+		- uniV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#704-711)
+		- (success,None) = address(marketingAddress).call{value: ethForMarketing}() (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#681)
+		- (success,None) = address(devAddress).call{value: address(this).balance}() (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#686)
+	State variables written after the call(s):
+	- divForSplitTax = marketingTax.add(liquidityTax) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#646)
+	- divForSplitTax = taxBuyMarketing.add(taxBuyLiquidity) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#651)
+	- divForSplitTax = taxSellMarketing.add(taxSellLiquidity) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#655)
+	- divForSplitTax = marketingTax.add(liquidityTax) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#659)
+	- liquidityTax = 0 (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#645)
+	- liquidityTax = taxBuyLiquidity (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#650)
+	- liquidityTax = taxSellLiquidity (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#654)
+	- liquidityTax = 10 (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#658)
+	- liquidityTax = 0 (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#664)
+	- marketingTax = 0 (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#644)
+	- marketingTax = taxBuyMarketing (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#649)
+	- marketingTax = taxSellMarketing (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#653)
+	- marketingTax = 85 (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#657)
+	- marketingTax = 0 (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#663)
+Reentrancy in TYRANT.manualBurnTokensFromLP(uint256) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#760-772):
+	External calls:
+	- internalTransfer(uniV2Pair,dead,amountToBurn) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#765)
+		- uniV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#704-711)
+		- uniV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#694-700)
+		- (success,None) = address(marketingAddress).call{value: ethForMarketing}() (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#681)
+		- (success,None) = address(devAddress).call{value: address(this).balance}() (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#686)
+	External calls sending eth:
+	- internalTransfer(uniV2Pair,dead,amountToBurn) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#765)
+		- uniV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#704-711)
+		- (success,None) = address(marketingAddress).call{value: ethForMarketing}() (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#681)
+		- (success,None) = address(devAddress).call{value: address(this).balance}() (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#686)
+	State variables written after the call(s):
+	- totalBurnedTokens = balanceOf(dead) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#767)
+Reentrancy in TYRANT.taxTokenSwap() (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#669-688):
+	External calls:
+	- swapTokensForETH(amountToSwapForETH) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#675)
+		- uniV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#694-700)
+	- (success,None) = address(marketingAddress).call{value: ethForMarketing}() (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#681)
+	- addLiquidity(swapLiquidityTokens,ethForLiquidity) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#683)
+		- uniV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#704-711)
+	External calls sending eth:
+	- (success,None) = address(marketingAddress).call{value: ethForMarketing}() (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#681)
+	- addLiquidity(swapLiquidityTokens,ethForLiquidity) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#683)
+		- uniV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#704-711)
+	State variables written after the call(s):
+	- addLiquidity(swapLiquidityTokens,ethForLiquidity) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#683)
+		- tokenAllowances[owner][spender] = amount (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#565)
+Reentrancy in TYRANT.transferFrom(address,address,uint256) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#572-577):
+	External calls:
+	- internalTransfer(sender,recipient,amount) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#573)
+		- uniV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#704-711)
+		- uniV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#694-700)
+		- (success,None) = address(marketingAddress).call{value: ethForMarketing}() (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#681)
+		- (success,None) = address(devAddress).call{value: address(this).balance}() (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#686)
+	External calls sending eth:
+	- internalTransfer(sender,recipient,amount) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#573)
+		- uniV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#704-711)
+		- (success,None) = address(marketingAddress).call{value: ethForMarketing}() (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#681)
+		- (success,None) = address(devAddress).call{value: address(this).balance}() (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#686)
+	State variables written after the call(s):
+	- internalApprove(sender,_msgSender(),tokenAllowances[sender][_msgSender()].sub(amount,ERC20: Can not transfer. Amount exceeds allowance)) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#574-575)
+		- tokenAllowances[owner][spender] = amount (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#565)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in TYRANT.GoLive() (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#586-608):
+	External calls:
+	- uniV2Pair = IUniswapV2Factory(_uniV2Router.factory()).createPair(address(this),_uniV2Router.WETH()) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#597)
+	- addLiquidity(balanceOf(address(this)),address(this).balance) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#601)
+		- uniV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#704-711)
+	External calls sending eth:
+	- addLiquidity(balanceOf(address(this)),address(this).balance) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#601)
+		- uniV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#704-711)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#566)
+		- addLiquidity(balanceOf(address(this)),address(this).balance) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#601)
+Reentrancy in TYRANT.internalTransfer(address,address,uint256) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#609-668):
+	External calls:
+	- taxTokenSwap() (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#641)
+		- uniV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#704-711)
+		- uniV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#694-700)
+		- (success,None) = address(marketingAddress).call{value: ethForMarketing}() (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#681)
+		- (success,None) = address(devAddress).call{value: address(this).balance}() (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#686)
+	External calls sending eth:
+	- taxTokenSwap() (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#641)
+		- uniV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#704-711)
+		- (success,None) = address(marketingAddress).call{value: ethForMarketing}() (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#681)
+		- (success,None) = address(devAddress).call{value: address(this).balance}() (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#686)
+	Event emitted after the call(s):
+	- Transfer(sender,recipient,transferTokens) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#728)
+		- tokenTransfer(from,to,amount) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#667)
+	- Transfer(sender,recipient,amount) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#732)
+		- tokenTransfer(from,to,amount) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#667)
+Reentrancy in TYRANT.taxTokenSwap() (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#669-688):
+	External calls:
+	- swapTokensForETH(amountToSwapForETH) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#675)
+		- uniV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#694-700)
+	- (success,None) = address(marketingAddress).call{value: ethForMarketing}() (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#681)
+	- addLiquidity(swapLiquidityTokens,ethForLiquidity) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#683)
+		- uniV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#704-711)
+	External calls sending eth:
+	- (success,None) = address(marketingAddress).call{value: ethForMarketing}() (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#681)
+	- addLiquidity(swapLiquidityTokens,ethForLiquidity) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#683)
+		- uniV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#704-711)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#566)
+		- addLiquidity(swapLiquidityTokens,ethForLiquidity) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#683)
+Reentrancy in TYRANT.transferFrom(address,address,uint256) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#572-577):
+	External calls:
+	- internalTransfer(sender,recipient,amount) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#573)
+		- uniV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#704-711)
+		- uniV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#694-700)
+		- (success,None) = address(marketingAddress).call{value: ethForMarketing}() (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#681)
+		- (success,None) = address(devAddress).call{value: address(this).balance}() (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#686)
+	External calls sending eth:
+	- internalTransfer(sender,recipient,amount) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#573)
+		- uniV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#704-711)
+		- (success,None) = address(marketingAddress).call{value: ethForMarketing}() (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#681)
+		- (success,None) = address(devAddress).call{value: address(this).balance}() (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#686)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#566)
+		- internalApprove(sender,_msgSender(),tokenAllowances[sender][_msgSender()].sub(amount,ERC20: Can not transfer. Amount exceeds allowance)) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#574-575)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+TYRANT.internalTransfer(address,address,uint256) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#609-668) uses timestamp for comparisons
+	Dangerous comparisons:
+	- isSniper[from] && sniperPenaltyEnd >= block.timestamp (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#656)
+	- require(bool,string)(! isSniper[from] || sniperPenaltyEnd <= block.timestamp,ERC20: Snipers can not transfer till penalty time is over) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#662)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Address.isContract(address) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#331-342) uses assembly
+	- INLINE ASM (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#338-340)
+Address._functionCallWithValue(address,bytes,uint256,string) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#394-417) uses assembly
+	- INLINE ASM (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#409-412)
+TYRANT.isContract(address) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#739-746) uses assembly
+	- INLINE ASM (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#742-744)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#assembly-usage
+
+TYRANT.internalTransfer(address,address,uint256) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#609-668) compares to a boolean constant:
+	-maxWalletOn == true && ! isMaxWalletExcluded[to] (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#617)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#boolean-equality
+
+TYRANT.lockTheSwap() (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#502-506) has costly operations inside a loop:
+	- inSwapAndLiquify = true (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#503)
+TYRANT.lockTheSwap() (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#502-506) has costly operations inside a loop:
+	- inSwapAndLiquify = false (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#505)
+TYRANT.taxTokenSwap() (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#669-688) has costly operations inside a loop:
+	- marketingTokens = 0 (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#679)
+TYRANT.taxTokenSwap() (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#669-688) has costly operations inside a loop:
+	- liquidityTokens = 0 (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#680)
+TYRANT.internalTransfer(address,address,uint256) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#609-668) has costly operations inside a loop:
+	- marketingTax = 0 (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#644)
+TYRANT.internalTransfer(address,address,uint256) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#609-668) has costly operations inside a loop:
+	- liquidityTax = 0 (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#645)
+TYRANT.internalTransfer(address,address,uint256) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#609-668) has costly operations inside a loop:
+	- divForSplitTax = marketingTax.add(liquidityTax) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#646)
+TYRANT.splitTaxTokens(uint256) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#716-719) has costly operations inside a loop:
+	- marketingTokens += taxTokens.mul(marketingTax).div(divForSplitTax) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#717)
+TYRANT.splitTaxTokens(uint256) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#716-719) has costly operations inside a loop:
+	- liquidityTokens += taxTokens.mul(liquidityTax).div(divForSplitTax) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#718)
+TYRANT.internalTransfer(address,address,uint256) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#609-668) has costly operations inside a loop:
+	- marketingTax = taxBuyMarketing (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#649)
+TYRANT.internalTransfer(address,address,uint256) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#609-668) has costly operations inside a loop:
+	- liquidityTax = taxBuyLiquidity (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#650)
+TYRANT.internalTransfer(address,address,uint256) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#609-668) has costly operations inside a loop:
+	- divForSplitTax = taxBuyMarketing.add(taxBuyLiquidity) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#651)
+TYRANT.internalTransfer(address,address,uint256) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#609-668) has costly operations inside a loop:
+	- marketingTax = taxSellMarketing (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#653)
+TYRANT.internalTransfer(address,address,uint256) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#609-668) has costly operations inside a loop:
+	- liquidityTax = taxSellLiquidity (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#654)
+TYRANT.internalTransfer(address,address,uint256) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#609-668) has costly operations inside a loop:
+	- divForSplitTax = taxSellMarketing.add(taxSellLiquidity) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#655)
+TYRANT.internalTransfer(address,address,uint256) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#609-668) has costly operations inside a loop:
+	- marketingTax = 85 (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#657)
+TYRANT.internalTransfer(address,address,uint256) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#609-668) has costly operations inside a loop:
+	- liquidityTax = 10 (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#658)
+TYRANT.internalTransfer(address,address,uint256) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#609-668) has costly operations inside a loop:
+	- divForSplitTax = marketingTax.add(liquidityTax) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#659)
+TYRANT.internalTransfer(address,address,uint256) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#609-668) has costly operations inside a loop:
+	- marketingTax = 0 (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#663)
+TYRANT.internalTransfer(address,address,uint256) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#609-668) has costly operations inside a loop:
+	- liquidityTax = 0 (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#664)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#costly-operations-inside-a-loop
+
+TYRANT.internalTransfer(address,address,uint256) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#609-668) has a high cyclomatic complexity (13).
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#cyclomatic-complexity
+
+Version constraint ^0.8.9 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- VerbatimInvalidDeduplication
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation.
+It is used by:
+	- ^0.8.9 (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#9)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in Address.sendValue(address,uint256) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#343-355):
+	- (success,None) = recipient.call{value: amount}() (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#350)
+Low level call in Address._functionCallWithValue(address,bytes,uint256,string) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#394-417):
+	- (success,returndata) = target.call{value: weiValue}(data) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#402-404)
+Low level call in TYRANT.taxTokenSwap() (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#669-688):
+	- (success,None) = address(marketingAddress).call{value: ethForMarketing}() (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#681)
+	- (success,None) = address(devAddress).call{value: address(this).balance}() (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#686)
+Low level call in TYRANT.withdrawStuckETH() (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#753-756):
+	- (success,None) = address(owner()).call{value: address(this).balance}() (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#755)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Function IUniswapV2Router01.WETH() (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#126) is not in mixedCase
+Function IUniswapV2Router02.WETH() (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#217) is not in mixedCase
+Function IUniswapV2Pair.DOMAIN_SEPARATOR() (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#431) is not in mixedCase
+Function IUniswapV2Pair.PERMIT_TYPEHASH() (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#432) is not in mixedCase
+Function IUniswapV2Pair.MINIMUM_LIQUIDITY() (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#438) is not in mixedCase
+Function TYRANT.AirDrop(address[],uint256[]) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#578-585) is not in mixedCase
+Function TYRANT.GoLive() (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#586-608) is not in mixedCase
+Parameter TYRANT.launchSetLiquidityAddress(address).LPAddress (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#735) is not in mixedCase
+Constant TYRANT.tokenName (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#457) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant TYRANT.tokenSymbol (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#458) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant TYRANT.tokenDecimal (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#459) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant TYRANT.tokenSupply (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#460) is not in UPPER_CASE_WITH_UNDERSCORES
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+TYRANT.taxSellTreasury (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#490) is never used in TYRANT (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#453-825)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-state-variable
+
+TYRANT.dead (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#473) should be constant 
+TYRANT.taxSellTreasury (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#490) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+
+TYRANT.devAddress (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#472) should be immutable 
+TYRANT.marketingAddress (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#471) should be immutable 
+TYRANT.minTaxSwap (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#479) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+
+The function TYRANT.manualBurnTokensFromLP(uint256) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#760-772) reads liquidityPairBalance = this.balanceOf(uniV2Pair) (0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol#762) with `this` which adds an extra STATICCALL.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#public-variable-read-in-external-context
+./0x0030f75e27f6df16383f47ae11ae34abc21f5f2c.sol analyzed (10 contracts with 94 detectors), 74 result(s) found
+
+real	0m4.897s
+user	0m4.619s
+sys	0m0.280s

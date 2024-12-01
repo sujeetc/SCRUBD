@@ -1,0 +1,293 @@
+'solc --version' running
+'solc ./0x09a80172ed7335660327cd664876b5df6fe06108.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+SafeERC20.safeTransferFrom(ERC20,address,address,uint256) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#50-52) uses arbitrary from in transferFrom: assert(bool)(token.transferFrom(from,to,value)) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#51)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#arbitrary-from-in-transferfrom
+
+Distribution.receiveFunds() (0x09a80172ed7335660327cd664876b5df6fe06108.sol#495-502) use msg.value in a loop: ethAmount = (rec.share.mul(msg.value)).div(sharesSum) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#499)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation/#msgvalue-inside-a-loop
+
+Reentrancy in OMPxContract.getFee() (0x09a80172ed7335660327cd664876b5df6fe06108.sol#330-336):
+	External calls:
+	- feeReceiverContract.receiveFunds.value(feeBalance).gas(150000)() (0x09a80172ed7335660327cd664876b5df6fe06108.sol#332)
+	State variables written after the call(s):
+	- feeBalance = 0 (0x09a80172ed7335660327cd664876b5df6fe06108.sol#334)
+	OMPxContract.feeBalance (0x09a80172ed7335660327cd664876b5df6fe06108.sol#299) can be used in cross function reentrancies:
+	- OMPxContract.getBuyBackPrice(uint256) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#347-359)
+	- OMPxContract.getFee() (0x09a80172ed7335660327cd664876b5df6fe06108.sol#330-336)
+	- OMPxContract.purchaseSafe(uint256,uint256) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#380-419)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+BasicToken.totalSupply_ (0x09a80172ed7335660327cd664876b5df6fe06108.sol#229) is never initialized. It is used in:
+	- BasicToken.totalSupply() (0x09a80172ed7335660327cd664876b5df6fe06108.sol#234-236)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#uninitialized-state-variables
+
+OMPxContract.purchaseSafe(uint256,uint256) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#380-419) performs a multiplication on the result of a division:
+	- tokensWuiAvailableByCurrentPrice = msg.value.mul(1e18).div(currentPrice) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#386)
+	- totalDealPrice = currentPrice.mul(tokensWuiAvailableByCurrentPrice).div(1e18) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#390)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+OMPxContract.getBuyBackPrice(uint256) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#347-359) uses a dangerous strict equality:
+	- address(this).balance == 0 (0x09a80172ed7335660327cd664876b5df6fe06108.sol#348)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-strict-equalities
+
+Reentrancy in OMPxContract.purchaseSafe(uint256,uint256) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#380-419):
+	External calls:
+	- currentPrice = getPurchasePrice(msg.value,tokensToPurchase) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#383)
+		- tokens = token.totalSupply() (0x09a80172ed7335660327cd664876b5df6fe06108.sol#352)
+	State variables written after the call(s):
+	- feeBalance = feeBalance + totalDealPrice.div(9) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#395)
+	OMPxContract.feeBalance (0x09a80172ed7335660327cd664876b5df6fe06108.sol#299) can be used in cross function reentrancies:
+	- OMPxContract.getBuyBackPrice(uint256) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#347-359)
+	- OMPxContract.getFee() (0x09a80172ed7335660327cd664876b5df6fe06108.sol#330-336)
+	- OMPxContract.purchaseSafe(uint256,uint256) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#380-419)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+OMPxContract.getPurchasePrice(uint256,uint256) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#362-369) contains a tautology or contradiction:
+	- require(bool)(purchaseValue >= 0) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#363)
+OMPxContract.getPurchasePrice(uint256,uint256) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#362-369) contains a tautology or contradiction:
+	- require(bool)(amount >= 0) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#364)
+OMPxContract.purchaseSafe(uint256,uint256) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#380-419) contains a tautology or contradiction:
+	- require(bool)(maxPrice >= 0) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#381)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#tautology-or-contradiction
+
+OMPxContract.OMPxContract() (0x09a80172ed7335660327cd664876b5df6fe06108.sol#308-316) ignores return value by token.mint(owner,token.initialSupply()) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#315)
+OMPxContract.purchaseSafe(uint256,uint256) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#380-419) ignores return value by token.mint(this,tokensToMint) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#401)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+OMPxContract.totalTokenSupply().totalSupply_ (0x09a80172ed7335660327cd664876b5df6fe06108.sol#338) shadows:
+	- BasicToken.totalSupply_ (0x09a80172ed7335660327cd664876b5df6fe06108.sol#229) (state variable)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#local-variable-shadowing
+
+Reentrancy in OMPxContract.buyBack(uint256,uint256) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#422-435):
+	External calls:
+	- currentPrice = getBuyBackPrice(0) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#423)
+		- tokens = token.totalSupply() (0x09a80172ed7335660327cd664876b5df6fe06108.sol#352)
+	- require(bool)(tokensToBuyBack <= token.balanceOf(msg.sender)) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#427)
+	- token.safeTransferFrom(msg.sender,this,tokensToBuyBack) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#429)
+	State variables written after the call(s):
+	- trackBuyBack(tokensToBuyBack,totalPrice) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#432)
+		- stat_ethReceived = stat_ethReceived.add(sum) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#159)
+	- trackBuyBack(tokensToBuyBack,totalPrice) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#432)
+		- stat_timesBoughtBack = stat_timesBoughtBack.add(1) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#158)
+	- trackBuyBack(tokensToBuyBack,totalPrice) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#432)
+		- stat_tokensBoughtBack = stat_tokensBoughtBack.add(tokens) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#157)
+Reentrancy in OMPxContract.getFee() (0x09a80172ed7335660327cd664876b5df6fe06108.sol#330-336):
+	External calls:
+	- feeReceiverContract.receiveFunds.value(feeBalance).gas(150000)() (0x09a80172ed7335660327cd664876b5df6fe06108.sol#332)
+	State variables written after the call(s):
+	- trackFee(feeBalance) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#333)
+		- feeSent = feeSent.add(fee) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#172)
+Reentrancy in OMPxContract.purchaseSafe(uint256,uint256) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#380-419):
+	External calls:
+	- currentPrice = getPurchasePrice(msg.value,tokensToPurchase) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#383)
+		- tokens = token.totalSupply() (0x09a80172ed7335660327cd664876b5df6fe06108.sol#352)
+	- availableTokens = token.balanceOf(this) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#398)
+	- token.mint(this,tokensToMint) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#401)
+	- token.safeTransfer(msg.sender,tokensWuiAvailableByCurrentPrice) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#403)
+	External calls sending eth:
+	- msg.sender.transfer(oddEthers) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#412)
+	State variables written after the call(s):
+	- trackOdd(oddEthers) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#413)
+		- oddSent = oddSent.add(odd) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#168)
+	- trackPurchase(tokensWuiAvailableByCurrentPrice,totalDealPrice) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#417)
+		- stat_ethSent = stat_ethSent.add(sum) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#153)
+	- trackPurchase(tokensWuiAvailableByCurrentPrice,totalDealPrice) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#417)
+		- stat_timesPurchased = stat_timesPurchased.add(1) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#152)
+	- trackPurchase(tokensWuiAvailableByCurrentPrice,totalDealPrice) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#417)
+		- stat_tokensPurchased = stat_tokensPurchased.add(tokens) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#151)
+Reentrancy in OMPxContract.spend(uint256,bytes32) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#438-443):
+	External calls:
+	- token.safeTransferFrom(msg.sender,this,tokensToSpend) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#439)
+	- token.burn(tokensToSpend) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#440)
+	State variables written after the call(s):
+	- trackSpend(tokensToSpend) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#441)
+		- stat_timesSpend = stat_timesSpend.add(1) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#164)
+	- trackSpend(tokensToSpend) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#441)
+		- stat_tokensSpend = stat_tokensSpend.add(tokens) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#163)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in OMPxContract.buyBack(uint256,uint256) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#422-435):
+	External calls:
+	- currentPrice = getBuyBackPrice(0) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#423)
+		- tokens = token.totalSupply() (0x09a80172ed7335660327cd664876b5df6fe06108.sol#352)
+	- require(bool)(tokensToBuyBack <= token.balanceOf(msg.sender)) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#427)
+	- token.safeTransferFrom(msg.sender,this,tokensToBuyBack) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#429)
+	Event emitted after the call(s):
+	- BuyBack(msg.sender,tokensToBuyBack,totalPrice) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#431)
+Reentrancy in OMPxContract.purchaseSafe(uint256,uint256) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#380-419):
+	External calls:
+	- currentPrice = getPurchasePrice(msg.value,tokensToPurchase) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#383)
+		- tokens = token.totalSupply() (0x09a80172ed7335660327cd664876b5df6fe06108.sol#352)
+	- availableTokens = token.balanceOf(this) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#398)
+	- token.mint(this,tokensToMint) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#401)
+	- token.safeTransfer(msg.sender,tokensWuiAvailableByCurrentPrice) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#403)
+	Event emitted after the call(s):
+	- TransferMoneyBack(msg.sender,oddEthers) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#411)
+Reentrancy in OMPxContract.purchaseSafe(uint256,uint256) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#380-419):
+	External calls:
+	- currentPrice = getPurchasePrice(msg.value,tokensToPurchase) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#383)
+		- tokens = token.totalSupply() (0x09a80172ed7335660327cd664876b5df6fe06108.sol#352)
+	- availableTokens = token.balanceOf(this) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#398)
+	- token.mint(this,tokensToMint) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#401)
+	- token.safeTransfer(msg.sender,tokensWuiAvailableByCurrentPrice) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#403)
+	External calls sending eth:
+	- msg.sender.transfer(oddEthers) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#412)
+	Event emitted after the call(s):
+	- Purchase(msg.sender,tokensToPurchase,totalDealPrice) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#416)
+Reentrancy in OMPxContract.purchaseUpAndSpend(uint256,uint256,bytes32) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#446-457):
+	External calls:
+	- tokensToPurchaseUp = tokensToSpend.sub(token.balanceOf(msg.sender)) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#447)
+	- currentPrice = getPurchasePrice(msg.value,tokensToPurchaseUp) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#448)
+		- tokens = token.totalSupply() (0x09a80172ed7335660327cd664876b5df6fe06108.sol#352)
+	- purchase(tokensToPurchaseUp,maxPrice) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#453)
+		- assert(bool)(token.transfer(to,value)) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#47)
+		- tokens = token.totalSupply() (0x09a80172ed7335660327cd664876b5df6fe06108.sol#352)
+		- availableTokens = token.balanceOf(this) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#398)
+		- token.mint(this,tokensToMint) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#401)
+		- token.safeTransfer(msg.sender,tokensWuiAvailableByCurrentPrice) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#403)
+	External calls sending eth:
+	- purchase(tokensToPurchaseUp,maxPrice) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#453)
+		- msg.sender.transfer(oddEthers) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#412)
+	Event emitted after the call(s):
+	- Purchase(msg.sender,tokensToPurchase,totalDealPrice) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#416)
+		- purchase(tokensToPurchaseUp,maxPrice) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#453)
+	- TransferMoneyBack(msg.sender,oddEthers) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#411)
+		- purchase(tokensToPurchaseUp,maxPrice) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#453)
+Reentrancy in OMPxContract.purchaseUpAndSpend(uint256,uint256,bytes32) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#446-457):
+	External calls:
+	- tokensToPurchaseUp = tokensToSpend.sub(token.balanceOf(msg.sender)) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#447)
+	- currentPrice = getPurchasePrice(msg.value,tokensToPurchaseUp) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#448)
+		- tokens = token.totalSupply() (0x09a80172ed7335660327cd664876b5df6fe06108.sol#352)
+	- purchase(tokensToPurchaseUp,maxPrice) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#453)
+		- assert(bool)(token.transfer(to,value)) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#47)
+		- tokens = token.totalSupply() (0x09a80172ed7335660327cd664876b5df6fe06108.sol#352)
+		- availableTokens = token.balanceOf(this) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#398)
+		- token.mint(this,tokensToMint) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#401)
+		- token.safeTransfer(msg.sender,tokensWuiAvailableByCurrentPrice) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#403)
+	- spend(tokensToSpend,orderId) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#455)
+		- token.safeTransferFrom(msg.sender,this,tokensToSpend) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#439)
+		- assert(bool)(token.transferFrom(from,to,value)) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#51)
+		- token.burn(tokensToSpend) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#440)
+	External calls sending eth:
+	- purchase(tokensToPurchaseUp,maxPrice) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#453)
+		- msg.sender.transfer(oddEthers) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#412)
+	Event emitted after the call(s):
+	- Spend(msg.sender,tokensToSpend,orderId) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#442)
+		- spend(tokensToSpend,orderId) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#455)
+Reentrancy in OMPxContract.spend(uint256,bytes32) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#438-443):
+	External calls:
+	- token.safeTransferFrom(msg.sender,this,tokensToSpend) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#439)
+	- token.burn(tokensToSpend) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#440)
+	Event emitted after the call(s):
+	- Spend(msg.sender,tokensToSpend,orderId) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#442)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+Version constraint ^0.4.13 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ExpExponentCleanup
+	- NestedArrayFunctionCallDecoder
+	- ZeroFunctionSelector
+	- DelegateCallReturnValue
+	- ECRecoverMalformedInput.
+It is used by:
+	- ^0.4.13 (0x09a80172ed7335660327cd664876b5df6fe06108.sol#1)
+solc-0.4.21 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Parameter Discountable.addDiscount(uint256,uint256)._amount (0x09a80172ed7335660327cd664876b5df6fe06108.sol#103) is not in mixedCase
+Parameter Discountable.addDiscount(uint256,uint256)._disc (0x09a80172ed7335660327cd664876b5df6fe06108.sol#103) is not in mixedCase
+Parameter Discountable.editDiscount(uint256,uint256,uint256)._amount (0x09a80172ed7335660327cd664876b5df6fe06108.sol#107) is not in mixedCase
+Parameter Discountable.editDiscount(uint256,uint256,uint256)._disc (0x09a80172ed7335660327cd664876b5df6fe06108.sol#107) is not in mixedCase
+Variable TransferStatistics.stat_tokensBoughtBack (0x09a80172ed7335660327cd664876b5df6fe06108.sol#136) is not in mixedCase
+Variable TransferStatistics.stat_timesBoughtBack (0x09a80172ed7335660327cd664876b5df6fe06108.sol#137) is not in mixedCase
+Variable TransferStatistics.stat_tokensPurchased (0x09a80172ed7335660327cd664876b5df6fe06108.sol#138) is not in mixedCase
+Variable TransferStatistics.stat_timesPurchased (0x09a80172ed7335660327cd664876b5df6fe06108.sol#139) is not in mixedCase
+Variable TransferStatistics.stat_ethSent (0x09a80172ed7335660327cd664876b5df6fe06108.sol#141) is not in mixedCase
+Variable TransferStatistics.stat_ethReceived (0x09a80172ed7335660327cd664876b5df6fe06108.sol#142) is not in mixedCase
+Variable TransferStatistics.stat_tokensSpend (0x09a80172ed7335660327cd664876b5df6fe06108.sol#144) is not in mixedCase
+Variable TransferStatistics.stat_timesSpend (0x09a80172ed7335660327cd664876b5df6fe06108.sol#145) is not in mixedCase
+Parameter BasicToken.transfer(address,uint256)._to (0x09a80172ed7335660327cd664876b5df6fe06108.sol#243) is not in mixedCase
+Parameter BasicToken.transfer(address,uint256)._value (0x09a80172ed7335660327cd664876b5df6fe06108.sol#243) is not in mixedCase
+Parameter BasicToken.balanceOf(address)._owner (0x09a80172ed7335660327cd664876b5df6fe06108.sol#259) is not in mixedCase
+Parameter BurnableToken.burn(uint256)._value (0x09a80172ed7335660327cd664876b5df6fe06108.sol#273) is not in mixedCase
+Parameter OMPxContract.balanceOf(address)._owner (0x09a80172ed7335660327cd664876b5df6fe06108.sol#342) is not in mixedCase
+Parameter Distribution.addShare(address,uint256)._rec (0x09a80172ed7335660327cd664876b5df6fe06108.sol#518) is not in mixedCase
+Parameter Distribution.changeShare(address,uint256)._rec (0x09a80172ed7335660327cd664876b5df6fe06108.sol#535) is not in mixedCase
+Parameter Distribution.deleteShare(address)._rec (0x09a80172ed7335660327cd664876b5df6fe06108.sol#545) is not in mixedCase
+Parameter Distribution.changeRecipientAddress(address)._newRec (0x09a80172ed7335660327cd664876b5df6fe06108.sol#559) is not in mixedCase
+Constant Distribution.maxRecsAmount (0x09a80172ed7335660327cd664876b5df6fe06108.sol#480) is not in UPPER_CASE_WITH_UNDERSCORES
+Parameter StandardToken.transferFrom(address,address,uint256)._from (0x09a80172ed7335660327cd664876b5df6fe06108.sol#596) is not in mixedCase
+Parameter StandardToken.transferFrom(address,address,uint256)._to (0x09a80172ed7335660327cd664876b5df6fe06108.sol#596) is not in mixedCase
+Parameter StandardToken.transferFrom(address,address,uint256)._value (0x09a80172ed7335660327cd664876b5df6fe06108.sol#596) is not in mixedCase
+Parameter StandardToken.approve(address,uint256)._spender (0x09a80172ed7335660327cd664876b5df6fe06108.sol#620) is not in mixedCase
+Parameter StandardToken.approve(address,uint256)._value (0x09a80172ed7335660327cd664876b5df6fe06108.sol#620) is not in mixedCase
+Parameter StandardToken.allowance(address,address)._owner (0x09a80172ed7335660327cd664876b5df6fe06108.sol#632) is not in mixedCase
+Parameter StandardToken.allowance(address,address)._spender (0x09a80172ed7335660327cd664876b5df6fe06108.sol#632) is not in mixedCase
+Parameter StandardToken.increaseApproval(address,uint256)._spender (0x09a80172ed7335660327cd664876b5df6fe06108.sol#646) is not in mixedCase
+Parameter StandardToken.increaseApproval(address,uint256)._addedValue (0x09a80172ed7335660327cd664876b5df6fe06108.sol#646) is not in mixedCase
+Parameter StandardToken.decreaseApproval(address,uint256)._spender (0x09a80172ed7335660327cd664876b5df6fe06108.sol#662) is not in mixedCase
+Parameter StandardToken.decreaseApproval(address,uint256)._subtractedValue (0x09a80172ed7335660327cd664876b5df6fe06108.sol#662) is not in mixedCase
+Parameter MintableToken.mint(address,uint256)._to (0x09a80172ed7335660327cd664876b5df6fe06108.sol#693) is not in mixedCase
+Parameter MintableToken.mint(address,uint256)._amount (0x09a80172ed7335660327cd664876b5df6fe06108.sol#693) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in Distribution.doPayments() (0x09a80172ed7335660327cd664876b5df6fe06108.sol#509-516):
+	External calls:
+	- rec.addr.transfer(rec.balance) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#512)
+	State variables written after the call(s):
+	- rec.received = (rec.received).add(rec.balance) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#514)
+	- rec.balance = 0 (0x09a80172ed7335660327cd664876b5df6fe06108.sol#515)
+	Event emitted after the call(s):
+	- Payment(rec.addr,rec.balance) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#513)
+Reentrancy in OMPxContract.purchaseSafe(uint256,uint256) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#380-419):
+	External calls:
+	- msg.sender.transfer(oddEthers) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#412)
+	State variables written after the call(s):
+	- trackOdd(oddEthers) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#413)
+		- oddSent = oddSent.add(odd) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#168)
+	- trackPurchase(tokensWuiAvailableByCurrentPrice,totalDealPrice) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#417)
+		- stat_ethSent = stat_ethSent.add(sum) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#153)
+	- trackPurchase(tokensWuiAvailableByCurrentPrice,totalDealPrice) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#417)
+		- stat_timesPurchased = stat_timesPurchased.add(1) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#152)
+	- trackPurchase(tokensWuiAvailableByCurrentPrice,totalDealPrice) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#417)
+		- stat_tokensPurchased = stat_tokensPurchased.add(tokens) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#151)
+	Event emitted after the call(s):
+	- Purchase(msg.sender,tokensToPurchase,totalDealPrice) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#416)
+Reentrancy in OMPxContract.purchaseUpAndSpend(uint256,uint256,bytes32) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#446-457):
+	External calls:
+	- purchase(tokensToPurchaseUp,maxPrice) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#453)
+		- msg.sender.transfer(oddEthers) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#412)
+	State variables written after the call(s):
+	- spend(tokensToSpend,orderId) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#455)
+		- stat_timesSpend = stat_timesSpend.add(1) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#164)
+	- spend(tokensToSpend,orderId) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#455)
+		- stat_tokensSpend = stat_tokensSpend.add(tokens) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#163)
+	Event emitted after the call(s):
+	- Spend(msg.sender,tokensToSpend,orderId) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#442)
+		- spend(tokensToSpend,orderId) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#455)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+OMPxContract.OMPxContract() (0x09a80172ed7335660327cd664876b5df6fe06108.sol#308-316) uses literals with too many digits:
+	- addDiscount(100000 * 1e18,150) (0x09a80172ed7335660327cd664876b5df6fe06108.sol#312)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+BasicToken.totalSupply_ (0x09a80172ed7335660327cd664876b5df6fe06108.sol#229) should be constant 
+Discountable.defaultCoef (0x09a80172ed7335660327cd664876b5df6fe06108.sol#100) should be constant 
+Discountable.descPrecision (0x09a80172ed7335660327cd664876b5df6fe06108.sol#99) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+./0x09a80172ed7335660327cd664876b5df6fe06108.sol analyzed (15 contracts with 94 detectors), 67 result(s) found
+
+real	0m3.795s
+user	0m3.527s
+sys	0m0.268s

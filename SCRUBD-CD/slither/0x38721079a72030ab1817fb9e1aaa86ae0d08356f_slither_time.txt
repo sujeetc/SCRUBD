@@ -1,0 +1,822 @@
+'solc --version' running
+'solc ./0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol:
+Warning: SPDX license identifier not provided in source file. Before publishing, consider adding a comment containing "SPDX-License-Identifier: <SPDX-License>" to each source file. Use "SPDX-License-Identifier: UNLICENSED" for non-open-source code. Please see https://spdx.org for more information.
+--> ./0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol
+
+Warning: Return value of low-level calls not used.
+    --> ./0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol:3295:9:
+     |
+3295 |         msg.sender.call{value: amountToPayToUser}("");
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: Function state mutability can be restricted to pure
+    --> ./0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol:3054:5:
+     |
+3054 |     function getOutToken(address[] memory v2Path, bytes memory v3Path) public view returns (address) {
+     |     ^ (Relevant source part starts here and spans across multiple lines).
+
+Warning: Contract code size exceeds 24576 bytes (a limit introduced in Spurious Dragon). This contract may not be deployable on mainnet. Consider enabling the optimizer (with a low "runs" value!), turning off revert strings, or using libraries.
+    --> ./0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol:3076:1:
+     |
+3076 | contract Investment is ERC20, ERC20Burnable, Ownable {
+     | ^ (Relevant source part starts here and spans across multiple lines).
+
+
+
+FullMath.mulDiv(uint256,uint256,uint256) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#1010-1104) has bitwise-xor operator ^ instead of the exponentiation operator **: 
+	 - inv = (3 * denominator) ^ 2 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#1084)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-exponentiation
+
+Reentrancy in Investment.addToPool(uint256[]) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3193-3238):
+	External calls:
+	- WETHContract.deposit{value: msg.value}() (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3203)
+	- IERC20(WETHAddress).transfer(owner(),poolOwnerFeeAmount) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3204)
+	- processFee(WETHAddress,factoryFeeAmount,0) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3205)
+		- IERC20(v2Path[0]).approve(address(uniswapV2Router),amountIn) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3349)
+		- uniswapV2Router.swapExactTokensForTokensSupportingFeeOnTransferTokens(amountIn,amountOutMinimum,v2Path,address(this),block.timestamp) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3350-3356)
+		- feeHandlerAddress = IFactory(_factoryAddress)._feeHandlerAddress() (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3322)
+		- IERC20(WETHAddress).approve(feeHandlerAddress,feeAmount) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3323)
+		- IERC20(decodedTokenIn).approve(address(swapRouter),amountIn) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3363)
+		- IFeeHandler(feeHandlerAddress).collectFees(feeAmount) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3324)
+		- IERC20(decodedTokenIn_scope_0).approve(address(swapRouter),amountIn) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3367)
+		- swapRouter.exactInput(params) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3377)
+	- _swapTokens(autoSwapParams.v2Path,autoSwapParams.v3Path,amountIn * autoSwapParams.ratio / 10 ** 18,minimumAmountsOut[i],autoSwapParams.quoteToken) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3216-3222)
+		- IERC20(v2Path[0]).approve(address(uniswapV2Router),amountIn) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3349)
+		- uniswapV2Router.swapExactTokensForTokensSupportingFeeOnTransferTokens(amountIn,amountOutMinimum,v2Path,address(this),block.timestamp) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3350-3356)
+		- IERC20(decodedTokenIn).approve(address(swapRouter),amountIn) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3363)
+		- IERC20(decodedTokenIn_scope_0).approve(address(swapRouter),amountIn) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3367)
+		- swapRouter.exactInput(params) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3377)
+	External calls sending eth:
+	- WETHContract.deposit{value: msg.value}() (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3203)
+	State variables written after the call(s):
+	- _swapTokens(autoSwapParams.v2Path,autoSwapParams.v3Path,amountIn * autoSwapParams.ratio / 10 ** 18,minimumAmountsOut[i],autoSwapParams.quoteToken) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3216-3222)
+		- _tokensHeld[i] = _tokensHeld[_tokensHeld.length - 1] (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3187)
+		- _tokensHeld.pop() (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3188)
+		- _tokensHeld.push(InvestmentLibrary.heldToken(tokenOut,address(0),false)) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3412)
+		- _tokensHeld.push(InvestmentLibrary.heldToken(tokenOut,quoteToken,isV3)) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3414)
+	Investment._tokensHeld (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3080) can be used in cross function reentrancies:
+	- Investment._adjustTokensHeld(address[],bytes,uint256,address) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3381-3419)
+	- Investment._removeAddressFromTokensHeld(address) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3181-3191)
+	- Investment._tokensHeld (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3080)
+	- Investment.addToPool(uint256[]) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3193-3238)
+	- Investment.getAllTokensHeld() (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3122-3124)
+	- Investment.getContractTotalBalance() (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3130-3132)
+	- Investment.removeFromPool(uint256,InvestmentLibrary.exitSwapParams[]) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3240-3303)
+	- _tokensHeld.push(InvestmentLibrary.heldToken(WETHAddress,address(0),false)) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3233)
+	Investment._tokensHeld (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3080) can be used in cross function reentrancies:
+	- Investment._adjustTokensHeld(address[],bytes,uint256,address) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3381-3419)
+	- Investment._removeAddressFromTokensHeld(address) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3181-3191)
+	- Investment._tokensHeld (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3080)
+	- Investment.addToPool(uint256[]) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3193-3238)
+	- Investment.getAllTokensHeld() (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3122-3124)
+	- Investment.getContractTotalBalance() (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3130-3132)
+	- Investment.removeFromPool(uint256,InvestmentLibrary.exitSwapParams[]) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3240-3303)
+	- _mint(msg.sender,poolTokensToMint) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3230)
+		- _totalSupply += amount (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#2706)
+	ERC20._totalSupply (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#2484) can be used in cross function reentrancies:
+	- ERC20._burn(address,uint256) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#2724-2739)
+	- ERC20._mint(address,uint256) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#2701-2711)
+	- ERC20.totalSupply() (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#2538-2540)
+Reentrancy in Investment.removeFromPool(uint256,InvestmentLibrary.exitSwapParams[]) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3240-3303):
+	External calls:
+	- wethRecieved = _swapTokens(path,emptyBytes,tokenContract.balanceOf(address(this)) * userShare / 10 ** 18,exitSwapParams[i].minimumOut,address(0)) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3262-3268)
+		- IERC20(v2Path[0]).approve(address(uniswapV2Router),amountIn) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3349)
+		- uniswapV2Router.swapExactTokensForTokensSupportingFeeOnTransferTokens(amountIn,amountOutMinimum,v2Path,address(this),block.timestamp) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3350-3356)
+		- IERC20(decodedTokenIn).approve(address(swapRouter),amountIn) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3363)
+		- IERC20(decodedTokenIn_scope_0).approve(address(swapRouter),amountIn) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3367)
+		- swapRouter.exactInput(params) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3377)
+	- wethRecieved_scope_1 = _swapTokens(path_scope_0,abi.encode(tokensHeldSnapshot[i].tokenAddress,exitSwapParams[i].fee,WETHAddress),tokenContract.balanceOf(address(this)) * userShare / 10 ** 18,exitSwapParams[i].minimumOut,address(0)) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3273-3279)
+		- IERC20(v2Path[0]).approve(address(uniswapV2Router),amountIn) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3349)
+		- uniswapV2Router.swapExactTokensForTokensSupportingFeeOnTransferTokens(amountIn,amountOutMinimum,v2Path,address(this),block.timestamp) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3350-3356)
+		- IERC20(decodedTokenIn).approve(address(swapRouter),amountIn) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3363)
+		- IERC20(decodedTokenIn_scope_0).approve(address(swapRouter),amountIn) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3367)
+		- swapRouter.exactInput(params) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3377)
+	- IERC20(WETHAddress).transfer(owner(),poolOwnerFeeAmount) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3291)
+	- processFee(WETHAddress,factoryFeeAmount,0) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3292)
+		- IERC20(v2Path[0]).approve(address(uniswapV2Router),amountIn) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3349)
+		- uniswapV2Router.swapExactTokensForTokensSupportingFeeOnTransferTokens(amountIn,amountOutMinimum,v2Path,address(this),block.timestamp) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3350-3356)
+		- feeHandlerAddress = IFactory(_factoryAddress)._feeHandlerAddress() (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3322)
+		- IERC20(WETHAddress).approve(feeHandlerAddress,feeAmount) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3323)
+		- IERC20(decodedTokenIn).approve(address(swapRouter),amountIn) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3363)
+		- IFeeHandler(feeHandlerAddress).collectFees(feeAmount) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3324)
+		- IERC20(decodedTokenIn_scope_0).approve(address(swapRouter),amountIn) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3367)
+		- swapRouter.exactInput(params) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3377)
+	- WETHContract.withdraw(amountToPayToUser) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3294)
+	- msg.sender.call{value: amountToPayToUser}() (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3295)
+	External calls sending eth:
+	- msg.sender.call{value: amountToPayToUser}() (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3295)
+	State variables written after the call(s):
+	- _removeAddressFromTokensHeld(WETHAddress) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3298)
+		- _tokensHeld[i] = _tokensHeld[_tokensHeld.length - 1] (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3187)
+		- _tokensHeld.pop() (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3188)
+	Investment._tokensHeld (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3080) can be used in cross function reentrancies:
+	- Investment._adjustTokensHeld(address[],bytes,uint256,address) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3381-3419)
+	- Investment._removeAddressFromTokensHeld(address) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3181-3191)
+	- Investment._tokensHeld (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3080)
+	- Investment.addToPool(uint256[]) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3193-3238)
+	- Investment.getAllTokensHeld() (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3122-3124)
+	- Investment.getContractTotalBalance() (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3130-3132)
+	- Investment.removeFromPool(uint256,InvestmentLibrary.exitSwapParams[]) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3240-3303)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+Investment._name (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3081) shadows:
+	- ERC20._name (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#2486)
+Investment._symbol (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3082) shadows:
+	- ERC20._symbol (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#2487)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variable-shadowing
+
+Investment.addToPool(uint256[]) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3193-3238) ignores return value by IERC20(WETHAddress).transfer(owner(),poolOwnerFeeAmount) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3204)
+Investment.removeFromPool(uint256,InvestmentLibrary.exitSwapParams[]) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3240-3303) ignores return value by IERC20(WETHAddress).transfer(owner(),poolOwnerFeeAmount) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3291)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+TickMath.getSqrtRatioAtTick(int24) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#806-841) performs a multiplication on the result of a division:
+	- ratio = (ratio * 0x48a170391f7dc42444e8fa2) >> 128 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#832)
+	- ratio = type()(uint256).max / ratio (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#834)
+TickMath.getSqrtRatioAtTick(int24) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#806-841) performs a multiplication on the result of a division:
+	- ratio = (ratio * 0x2216e584f5fa1ea926041bedfe98) >> 128 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#831)
+	- ratio = type()(uint256).max / ratio (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#834)
+TickMath.getSqrtRatioAtTick(int24) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#806-841) performs a multiplication on the result of a division:
+	- ratio = (ratio * 0x5d6af8dedb81196699c329225ee604) >> 128 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#830)
+	- ratio = type()(uint256).max / ratio (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#834)
+TickMath.getSqrtRatioAtTick(int24) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#806-841) performs a multiplication on the result of a division:
+	- ratio = (ratio * 0x9aa508b5b7a84e1c677de54f3e99bc9) >> 128 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#829)
+	- ratio = type()(uint256).max / ratio (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#834)
+TickMath.getSqrtRatioAtTick(int24) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#806-841) performs a multiplication on the result of a division:
+	- ratio = (ratio * 0x31be135f97d08fd981231505542fcfa6) >> 128 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#828)
+	- ratio = type()(uint256).max / ratio (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#834)
+TickMath.getSqrtRatioAtTick(int24) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#806-841) performs a multiplication on the result of a division:
+	- ratio = (ratio * 0x70d869a156d2a1b890bb3df62baf32f7) >> 128 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#827)
+	- ratio = type()(uint256).max / ratio (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#834)
+TickMath.getSqrtRatioAtTick(int24) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#806-841) performs a multiplication on the result of a division:
+	- ratio = (ratio * 0xa9f746462d870fdf8a65dc1f90e061e5) >> 128 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#826)
+	- ratio = type()(uint256).max / ratio (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#834)
+TickMath.getSqrtRatioAtTick(int24) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#806-841) performs a multiplication on the result of a division:
+	- ratio = (ratio * 0xd097f3bdfd2022b8845ad8f792aa5825) >> 128 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#825)
+	- ratio = type()(uint256).max / ratio (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#834)
+TickMath.getSqrtRatioAtTick(int24) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#806-841) performs a multiplication on the result of a division:
+	- ratio = (ratio * 0xe7159475a2c29b7443b29c7fa6e889d9) >> 128 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#824)
+	- ratio = type()(uint256).max / ratio (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#834)
+TickMath.getSqrtRatioAtTick(int24) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#806-841) performs a multiplication on the result of a division:
+	- ratio = (ratio * 0xf3392b0822b70005940c7a398e4b70f3) >> 128 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#823)
+	- ratio = type()(uint256).max / ratio (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#834)
+TickMath.getSqrtRatioAtTick(int24) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#806-841) performs a multiplication on the result of a division:
+	- ratio = (ratio * 0xf987a7253ac413176f2b074cf7815e54) >> 128 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#822)
+	- ratio = type()(uint256).max / ratio (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#834)
+TickMath.getSqrtRatioAtTick(int24) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#806-841) performs a multiplication on the result of a division:
+	- ratio = (ratio * 0xfcbe86c7900a88aedcffc83b479aa3a4) >> 128 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#821)
+	- ratio = type()(uint256).max / ratio (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#834)
+TickMath.getSqrtRatioAtTick(int24) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#806-841) performs a multiplication on the result of a division:
+	- ratio = (ratio * 0xfe5dee046a99a2a811c461f1969c3053) >> 128 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#820)
+	- ratio = type()(uint256).max / ratio (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#834)
+TickMath.getSqrtRatioAtTick(int24) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#806-841) performs a multiplication on the result of a division:
+	- ratio = (ratio * 0xff2ea16466c96a3843ec78b326b52861) >> 128 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#819)
+	- ratio = type()(uint256).max / ratio (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#834)
+TickMath.getSqrtRatioAtTick(int24) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#806-841) performs a multiplication on the result of a division:
+	- ratio = (ratio * 0xff973b41fa98c081472e6896dfb254c0) >> 128 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#818)
+	- ratio = type()(uint256).max / ratio (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#834)
+TickMath.getSqrtRatioAtTick(int24) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#806-841) performs a multiplication on the result of a division:
+	- ratio = (ratio * 0xffcb9843d60f6159c9db58835c926644) >> 128 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#817)
+	- ratio = type()(uint256).max / ratio (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#834)
+TickMath.getSqrtRatioAtTick(int24) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#806-841) performs a multiplication on the result of a division:
+	- ratio = (ratio * 0xffe5caca7e10e4e61c3624eaa0941cd0) >> 128 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#816)
+	- ratio = type()(uint256).max / ratio (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#834)
+TickMath.getSqrtRatioAtTick(int24) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#806-841) performs a multiplication on the result of a division:
+	- ratio = (ratio * 0xfff2e50f5f656932ef12357cf3c7fdcc) >> 128 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#815)
+	- ratio = type()(uint256).max / ratio (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#834)
+TickMath.getSqrtRatioAtTick(int24) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#806-841) performs a multiplication on the result of a division:
+	- ratio = (ratio * 0xfff97272373d413259a46990580e213a) >> 128 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#814)
+	- ratio = type()(uint256).max / ratio (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#834)
+FullMath.mulDiv(uint256,uint256,uint256) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#1010-1104) performs a multiplication on the result of a division:
+	- denominator = denominator / twos (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#1064)
+	- inv = (3 * denominator) ^ 2 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#1084)
+FullMath.mulDiv(uint256,uint256,uint256) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#1010-1104) performs a multiplication on the result of a division:
+	- denominator = denominator / twos (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#1064)
+	- inv *= 2 - denominator * inv (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#1088)
+FullMath.mulDiv(uint256,uint256,uint256) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#1010-1104) performs a multiplication on the result of a division:
+	- denominator = denominator / twos (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#1064)
+	- inv *= 2 - denominator * inv (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#1089)
+FullMath.mulDiv(uint256,uint256,uint256) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#1010-1104) performs a multiplication on the result of a division:
+	- denominator = denominator / twos (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#1064)
+	- inv *= 2 - denominator * inv (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#1090)
+FullMath.mulDiv(uint256,uint256,uint256) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#1010-1104) performs a multiplication on the result of a division:
+	- denominator = denominator / twos (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#1064)
+	- inv *= 2 - denominator * inv (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#1091)
+FullMath.mulDiv(uint256,uint256,uint256) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#1010-1104) performs a multiplication on the result of a division:
+	- denominator = denominator / twos (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#1064)
+	- inv *= 2 - denominator * inv (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#1092)
+FullMath.mulDiv(uint256,uint256,uint256) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#1010-1104) performs a multiplication on the result of a division:
+	- denominator = denominator / twos (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#1064)
+	- inv *= 2 - denominator * inv (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#1093)
+FullMath.mulDiv(uint256,uint256,uint256) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#1010-1104) performs a multiplication on the result of a division:
+	- prod0 = prod0 / twos (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#1069)
+	- result = prod0 * inv (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#1101)
+InvestmentLibrary.getContractTotalBalance(InvestmentLibrary.heldToken[]) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#2976-2995) performs a multiplication on the result of a division:
+	- tokenPriceInETH = tokenPriceInUSD * 10 ** 18 / usdPriceInETH (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#2987)
+	- contractValue += IERC20(_tokensHeld[i].tokenAddress).balanceOf(address(this)) * tokenPriceInETH / 10 ** IERC20Metadata(_tokensHeld[i].tokenAddress).decimals() (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#2989)
+InvestmentLibrary.getPoolTokensToMint(uint256,InvestmentLibrary.heldToken[],uint256) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#2997-3009) performs a multiplication on the result of a division:
+	- percentIncrease = messageValue * 10 ** 18 / poolValue (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3000)
+	- newSupply = totalSupply * percentIncrease / 10 ** 18 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3003)
+Investment.removeFromPool(uint256,InvestmentLibrary.exitSwapParams[]) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3240-3303) performs a multiplication on the result of a division:
+	- userShare = amountToRemove * 10 ** 18 / (totalSupply() + amountToRemove) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3251)
+	- wethPayout = IERC20(WETHAddress).balanceOf(address(this)) * userShare / 10 ** 18 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3252)
+Investment.removeFromPool(uint256,InvestmentLibrary.exitSwapParams[]) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3240-3303) performs a multiplication on the result of a division:
+	- wethPayout = IERC20(WETHAddress).balanceOf(address(this)) * userShare / 10 ** 18 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3252)
+	- poolOwnerFeeAmount = wethPayout * _poolFee / 10 ** 18 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3286)
+Investment.removeFromPool(uint256,InvestmentLibrary.exitSwapParams[]) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3240-3303) performs a multiplication on the result of a division:
+	- wethPayout = IERC20(WETHAddress).balanceOf(address(this)) * userShare / 10 ** 18 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3252)
+	- factoryFeeAmount = wethPayout * _factoryFee / 10 ** 18 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3287)
+Investment.removeFromPool(uint256,InvestmentLibrary.exitSwapParams[]) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3240-3303) performs a multiplication on the result of a division:
+	- userShare = amountToRemove * 10 ** 18 / (totalSupply() + amountToRemove) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3251)
+	- wethRecieved_scope_1 = _swapTokens(path_scope_0,abi.encode(tokensHeldSnapshot[i].tokenAddress,exitSwapParams[i].fee,WETHAddress),tokenContract.balanceOf(address(this)) * userShare / 10 ** 18,exitSwapParams[i].minimumOut,address(0)) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3273-3279)
+Investment.removeFromPool(uint256,InvestmentLibrary.exitSwapParams[]) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3240-3303) performs a multiplication on the result of a division:
+	- userShare = amountToRemove * 10 ** 18 / (totalSupply() + amountToRemove) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3251)
+	- wethRecieved = _swapTokens(path,emptyBytes,tokenContract.balanceOf(address(this)) * userShare / 10 ** 18,exitSwapParams[i].minimumOut,address(0)) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3262-3268)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+Investment._adjustTokensHeld(address[],bytes,uint256,address) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3381-3419) uses a dangerous strict equality:
+	- IERC20(tokenIn).balanceOf(address(this)) - amountIn == 0 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3407)
+Investment._adjustTokensHeld(address[],bytes,uint256,address) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3381-3419) uses a dangerous strict equality:
+	- IERC20(tokenOut).balanceOf(address(this)) == 0 && InvestmentLibrary.isTokenHeld(_tokensHeld,tokenOut) == false (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3410)
+Investment.removeFromPool(uint256,InvestmentLibrary.exitSwapParams[]) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3240-3303) uses a dangerous strict equality:
+	- InvestmentLibrary.isTokenHeld(_tokensHeld,WETHAddress) == true && IERC20(WETHAddress).balanceOf(address(this)) == 0 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3297)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-strict-equalities
+
+Reentrancy in Investment.removeFromPool(uint256,InvestmentLibrary.exitSwapParams[]) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3240-3303):
+	External calls:
+	- wethRecieved = _swapTokens(path,emptyBytes,tokenContract.balanceOf(address(this)) * userShare / 10 ** 18,exitSwapParams[i].minimumOut,address(0)) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3262-3268)
+		- IERC20(v2Path[0]).approve(address(uniswapV2Router),amountIn) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3349)
+		- uniswapV2Router.swapExactTokensForTokensSupportingFeeOnTransferTokens(amountIn,amountOutMinimum,v2Path,address(this),block.timestamp) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3350-3356)
+		- IERC20(decodedTokenIn).approve(address(swapRouter),amountIn) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3363)
+		- IERC20(decodedTokenIn_scope_0).approve(address(swapRouter),amountIn) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3367)
+		- swapRouter.exactInput(params) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3377)
+	- wethRecieved_scope_1 = _swapTokens(path_scope_0,abi.encode(tokensHeldSnapshot[i].tokenAddress,exitSwapParams[i].fee,WETHAddress),tokenContract.balanceOf(address(this)) * userShare / 10 ** 18,exitSwapParams[i].minimumOut,address(0)) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3273-3279)
+		- IERC20(v2Path[0]).approve(address(uniswapV2Router),amountIn) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3349)
+		- uniswapV2Router.swapExactTokensForTokensSupportingFeeOnTransferTokens(amountIn,amountOutMinimum,v2Path,address(this),block.timestamp) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3350-3356)
+		- IERC20(decodedTokenIn).approve(address(swapRouter),amountIn) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3363)
+		- IERC20(decodedTokenIn_scope_0).approve(address(swapRouter),amountIn) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3367)
+		- swapRouter.exactInput(params) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3377)
+	State variables written after the call(s):
+	- wethRecieved = _swapTokens(path,emptyBytes,tokenContract.balanceOf(address(this)) * userShare / 10 ** 18,exitSwapParams[i].minimumOut,address(0)) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3262-3268)
+		- _tokensHeld[i] = _tokensHeld[_tokensHeld.length - 1] (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3187)
+		- _tokensHeld.pop() (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3188)
+		- _tokensHeld.push(InvestmentLibrary.heldToken(tokenOut,address(0),false)) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3412)
+		- _tokensHeld.push(InvestmentLibrary.heldToken(tokenOut,quoteToken,isV3)) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3414)
+	Investment._tokensHeld (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3080) can be used in cross function reentrancies:
+	- Investment._adjustTokensHeld(address[],bytes,uint256,address) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3381-3419)
+	- Investment._removeAddressFromTokensHeld(address) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3181-3191)
+	- Investment._tokensHeld (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3080)
+	- Investment.addToPool(uint256[]) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3193-3238)
+	- Investment.getAllTokensHeld() (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3122-3124)
+	- Investment.getContractTotalBalance() (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3130-3132)
+	- Investment.removeFromPool(uint256,InvestmentLibrary.exitSwapParams[]) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3240-3303)
+	- wethRecieved_scope_1 = _swapTokens(path_scope_0,abi.encode(tokensHeldSnapshot[i].tokenAddress,exitSwapParams[i].fee,WETHAddress),tokenContract.balanceOf(address(this)) * userShare / 10 ** 18,exitSwapParams[i].minimumOut,address(0)) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3273-3279)
+		- _tokensHeld[i] = _tokensHeld[_tokensHeld.length - 1] (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3187)
+		- _tokensHeld.pop() (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3188)
+		- _tokensHeld.push(InvestmentLibrary.heldToken(tokenOut,address(0),false)) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3412)
+		- _tokensHeld.push(InvestmentLibrary.heldToken(tokenOut,quoteToken,isV3)) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3414)
+	Investment._tokensHeld (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3080) can be used in cross function reentrancies:
+	- Investment._adjustTokensHeld(address[],bytes,uint256,address) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3381-3419)
+	- Investment._removeAddressFromTokensHeld(address) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3181-3191)
+	- Investment._tokensHeld (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3080)
+	- Investment.addToPool(uint256[]) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3193-3238)
+	- Investment.getAllTokensHeld() (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3122-3124)
+	- Investment.getContractTotalBalance() (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3130-3132)
+	- Investment.removeFromPool(uint256,InvestmentLibrary.exitSwapParams[]) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3240-3303)
+Reentrancy in Investment.removeFromPool(uint256,InvestmentLibrary.exitSwapParams[]) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3240-3303):
+	External calls:
+	- wethRecieved = _swapTokens(path,emptyBytes,tokenContract.balanceOf(address(this)) * userShare / 10 ** 18,exitSwapParams[i].minimumOut,address(0)) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3262-3268)
+		- IERC20(v2Path[0]).approve(address(uniswapV2Router),amountIn) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3349)
+		- uniswapV2Router.swapExactTokensForTokensSupportingFeeOnTransferTokens(amountIn,amountOutMinimum,v2Path,address(this),block.timestamp) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3350-3356)
+		- IERC20(decodedTokenIn).approve(address(swapRouter),amountIn) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3363)
+		- IERC20(decodedTokenIn_scope_0).approve(address(swapRouter),amountIn) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3367)
+		- swapRouter.exactInput(params) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3377)
+	- wethRecieved_scope_1 = _swapTokens(path_scope_0,abi.encode(tokensHeldSnapshot[i].tokenAddress,exitSwapParams[i].fee,WETHAddress),tokenContract.balanceOf(address(this)) * userShare / 10 ** 18,exitSwapParams[i].minimumOut,address(0)) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3273-3279)
+		- IERC20(v2Path[0]).approve(address(uniswapV2Router),amountIn) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3349)
+		- uniswapV2Router.swapExactTokensForTokensSupportingFeeOnTransferTokens(amountIn,amountOutMinimum,v2Path,address(this),block.timestamp) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3350-3356)
+		- IERC20(decodedTokenIn).approve(address(swapRouter),amountIn) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3363)
+		- IERC20(decodedTokenIn_scope_0).approve(address(swapRouter),amountIn) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3367)
+		- swapRouter.exactInput(params) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3377)
+	- IERC20(WETHAddress).transfer(owner(),poolOwnerFeeAmount) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3291)
+	- processFee(WETHAddress,factoryFeeAmount,0) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3292)
+		- IERC20(v2Path[0]).approve(address(uniswapV2Router),amountIn) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3349)
+		- uniswapV2Router.swapExactTokensForTokensSupportingFeeOnTransferTokens(amountIn,amountOutMinimum,v2Path,address(this),block.timestamp) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3350-3356)
+		- feeHandlerAddress = IFactory(_factoryAddress)._feeHandlerAddress() (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3322)
+		- IERC20(WETHAddress).approve(feeHandlerAddress,feeAmount) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3323)
+		- IERC20(decodedTokenIn).approve(address(swapRouter),amountIn) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3363)
+		- IFeeHandler(feeHandlerAddress).collectFees(feeAmount) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3324)
+		- IERC20(decodedTokenIn_scope_0).approve(address(swapRouter),amountIn) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3367)
+		- swapRouter.exactInput(params) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3377)
+	State variables written after the call(s):
+	- processFee(WETHAddress,factoryFeeAmount,0) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3292)
+		- _tokensHeld[i] = _tokensHeld[_tokensHeld.length - 1] (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3187)
+		- _tokensHeld.pop() (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3188)
+		- _tokensHeld.push(InvestmentLibrary.heldToken(tokenOut,address(0),false)) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3412)
+		- _tokensHeld.push(InvestmentLibrary.heldToken(tokenOut,quoteToken,isV3)) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3414)
+	Investment._tokensHeld (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3080) can be used in cross function reentrancies:
+	- Investment._adjustTokensHeld(address[],bytes,uint256,address) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3381-3419)
+	- Investment._removeAddressFromTokensHeld(address) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3181-3191)
+	- Investment._tokensHeld (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3080)
+	- Investment.addToPool(uint256[]) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3193-3238)
+	- Investment.getAllTokensHeld() (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3122-3124)
+	- Investment.getContractTotalBalance() (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3130-3132)
+	- Investment.removeFromPool(uint256,InvestmentLibrary.exitSwapParams[]) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3240-3303)
+Reentrancy in Investment.swapTokens(address[],bytes,uint256,uint256,address) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3327-3343):
+	External calls:
+	- processFee(v2Path[0],feeAmount,0) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3336)
+		- IERC20(v2Path[0]).approve(address(uniswapV2Router),amountIn) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3349)
+		- uniswapV2Router.swapExactTokensForTokensSupportingFeeOnTransferTokens(amountIn,amountOutMinimum,v2Path,address(this),block.timestamp) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3350-3356)
+		- feeHandlerAddress = IFactory(_factoryAddress)._feeHandlerAddress() (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3322)
+		- IERC20(WETHAddress).approve(feeHandlerAddress,feeAmount) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3323)
+		- IERC20(decodedTokenIn).approve(address(swapRouter),amountIn) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3363)
+		- IFeeHandler(feeHandlerAddress).collectFees(feeAmount) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3324)
+		- IERC20(decodedTokenIn_scope_0).approve(address(swapRouter),amountIn) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3367)
+		- swapRouter.exactInput(params) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3377)
+	- processFee(inToken,feeAmount,fee) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3339)
+		- IERC20(v2Path[0]).approve(address(uniswapV2Router),amountIn) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3349)
+		- uniswapV2Router.swapExactTokensForTokensSupportingFeeOnTransferTokens(amountIn,amountOutMinimum,v2Path,address(this),block.timestamp) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3350-3356)
+		- feeHandlerAddress = IFactory(_factoryAddress)._feeHandlerAddress() (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3322)
+		- IERC20(WETHAddress).approve(feeHandlerAddress,feeAmount) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3323)
+		- IERC20(decodedTokenIn).approve(address(swapRouter),amountIn) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3363)
+		- IFeeHandler(feeHandlerAddress).collectFees(feeAmount) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3324)
+		- IERC20(decodedTokenIn_scope_0).approve(address(swapRouter),amountIn) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3367)
+		- swapRouter.exactInput(params) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3377)
+	- _swapTokens(v2Path,v3Path,amountIn - feeAmount,amountOutMinimum,address(0)) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3342)
+		- IERC20(v2Path[0]).approve(address(uniswapV2Router),amountIn) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3349)
+		- uniswapV2Router.swapExactTokensForTokensSupportingFeeOnTransferTokens(amountIn,amountOutMinimum,v2Path,address(this),block.timestamp) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3350-3356)
+		- IERC20(decodedTokenIn).approve(address(swapRouter),amountIn) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3363)
+		- IERC20(decodedTokenIn_scope_0).approve(address(swapRouter),amountIn) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3367)
+		- swapRouter.exactInput(params) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3377)
+	State variables written after the call(s):
+	- _swapTokens(v2Path,v3Path,amountIn - feeAmount,amountOutMinimum,address(0)) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3342)
+		- _tokensHeld[i] = _tokensHeld[_tokensHeld.length - 1] (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3187)
+		- _tokensHeld.pop() (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3188)
+		- _tokensHeld.push(InvestmentLibrary.heldToken(tokenOut,address(0),false)) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3412)
+		- _tokensHeld.push(InvestmentLibrary.heldToken(tokenOut,quoteToken,isV3)) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3414)
+	Investment._tokensHeld (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3080) can be used in cross function reentrancies:
+	- Investment._adjustTokensHeld(address[],bytes,uint256,address) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3381-3419)
+	- Investment._removeAddressFromTokensHeld(address) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3181-3191)
+	- Investment._tokensHeld (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3080)
+	- Investment.addToPool(uint256[]) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3193-3238)
+	- Investment.getAllTokensHeld() (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3122-3124)
+	- Investment.getContractTotalBalance() (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3130-3132)
+	- Investment.removeFromPool(uint256,InvestmentLibrary.exitSwapParams[]) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3240-3303)
+Reentrancy in Investment.swapTokens(address[],bytes,uint256,uint256,address) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3327-3343):
+	External calls:
+	- processFee(v2Path[0],feeAmount,0) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3336)
+		- IERC20(v2Path[0]).approve(address(uniswapV2Router),amountIn) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3349)
+		- uniswapV2Router.swapExactTokensForTokensSupportingFeeOnTransferTokens(amountIn,amountOutMinimum,v2Path,address(this),block.timestamp) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3350-3356)
+		- feeHandlerAddress = IFactory(_factoryAddress)._feeHandlerAddress() (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3322)
+		- IERC20(WETHAddress).approve(feeHandlerAddress,feeAmount) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3323)
+		- IERC20(decodedTokenIn).approve(address(swapRouter),amountIn) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3363)
+		- IFeeHandler(feeHandlerAddress).collectFees(feeAmount) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3324)
+		- IERC20(decodedTokenIn_scope_0).approve(address(swapRouter),amountIn) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3367)
+		- swapRouter.exactInput(params) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3377)
+	- processFee(inToken,feeAmount,fee) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3339)
+		- IERC20(v2Path[0]).approve(address(uniswapV2Router),amountIn) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3349)
+		- uniswapV2Router.swapExactTokensForTokensSupportingFeeOnTransferTokens(amountIn,amountOutMinimum,v2Path,address(this),block.timestamp) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3350-3356)
+		- feeHandlerAddress = IFactory(_factoryAddress)._feeHandlerAddress() (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3322)
+		- IERC20(WETHAddress).approve(feeHandlerAddress,feeAmount) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3323)
+		- IERC20(decodedTokenIn).approve(address(swapRouter),amountIn) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3363)
+		- IFeeHandler(feeHandlerAddress).collectFees(feeAmount) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3324)
+		- IERC20(decodedTokenIn_scope_0).approve(address(swapRouter),amountIn) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3367)
+		- swapRouter.exactInput(params) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3377)
+	- _swapTokens(v2Path,v3Path,amountIn - feeAmount,amountOutMinimum,tokenOutQuoteToken) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3342)
+		- IERC20(v2Path[0]).approve(address(uniswapV2Router),amountIn) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3349)
+		- uniswapV2Router.swapExactTokensForTokensSupportingFeeOnTransferTokens(amountIn,amountOutMinimum,v2Path,address(this),block.timestamp) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3350-3356)
+		- IERC20(decodedTokenIn).approve(address(swapRouter),amountIn) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3363)
+		- IERC20(decodedTokenIn_scope_0).approve(address(swapRouter),amountIn) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3367)
+		- swapRouter.exactInput(params) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3377)
+	State variables written after the call(s):
+	- _swapTokens(v2Path,v3Path,amountIn - feeAmount,amountOutMinimum,tokenOutQuoteToken) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3342)
+		- _tokensHeld[i] = _tokensHeld[_tokensHeld.length - 1] (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3187)
+		- _tokensHeld.pop() (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3188)
+		- _tokensHeld.push(InvestmentLibrary.heldToken(tokenOut,address(0),false)) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3412)
+		- _tokensHeld.push(InvestmentLibrary.heldToken(tokenOut,quoteToken,isV3)) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3414)
+	Investment._tokensHeld (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3080) can be used in cross function reentrancies:
+	- Investment._adjustTokensHeld(address[],bytes,uint256,address) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3381-3419)
+	- Investment._removeAddressFromTokensHeld(address) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3181-3191)
+	- Investment._tokensHeld (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3080)
+	- Investment.addToPool(uint256[]) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3193-3238)
+	- Investment.getAllTokensHeld() (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3122-3124)
+	- Investment.getContractTotalBalance() (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3130-3132)
+	- Investment.removeFromPool(uint256,InvestmentLibrary.exitSwapParams[]) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3240-3303)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+Investment.removeFromPool(uint256,InvestmentLibrary.exitSwapParams[]) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3240-3303) ignores return value by msg.sender.call{value: amountToPayToUser}() (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3295)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-low-level-calls
+
+InvestmentLibrary.checkIfTokenIsCompatible(address[],bytes).token (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3026) is a local variable never initialized
+InvestmentLibrary.getOutToken(address[],bytes).tokenOut (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3055) is a local variable never initialized
+Investment._adjustTokensHeld(address[],bytes,uint256,address).tokenIn (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3382) is a local variable never initialized
+Investment.processFee(address,uint256,uint24).emptyBytes (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3311) is a local variable never initialized
+Investment.processFee(address,uint256,uint24).path_scope_0 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3317) is a local variable never initialized
+Investment._adjustTokensHeld(address[],bytes,uint256,address).tokenOut (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3383) is a local variable never initialized
+Investment.removeFromPool(uint256,InvestmentLibrary.exitSwapParams[]).emptyBytes (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3258) is a local variable never initialized
+Investment.getAutoSwapInfo().tokenOut (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3140) is a local variable never initialized
+Investment.removeFromPool(uint256,InvestmentLibrary.exitSwapParams[]).path_scope_0 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3272) is a local variable never initialized
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#uninitialized-local-variables
+
+OracleLibrary.getOldestObservationSecondsAgo(address) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#1199-1216) ignores return value by (None,None,observationIndex,observationCardinality,None,None,None) = IUniswapV3Pool(pool).slot0() (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#1200)
+OracleLibrary.getOldestObservationSecondsAgo(address) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#1199-1216) ignores return value by (observationTimestamp,None,None,initialized) = IUniswapV3Pool(pool).observations((observationIndex + 1) % observationCardinality) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#1203-1205)
+OracleLibrary.getOldestObservationSecondsAgo(address) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#1199-1216) ignores return value by (observationTimestamp,None,None,None) = IUniswapV3Pool(pool).observations(0) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#1210)
+OracleLibrary.getBlockStartingTickAndLiquidity(address) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#1221-1257) ignores return value by (None,tick,observationIndex,observationCardinality,None,None,None) = IUniswapV3Pool(pool).slot0() (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#1222)
+OracleLibrary.getBlockStartingTickAndLiquidity(address) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#1221-1257) ignores return value by (observationTimestamp,tickCumulative,secondsPerLiquidityCumulativeX128,None) = IUniswapV3Pool(pool).observations(observationIndex) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#1230-1235)
+UniswapV2Library.getReserves(address,address,address) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#2163-2167) ignores return value by (reserve0,reserve1,None) = IUniswapV2Pair(pairFor(factory,tokenA,tokenB)).getReserves() (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#2165)
+InvestmentLibrary.getQuoteAndConvertToWei(address,address) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#2970-2974) ignores return value by (None,quote,None,None,None) = feedRegistry.latestRoundData(baseToken,quoteToken) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#2971)
+Investment.processFee(address,uint256,uint24) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3307-3325) ignores return value by IERC20(WETHAddress).approve(feeHandlerAddress,feeAmount) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3323)
+Investment._swapTokens(address[],bytes,uint256,uint256,address) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3345-3379) ignores return value by IERC20(v2Path[0]).approve(address(uniswapV2Router),amountIn) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3349)
+Investment._swapTokens(address[],bytes,uint256,uint256,address) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3345-3379) ignores return value by IERC20(decodedTokenIn).approve(address(swapRouter),amountIn) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3363)
+Investment._swapTokens(address[],bytes,uint256,uint256,address) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3345-3379) ignores return value by IERC20(decodedTokenIn_scope_0).approve(address(swapRouter),amountIn) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3367)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+InvestmentLibrary.checkIfTokenIsCompatible(address[],bytes).token (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3026) lacks a zero-check on :
+		- (ethSuccess,None) = address(feedRegistry).staticcall(abi.encodeWithSignature(getFeed(address,address),token,ethAddress)) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3039-3041)
+		- (usdSuccess,None) = address(feedRegistry).staticcall(abi.encodeWithSignature(getFeed(address,address),token,address(840))) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3043-3045)
+Investment.constructor(string,string,string,uint256,address).factoryAddress_ (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3096) lacks a zero-check on :
+		- _factoryAddress = factoryAddress_ (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3101)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+InvestmentLibrary.getQuoteAndConvertToWei(address,address) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#2970-2974) has external calls inside a loop: (None,quote,None,None,None) = feedRegistry.latestRoundData(baseToken,quoteToken) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#2971)
+InvestmentLibrary.getQuoteAndConvertToWei(address,address) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#2970-2974) has external calls inside a loop: decimals = feedRegistry.decimals(baseToken,quoteToken) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#2972)
+InvestmentLibrary.getContractTotalBalance(InvestmentLibrary.heldToken[]) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#2976-2995) has external calls inside a loop: contractValue += IERC20(_tokensHeld[i].tokenAddress).balanceOf(address(this)) * tokenPriceInETH / 10 ** IERC20Metadata(_tokensHeld[i].tokenAddress).decimals() (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#2989)
+Investment._adjustTokensHeld(address[],bytes,uint256,address) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3381-3419) has external calls inside a loop: IERC20(tokenIn).balanceOf(address(this)) - amountIn == 0 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3407)
+Investment._adjustTokensHeld(address[],bytes,uint256,address) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3381-3419) has external calls inside a loop: IERC20(tokenOut).balanceOf(address(this)) == 0 && InvestmentLibrary.isTokenHeld(_tokensHeld,tokenOut) == false (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3410)
+Investment._swapTokens(address[],bytes,uint256,uint256,address) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3345-3379) has external calls inside a loop: balanceOfTokenBeforeSwap = IERC20(v2Path[v2Path.length - 1]).balanceOf(address(this)) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3348)
+Investment._swapTokens(address[],bytes,uint256,uint256,address) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3345-3379) has external calls inside a loop: IERC20(v2Path[0]).approve(address(uniswapV2Router),amountIn) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3349)
+Investment._swapTokens(address[],bytes,uint256,uint256,address) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3345-3379) has external calls inside a loop: uniswapV2Router.swapExactTokensForTokensSupportingFeeOnTransferTokens(amountIn,amountOutMinimum,v2Path,address(this),block.timestamp) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3350-3356)
+Investment._swapTokens(address[],bytes,uint256,uint256,address) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3345-3379) has external calls inside a loop: IERC20(v2Path[v2Path.length - 1]).balanceOf(address(this)) - balanceOfTokenBeforeSwap (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3357)
+Investment._swapTokens(address[],bytes,uint256,uint256,address) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3345-3379) has external calls inside a loop: IERC20(decodedTokenIn).approve(address(swapRouter),amountIn) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3363)
+Investment._swapTokens(address[],bytes,uint256,uint256,address) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3345-3379) has external calls inside a loop: swapRouter.exactInput(params) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3377)
+Investment._swapTokens(address[],bytes,uint256,uint256,address) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3345-3379) has external calls inside a loop: IERC20(decodedTokenIn_scope_0).approve(address(swapRouter),amountIn) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3367)
+Investment.removeFromPool(uint256,InvestmentLibrary.exitSwapParams[]) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3240-3303) has external calls inside a loop: wethRecieved = _swapTokens(path,emptyBytes,tokenContract.balanceOf(address(this)) * userShare / 10 ** 18,exitSwapParams[i].minimumOut,address(0)) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3262-3268)
+Investment.removeFromPool(uint256,InvestmentLibrary.exitSwapParams[]) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3240-3303) has external calls inside a loop: wethRecieved_scope_1 = _swapTokens(path_scope_0,abi.encode(tokensHeldSnapshot[i].tokenAddress,exitSwapParams[i].fee,WETHAddress),tokenContract.balanceOf(address(this)) * userShare / 10 ** 18,exitSwapParams[i].minimumOut,address(0)) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3273-3279)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation/#calls-inside-a-loop
+
+Reentrancy in Investment.addToPool(uint256[]) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3193-3238):
+	External calls:
+	- WETHContract.deposit{value: msg.value}() (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3203)
+	- IERC20(WETHAddress).transfer(owner(),poolOwnerFeeAmount) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3204)
+	- processFee(WETHAddress,factoryFeeAmount,0) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3205)
+		- IERC20(v2Path[0]).approve(address(uniswapV2Router),amountIn) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3349)
+		- uniswapV2Router.swapExactTokensForTokensSupportingFeeOnTransferTokens(amountIn,amountOutMinimum,v2Path,address(this),block.timestamp) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3350-3356)
+		- feeHandlerAddress = IFactory(_factoryAddress)._feeHandlerAddress() (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3322)
+		- IERC20(WETHAddress).approve(feeHandlerAddress,feeAmount) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3323)
+		- IERC20(decodedTokenIn).approve(address(swapRouter),amountIn) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3363)
+		- IFeeHandler(feeHandlerAddress).collectFees(feeAmount) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3324)
+		- IERC20(decodedTokenIn_scope_0).approve(address(swapRouter),amountIn) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3367)
+		- swapRouter.exactInput(params) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3377)
+	- _swapTokens(autoSwapParams.v2Path,autoSwapParams.v3Path,amountIn * autoSwapParams.ratio / 10 ** 18,minimumAmountsOut[i],autoSwapParams.quoteToken) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3216-3222)
+		- IERC20(v2Path[0]).approve(address(uniswapV2Router),amountIn) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3349)
+		- uniswapV2Router.swapExactTokensForTokensSupportingFeeOnTransferTokens(amountIn,amountOutMinimum,v2Path,address(this),block.timestamp) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3350-3356)
+		- IERC20(decodedTokenIn).approve(address(swapRouter),amountIn) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3363)
+		- IERC20(decodedTokenIn_scope_0).approve(address(swapRouter),amountIn) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3367)
+		- swapRouter.exactInput(params) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3377)
+	External calls sending eth:
+	- WETHContract.deposit{value: msg.value}() (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3203)
+	State variables written after the call(s):
+	- _mint(msg.sender,poolTokensToMint) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3230)
+		- _balances[account] += amount (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#2707)
+	- _totalHolders ++ (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3227)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in Investment.addToPool(uint256[]) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3193-3238):
+	External calls:
+	- WETHContract.deposit{value: msg.value}() (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3203)
+	- IERC20(WETHAddress).transfer(owner(),poolOwnerFeeAmount) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3204)
+	- processFee(WETHAddress,factoryFeeAmount,0) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3205)
+		- IERC20(v2Path[0]).approve(address(uniswapV2Router),amountIn) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3349)
+		- uniswapV2Router.swapExactTokensForTokensSupportingFeeOnTransferTokens(amountIn,amountOutMinimum,v2Path,address(this),block.timestamp) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3350-3356)
+		- feeHandlerAddress = IFactory(_factoryAddress)._feeHandlerAddress() (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3322)
+		- IERC20(WETHAddress).approve(feeHandlerAddress,feeAmount) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3323)
+		- IERC20(decodedTokenIn).approve(address(swapRouter),amountIn) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3363)
+		- IFeeHandler(feeHandlerAddress).collectFees(feeAmount) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3324)
+		- IERC20(decodedTokenIn_scope_0).approve(address(swapRouter),amountIn) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3367)
+		- swapRouter.exactInput(params) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3377)
+	- _swapTokens(autoSwapParams.v2Path,autoSwapParams.v3Path,amountIn * autoSwapParams.ratio / 10 ** 18,minimumAmountsOut[i],autoSwapParams.quoteToken) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3216-3222)
+		- IERC20(v2Path[0]).approve(address(uniswapV2Router),amountIn) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3349)
+		- uniswapV2Router.swapExactTokensForTokensSupportingFeeOnTransferTokens(amountIn,amountOutMinimum,v2Path,address(this),block.timestamp) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3350-3356)
+		- IERC20(decodedTokenIn).approve(address(swapRouter),amountIn) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3363)
+		- IERC20(decodedTokenIn_scope_0).approve(address(swapRouter),amountIn) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3367)
+		- swapRouter.exactInput(params) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3377)
+	External calls sending eth:
+	- WETHContract.deposit{value: msg.value}() (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3203)
+	Event emitted after the call(s):
+	- Transfer(address(0),account,amount) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#2708)
+		- _mint(msg.sender,poolTokensToMint) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3230)
+	- InvestmentLibrary.feePaidToOwner(msg.sender,owner(),poolOwnerFeeAmount) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3236)
+	- InvestmentLibrary.poolAddedTo(msg.sender,msg.value,poolTokensToMint) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3237)
+Reentrancy in Investment.removeFromPool(uint256,InvestmentLibrary.exitSwapParams[]) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3240-3303):
+	External calls:
+	- wethRecieved = _swapTokens(path,emptyBytes,tokenContract.balanceOf(address(this)) * userShare / 10 ** 18,exitSwapParams[i].minimumOut,address(0)) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3262-3268)
+		- IERC20(v2Path[0]).approve(address(uniswapV2Router),amountIn) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3349)
+		- uniswapV2Router.swapExactTokensForTokensSupportingFeeOnTransferTokens(amountIn,amountOutMinimum,v2Path,address(this),block.timestamp) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3350-3356)
+		- IERC20(decodedTokenIn).approve(address(swapRouter),amountIn) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3363)
+		- IERC20(decodedTokenIn_scope_0).approve(address(swapRouter),amountIn) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3367)
+		- swapRouter.exactInput(params) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3377)
+	- wethRecieved_scope_1 = _swapTokens(path_scope_0,abi.encode(tokensHeldSnapshot[i].tokenAddress,exitSwapParams[i].fee,WETHAddress),tokenContract.balanceOf(address(this)) * userShare / 10 ** 18,exitSwapParams[i].minimumOut,address(0)) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3273-3279)
+		- IERC20(v2Path[0]).approve(address(uniswapV2Router),amountIn) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3349)
+		- uniswapV2Router.swapExactTokensForTokensSupportingFeeOnTransferTokens(amountIn,amountOutMinimum,v2Path,address(this),block.timestamp) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3350-3356)
+		- IERC20(decodedTokenIn).approve(address(swapRouter),amountIn) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3363)
+		- IERC20(decodedTokenIn_scope_0).approve(address(swapRouter),amountIn) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3367)
+		- swapRouter.exactInput(params) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3377)
+	- IERC20(WETHAddress).transfer(owner(),poolOwnerFeeAmount) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3291)
+	- processFee(WETHAddress,factoryFeeAmount,0) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3292)
+		- IERC20(v2Path[0]).approve(address(uniswapV2Router),amountIn) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3349)
+		- uniswapV2Router.swapExactTokensForTokensSupportingFeeOnTransferTokens(amountIn,amountOutMinimum,v2Path,address(this),block.timestamp) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3350-3356)
+		- feeHandlerAddress = IFactory(_factoryAddress)._feeHandlerAddress() (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3322)
+		- IERC20(WETHAddress).approve(feeHandlerAddress,feeAmount) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3323)
+		- IERC20(decodedTokenIn).approve(address(swapRouter),amountIn) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3363)
+		- IFeeHandler(feeHandlerAddress).collectFees(feeAmount) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3324)
+		- IERC20(decodedTokenIn_scope_0).approve(address(swapRouter),amountIn) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3367)
+		- swapRouter.exactInput(params) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3377)
+	- WETHContract.withdraw(amountToPayToUser) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3294)
+	- msg.sender.call{value: amountToPayToUser}() (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3295)
+	External calls sending eth:
+	- msg.sender.call{value: amountToPayToUser}() (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3295)
+	Event emitted after the call(s):
+	- InvestmentLibrary.feePaidToOwner(msg.sender,owner(),poolOwnerFeeAmount) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3301)
+	- InvestmentLibrary.poolRemovedFrom(msg.sender,amountToRemove,amountToPayToUser) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3302)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+OracleLibrary.getBlockStartingTickAndLiquidity(address) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#1221-1257) uses timestamp for comparisons
+	Dangerous comparisons:
+	- observationTimestamp != uint32(block.timestamp) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#1236)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+TickMath.getTickAtSqrtRatio(uint160) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#848-993) uses assembly
+	- INLINE ASM (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#857-861)
+	- INLINE ASM (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#862-866)
+	- INLINE ASM (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#867-871)
+	- INLINE ASM (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#872-876)
+	- INLINE ASM (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#877-881)
+	- INLINE ASM (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#882-886)
+	- INLINE ASM (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#887-891)
+	- INLINE ASM (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#892-895)
+	- INLINE ASM (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#902-907)
+	- INLINE ASM (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#908-913)
+	- INLINE ASM (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#914-919)
+	- INLINE ASM (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#920-925)
+	- INLINE ASM (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#926-931)
+	- INLINE ASM (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#932-937)
+	- INLINE ASM (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#938-943)
+	- INLINE ASM (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#944-949)
+	- INLINE ASM (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#950-955)
+	- INLINE ASM (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#956-961)
+	- INLINE ASM (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#962-967)
+	- INLINE ASM (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#968-973)
+	- INLINE ASM (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#974-979)
+	- INLINE ASM (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#980-984)
+FullMath.mulDiv(uint256,uint256,uint256) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#1010-1104) uses assembly
+	- INLINE ASM (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#1023-1027)
+	- INLINE ASM (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#1032-1034)
+	- INLINE ASM (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#1049-1051)
+	- INLINE ASM (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#1053-1056)
+	- INLINE ASM (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#1063-1065)
+	- INLINE ASM (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#1068-1070)
+	- INLINE ASM (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#1074-1076)
+Address.verifyCallResult(bool,bytes,string) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#1882-1902) uses assembly
+	- INLINE ASM (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#1894-1897)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#assembly-usage
+
+Investment._removeAddressFromTokensHeld(address) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3181-3191) compares to a boolean constant:
+	-InvestmentLibrary.isTokenHeld(_tokensHeld,_address) == false (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3182)
+Investment.addToPool(uint256[]) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3193-3238) compares to a boolean constant:
+	-InvestmentLibrary.isTokenHeld(_tokensHeld,WETHAddress) == false && IERC20(WETHAddress).balanceOf(address(this)) > 0 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3232)
+Investment.removeFromPool(uint256,InvestmentLibrary.exitSwapParams[]) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3240-3303) compares to a boolean constant:
+	-InvestmentLibrary.isTokenHeld(_tokensHeld,WETHAddress) == true && IERC20(WETHAddress).balanceOf(address(this)) == 0 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3297)
+Investment._adjustTokensHeld(address[],bytes,uint256,address) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3381-3419) compares to a boolean constant:
+	-IERC20(tokenOut).balanceOf(address(this)) == 0 && InvestmentLibrary.isTokenHeld(_tokensHeld,tokenOut) == false (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3410)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#boolean-equality
+
+7 different versions of Solidity are used:
+	- Version constraint ^0.8.0 is used by:
+		-^0.8.0 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#4)
+		-^0.8.0 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#39)
+		-^0.8.0 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#60)
+		-^0.8.0 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#69)
+		-^0.8.0 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#782)
+		-^0.8.0 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#998)
+		-^0.8.0 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#1552)
+		-^0.8.0 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#1910)
+		-^0.8.0 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#2222)
+		-^0.8.0 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#2249)
+		-^0.8.0 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#2334)
+		-^0.8.0 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#2419)
+		-^0.8.0 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#2449)
+		-^0.8.0 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#2834)
+	- Version constraint >=0.5.0 is used by:
+		->=0.5.0 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#248)
+		->=0.5.0 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#300)
+		->=0.5.0 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#424)
+		->=0.5.0 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#450)
+		->=0.5.0 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#556)
+		->=0.5.0 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#599)
+		->=0.5.0 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#718)
+		->=0.5.0 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#756)
+		->=0.5.0 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#1315)
+		->=0.5.0 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#1627)
+		->=0.5.0 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#2137)
+	- Version constraint >=0.5.0<0.9.0 is used by:
+		->=0.5.0<0.9.0 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#1128)
+	- Version constraint >=0.7.5 is used by:
+		->=0.7.5 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#1339)
+	- Version constraint >=0.6.2 is used by:
+		->=0.6.2 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#1405)
+		->=0.6.2 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#1503)
+	- Version constraint ^0.8.1 is used by:
+		-^0.8.1 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#1685)
+	- Version constraint 0.8.4 is used by:
+		-0.8.4 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#2873)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#different-pragma-directives-are-used
+
+Investment._removeAddressFromTokensHeld(address) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3181-3191) has costly operations inside a loop:
+	- _tokensHeld.pop() (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3188)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#costly-operations-inside-a-loop
+
+TickMath.getSqrtRatioAtTick(int24) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#806-841) has a high cyclomatic complexity (25).
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#cyclomatic-complexity
+
+Context._msgData() (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#2239-2241) is never used and should be removed
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dead-code
+
+Version constraint ^0.8.0 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- SignedImmutables
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching.
+It is used by:
+	- ^0.8.0 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#4)
+	- ^0.8.0 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#39)
+	- ^0.8.0 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#60)
+	- ^0.8.0 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#69)
+	- ^0.8.0 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#782)
+	- ^0.8.0 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#998)
+	- ^0.8.0 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#1552)
+	- ^0.8.0 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#1910)
+	- ^0.8.0 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#2222)
+	- ^0.8.0 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#2249)
+	- ^0.8.0 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#2334)
+	- ^0.8.0 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#2419)
+	- ^0.8.0 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#2449)
+	- ^0.8.0 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#2834)
+Version constraint >=0.5.0 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor
+	- IncorrectEventSignatureInLibraries
+	- ABIEncoderV2PackedStorage.
+It is used by:
+	- >=0.5.0 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#248)
+	- >=0.5.0 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#300)
+	- >=0.5.0 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#424)
+	- >=0.5.0 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#450)
+	- >=0.5.0 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#556)
+	- >=0.5.0 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#599)
+	- >=0.5.0 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#718)
+	- >=0.5.0 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#756)
+	- >=0.5.0 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#1315)
+	- >=0.5.0 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#1627)
+	- >=0.5.0 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#2137)
+Version constraint >=0.5.0<0.9.0 is too complex.
+It is used by:
+	- >=0.5.0<0.9.0 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#1128)
+Version constraint >=0.7.5 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- SignedImmutables
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching.
+It is used by:
+	- >=0.7.5 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#1339)
+Version constraint >=0.6.2 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- MissingEscapingInFormatting
+	- ArraySliceDynamicallyEncodedBaseType
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow.
+It is used by:
+	- >=0.6.2 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#1405)
+	- >=0.6.2 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#1503)
+Version constraint ^0.8.1 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- SignedImmutables
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching.
+It is used by:
+	- ^0.8.1 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#1685)
+Version constraint 0.8.4 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- SignedImmutables.
+It is used by:
+	- 0.8.4 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#2873)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in Address.sendValue(address,uint256) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#1741-1746):
+	- (success,None) = recipient.call{value: amount}() (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#1744)
+Low level call in Address.functionCallWithValue(address,bytes,uint256,string) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#1809-1820):
+	- (success,returndata) = target.call{value: value}(data) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#1818)
+Low level call in Address.functionStaticCall(address,bytes,string) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#1838-1847):
+	- (success,returndata) = target.staticcall(data) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#1845)
+Low level call in Address.functionDelegateCall(address,bytes,string) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#1865-1874):
+	- (success,returndata) = target.delegatecall(data) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#1872)
+Low level call in InvestmentLibrary.checkIfTokenIsCompatible(address[],bytes) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3025-3052):
+	- (ethSuccess,None) = address(feedRegistry).staticcall(abi.encodeWithSignature(getFeed(address,address),token,ethAddress)) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3039-3041)
+	- (usdSuccess,None) = address(feedRegistry).staticcall(abi.encodeWithSignature(getFeed(address,address),token,address(840))) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3043-3045)
+Low level call in Investment.removeFromPool(uint256,InvestmentLibrary.exitSwapParams[]) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3240-3303):
+	- msg.sender.call{value: amountToPayToUser}() (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3295)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Function IUniswapV2Router01.WETH() (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#1409) is not in mixedCase
+Function IUniswapV2Pair.DOMAIN_SEPARATOR() (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#1644) is not in mixedCase
+Function IUniswapV2Pair.PERMIT_TYPEHASH() (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#1645) is not in mixedCase
+Function IUniswapV2Pair.MINIMUM_LIQUIDITY() (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#1662) is not in mixedCase
+Function IFactory._feeHandlerAddress() (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#2904) is not in mixedCase
+Struct InvestmentLibrary.exitSwapParams (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#2933-2936) is not in CapWords
+Struct InvestmentLibrary.autoSwapToken (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#2938-2943) is not in CapWords
+Struct InvestmentLibrary.crashProtectParams (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#2945-2950) is not in CapWords
+Struct InvestmentLibrary.heldToken (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#2952-2956) is not in CapWords
+Struct InvestmentLibrary.tokenHeldWithValueReturn (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#2958-2964) is not in CapWords
+Event InvestmentLibrary.poolAddedTo(address,uint256,uint256) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#2908-2912) is not in CapWords
+Event InvestmentLibrary.poolRemovedFrom(address,uint256,uint256) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#2914-2918) is not in CapWords
+Event InvestmentLibrary.tokensSwapped(address,address,uint256,uint256) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#2920-2925) is not in CapWords
+Event InvestmentLibrary.feePaidToOwner(address,address,uint256) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#2927-2931) is not in CapWords
+Parameter InvestmentLibrary.getContractTotalBalance(InvestmentLibrary.heldToken[])._tokensHeld (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#2976) is not in mixedCase
+Parameter InvestmentLibrary.getPoolTokensToMint(uint256,InvestmentLibrary.heldToken[],uint256)._tokensHeld (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#2997) is not in mixedCase
+Parameter InvestmentLibrary.isTokenHeld(InvestmentLibrary.heldToken[],address)._tokensHeld (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3011) is not in mixedCase
+Parameter InvestmentLibrary.isTokenHeld(InvestmentLibrary.heldToken[],address)._address (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3011) is not in mixedCase
+Constant InvestmentLibrary.ethAddress (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#2966) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant InvestmentLibrary.WETHAddress (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#2967) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant InvestmentLibrary.feedRegistry (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#2968) is not in UPPER_CASE_WITH_UNDERSCORES
+Variable Investment._tokensHeld (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3080) is not in mixedCase
+Variable Investment._poolFee (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3084) is not in mixedCase
+Variable Investment._factoryFee (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3085) is not in mixedCase
+Variable Investment._factoryAddress (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3086) is not in mixedCase
+Constant Investment.WETHAddress (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3090) is not in UPPER_CASE_WITH_UNDERSCORES
+Variable Investment._totalHolders (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3091) is not in mixedCase
+Variable Investment._tokensToSwapIntoOnDeposit (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3094) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+TickMath.getSqrtRatioAtTick(int24) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#806-841) uses literals with too many digits:
+	- ratio = 0x100000000000000000000000000000000 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#811-813)
+Investment.addToPool(uint256[]) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3193-3238) uses literals with too many digits:
+	- require(bool,string)(msg.value >= 10000000000000000,You must initiate the pool with at least 0.01 ETH!) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3196)
+Investment.swapTokens(address[],bytes,uint256,uint256,address) (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3327-3343) uses literals with too many digits:
+	- feeAmount = amountIn * 7500000000000000 / 10 ** 18 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3334)
+Investment.slitherConstructorVariables() (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3076-3422) uses literals with too many digits:
+	- _factoryFee = 20000000000000000 (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3085)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+Investment._stableCoin (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3087) is never used in Investment (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3076-3422)
+Investment.feedRegistry (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3092) is never used in Investment (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3076-3422)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-state-variable
+
+Loop condition i < _tokensToSwapIntoOnDeposit.length (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3139) should use cached array length instead of referencing `length` member of the storage array.
+ Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#cache-array-length
+
+Investment._factoryFee (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3085) should be constant 
+Investment._stableCoin (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3087) should be constant 
+Investment.feedRegistry (0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol#3092) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+./0x38721079a72030ab1817fb9e1aaa86ae0d08356f.sol analyzed (35 contracts with 94 detectors), 151 result(s) found
+
+real	0m11.147s
+user	0m10.813s
+sys	0m0.334s

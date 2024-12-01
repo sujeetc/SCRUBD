@@ -1,0 +1,532 @@
+'solc --version' running
+'solc ./0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol:
+Warning: SPDX license identifier not provided in source file. Before publishing, consider adding a comment containing "SPDX-License-Identifier: <SPDX-License>" to each source file. Use "SPDX-License-Identifier: UNLICENSED" for non-open-source code. Please see https://spdx.org for more information.
+--> ./0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol
+
+
+
+Reentrancy in Sargasso.ETHsend(uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1020-1037):
+	External calls:
+	- lookUP = address(buccTransfer.findUser(userNum)) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1031)
+	- buccTransfer.specialTransfer(userNum,0) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1035)
+	External calls sending eth:
+	- lookUP.transfer(userAmount) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1034)
+	State variables written after the call(s):
+	- secondaryUserLock[msg.sender] = false (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1036)
+	Sargasso.secondaryUserLock (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#729) can be used in cross function reentrancies:
+	- Sargasso.ETHsend(uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1020-1037)
+	- Sargasso.addKey(uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1047-1066)
+	- Sargasso.paySubscription() (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1000-1009)
+	- Sargasso.preApproveTokens(address,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1138-1152)
+	- Sargasso.receive() (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1154-1163)
+	- Sargasso.tokenSend(address,uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1113-1132)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+Sargasso.addContractTokens(uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#821-825) ignores return value by buccTransfer.transferFrom(msg.sender,address(this),amount) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#823)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+tokenTumble (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#683-686) has incorrect ERC20 function interface:tokenTumble.transferFrom(address,address,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#684)
+tokenTumble (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#683-686) has incorrect ERC20 function interface:tokenTumble.transfer(address,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#685)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-erc20-interface
+
+Sargasso.updatePool(uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#857-871) uses a dangerous strict equality:
+	- lpSupply == 0 (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#863)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-strict-equalities
+
+Reentrancy in Sargasso.ETHsend(uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1020-1037):
+	External calls:
+	- lookUP = address(buccTransfer.findUser(userNum)) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1031)
+	State variables written after the call(s):
+	- keylock = now (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1033)
+	Sargasso.keylock (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#738) can be used in cross function reentrancies:
+	- Sargasso.ETHsend(uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1020-1037)
+	- Sargasso.KeyLock() (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1039-1045)
+	- Sargasso.addKey(uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1047-1066)
+	- Sargasso.tokenSend(address,uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1113-1132)
+Reentrancy in Sargasso.addKey(uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1047-1066):
+	External calls:
+	- lookUP = buccTransfer.findUser(userNum) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1055)
+	State variables written after the call(s):
+	- isaKey[lookUP] = true (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1060)
+	Sargasso.isaKey (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#736) can be used in cross function reentrancies:
+	- Sargasso.addKey(uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1047-1066)
+	- Sargasso.isKey() (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1072-1074)
+	- Sargasso.manualDeletion() (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1103-1109)
+	- Sargasso.paySubscription() (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1000-1009)
+	- keylock = now (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1056)
+	Sargasso.keylock (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#738) can be used in cross function reentrancies:
+	- Sargasso.ETHsend(uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1020-1037)
+	- Sargasso.KeyLock() (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1039-1045)
+	- Sargasso.addKey(uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1047-1066)
+	- Sargasso.tokenSend(address,uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1113-1132)
+Reentrancy in Sargasso.addKey(uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1047-1066):
+	External calls:
+	- lookUP = buccTransfer.findUser(userNum) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1055)
+	- buccTransfer.specialTransfer(userNum,0) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1064)
+	State variables written after the call(s):
+	- secondaryUserLock[msg.sender] = false (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1065)
+	Sargasso.secondaryUserLock (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#729) can be used in cross function reentrancies:
+	- Sargasso.ETHsend(uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1020-1037)
+	- Sargasso.addKey(uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1047-1066)
+	- Sargasso.paySubscription() (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1000-1009)
+	- Sargasso.preApproveTokens(address,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1138-1152)
+	- Sargasso.receive() (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1154-1163)
+	- Sargasso.tokenSend(address,uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1113-1132)
+Reentrancy in Sargasso.deposit(uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#883-903):
+	External calls:
+	- secretBUCCTransfer(collectRewards) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#893)
+		- buccBal = buccTransfer.balanceOf(address(this)) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#978)
+		- userNum = buccTransfer.displayUserCount(msg.sender) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#979)
+		- buccTransfer.specialTransfer(userNum,buccBal) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#982)
+		- buccTransfer.specialTransfer(userNum,_amount) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#985)
+	- pool.lpToken.safeTransferFrom(address(msg.sender),address(this),input) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#899)
+	State variables written after the call(s):
+	- user.amount = user.amount.add(input) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#900)
+	Sargasso.userInfo (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#752) can be used in cross function reentrancies:
+	- Sargasso.deposit(uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#883-903)
+	- Sargasso.emergencyWithdraw(uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#929-940)
+	- Sargasso.pendingBucc(uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#828-842)
+	- Sargasso.specialdeposit(uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#942-958)
+	- Sargasso.viewLPPerson(uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#878-881)
+	- Sargasso.withdraw(uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#907-926)
+	- user.rewardDebt = user.amount.mul(pool.accBuccMultiplierEarned).div(1e12) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#901)
+	Sargasso.userInfo (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#752) can be used in cross function reentrancies:
+	- Sargasso.deposit(uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#883-903)
+	- Sargasso.emergencyWithdraw(uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#929-940)
+	- Sargasso.pendingBucc(uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#828-842)
+	- Sargasso.specialdeposit(uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#942-958)
+	- Sargasso.viewLPPerson(uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#878-881)
+	- Sargasso.withdraw(uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#907-926)
+	- userLock[msg.sender] = false (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#902)
+	Sargasso.userLock (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#728) can be used in cross function reentrancies:
+	- Sargasso.deposit(uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#883-903)
+	- Sargasso.emergencyWithdraw(uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#929-940)
+	- Sargasso.specialdeposit(uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#942-958)
+	- Sargasso.withdraw(uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#907-926)
+Reentrancy in Sargasso.emergencyWithdraw(uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#929-940):
+	External calls:
+	- pool.lpToken.safeTransfer(address(msg.sender),user.amount) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#934)
+	State variables written after the call(s):
+	- user.amount = 0 (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#935)
+	Sargasso.userInfo (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#752) can be used in cross function reentrancies:
+	- Sargasso.deposit(uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#883-903)
+	- Sargasso.emergencyWithdraw(uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#929-940)
+	- Sargasso.pendingBucc(uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#828-842)
+	- Sargasso.specialdeposit(uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#942-958)
+	- Sargasso.viewLPPerson(uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#878-881)
+	- Sargasso.withdraw(uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#907-926)
+	- user.rewardDebt = 0 (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#936)
+	Sargasso.userInfo (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#752) can be used in cross function reentrancies:
+	- Sargasso.deposit(uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#883-903)
+	- Sargasso.emergencyWithdraw(uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#929-940)
+	- Sargasso.pendingBucc(uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#828-842)
+	- Sargasso.specialdeposit(uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#942-958)
+	- Sargasso.viewLPPerson(uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#878-881)
+	- Sargasso.withdraw(uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#907-926)
+	- userLock[msg.sender] = false (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#939)
+	Sargasso.userLock (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#728) can be used in cross function reentrancies:
+	- Sargasso.deposit(uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#883-903)
+	- Sargasso.emergencyWithdraw(uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#929-940)
+	- Sargasso.specialdeposit(uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#942-958)
+	- Sargasso.withdraw(uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#907-926)
+Reentrancy in Sargasso.paySubscription() (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1000-1009):
+	External calls:
+	- require(bool)(buccTransfer.transferFrom(msg.sender,address(this),subscriptionFee)) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1004)
+	State variables written after the call(s):
+	- secondaryUserLock[msg.sender] = false (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1008)
+	Sargasso.secondaryUserLock (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#729) can be used in cross function reentrancies:
+	- Sargasso.ETHsend(uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1020-1037)
+	- Sargasso.addKey(uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1047-1066)
+	- Sargasso.paySubscription() (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1000-1009)
+	- Sargasso.preApproveTokens(address,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1138-1152)
+	- Sargasso.receive() (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1154-1163)
+	- Sargasso.tokenSend(address,uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1113-1132)
+Reentrancy in Sargasso.preApproveTokens(address,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1138-1152):
+	External calls:
+	- selectedTokentoTumble.transferFrom(msg.sender,address(this),userSpecifiedAmount) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1147)
+	State variables written after the call(s):
+	- secondaryUserLock[msg.sender] = false (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1151)
+	Sargasso.secondaryUserLock (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#729) can be used in cross function reentrancies:
+	- Sargasso.ETHsend(uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1020-1037)
+	- Sargasso.addKey(uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1047-1066)
+	- Sargasso.paySubscription() (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1000-1009)
+	- Sargasso.preApproveTokens(address,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1138-1152)
+	- Sargasso.receive() (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1154-1163)
+	- Sargasso.tokenSend(address,uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1113-1132)
+Reentrancy in Sargasso.sendtoRecipient(uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#961-973):
+	External calls:
+	- buccBal = buccTransfer.balanceOf(address(this)) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#963)
+	- buccTransfer.specialTransfer(userNum,buccBal) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#967)
+	State variables written after the call(s):
+	- contractTokens = 0 (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#968)
+	Sargasso.contractTokens (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#726) can be used in cross function reentrancies:
+	- Sargasso.addContractTokens(uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#821-825)
+	- Sargasso.deposit(uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#883-903)
+	- Sargasso.paySubscription() (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1000-1009)
+	- Sargasso.secretBUCCTransfer(uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#976-988)
+	- Sargasso.sendtoRecipient(uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#961-973)
+	- Sargasso.specialdeposit(uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#942-958)
+	- Sargasso.viewContractTokens() (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#817-819)
+	- Sargasso.withdraw(uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#907-926)
+Reentrancy in Sargasso.sendtoRecipient(uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#961-973):
+	External calls:
+	- buccBal = buccTransfer.balanceOf(address(this)) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#963)
+	- buccTransfer.specialTransfer(userNum,_amount) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#970)
+	State variables written after the call(s):
+	- contractTokens -= _amount (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#971)
+	Sargasso.contractTokens (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#726) can be used in cross function reentrancies:
+	- Sargasso.addContractTokens(uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#821-825)
+	- Sargasso.deposit(uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#883-903)
+	- Sargasso.paySubscription() (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1000-1009)
+	- Sargasso.secretBUCCTransfer(uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#976-988)
+	- Sargasso.sendtoRecipient(uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#961-973)
+	- Sargasso.specialdeposit(uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#942-958)
+	- Sargasso.viewContractTokens() (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#817-819)
+	- Sargasso.withdraw(uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#907-926)
+Reentrancy in Sargasso.specialdeposit(uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#942-958):
+	External calls:
+	- sendtoRecipient(userNum,collectRewards) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#952)
+		- buccBal = buccTransfer.balanceOf(address(this)) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#963)
+		- buccTransfer.specialTransfer(userNum,buccBal) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#967)
+		- buccTransfer.specialTransfer(userNum,_amount) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#970)
+	State variables written after the call(s):
+	- user.rewardDebt = user.amount.mul(pool.accBuccMultiplierEarned).div(1e12) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#956)
+	Sargasso.userInfo (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#752) can be used in cross function reentrancies:
+	- Sargasso.deposit(uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#883-903)
+	- Sargasso.emergencyWithdraw(uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#929-940)
+	- Sargasso.pendingBucc(uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#828-842)
+	- Sargasso.specialdeposit(uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#942-958)
+	- Sargasso.viewLPPerson(uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#878-881)
+	- Sargasso.withdraw(uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#907-926)
+	- userLock[msg.sender] = false (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#957)
+	Sargasso.userLock (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#728) can be used in cross function reentrancies:
+	- Sargasso.deposit(uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#883-903)
+	- Sargasso.emergencyWithdraw(uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#929-940)
+	- Sargasso.specialdeposit(uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#942-958)
+	- Sargasso.withdraw(uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#907-926)
+Reentrancy in Sargasso.tokenSend(address,uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1113-1132):
+	External calls:
+	- lookUP = buccTransfer.findUser(userNum) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1125)
+	State variables written after the call(s):
+	- keylock = now (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1126)
+	Sargasso.keylock (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#738) can be used in cross function reentrancies:
+	- Sargasso.ETHsend(uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1020-1037)
+	- Sargasso.KeyLock() (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1039-1045)
+	- Sargasso.addKey(uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1047-1066)
+	- Sargasso.tokenSend(address,uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1113-1132)
+Reentrancy in Sargasso.tokenSend(address,uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1113-1132):
+	External calls:
+	- lookUP = buccTransfer.findUser(userNum) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1125)
+	- selectedTokentoTumble.transfer(lookUP,userAmount) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1128)
+	- buccTransfer.specialTransfer(userNum,0) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1129)
+	State variables written after the call(s):
+	- secondaryUserLock[msg.sender] = false (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1131)
+	Sargasso.secondaryUserLock (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#729) can be used in cross function reentrancies:
+	- Sargasso.ETHsend(uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1020-1037)
+	- Sargasso.addKey(uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1047-1066)
+	- Sargasso.paySubscription() (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1000-1009)
+	- Sargasso.preApproveTokens(address,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1138-1152)
+	- Sargasso.receive() (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1154-1163)
+	- Sargasso.tokenSend(address,uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1113-1132)
+Reentrancy in Sargasso.withdraw(uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#907-926):
+	External calls:
+	- secretBUCCTransfer(collectRewards) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#920)
+		- buccBal = buccTransfer.balanceOf(address(this)) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#978)
+		- userNum = buccTransfer.displayUserCount(msg.sender) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#979)
+		- buccTransfer.specialTransfer(userNum,buccBal) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#982)
+		- buccTransfer.specialTransfer(userNum,_amount) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#985)
+	State variables written after the call(s):
+	- contractTokens -= collectRewards (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#921)
+	Sargasso.contractTokens (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#726) can be used in cross function reentrancies:
+	- Sargasso.addContractTokens(uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#821-825)
+	- Sargasso.deposit(uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#883-903)
+	- Sargasso.paySubscription() (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1000-1009)
+	- Sargasso.secretBUCCTransfer(uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#976-988)
+	- Sargasso.sendtoRecipient(uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#961-973)
+	- Sargasso.specialdeposit(uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#942-958)
+	- Sargasso.viewContractTokens() (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#817-819)
+	- Sargasso.withdraw(uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#907-926)
+	- user.amount = user.amount.sub(input) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#922)
+	Sargasso.userInfo (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#752) can be used in cross function reentrancies:
+	- Sargasso.deposit(uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#883-903)
+	- Sargasso.emergencyWithdraw(uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#929-940)
+	- Sargasso.pendingBucc(uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#828-842)
+	- Sargasso.specialdeposit(uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#942-958)
+	- Sargasso.viewLPPerson(uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#878-881)
+	- Sargasso.withdraw(uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#907-926)
+	- user.rewardDebt = user.amount.mul(pool.accBuccMultiplierEarned).div(1e12) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#923)
+	Sargasso.userInfo (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#752) can be used in cross function reentrancies:
+	- Sargasso.deposit(uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#883-903)
+	- Sargasso.emergencyWithdraw(uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#929-940)
+	- Sargasso.pendingBucc(uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#828-842)
+	- Sargasso.specialdeposit(uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#942-958)
+	- Sargasso.viewLPPerson(uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#878-881)
+	- Sargasso.withdraw(uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#907-926)
+Reentrancy in Sargasso.withdraw(uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#907-926):
+	External calls:
+	- secretBUCCTransfer(collectRewards) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#920)
+		- buccBal = buccTransfer.balanceOf(address(this)) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#978)
+		- userNum = buccTransfer.displayUserCount(msg.sender) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#979)
+		- buccTransfer.specialTransfer(userNum,buccBal) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#982)
+		- buccTransfer.specialTransfer(userNum,_amount) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#985)
+	- pool.lpToken.safeTransfer(address(msg.sender),input) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#924)
+	State variables written after the call(s):
+	- userLock[msg.sender] = false (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#925)
+	Sargasso.userLock (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#728) can be used in cross function reentrancies:
+	- Sargasso.deposit(uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#883-903)
+	- Sargasso.emergencyWithdraw(uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#929-940)
+	- Sargasso.specialdeposit(uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#942-958)
+	- Sargasso.withdraw(uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#907-926)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+Sargasso.sendtoRecipient(uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#961-973) ignores return value by buccTransfer.specialTransfer(userNum,buccBal) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#967)
+Sargasso.sendtoRecipient(uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#961-973) ignores return value by buccTransfer.specialTransfer(userNum,_amount) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#970)
+Sargasso.secretBUCCTransfer(uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#976-988) ignores return value by buccTransfer.specialTransfer(userNum,buccBal) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#982)
+Sargasso.secretBUCCTransfer(uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#976-988) ignores return value by buccTransfer.specialTransfer(userNum,_amount) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#985)
+Sargasso.ETHsend(uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1020-1037) ignores return value by buccTransfer.specialTransfer(userNum,0) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1035)
+Sargasso.addKey(uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1047-1066) ignores return value by buccTransfer.specialTransfer(userNum,0) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1064)
+Sargasso.tokenSend(address,uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1113-1132) ignores return value by buccTransfer.specialTransfer(userNum,0) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1129)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+Sargasso.changeSubscriptionFee(uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#802-805) should emit an event for: 
+	- subscriptionFee = changeSubscriptionFeeTo (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#804) 
+Sargasso.buccperBlock(uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#873-876) should emit an event for: 
+	- buccPerBlock = multiplicationFactor (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#875) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+Sargasso.constructor(address,address,uint256,uint256,uint256)._devAddr (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#759) lacks a zero-check on :
+		- buccsAddress = _devAddr (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#765)
+Sargasso.constructor(address,address,uint256,uint256,uint256)._v2Address (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#760) lacks a zero-check on :
+		- v2Address = _v2Address (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#766)
+Sargasso.changev2Address(address).updateAddress (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#808) lacks a zero-check on :
+		- v2Address = updateAddress (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#810)
+Sargasso.dev(address)._buccsAddress (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#990) lacks a zero-check on :
+		- buccsAddress = _buccsAddress (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#992)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Sargasso.updatePool(uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#857-871) has external calls inside a loop: lpSupply = pool.lpToken.balanceOf(address(this)) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#862)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation/#calls-inside-a-loop
+
+Reentrancy in Sargasso.addContractTokens(uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#821-825):
+	External calls:
+	- buccTransfer.transferFrom(msg.sender,address(this),amount) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#823)
+	State variables written after the call(s):
+	- contractTokens += amount (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#824)
+Reentrancy in Sargasso.addKey(uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1047-1066):
+	External calls:
+	- lookUP = buccTransfer.findUser(userNum) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1055)
+	State variables written after the call(s):
+	- hasKey[msg.sender] = true (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1063)
+	- inverseLook[msg.sender] = lookUP (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1061)
+	- key[lookUP] = msg.sender (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1062)
+Reentrancy in Sargasso.deposit(uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#883-903):
+	External calls:
+	- secretBUCCTransfer(collectRewards) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#893)
+		- buccBal = buccTransfer.balanceOf(address(this)) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#978)
+		- userNum = buccTransfer.displayUserCount(msg.sender) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#979)
+		- buccTransfer.specialTransfer(userNum,buccBal) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#982)
+		- buccTransfer.specialTransfer(userNum,_amount) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#985)
+	State variables written after the call(s):
+	- fellowBuccaneers += 1 (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#897)
+	- hasJoined[msg.sender] = true (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#896)
+Reentrancy in Sargasso.emergencyWithdraw(uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#929-940):
+	External calls:
+	- pool.lpToken.safeTransfer(address(msg.sender),user.amount) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#934)
+	State variables written after the call(s):
+	- fellowBuccaneers -= 1 (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#938)
+	- hasJoined[msg.sender] = false (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#937)
+Reentrancy in Sargasso.paySubscription() (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1000-1009):
+	External calls:
+	- require(bool)(buccTransfer.transferFrom(msg.sender,address(this),subscriptionFee)) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1004)
+	State variables written after the call(s):
+	- contractTokens += subscriptionFee (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1006)
+	- subscription[msg.sender] = now (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1007)
+Reentrancy in Sargasso.preApproveTokens(address,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1138-1152):
+	External calls:
+	- selectedTokentoTumble.transferFrom(msg.sender,address(this),userSpecifiedAmount) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1147)
+	State variables written after the call(s):
+	- totalTokensSpecifiedAddress[specifiedToken] += userSpecifiedAmount (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1150)
+	- userSpecifiedTokenLock[specifiedToken][msg.sender] += userSpecifiedAmount (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1149)
+Reentrancy in Sargasso.secretBUCCTransfer(uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#976-988):
+	External calls:
+	- buccBal = buccTransfer.balanceOf(address(this)) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#978)
+	- userNum = buccTransfer.displayUserCount(msg.sender) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#979)
+	- buccTransfer.specialTransfer(userNum,buccBal) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#982)
+	State variables written after the call(s):
+	- contractTokens = 0 (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#983)
+Reentrancy in Sargasso.secretBUCCTransfer(uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#976-988):
+	External calls:
+	- buccBal = buccTransfer.balanceOf(address(this)) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#978)
+	- userNum = buccTransfer.displayUserCount(msg.sender) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#979)
+	- buccTransfer.specialTransfer(userNum,_amount) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#985)
+	State variables written after the call(s):
+	- contractTokens -= _amount (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#986)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Sargasso.checkSubscription() (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1011-1017) uses timestamp for comparisons
+	Dangerous comparisons:
+	- subscription[msg.sender] + 2592000 > now (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1012)
+Sargasso.KeyLock() (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1039-1045) uses timestamp for comparisons
+	Dangerous comparisons:
+	- keylock > now - 3 (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1040)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Address.isContract(address) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#185-194) uses assembly
+	- INLINE ASM (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#192)
+Address._functionCallWithValue(address,bytes,uint256,string) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#263-284) uses assembly
+	- INLINE ASM (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#276-279)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#assembly-usage
+
+Sargasso.deposit(uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#883-903) compares to a boolean constant:
+	-require(bool)(userLock[msg.sender] == false) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#884)
+Sargasso.deposit(uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#883-903) compares to a boolean constant:
+	-hasJoined[msg.sender] == false (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#895)
+Sargasso.withdraw(uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#907-926) compares to a boolean constant:
+	-require(bool)(userLock[msg.sender] == false) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#908)
+Sargasso.emergencyWithdraw(uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#929-940) compares to a boolean constant:
+	-require(bool)(userLock[msg.sender] == false) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#930)
+Sargasso.specialdeposit(uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#942-958) compares to a boolean constant:
+	-require(bool)(userLock[msg.sender] == false) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#943)
+Sargasso.paySubscription() (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1000-1009) compares to a boolean constant:
+	-require(bool)(isaKey[msg.sender] == false) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1005)
+Sargasso.paySubscription() (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1000-1009) compares to a boolean constant:
+	-require(bool)(secondaryUserLock[msg.sender] == false) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1001)
+Sargasso.ETHsend(uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1020-1037) compares to a boolean constant:
+	-require(bool)(secondaryUserLock[msg.sender] == false) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1021)
+Sargasso.addKey(uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1047-1066) compares to a boolean constant:
+	-require(bool)(isaKey[msg.sender] == false) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1051)
+Sargasso.addKey(uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1047-1066) compares to a boolean constant:
+	-require(bool)(secondaryUserLock[msg.sender] == false) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1049)
+Sargasso.addKey(uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1047-1066) compares to a boolean constant:
+	-require(bool)(isaKey[lookUP] == false) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1059)
+Sargasso.tokenSend(address,uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1113-1132) compares to a boolean constant:
+	-require(bool)(secondaryUserLock[msg.sender] == false) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1114)
+Sargasso.preApproveTokens(address,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1138-1152) compares to a boolean constant:
+	-require(bool)(secondaryUserLock[msg.sender] == false) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1139)
+Sargasso.receive() (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1154-1163) compares to a boolean constant:
+	-require(bool)(secondaryUserLock[msg.sender] == false) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1155)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#boolean-equality
+
+3 different versions of Solidity are used:
+	- Version constraint ^0.6.0 is used by:
+		-^0.6.0 (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#54)
+		-^0.6.0 (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#75)
+		-^0.6.0 (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#291)
+		-^0.6.0 (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#350)
+		-^0.6.0 (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#597)
+		-^0.6.0 (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#624)
+	- Version constraint ^0.6.2 is used by:
+		-^0.6.2 (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#162)
+	- Version constraint 0.6.12 is used by:
+		-0.6.12 (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#681)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#different-pragma-directives-are-used
+
+Context._msgData() (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#614-617) is never used and should be removed
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dead-code
+
+Version constraint ^0.6.0 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- MissingEscapingInFormatting
+	- ArraySliceDynamicallyEncodedBaseType
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- YulOptimizerRedundantAssignmentBreakContinue.
+It is used by:
+	- ^0.6.0 (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#54)
+	- ^0.6.0 (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#75)
+	- ^0.6.0 (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#291)
+	- ^0.6.0 (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#350)
+	- ^0.6.0 (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#597)
+	- ^0.6.0 (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#624)
+Version constraint ^0.6.2 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- MissingEscapingInFormatting
+	- ArraySliceDynamicallyEncodedBaseType
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow.
+It is used by:
+	- ^0.6.2 (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#162)
+Version constraint 0.6.12 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- SignedImmutables
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup.
+It is used by:
+	- 0.6.12 (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#681)
+solc-0.6.12 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in Address.sendValue(address,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#197-203):
+	- (success,None) = recipient.call{value: amount}() (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#201)
+Low level call in Address._functionCallWithValue(address,bytes,uint256,string) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#263-284):
+	- (success,returndata) = target.call{value: weiValue}(data) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#267)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Contract tokenTumble (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#683-686) is not in CapWords
+Parameter Sargasso.add(IERC20,bool)._lpToken (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#773) is not in mixedCase
+Parameter Sargasso.add(IERC20,bool)._withUpdate (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#773) is not in mixedCase
+Parameter Sargasso.getMultiplier(uint256,uint256)._from (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#789) is not in mixedCase
+Parameter Sargasso.getMultiplier(uint256,uint256)._to (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#789) is not in mixedCase
+Parameter Sargasso.pendingBucc(uint256)._pid (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#828) is not in mixedCase
+Parameter Sargasso.updatePool(uint256)._pid (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#857) is not in mixedCase
+Parameter Sargasso.viewLPPerson(uint256)._pid (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#878) is not in mixedCase
+Parameter Sargasso.deposit(uint256,uint256)._pid (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#883) is not in mixedCase
+Parameter Sargasso.withdraw(uint256,uint256)._pid (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#907) is not in mixedCase
+Parameter Sargasso.emergencyWithdraw(uint256)._pid (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#929) is not in mixedCase
+Parameter Sargasso.specialdeposit(uint256,uint256)._pid (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#942) is not in mixedCase
+Parameter Sargasso.sendtoRecipient(uint256,uint256)._amount (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#961) is not in mixedCase
+Parameter Sargasso.secretBUCCTransfer(uint256)._amount (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#976) is not in mixedCase
+Parameter Sargasso.dev(address)._buccsAddress (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#990) is not in mixedCase
+Function Sargasso.ETHsend(uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1020-1037) is not in mixedCase
+Function Sargasso.KeyLock() (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1039-1045) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Redundant expression "this (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#615)" inContext (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#609-618)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#redundant-statements
+
+Reentrancy in Sargasso.ETHsend(uint256,uint256) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1020-1037):
+	External calls:
+	- lookUP.transfer(userAmount) (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1034)
+	State variables written after the call(s):
+	- secondaryUserLock[msg.sender] = false (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#1036)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+Sargasso.ethDeposits (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#740) is never used in Sargasso (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#705-1165)
+Sargasso.totalAllocPoint (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#754) is never used in Sargasso (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#705-1165)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-state-variable
+
+Sargasso.ethDeposits (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#740) should be constant 
+Sargasso.totalAllocPoint (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#754) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+
+Sargasso.bonusEndBlock (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#746) should be immutable 
+Sargasso.startBlock (0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol#755) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+./0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879.sol analyzed (10 contracts with 94 detectors), 92 result(s) found
+
+real	0m5.005s
+user	0m4.735s
+sys	0m0.272s

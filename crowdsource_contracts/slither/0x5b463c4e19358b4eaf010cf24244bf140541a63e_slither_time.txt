@@ -1,0 +1,140 @@
+'solc --version' running
+'solc ./0x5b463c4e19358b4eaf010cf24244bf140541a63e.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x5b463c4e19358b4eaf010cf24244bf140541a63e.sol:
+./0x5b463c4e19358b4eaf010cf24244bf140541a63e.sol:8:5: Warning: No visibility specified. Defaulting to "public".
+    function owned(){
+    ^
+Spanning multiple lines.
+./0x5b463c4e19358b4eaf010cf24244bf140541a63e.sol:15:34: Warning: "throw" is deprecated in favour of "revert()", "require()" and "assert()".
+        if (msg.sender != owner) throw;
+                                 ^---^
+./0x5b463c4e19358b4eaf010cf24244bf140541a63e.sol:19:5: Warning: No visibility specified. Defaulting to "public".
+    function transferOwnership(address newOwner) onlyOwner {
+    ^
+Spanning multiple lines.
+./0x5b463c4e19358b4eaf010cf24244bf140541a63e.sol:104:5: Warning: No visibility specified. Defaulting to "public".
+    function mintToken(address target, uint256 mintedAmount) onlyOwner {
+    ^
+Spanning multiple lines.
+./0x5b463c4e19358b4eaf010cf24244bf140541a63e.sol:111:5: Warning: No visibility specified. Defaulting to "public".
+    function freezeAccount(address target,bool _bool) onlyOwner{
+    ^
+Spanning multiple lines.
+./0x5b463c4e19358b4eaf010cf24244bf140541a63e.sol:117:6: Warning: No visibility specified. Defaulting to "public".
+     function setPrices(uint256 newSellPrice, uint256 newBuyPrice) onlyOwner {
+     ^
+Spanning multiple lines.
+./0x5b463c4e19358b4eaf010cf24244bf140541a63e.sol:122:6: Warning: No visibility specified. Defaulting to "public".
+     function buy() returns (uint amount){
+     ^
+Spanning multiple lines.
+./0x5b463c4e19358b4eaf010cf24244bf140541a63e.sol:124:43: Warning: "throw" is deprecated in favour of "revert()", "require()" and "assert()".
+            if (balanceOf[this] < amount) throw;               // checks if it has enough to sell
+                                          ^---^
+./0x5b463c4e19358b4eaf010cf24244bf140541a63e.sol:131:9: Warning: No visibility specified. Defaulting to "public".
+        function sell(uint amount) returns (uint revenue){
+        ^
+Spanning multiple lines.
+./0x5b463c4e19358b4eaf010cf24244bf140541a63e.sol:132:50: Warning: "throw" is deprecated in favour of "revert()", "require()" and "assert()".
+            if (balanceOf[msg.sender] < amount ) throw;        // checks if the sender has enough to sell
+                                                 ^---^
+./0x5b463c4e19358b4eaf010cf24244bf140541a63e.sol:142:9: Warning: No visibility specified. Defaulting to "public".
+        function setMinBalance(uint minimumBalanceInFinney) onlyOwner {
+        ^
+Spanning multiple lines.
+./0x5b463c4e19358b4eaf010cf24244bf140541a63e.sol:136:13: Warning: Failure condition of 'send' ignored. Consider using 'transfer' instead.
+            msg.sender.send(revenue);                          // sends ether to the seller
+            ^----------------------^
+./0x5b463c4e19358b4eaf010cf24244bf140541a63e.sol:123:22: Warning: "msg.value" used in non-payable function. Do you want to add the "payable" modifier to this function?
+            amount = msg.value / buyPrice;                     // calculates the amount
+                     ^-------^
+
+
+TokenERC20 (0x5b463c4e19358b4eaf010cf24244bf140541a63e.sol#23-146) has incorrect ERC20 function interface:TokenERC20.transfer(address,uint256) (0x5b463c4e19358b4eaf010cf24244bf140541a63e.sol#60-62)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-erc20-interface
+
+TokenERC20.sell(uint256) (0x5b463c4e19358b4eaf010cf24244bf140541a63e.sol#131-139) ignores return value by msg.sender.send(revenue) (0x5b463c4e19358b4eaf010cf24244bf140541a63e.sol#136)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-send
+
+owned.transferOwnership(address) (0x5b463c4e19358b4eaf010cf24244bf140541a63e.sol#19-21) should emit an event for: 
+	- owner = newOwner (0x5b463c4e19358b4eaf010cf24244bf140541a63e.sol#20) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-access-control
+
+TokenERC20.setPrices(uint256,uint256) (0x5b463c4e19358b4eaf010cf24244bf140541a63e.sol#117-120) should emit an event for: 
+	- sellPrice = newSellPrice (0x5b463c4e19358b4eaf010cf24244bf140541a63e.sol#118) 
+	- buyPrice = newBuyPrice (0x5b463c4e19358b4eaf010cf24244bf140541a63e.sol#119) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+owned.transferOwnership(address).newOwner (0x5b463c4e19358b4eaf010cf24244bf140541a63e.sol#19) lacks a zero-check on :
+		- owner = newOwner (0x5b463c4e19358b4eaf010cf24244bf140541a63e.sol#20)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Deprecated standard detected THROW (0x5b463c4e19358b4eaf010cf24244bf140541a63e.sol#15):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x5b463c4e19358b4eaf010cf24244bf140541a63e.sol#124):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x5b463c4e19358b4eaf010cf24244bf140541a63e.sol#132):
+	- Usage of "throw" should be replaced with "revert()"
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#deprecated-standards
+
+Version constraint ^0.4.18 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ExpExponentCleanup
+	- EventStructWrongData
+	- NestedArrayFunctionCallDecoder.
+It is used by:
+	- ^0.4.18 (0x5b463c4e19358b4eaf010cf24244bf140541a63e.sol#1)
+solc-0.4.18 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Contract tokenRecipient (0x5b463c4e19358b4eaf010cf24244bf140541a63e.sol#3) is not in CapWords
+Contract owned (0x5b463c4e19358b4eaf010cf24244bf140541a63e.sol#5-22) is not in CapWords
+Parameter TokenERC20.transfer(address,uint256)._to (0x5b463c4e19358b4eaf010cf24244bf140541a63e.sol#60) is not in mixedCase
+Parameter TokenERC20.transfer(address,uint256)._value (0x5b463c4e19358b4eaf010cf24244bf140541a63e.sol#60) is not in mixedCase
+Parameter TokenERC20.transferFrom(address,address,uint256)._from (0x5b463c4e19358b4eaf010cf24244bf140541a63e.sol#64) is not in mixedCase
+Parameter TokenERC20.transferFrom(address,address,uint256)._to (0x5b463c4e19358b4eaf010cf24244bf140541a63e.sol#64) is not in mixedCase
+Parameter TokenERC20.transferFrom(address,address,uint256)._value (0x5b463c4e19358b4eaf010cf24244bf140541a63e.sol#64) is not in mixedCase
+Parameter TokenERC20.approve(address,uint256)._spender (0x5b463c4e19358b4eaf010cf24244bf140541a63e.sol#71) is not in mixedCase
+Parameter TokenERC20.approve(address,uint256)._value (0x5b463c4e19358b4eaf010cf24244bf140541a63e.sol#71) is not in mixedCase
+Parameter TokenERC20.approveAndCall(address,uint256,bytes)._spender (0x5b463c4e19358b4eaf010cf24244bf140541a63e.sol#77) is not in mixedCase
+Parameter TokenERC20.approveAndCall(address,uint256,bytes)._value (0x5b463c4e19358b4eaf010cf24244bf140541a63e.sol#77) is not in mixedCase
+Parameter TokenERC20.approveAndCall(address,uint256,bytes)._extraData (0x5b463c4e19358b4eaf010cf24244bf140541a63e.sol#77) is not in mixedCase
+Parameter TokenERC20.burn(uint256)._value (0x5b463c4e19358b4eaf010cf24244bf140541a63e.sol#85) is not in mixedCase
+Parameter TokenERC20.burnFrom(address,uint256)._from (0x5b463c4e19358b4eaf010cf24244bf140541a63e.sol#93) is not in mixedCase
+Parameter TokenERC20.burnFrom(address,uint256)._value (0x5b463c4e19358b4eaf010cf24244bf140541a63e.sol#93) is not in mixedCase
+Parameter TokenERC20.freezeAccount(address,bool)._bool (0x5b463c4e19358b4eaf010cf24244bf140541a63e.sol#111) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in TokenERC20.sell(uint256) (0x5b463c4e19358b4eaf010cf24244bf140541a63e.sol#131-139):
+	External calls:
+	- msg.sender.send(revenue) (0x5b463c4e19358b4eaf010cf24244bf140541a63e.sol#136)
+	Event emitted after the call(s):
+	- Transfer(msg.sender,this,amount) (0x5b463c4e19358b4eaf010cf24244bf140541a63e.sol#137)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+TokenERC20.decimals (0x5b463c4e19358b4eaf010cf24244bf140541a63e.sol#26) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+
+receiveApproval(address,uint256,address,bytes) should be declared external:
+	- tokenRecipient.receiveApproval(address,uint256,address,bytes) (0x5b463c4e19358b4eaf010cf24244bf140541a63e.sol#3)
+approveAndCall(address,uint256,bytes) should be declared external:
+	- TokenERC20.approveAndCall(address,uint256,bytes) (0x5b463c4e19358b4eaf010cf24244bf140541a63e.sol#77-83)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#public-function-that-could-be-declared-external
+./0x5b463c4e19358b4eaf010cf24244bf140541a63e.sol analyzed (3 contracts with 94 detectors), 30 result(s) found
+
+real	0m1.464s
+user	0m1.275s
+sys	0m0.192s

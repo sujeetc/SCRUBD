@@ -1,0 +1,181 @@
+'solc --version' running
+'solc ./0x08759550264b7f8078d95eff8a0577001c833483.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+Canvas.redeem(uint256) (0x08759550264b7f8078d95eff8a0577001c833483.sol#609-616) sends eth to arbitrary user
+	Dangerous calls:
+	- (success,None) = msg.sender.call{gas: 20000,value: share}() (0x08759550264b7f8078d95eff8a0577001c833483.sol#614)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+Reentrancy in Canvas.buy() (0x08759550264b7f8078d95eff8a0577001c833483.sol#595-607):
+	External calls:
+	- (success,None) = hodler.call{gas: 20000,value: hodler_share}() (0x08759550264b7f8078d95eff8a0577001c833483.sol#601)
+	State variables written after the call(s):
+	- _transferBase(msg.sender) (0x08759550264b7f8078d95eff8a0577001c833483.sol#606)
+		- hodler = to (0x08759550264b7f8078d95eff8a0577001c833483.sol#479)
+	BoringSingleNFT.hodler (0x08759550264b7f8078d95eff8a0577001c833483.sol#432) can be used in cross function reentrancies:
+	- BoringSingleNFT._transfer(address,address,uint256) (0x08759550264b7f8078d95eff8a0577001c833483.sol#484-494)
+	- BoringSingleNFT._transferBase(address) (0x08759550264b7f8078d95eff8a0577001c833483.sol#477-482)
+	- BoringSingleNFT.approve(address,uint256) (0x08759550264b7f8078d95eff8a0577001c833483.sol#456-461)
+	- BoringSingleNFT.balanceOf(address) (0x08759550264b7f8078d95eff8a0577001c833483.sol#445-448)
+	- Canvas.buy() (0x08759550264b7f8078d95eff8a0577001c833483.sol#595-607)
+	- BoringSingleNFT.hodler (0x08759550264b7f8078d95eff8a0577001c833483.sol#432)
+	- BoringSingleNFT.ownerOf(uint256) (0x08759550264b7f8078d95eff8a0577001c833483.sol#450-454)
+	- Canvas.poll(address) (0x08759550264b7f8078d95eff8a0577001c833483.sol#623-625)
+	- Canvas.setInfo(string) (0x08759550264b7f8078d95eff8a0577001c833483.sol#618-621)
+	- price = price.mul(150) / 100 (0x08759550264b7f8078d95eff8a0577001c833483.sol#605)
+	Canvas.price (0x08759550264b7f8078d95eff8a0577001c833483.sol#580) can be used in cross function reentrancies:
+	- Canvas.buy() (0x08759550264b7f8078d95eff8a0577001c833483.sol#595-607)
+	- Canvas.constructor(Pixel) (0x08759550264b7f8078d95eff8a0577001c833483.sol#584-588)
+	- Canvas.poll(address) (0x08759550264b7f8078d95eff8a0577001c833483.sol#623-625)
+	- Canvas.price (0x08759550264b7f8078d95eff8a0577001c833483.sol#580)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+BoringSingleNFT.approve(address,uint256)._approved (0x08759550264b7f8078d95eff8a0577001c833483.sol#456) lacks a zero-check on :
+		- allowed = _approved (0x08759550264b7f8078d95eff8a0577001c833483.sol#459)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in Canvas.buy() (0x08759550264b7f8078d95eff8a0577001c833483.sol#595-607):
+	External calls:
+	- (success,None) = hodler.call{gas: 20000,value: hodler_share}() (0x08759550264b7f8078d95eff8a0577001c833483.sol#601)
+	State variables written after the call(s):
+	- _transferBase(msg.sender) (0x08759550264b7f8078d95eff8a0577001c833483.sol#606)
+		- allowed = address(0) (0x08759550264b7f8078d95eff8a0577001c833483.sol#481)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in Canvas.buy() (0x08759550264b7f8078d95eff8a0577001c833483.sol#595-607):
+	External calls:
+	- (success,None) = hodler.call{gas: 20000,value: hodler_share}() (0x08759550264b7f8078d95eff8a0577001c833483.sol#601)
+	Event emitted after the call(s):
+	- Buy(hodler,msg.sender,price,hodler_share) (0x08759550264b7f8078d95eff8a0577001c833483.sol#603)
+	- Transfer(hodler,to,0) (0x08759550264b7f8078d95eff8a0577001c833483.sol#478)
+		- _transferBase(msg.sender) (0x08759550264b7f8078d95eff8a0577001c833483.sol#606)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+Canvas.buy() (0x08759550264b7f8078d95eff8a0577001c833483.sol#595-607) tries to limit the gas of an external call that controls implicit decoding
+	(success,None) = hodler.call{gas: 20000,value: hodler_share}() (0x08759550264b7f8078d95eff8a0577001c833483.sol#601)
+Canvas.redeem(uint256) (0x08759550264b7f8078d95eff8a0577001c833483.sol#609-616) tries to limit the gas of an external call that controls implicit decoding
+	(success,None) = msg.sender.call{gas: 20000,value: share}() (0x08759550264b7f8078d95eff8a0577001c833483.sol#614)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#return-bomb
+
+ERC20.permit(address,address,uint256,uint256,uint8,bytes32,bytes32) (0x08759550264b7f8078d95eff8a0577001c833483.sol#348-366) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(block.timestamp < deadline,ERC20: Expired) (0x08759550264b7f8078d95eff8a0577001c833483.sol#358)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Domain.constructor() (0x08759550264b7f8078d95eff8a0577001c833483.sol#219-225) uses assembly
+	- INLINE ASM (0x08759550264b7f8078d95eff8a0577001c833483.sol#221-223)
+Domain._domainSeparator() (0x08759550264b7f8078d95eff8a0577001c833483.sol#231-237) uses assembly
+	- INLINE ASM (0x08759550264b7f8078d95eff8a0577001c833483.sol#233-235)
+BoringAddress.isContract(address) (0x08759550264b7f8078d95eff8a0577001c833483.sol#397-403) uses assembly
+	- INLINE ASM (0x08759550264b7f8078d95eff8a0577001c833483.sol#399-401)
+Address.isContract(address) (0x08759550264b7f8078d95eff8a0577001c833483.sol#558-564) uses assembly
+	- INLINE ASM (0x08759550264b7f8078d95eff8a0577001c833483.sol#560-562)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#assembly-usage
+
+2 different versions of Solidity are used:
+	- Version constraint 0.6.12 is used by:
+		-0.6.12 (0x08759550264b7f8078d95eff8a0577001c833483.sol#5)
+		-0.6.12 (0x08759550264b7f8078d95eff8a0577001c833483.sol#73)
+		-0.6.12 (0x08759550264b7f8078d95eff8a0577001c833483.sol#101)
+		-0.6.12 (0x08759550264b7f8078d95eff8a0577001c833483.sol#201)
+		-0.6.12 (0x08759550264b7f8078d95eff8a0577001c833483.sol#246)
+	- Version constraint ^0.6.12 is used by:
+		-^0.6.12 (0x08759550264b7f8078d95eff8a0577001c833483.sol#392)
+		-^0.6.12 (0x08759550264b7f8078d95eff8a0577001c833483.sol#408)
+		-^0.6.12 (0x08759550264b7f8078d95eff8a0577001c833483.sol#550)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#different-pragma-directives-are-used
+
+ERC20WithSupply._burn(address,uint256) (0x08759550264b7f8078d95eff8a0577001c833483.sol#380-385) is never used and should be removed
+ERC20WithSupply._mint(address,uint256) (0x08759550264b7f8078d95eff8a0577001c833483.sol#372-378) is never used and should be removed
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dead-code
+
+Version constraint 0.6.12 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- SignedImmutables
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup.
+It is used by:
+	- 0.6.12 (0x08759550264b7f8078d95eff8a0577001c833483.sol#5)
+	- 0.6.12 (0x08759550264b7f8078d95eff8a0577001c833483.sol#73)
+	- 0.6.12 (0x08759550264b7f8078d95eff8a0577001c833483.sol#101)
+	- 0.6.12 (0x08759550264b7f8078d95eff8a0577001c833483.sol#201)
+	- 0.6.12 (0x08759550264b7f8078d95eff8a0577001c833483.sol#246)
+Version constraint ^0.6.12 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- SignedImmutables
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup.
+It is used by:
+	- ^0.6.12 (0x08759550264b7f8078d95eff8a0577001c833483.sol#392)
+	- ^0.6.12 (0x08759550264b7f8078d95eff8a0577001c833483.sol#408)
+	- ^0.6.12 (0x08759550264b7f8078d95eff8a0577001c833483.sol#550)
+solc-0.6.12 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in BoringERC20.safeSymbol(IERC20) (0x08759550264b7f8078d95eff8a0577001c833483.sol#134-137):
+	- (success,data) = address(token).staticcall(abi.encodeWithSelector(SIG_SYMBOL)) (0x08759550264b7f8078d95eff8a0577001c833483.sol#135)
+Low level call in BoringERC20.safeName(IERC20) (0x08759550264b7f8078d95eff8a0577001c833483.sol#142-145):
+	- (success,data) = address(token).staticcall(abi.encodeWithSelector(SIG_NAME)) (0x08759550264b7f8078d95eff8a0577001c833483.sol#143)
+Low level call in BoringERC20.safeDecimals(IERC20) (0x08759550264b7f8078d95eff8a0577001c833483.sol#150-153):
+	- (success,data) = address(token).staticcall(abi.encodeWithSelector(SIG_DECIMALS)) (0x08759550264b7f8078d95eff8a0577001c833483.sol#151)
+Low level call in BoringERC20.safeBalanceOf(IERC20,address) (0x08759550264b7f8078d95eff8a0577001c833483.sol#159-163):
+	- (success,data) = address(token).staticcall(abi.encodeWithSelector(SIG_BALANCE_OF,to)) (0x08759550264b7f8078d95eff8a0577001c833483.sol#160)
+Low level call in BoringERC20.safeTransfer(IERC20,address,uint256) (0x08759550264b7f8078d95eff8a0577001c833483.sol#170-177):
+	- (success,data) = address(token).call(abi.encodeWithSelector(SIG_TRANSFER,to,amount)) (0x08759550264b7f8078d95eff8a0577001c833483.sol#175)
+Low level call in BoringERC20.safeTransferFrom(IERC20,address,address,uint256) (0x08759550264b7f8078d95eff8a0577001c833483.sol#185-193):
+	- (success,data) = address(token).call(abi.encodeWithSelector(SIG_TRANSFER_FROM,from,to,amount)) (0x08759550264b7f8078d95eff8a0577001c833483.sol#191)
+Low level call in Canvas.buy() (0x08759550264b7f8078d95eff8a0577001c833483.sol#595-607):
+	- (success,None) = hodler.call{gas: 20000,value: hodler_share}() (0x08759550264b7f8078d95eff8a0577001c833483.sol#601)
+Low level call in Canvas.redeem(uint256) (0x08759550264b7f8078d95eff8a0577001c833483.sol#609-616):
+	- (success,None) = msg.sender.call{gas: 20000,value: share}() (0x08759550264b7f8078d95eff8a0577001c833483.sol#614)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Variable Domain._DOMAIN_SEPARATOR (0x08759550264b7f8078d95eff8a0577001c833483.sol#211) is not in mixedCase
+Variable Domain.DOMAIN_SEPARATOR_CHAIN_ID (0x08759550264b7f8078d95eff8a0577001c833483.sol#212) is not in mixedCase
+Function ERC20.DOMAIN_SEPARATOR() (0x08759550264b7f8078d95eff8a0577001c833483.sol#336-338) is not in mixedCase
+Parameter BoringSingleNFT.balanceOf(address)._owner (0x08759550264b7f8078d95eff8a0577001c833483.sol#445) is not in mixedCase
+Parameter BoringSingleNFT.ownerOf(uint256)._tokenId (0x08759550264b7f8078d95eff8a0577001c833483.sol#450) is not in mixedCase
+Parameter BoringSingleNFT.approve(address,uint256)._approved (0x08759550264b7f8078d95eff8a0577001c833483.sol#456) is not in mixedCase
+Parameter BoringSingleNFT.approve(address,uint256)._tokenId (0x08759550264b7f8078d95eff8a0577001c833483.sol#456) is not in mixedCase
+Parameter BoringSingleNFT.setApprovalForAll(address,bool)._operator (0x08759550264b7f8078d95eff8a0577001c833483.sol#463) is not in mixedCase
+Parameter BoringSingleNFT.setApprovalForAll(address,bool)._approved (0x08759550264b7f8078d95eff8a0577001c833483.sol#463) is not in mixedCase
+Parameter BoringSingleNFT.getApproved(uint256)._tokenId (0x08759550264b7f8078d95eff8a0577001c833483.sol#468) is not in mixedCase
+Parameter BoringSingleNFT.isApprovedForAll(address,address)._owner (0x08759550264b7f8078d95eff8a0577001c833483.sol#473) is not in mixedCase
+Parameter BoringSingleNFT.isApprovedForAll(address,address)._operator (0x08759550264b7f8078d95eff8a0577001c833483.sol#473) is not in mixedCase
+Parameter BoringSingleNFT.transferFrom(address,address,uint256)._from (0x08759550264b7f8078d95eff8a0577001c833483.sol#497) is not in mixedCase
+Parameter BoringSingleNFT.transferFrom(address,address,uint256)._to (0x08759550264b7f8078d95eff8a0577001c833483.sol#498) is not in mixedCase
+Parameter BoringSingleNFT.transferFrom(address,address,uint256)._tokenId (0x08759550264b7f8078d95eff8a0577001c833483.sol#499) is not in mixedCase
+Parameter BoringSingleNFT.safeTransferFrom(address,address,uint256)._from (0x08759550264b7f8078d95eff8a0577001c833483.sol#505) is not in mixedCase
+Parameter BoringSingleNFT.safeTransferFrom(address,address,uint256)._to (0x08759550264b7f8078d95eff8a0577001c833483.sol#506) is not in mixedCase
+Parameter BoringSingleNFT.safeTransferFrom(address,address,uint256)._tokenId (0x08759550264b7f8078d95eff8a0577001c833483.sol#507) is not in mixedCase
+Parameter BoringSingleNFT.safeTransferFrom(address,address,uint256,bytes)._from (0x08759550264b7f8078d95eff8a0577001c833483.sol#513) is not in mixedCase
+Parameter BoringSingleNFT.safeTransferFrom(address,address,uint256,bytes)._to (0x08759550264b7f8078d95eff8a0577001c833483.sol#514) is not in mixedCase
+Parameter BoringSingleNFT.safeTransferFrom(address,address,uint256,bytes)._tokenId (0x08759550264b7f8078d95eff8a0577001c833483.sol#515) is not in mixedCase
+Parameter BoringSingleNFT.safeTransferFrom(address,address,uint256,bytes)._data (0x08759550264b7f8078d95eff8a0577001c833483.sol#516) is not in mixedCase
+Parameter BoringSingleNFT.tokenURI(uint256)._tokenId (0x08759550264b7f8078d95eff8a0577001c833483.sol#528) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Canvas.constructor(Pixel) (0x08759550264b7f8078d95eff8a0577001c833483.sol#584-588) uses literals with too many digits:
+	- price = _pixel.totalSupply() / 200000 (0x08759550264b7f8078d95eff8a0577001c833483.sol#586)
+Canvas.getCanvasImageCode() (0x08759550264b7f8078d95eff8a0577001c833483.sol#627-629) uses literals with too many digits:
+	- if(process.argv[2]){const e=require('ethers'),t=new e.Contract('0x1590ABe3612Be1CB3ab5B0f28874D521576e97Dc',[{inputs:[{internalType:'uint256[]',name:'blockNumbers',type:'uint256[]'}],name:'getBlocks',outputs:[{components:[{internalType:'address',name:'owner',type:'address'},{internalType:'string',name:'url',type:'string'},{internalType:'string',name:'description',type:'string'},{internalType:'bytes',name:'pixels',type:'bytes'},{internalType:'uint128',name:'lastPrice',type:'uint128'},{internalType:'uint32',name:'number',type:'uint32'}],internalType:'struct PixelV2.ExportBlock[]',name:'blocks',type:'tuple[]'}],stateMutability:'view',type:'function'}],new e.providers.JsonRpcProvider(process.argv[2])),{Canvas:a,Image:b}=require('node-canvas');async function main(){const e=new a(1e3,1e3),n=e.getContext('2d');for(let e=0;e<100;e++){console.log(100*e);let a=await t.getBlocks([...Array(100).keys()].map(t=>t+100*e));for(let t in a){let s=parseInt(a[t].pixels.substr(2,2)),r=a[t].pixels.substr(4);if(s<=4){1==s&&(r='89504e470d0a1a0a0000000d494844520000000a0000000a08060000008d32cfbd0000'+r+'0000000049454e44ae426082'),3==s&&(r='ffd8ffe000104a46494600010100000100010000ffdb0043000a07070807060a0808080b0a0a0b0e18100e0d0d0e1d15161118231f2524221f2221262b372f26293429212230413134393b3e3e3e252e4449433c48373d3e3bffdb0043010a0b0b0e0d0e1c10101c3b2822283b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3b3bffc0001108000a000a03012200021101031101ffc400'+r+'ffd9');const a=new b;a.src=Buffer.from(r,'hex'),n.drawImage(a,10*t,10*e,10,10)}else if(5==s){let a=n.createImageData(10,10);for(let e=0;e<100;e++){let t=parseInt(r.substr(6*e,6),16);a.data.set([Math.floor(t/65536),Math.floor(t%65536/256),t%256,255],4*e)}n.putImageData(a,10*t,10*e)}else 6!=s&&r||(n.fillStyle='#'+(r||'000000'),n.fillRect(10*t,10*e,10,10))}}const s=e.toBuffer('image/png');require('fs').writeFileSync('canvas.png',s)}main()}else console.log('Usage: node getImage.js <RPC URL>'); (0x08759550264b7f8078d95eff8a0577001c833483.sol#628)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+./0x08759550264b7f8078d95eff8a0577001c833483.sol analyzed (16 contracts with 94 detectors), 51 result(s) found
+
+real	0m2.338s
+user	0m2.087s
+sys	0m0.254s

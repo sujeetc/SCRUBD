@@ -1,0 +1,73 @@
+'solc --version' running
+'solc ./0xefe2481c6801ae124925db7fabcba71dc6da4cba.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0xefe2481c6801ae124925db7fabcba71dc6da4cba.sol:
+./0xefe2481c6801ae124925db7fabcba71dc6da4cba.sol:41:13: Warning: Failure condition of 'send' ignored. Consider using 'transfer' instead.
+            c.beneficiary.send(c.amount);
+            ^--------------------------^
+./0xefe2481c6801ae124925db7fabcba71dc6da4cba.sol:49:17: Warning: Failure condition of 'send' ignored. Consider using 'transfer' instead.
+                c.funders[j].addr.send(c.funders[j].amount);
+                ^-----------------------------------------^
+./0xefe2481c6801ae124925db7fabcba71dc6da4cba.sol:34:20: Warning: "msg.value" used in non-payable function. Do you want to add the "payable" modifier to this function?
+        f.amount = msg.value;
+                   ^-------^
+
+
+XG4KCrowdFunding.checkGoalReached(uint256) (0xefe2481c6801ae124925db7fabcba71dc6da4cba.sol#38-56) ignores return value by c.beneficiary.send(c.amount) (0xefe2481c6801ae124925db7fabcba71dc6da4cba.sol#41)
+XG4KCrowdFunding.checkGoalReached(uint256) (0xefe2481c6801ae124925db7fabcba71dc6da4cba.sol#38-56) ignores return value by c.funders[j].addr.send(c.funders[j].amount) (0xefe2481c6801ae124925db7fabcba71dc6da4cba.sol#49)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-send
+
+XG4KCrowdFunding.checkGoalReached(uint256) (0xefe2481c6801ae124925db7fabcba71dc6da4cba.sol#38-56) has external calls inside a loop: c.funders[j].addr.send(c.funders[j].amount) (0xefe2481c6801ae124925db7fabcba71dc6da4cba.sol#49)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation/#calls-inside-a-loop
+
+Version constraint ^0.4.4 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ExpExponentCleanup
+	- NestedArrayFunctionCallDecoder
+	- ZeroFunctionSelector
+	- DelegateCallReturnValue
+	- ECRecoverMalformedInput
+	- SkipEmptyStringLiteral
+	- ConstantOptimizerSubtraction
+	- IdentityPrecompileReturnIgnored.
+It is used by:
+	- ^0.4.4 (0xefe2481c6801ae124925db7fabcba71dc6da4cba.sol#1)
+solc-0.4.11 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Reentrancy in XG4KCrowdFunding.checkGoalReached(uint256) (0xefe2481c6801ae124925db7fabcba71dc6da4cba.sol#38-56):
+	External calls:
+	- c.beneficiary.send(c.amount) (0xefe2481c6801ae124925db7fabcba71dc6da4cba.sol#41)
+	State variables written after the call(s):
+	- clean(campaignID) (0xefe2481c6801ae124925db7fabcba71dc6da4cba.sol#42)
+		- c.amount = 0 (0xefe2481c6801ae124925db7fabcba71dc6da4cba.sol#61)
+		- c.beneficiary = 0 (0xefe2481c6801ae124925db7fabcba71dc6da4cba.sol#62)
+		- c.fundingGoal = 0 (0xefe2481c6801ae124925db7fabcba71dc6da4cba.sol#63)
+		- c.deadline = 0 (0xefe2481c6801ae124925db7fabcba71dc6da4cba.sol#64)
+		- c.numFunders = 0 (0xefe2481c6801ae124925db7fabcba71dc6da4cba.sol#65)
+		- c.funders[i].addr = 0 (0xefe2481c6801ae124925db7fabcba71dc6da4cba.sol#67)
+		- c.funders[i].amount = 0 (0xefe2481c6801ae124925db7fabcba71dc6da4cba.sol#68)
+Reentrancy in XG4KCrowdFunding.checkGoalReached(uint256) (0xefe2481c6801ae124925db7fabcba71dc6da4cba.sol#38-56):
+	External calls:
+	- c.funders[j].addr.send(c.funders[j].amount) (0xefe2481c6801ae124925db7fabcba71dc6da4cba.sol#49)
+	State variables written after the call(s):
+	- clean(campaignID) (0xefe2481c6801ae124925db7fabcba71dc6da4cba.sol#52)
+		- c.amount = 0 (0xefe2481c6801ae124925db7fabcba71dc6da4cba.sol#61)
+		- c.beneficiary = 0 (0xefe2481c6801ae124925db7fabcba71dc6da4cba.sol#62)
+		- c.fundingGoal = 0 (0xefe2481c6801ae124925db7fabcba71dc6da4cba.sol#63)
+		- c.deadline = 0 (0xefe2481c6801ae124925db7fabcba71dc6da4cba.sol#64)
+		- c.numFunders = 0 (0xefe2481c6801ae124925db7fabcba71dc6da4cba.sol#65)
+		- c.funders[i].addr = 0 (0xefe2481c6801ae124925db7fabcba71dc6da4cba.sol#67)
+		- c.funders[i].amount = 0 (0xefe2481c6801ae124925db7fabcba71dc6da4cba.sol#68)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+./0xefe2481c6801ae124925db7fabcba71dc6da4cba.sol analyzed (1 contracts with 94 detectors), 7 result(s) found
+
+real	0m1.553s
+user	0m1.379s
+sys	0m0.177s

@@ -1,0 +1,289 @@
+'solc --version' running
+'solc ./0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol:
+./0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol:81:5: Warning: Invoking events without "emit" prefix is deprecated.
+    CreateSwap(_token, _participantAddress, msg.sender, _value, _secretHash, now);
+    ^---------------------------------------------------------------------------^
+./0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol:99:5: Warning: Invoking events without "emit" prefix is deprecated.
+    CreateSwap(_token, _participantAddress, msg.sender, _value, _secretHash, now);
+    ^---------------------------------------------------------------------------^
+./0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol:115:32: Warning: This function only accepts a single "bytes" argument. Please use "abi.encodePacked(...)" or a similar function to encode the data.
+    require(swap.secretHash == ripemd160(_secret));
+                               ^----------------^
+./0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol:115:32: Warning: The provided argument of type bytes32 is not implicitly convertible to expected type bytes memory.
+    require(swap.secretHash == ripemd160(_secret));
+                               ^----------------^
+./0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol:124:5: Warning: Invoking events without "emit" prefix is deprecated.
+    Withdraw(msg.sender, _ownerAddress, now); 
+    ^--------------------------------------^
+./0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol:131:32: Warning: This function only accepts a single "bytes" argument. Please use "abi.encodePacked(...)" or a similar function to encode the data.
+    require(swap.secretHash == ripemd160(_secret));
+                               ^----------------^
+./0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol:131:32: Warning: The provided argument of type bytes32 is not implicitly convertible to expected type bytes memory.
+    require(swap.secretHash == ripemd160(_secret));
+                               ^----------------^
+./0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol:140:5: Warning: Invoking events without "emit" prefix is deprecated.
+    Withdraw(participantAddress, msg.sender, now); 
+    ^-------------------------------------------^
+./0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol:148:32: Warning: This function only accepts a single "bytes" argument. Please use "abi.encodePacked(...)" or a similar function to encode the data.
+    require(swap.secretHash == ripemd160(_secret));
+                               ^----------------^
+./0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol:148:32: Warning: The provided argument of type bytes32 is not implicitly convertible to expected type bytes memory.
+    require(swap.secretHash == ripemd160(_secret));
+                               ^----------------^
+./0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol:157:5: Warning: Invoking events without "emit" prefix is deprecated.
+    Withdraw(participantAddress, _ownerAddress, now); 
+    ^----------------------------------------------^
+./0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol:178:5: Warning: Invoking events without "emit" prefix is deprecated.
+    Refund();
+    ^------^
+./0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol:107:3: Warning: Function state mutability can be restricted to view
+  function getTargetWallet(address tokenOwnerAddress) public returns (address) {
+  ^ (Relevant source part starts here and spans across multiple lines).
+
+
+ERC20 (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#32-35) has incorrect ERC20 function interface:ERC20.transfer(address,uint256) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#33)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-erc20-interface
+
+Reentrancy in EthTokenToSmthSwaps.createSwap(bytes20,address,uint256,address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#67-82):
+	External calls:
+	- require(bool)(ERC20(_token).transferFrom(msg.sender,this,_value)) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#70)
+	State variables written after the call(s):
+	- swaps[msg.sender][_participantAddress] = Swap(_token,_participantAddress,bytes32(0),_secretHash,now,_value) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#72-79)
+	EthTokenToSmthSwaps.swaps (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#54) can be used in cross function reentrancies:
+	- EthTokenToSmthSwaps.clean(address,address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#181-183)
+	- EthTokenToSmthSwaps.createSwap(bytes20,address,uint256,address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#67-82)
+	- EthTokenToSmthSwaps.createSwapTarget(bytes20,address,address,uint256,address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#85-100)
+	- EthTokenToSmthSwaps.getBalance(address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#101-103)
+	- EthTokenToSmthSwaps.getSecret(address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#161-163)
+	- EthTokenToSmthSwaps.getTargetWallet(address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#107-109)
+	- EthTokenToSmthSwaps.refund(address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#169-179)
+	- EthTokenToSmthSwaps.swaps (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#54)
+	- EthTokenToSmthSwaps.withdraw(bytes32,address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#112-125)
+	- EthTokenToSmthSwaps.withdrawNoMoney(bytes32,address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#128-141)
+	- EthTokenToSmthSwaps.withdrawOther(bytes32,address,address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#145-158)
+Reentrancy in EthTokenToSmthSwaps.createSwapTarget(bytes20,address,address,uint256,address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#85-100):
+	External calls:
+	- require(bool)(ERC20(_token).transferFrom(msg.sender,this,_value)) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#88)
+	State variables written after the call(s):
+	- swaps[msg.sender][_participantAddress] = Swap(_token,_targetWallet,bytes32(0),_secretHash,now,_value) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#90-97)
+	EthTokenToSmthSwaps.swaps (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#54) can be used in cross function reentrancies:
+	- EthTokenToSmthSwaps.clean(address,address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#181-183)
+	- EthTokenToSmthSwaps.createSwap(bytes20,address,uint256,address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#67-82)
+	- EthTokenToSmthSwaps.createSwapTarget(bytes20,address,address,uint256,address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#85-100)
+	- EthTokenToSmthSwaps.getBalance(address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#101-103)
+	- EthTokenToSmthSwaps.getSecret(address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#161-163)
+	- EthTokenToSmthSwaps.getTargetWallet(address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#107-109)
+	- EthTokenToSmthSwaps.refund(address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#169-179)
+	- EthTokenToSmthSwaps.swaps (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#54)
+	- EthTokenToSmthSwaps.withdraw(bytes32,address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#112-125)
+	- EthTokenToSmthSwaps.withdrawNoMoney(bytes32,address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#128-141)
+	- EthTokenToSmthSwaps.withdrawOther(bytes32,address,address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#145-158)
+Reentrancy in EthTokenToSmthSwaps.refund(address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#169-179):
+	External calls:
+	- ERC20(swap.token).transfer(msg.sender,swap.balance) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#175)
+	State variables written after the call(s):
+	- clean(msg.sender,_participantAddress) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#176)
+		- delete swaps[_ownerAddress][_participantAddress] (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#182)
+	EthTokenToSmthSwaps.swaps (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#54) can be used in cross function reentrancies:
+	- EthTokenToSmthSwaps.clean(address,address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#181-183)
+	- EthTokenToSmthSwaps.createSwap(bytes20,address,uint256,address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#67-82)
+	- EthTokenToSmthSwaps.createSwapTarget(bytes20,address,address,uint256,address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#85-100)
+	- EthTokenToSmthSwaps.getBalance(address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#101-103)
+	- EthTokenToSmthSwaps.getSecret(address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#161-163)
+	- EthTokenToSmthSwaps.getTargetWallet(address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#107-109)
+	- EthTokenToSmthSwaps.refund(address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#169-179)
+	- EthTokenToSmthSwaps.swaps (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#54)
+	- EthTokenToSmthSwaps.withdraw(bytes32,address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#112-125)
+	- EthTokenToSmthSwaps.withdrawNoMoney(bytes32,address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#128-141)
+	- EthTokenToSmthSwaps.withdrawOther(bytes32,address,address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#145-158)
+Reentrancy in EthTokenToSmthSwaps.withdraw(bytes32,address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#112-125):
+	External calls:
+	- ERC20(swap.token).transfer(swap.targetWallet,swap.balance) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#119)
+	State variables written after the call(s):
+	- swaps[_ownerAddress][msg.sender].balance = 0 (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#121)
+	EthTokenToSmthSwaps.swaps (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#54) can be used in cross function reentrancies:
+	- EthTokenToSmthSwaps.clean(address,address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#181-183)
+	- EthTokenToSmthSwaps.createSwap(bytes20,address,uint256,address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#67-82)
+	- EthTokenToSmthSwaps.createSwapTarget(bytes20,address,address,uint256,address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#85-100)
+	- EthTokenToSmthSwaps.getBalance(address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#101-103)
+	- EthTokenToSmthSwaps.getSecret(address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#161-163)
+	- EthTokenToSmthSwaps.getTargetWallet(address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#107-109)
+	- EthTokenToSmthSwaps.refund(address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#169-179)
+	- EthTokenToSmthSwaps.swaps (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#54)
+	- EthTokenToSmthSwaps.withdraw(bytes32,address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#112-125)
+	- EthTokenToSmthSwaps.withdrawNoMoney(bytes32,address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#128-141)
+	- EthTokenToSmthSwaps.withdrawOther(bytes32,address,address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#145-158)
+	- swaps[_ownerAddress][msg.sender].secret = _secret (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#122)
+	EthTokenToSmthSwaps.swaps (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#54) can be used in cross function reentrancies:
+	- EthTokenToSmthSwaps.clean(address,address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#181-183)
+	- EthTokenToSmthSwaps.createSwap(bytes20,address,uint256,address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#67-82)
+	- EthTokenToSmthSwaps.createSwapTarget(bytes20,address,address,uint256,address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#85-100)
+	- EthTokenToSmthSwaps.getBalance(address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#101-103)
+	- EthTokenToSmthSwaps.getSecret(address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#161-163)
+	- EthTokenToSmthSwaps.getTargetWallet(address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#107-109)
+	- EthTokenToSmthSwaps.refund(address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#169-179)
+	- EthTokenToSmthSwaps.swaps (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#54)
+	- EthTokenToSmthSwaps.withdraw(bytes32,address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#112-125)
+	- EthTokenToSmthSwaps.withdrawNoMoney(bytes32,address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#128-141)
+	- EthTokenToSmthSwaps.withdrawOther(bytes32,address,address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#145-158)
+Reentrancy in EthTokenToSmthSwaps.withdrawNoMoney(bytes32,address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#128-141):
+	External calls:
+	- ERC20(swap.token).transfer(swap.targetWallet,swap.balance) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#135)
+	State variables written after the call(s):
+	- swaps[msg.sender][participantAddress].balance = 0 (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#137)
+	EthTokenToSmthSwaps.swaps (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#54) can be used in cross function reentrancies:
+	- EthTokenToSmthSwaps.clean(address,address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#181-183)
+	- EthTokenToSmthSwaps.createSwap(bytes20,address,uint256,address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#67-82)
+	- EthTokenToSmthSwaps.createSwapTarget(bytes20,address,address,uint256,address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#85-100)
+	- EthTokenToSmthSwaps.getBalance(address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#101-103)
+	- EthTokenToSmthSwaps.getSecret(address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#161-163)
+	- EthTokenToSmthSwaps.getTargetWallet(address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#107-109)
+	- EthTokenToSmthSwaps.refund(address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#169-179)
+	- EthTokenToSmthSwaps.swaps (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#54)
+	- EthTokenToSmthSwaps.withdraw(bytes32,address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#112-125)
+	- EthTokenToSmthSwaps.withdrawNoMoney(bytes32,address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#128-141)
+	- EthTokenToSmthSwaps.withdrawOther(bytes32,address,address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#145-158)
+	- swaps[msg.sender][participantAddress].secret = _secret (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#138)
+	EthTokenToSmthSwaps.swaps (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#54) can be used in cross function reentrancies:
+	- EthTokenToSmthSwaps.clean(address,address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#181-183)
+	- EthTokenToSmthSwaps.createSwap(bytes20,address,uint256,address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#67-82)
+	- EthTokenToSmthSwaps.createSwapTarget(bytes20,address,address,uint256,address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#85-100)
+	- EthTokenToSmthSwaps.getBalance(address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#101-103)
+	- EthTokenToSmthSwaps.getSecret(address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#161-163)
+	- EthTokenToSmthSwaps.getTargetWallet(address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#107-109)
+	- EthTokenToSmthSwaps.refund(address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#169-179)
+	- EthTokenToSmthSwaps.swaps (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#54)
+	- EthTokenToSmthSwaps.withdraw(bytes32,address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#112-125)
+	- EthTokenToSmthSwaps.withdrawNoMoney(bytes32,address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#128-141)
+	- EthTokenToSmthSwaps.withdrawOther(bytes32,address,address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#145-158)
+Reentrancy in EthTokenToSmthSwaps.withdrawOther(bytes32,address,address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#145-158):
+	External calls:
+	- ERC20(swap.token).transfer(swap.targetWallet,swap.balance) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#152)
+	State variables written after the call(s):
+	- swaps[_ownerAddress][participantAddress].balance = 0 (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#154)
+	EthTokenToSmthSwaps.swaps (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#54) can be used in cross function reentrancies:
+	- EthTokenToSmthSwaps.clean(address,address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#181-183)
+	- EthTokenToSmthSwaps.createSwap(bytes20,address,uint256,address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#67-82)
+	- EthTokenToSmthSwaps.createSwapTarget(bytes20,address,address,uint256,address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#85-100)
+	- EthTokenToSmthSwaps.getBalance(address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#101-103)
+	- EthTokenToSmthSwaps.getSecret(address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#161-163)
+	- EthTokenToSmthSwaps.getTargetWallet(address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#107-109)
+	- EthTokenToSmthSwaps.refund(address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#169-179)
+	- EthTokenToSmthSwaps.swaps (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#54)
+	- EthTokenToSmthSwaps.withdraw(bytes32,address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#112-125)
+	- EthTokenToSmthSwaps.withdrawNoMoney(bytes32,address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#128-141)
+	- EthTokenToSmthSwaps.withdrawOther(bytes32,address,address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#145-158)
+	- swaps[_ownerAddress][participantAddress].secret = _secret (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#155)
+	EthTokenToSmthSwaps.swaps (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#54) can be used in cross function reentrancies:
+	- EthTokenToSmthSwaps.clean(address,address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#181-183)
+	- EthTokenToSmthSwaps.createSwap(bytes20,address,uint256,address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#67-82)
+	- EthTokenToSmthSwaps.createSwapTarget(bytes20,address,address,uint256,address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#85-100)
+	- EthTokenToSmthSwaps.getBalance(address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#101-103)
+	- EthTokenToSmthSwaps.getSecret(address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#161-163)
+	- EthTokenToSmthSwaps.getTargetWallet(address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#107-109)
+	- EthTokenToSmthSwaps.refund(address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#169-179)
+	- EthTokenToSmthSwaps.swaps (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#54)
+	- EthTokenToSmthSwaps.withdraw(bytes32,address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#112-125)
+	- EthTokenToSmthSwaps.withdrawNoMoney(bytes32,address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#128-141)
+	- EthTokenToSmthSwaps.withdrawOther(bytes32,address,address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#145-158)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+Reentrancy in EthTokenToSmthSwaps.createSwap(bytes20,address,uint256,address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#67-82):
+	External calls:
+	- require(bool)(ERC20(_token).transferFrom(msg.sender,this,_value)) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#70)
+	Event emitted after the call(s):
+	- CreateSwap(_token,_participantAddress,msg.sender,_value,_secretHash,now) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#81)
+Reentrancy in EthTokenToSmthSwaps.createSwapTarget(bytes20,address,address,uint256,address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#85-100):
+	External calls:
+	- require(bool)(ERC20(_token).transferFrom(msg.sender,this,_value)) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#88)
+	Event emitted after the call(s):
+	- CreateSwap(_token,_participantAddress,msg.sender,_value,_secretHash,now) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#99)
+Reentrancy in EthTokenToSmthSwaps.refund(address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#169-179):
+	External calls:
+	- ERC20(swap.token).transfer(msg.sender,swap.balance) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#175)
+	Event emitted after the call(s):
+	- Refund() (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#178)
+Reentrancy in EthTokenToSmthSwaps.withdraw(bytes32,address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#112-125):
+	External calls:
+	- ERC20(swap.token).transfer(swap.targetWallet,swap.balance) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#119)
+	Event emitted after the call(s):
+	- Withdraw(msg.sender,_ownerAddress,now) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#124)
+Reentrancy in EthTokenToSmthSwaps.withdrawNoMoney(bytes32,address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#128-141):
+	External calls:
+	- ERC20(swap.token).transfer(swap.targetWallet,swap.balance) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#135)
+	Event emitted after the call(s):
+	- Withdraw(participantAddress,msg.sender,now) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#140)
+Reentrancy in EthTokenToSmthSwaps.withdrawOther(bytes32,address,address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#145-158):
+	External calls:
+	- ERC20(swap.token).transfer(swap.targetWallet,swap.balance) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#152)
+	Event emitted after the call(s):
+	- Withdraw(participantAddress,_ownerAddress,now) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#157)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+EthTokenToSmthSwaps.withdraw(bytes32,address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#112-125) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(swap.createdAt.add(SafeTime) > now) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#117)
+EthTokenToSmthSwaps.withdrawNoMoney(bytes32,address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#128-141) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(swap.createdAt.add(SafeTime) > now) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#133)
+EthTokenToSmthSwaps.withdrawOther(bytes32,address,address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#145-158) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(swap.createdAt.add(SafeTime) > now) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#150)
+EthTokenToSmthSwaps.refund(address) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#169-179) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(swap.createdAt.add(SafeTime) < now) (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#173)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Version constraint ^0.4.24 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ABIEncoderV2PackedStorage_0.4.x
+	- ExpExponentCleanup
+	- EventStructWrongData.
+It is used by:
+	- ^0.4.24 (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#1)
+solc-0.4.24 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Parameter EthTokenToSmthSwaps.createSwap(bytes20,address,uint256,address)._secretHash (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#67) is not in mixedCase
+Parameter EthTokenToSmthSwaps.createSwap(bytes20,address,uint256,address)._participantAddress (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#67) is not in mixedCase
+Parameter EthTokenToSmthSwaps.createSwap(bytes20,address,uint256,address)._value (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#67) is not in mixedCase
+Parameter EthTokenToSmthSwaps.createSwap(bytes20,address,uint256,address)._token (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#67) is not in mixedCase
+Parameter EthTokenToSmthSwaps.createSwapTarget(bytes20,address,address,uint256,address)._secretHash (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#85) is not in mixedCase
+Parameter EthTokenToSmthSwaps.createSwapTarget(bytes20,address,address,uint256,address)._participantAddress (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#85) is not in mixedCase
+Parameter EthTokenToSmthSwaps.createSwapTarget(bytes20,address,address,uint256,address)._targetWallet (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#85) is not in mixedCase
+Parameter EthTokenToSmthSwaps.createSwapTarget(bytes20,address,address,uint256,address)._value (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#85) is not in mixedCase
+Parameter EthTokenToSmthSwaps.createSwapTarget(bytes20,address,address,uint256,address)._token (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#85) is not in mixedCase
+Parameter EthTokenToSmthSwaps.getBalance(address)._ownerAddress (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#101) is not in mixedCase
+Parameter EthTokenToSmthSwaps.withdraw(bytes32,address)._secret (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#112) is not in mixedCase
+Parameter EthTokenToSmthSwaps.withdraw(bytes32,address)._ownerAddress (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#112) is not in mixedCase
+Parameter EthTokenToSmthSwaps.withdrawNoMoney(bytes32,address)._secret (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#128) is not in mixedCase
+Parameter EthTokenToSmthSwaps.withdrawOther(bytes32,address,address)._secret (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#145) is not in mixedCase
+Parameter EthTokenToSmthSwaps.withdrawOther(bytes32,address,address)._ownerAddress (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#145) is not in mixedCase
+Parameter EthTokenToSmthSwaps.getSecret(address)._participantAddress (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#161) is not in mixedCase
+Parameter EthTokenToSmthSwaps.refund(address)._participantAddress (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#169) is not in mixedCase
+Parameter EthTokenToSmthSwaps.clean(address,address)._ownerAddress (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#181) is not in mixedCase
+Parameter EthTokenToSmthSwaps.clean(address,address)._participantAddress (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#181) is not in mixedCase
+Variable EthTokenToSmthSwaps.SafeTime (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#42) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+EthTokenToSmthSwaps.SafeTime (0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol#42) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+./0xd84b6aec4985e68ef5882de0b5d0b30992bb5057.sol analyzed (3 contracts with 94 detectors), 40 result(s) found
+
+real	0m1.689s
+user	0m1.473s
+sys	0m0.219s

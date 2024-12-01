@@ -1,0 +1,205 @@
+'solc --version' running
+'solc ./0x11566f832f90155701384e42f0adcdc889767bbc.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+HexSaitama.sendETHToFee(uint256) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#371-374) sends eth to arbitrary user
+	Dangerous calls:
+	- _teamAddress.transfer(amount.div(2)) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#372)
+	- _marketingFunds.transfer(amount.div(2)) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#373)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+Reentrancy in HexSaitama._transfer(address,address,uint256) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#304-355):
+	External calls:
+	- swapTokensForEth(contractTokenBalance) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#341)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#362-368)
+	External calls sending eth:
+	- sendETHToFee(address(this).balance) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#344)
+		- _teamAddress.transfer(amount.div(2)) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#372)
+		- _marketingFunds.transfer(amount.div(2)) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#373)
+	State variables written after the call(s):
+	- _tokenTransfer(from,to,amount,takeFee) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#354)
+		- _rOwned[address(this)] = _rOwned[address(this)].add(rTeam) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#457)
+		- _rOwned[sender] = _rOwned[sender].sub(rAmount) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#447)
+		- _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#448)
+	HexSaitama._rOwned (0x11566f832f90155701384e42f0adcdc889767bbc.sol#159) can be used in cross function reentrancies:
+	- HexSaitama._takeTeam(uint256) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#454-458)
+	- HexSaitama._transferStandard(address,address,uint256) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#434-452)
+	- HexSaitama.balanceOf(address) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#217-219)
+	- HexSaitama.constructor(address,address) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#190-199)
+	- _tokenTransfer(from,to,amount,takeFee) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#354)
+		- _rTotal = _rTotal.sub(rFee) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#461)
+	HexSaitama._rTotal (0x11566f832f90155701384e42f0adcdc889767bbc.sol#165) can be used in cross function reentrancies:
+	- HexSaitama._getCurrentSupply() (0x11566f832f90155701384e42f0adcdc889767bbc.sol#536-542)
+	- HexSaitama._reflectFee(uint256,uint256) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#460-463)
+	- HexSaitama.constructor(address,address) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#190-199)
+	- HexSaitama.tokenFromReflection(uint256) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#269-280)
+Reentrancy in HexSaitama.startTrading() (0x11566f832f90155701384e42f0adcdc889767bbc.sol#376-399):
+	External calls:
+	- uniswapV2Pair = IUniswapV2Factory(_uniswapV2Router.factory()).createPair(address(this),_uniswapV2Router.WETH()) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#381-382)
+	- uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#383-390)
+	External calls sending eth:
+	- uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#383-390)
+	State variables written after the call(s):
+	- tradingOpen = true (0x11566f832f90155701384e42f0adcdc889767bbc.sol#394)
+	HexSaitama.tradingOpen (0x11566f832f90155701384e42f0adcdc889767bbc.sol#177) can be used in cross function reentrancies:
+	- HexSaitama.startTrading() (0x11566f832f90155701384e42f0adcdc889767bbc.sol#376-399)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+HexSaitama.startTrading() (0x11566f832f90155701384e42f0adcdc889767bbc.sol#376-399) ignores return value by uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#383-390)
+HexSaitama.startTrading() (0x11566f832f90155701384e42f0adcdc889767bbc.sol#376-399) ignores return value by IERC20(uniswapV2Pair).approve(address(uniswapV2Router),type()(uint256).max) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#395-398)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+HexSaitama.allowance(address,address).owner (0x11566f832f90155701384e42f0adcdc889767bbc.sol#230) shadows:
+	- Ownable.owner() (0x11566f832f90155701384e42f0adcdc889767bbc.sol#55-57) (function)
+HexSaitama._approve(address,address,uint256).owner (0x11566f832f90155701384e42f0adcdc889767bbc.sol#294) shadows:
+	- Ownable.owner() (0x11566f832f90155701384e42f0adcdc889767bbc.sol#55-57) (function)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#local-variable-shadowing
+
+Ownable.constructor().msgSender (0x11566f832f90155701384e42f0adcdc889767bbc.sol#50) lacks a zero-check on :
+		- _owner = msgSender (0x11566f832f90155701384e42f0adcdc889767bbc.sol#51)
+HexSaitama.constructor(address,address).addr1 (0x11566f832f90155701384e42f0adcdc889767bbc.sol#190) lacks a zero-check on :
+		- _teamAddress = addr1 (0x11566f832f90155701384e42f0adcdc889767bbc.sol#191)
+HexSaitama.constructor(address,address).addr2 (0x11566f832f90155701384e42f0adcdc889767bbc.sol#190) lacks a zero-check on :
+		- _marketingFunds = addr2 (0x11566f832f90155701384e42f0adcdc889767bbc.sol#192)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in HexSaitama._transfer(address,address,uint256) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#304-355):
+	External calls:
+	- swapTokensForEth(contractTokenBalance) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#341)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#362-368)
+	External calls sending eth:
+	- sendETHToFee(address(this).balance) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#344)
+		- _teamAddress.transfer(amount.div(2)) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#372)
+		- _marketingFunds.transfer(amount.div(2)) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#373)
+	State variables written after the call(s):
+	- _tokenTransfer(from,to,amount,takeFee) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#354)
+		- _tFeeTotal = _tFeeTotal.add(tFee) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#462)
+	- _tokenTransfer(from,to,amount,takeFee) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#354)
+		- _taxFee = 5 (0x11566f832f90155701384e42f0adcdc889767bbc.sol#289)
+		- _taxFee = 0 (0x11566f832f90155701384e42f0adcdc889767bbc.sol#284)
+	- _tokenTransfer(from,to,amount,takeFee) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#354)
+		- _teamFee = 10 (0x11566f832f90155701384e42f0adcdc889767bbc.sol#290)
+		- _teamFee = 0 (0x11566f832f90155701384e42f0adcdc889767bbc.sol#285)
+Reentrancy in HexSaitama.startTrading() (0x11566f832f90155701384e42f0adcdc889767bbc.sol#376-399):
+	External calls:
+	- uniswapV2Pair = IUniswapV2Factory(_uniswapV2Router.factory()).createPair(address(this),_uniswapV2Router.WETH()) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#381-382)
+	- uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#383-390)
+	External calls sending eth:
+	- uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#383-390)
+	State variables written after the call(s):
+	- _maxTxAmount = 80000000000 * 10 ** 9 (0x11566f832f90155701384e42f0adcdc889767bbc.sol#393)
+	- cooldownEnabled = false (0x11566f832f90155701384e42f0adcdc889767bbc.sol#392)
+	- swapEnabled = true (0x11566f832f90155701384e42f0adcdc889767bbc.sol#391)
+Reentrancy in HexSaitama.transferFrom(address,address,uint256) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#248-263):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#253)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#362-368)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#253)
+		- _teamAddress.transfer(amount.div(2)) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#372)
+		- _marketingFunds.transfer(amount.div(2)) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#373)
+	State variables written after the call(s):
+	- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#254-261)
+		- _allowances[owner][spender] = amount (0x11566f832f90155701384e42f0adcdc889767bbc.sol#300)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in HexSaitama._transfer(address,address,uint256) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#304-355):
+	External calls:
+	- swapTokensForEth(contractTokenBalance) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#341)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#362-368)
+	External calls sending eth:
+	- sendETHToFee(address(this).balance) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#344)
+		- _teamAddress.transfer(amount.div(2)) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#372)
+		- _marketingFunds.transfer(amount.div(2)) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#373)
+	Event emitted after the call(s):
+	- Transfer(sender,recipient,tTransferAmount) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#451)
+		- _tokenTransfer(from,to,amount,takeFee) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#354)
+Reentrancy in HexSaitama.transferFrom(address,address,uint256) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#248-263):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#253)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#362-368)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#253)
+		- _teamAddress.transfer(amount.div(2)) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#372)
+		- _marketingFunds.transfer(amount.div(2)) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#373)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#301)
+		- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#254-261)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+HexSaitama._transfer(address,address,uint256) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#304-355) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(cooldown[to] < block.timestamp) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#336)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Version constraint ^0.8.4 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- SignedImmutables.
+It is used by:
+	- ^0.8.4 (0x11566f832f90155701384e42f0adcdc889767bbc.sol#8)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Function IUniswapV2Router02.WETH() (0x11566f832f90155701384e42f0adcdc889767bbc.sol#132) is not in mixedCase
+Constant HexSaitama._name (0x11566f832f90155701384e42f0adcdc889767bbc.sol#154) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant HexSaitama._symbol (0x11566f832f90155701384e42f0adcdc889767bbc.sol#155) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant HexSaitama._decimals (0x11566f832f90155701384e42f0adcdc889767bbc.sol#156) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant HexSaitama._tTotal (0x11566f832f90155701384e42f0adcdc889767bbc.sol#164) is not in UPPER_CASE_WITH_UNDERSCORES
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in HexSaitama._transfer(address,address,uint256) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#304-355):
+	External calls:
+	- sendETHToFee(address(this).balance) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#344)
+		- _teamAddress.transfer(amount.div(2)) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#372)
+		- _marketingFunds.transfer(amount.div(2)) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#373)
+	State variables written after the call(s):
+	- _tokenTransfer(from,to,amount,takeFee) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#354)
+		- _rOwned[address(this)] = _rOwned[address(this)].add(rTeam) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#457)
+		- _rOwned[sender] = _rOwned[sender].sub(rAmount) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#447)
+		- _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#448)
+	- _tokenTransfer(from,to,amount,takeFee) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#354)
+		- _rTotal = _rTotal.sub(rFee) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#461)
+	- _tokenTransfer(from,to,amount,takeFee) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#354)
+		- _tFeeTotal = _tFeeTotal.add(tFee) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#462)
+	- _tokenTransfer(from,to,amount,takeFee) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#354)
+		- _taxFee = 5 (0x11566f832f90155701384e42f0adcdc889767bbc.sol#289)
+		- _taxFee = 0 (0x11566f832f90155701384e42f0adcdc889767bbc.sol#284)
+	- _tokenTransfer(from,to,amount,takeFee) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#354)
+		- _teamFee = 10 (0x11566f832f90155701384e42f0adcdc889767bbc.sol#290)
+		- _teamFee = 0 (0x11566f832f90155701384e42f0adcdc889767bbc.sol#285)
+	Event emitted after the call(s):
+	- Transfer(sender,recipient,tTransferAmount) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#451)
+		- _tokenTransfer(from,to,amount,takeFee) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#354)
+Reentrancy in HexSaitama.transferFrom(address,address,uint256) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#248-263):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#253)
+		- _teamAddress.transfer(amount.div(2)) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#372)
+		- _marketingFunds.transfer(amount.div(2)) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#373)
+	State variables written after the call(s):
+	- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#254-261)
+		- _allowances[owner][spender] = amount (0x11566f832f90155701384e42f0adcdc889767bbc.sol#300)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#301)
+		- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x11566f832f90155701384e42f0adcdc889767bbc.sol#254-261)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+HexSaitama.startTrading() (0x11566f832f90155701384e42f0adcdc889767bbc.sol#376-399) uses literals with too many digits:
+	- _maxTxAmount = 80000000000 * 10 ** 9 (0x11566f832f90155701384e42f0adcdc889767bbc.sol#393)
+HexSaitama.slitherConstructorConstantVariables() (0x11566f832f90155701384e42f0adcdc889767bbc.sol#151-550) uses literals with too many digits:
+	- _tTotal = 1000000000000 * 10 ** 9 (0x11566f832f90155701384e42f0adcdc889767bbc.sol#164)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+HexSaitama._tOwned (0x11566f832f90155701384e42f0adcdc889767bbc.sol#160) is never used in HexSaitama (0x11566f832f90155701384e42f0adcdc889767bbc.sol#151-550)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-state-variable
+
+HexSaitama._marketingFunds (0x11566f832f90155701384e42f0adcdc889767bbc.sol#174) should be immutable 
+HexSaitama._teamAddress (0x11566f832f90155701384e42f0adcdc889767bbc.sol#173) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+./0x11566f832f90155701384e42f0adcdc889767bbc.sol analyzed (7 contracts with 94 detectors), 29 result(s) found
+
+real	0m2.364s
+user	0m2.200s
+sys	0m0.167s

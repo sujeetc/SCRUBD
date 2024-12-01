@@ -1,0 +1,136 @@
+'solc --version' running
+'solc ./0x08715190074e24cf2145e8a61b784a1b5ac9a505.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x08715190074e24cf2145e8a61b784a1b5ac9a505.sol:
+Warning: Function state mutability can be restricted to pure
+    --> ./0x08715190074e24cf2145e8a61b784a1b5ac9a505.sol:2045:5:
+     |
+2045 |     function indexToVoid(uint256 idx) public returns (Void memory) {
+     |     ^ (Relevant source part starts here and spans across multiple lines).
+
+Warning: Function state mutability can be restricted to pure
+    --> ./0x08715190074e24cf2145e8a61b784a1b5ac9a505.sol:2058:5:
+     |
+2058 |     function voidToIndex(Void memory void) public returns (uint256) {
+     |     ^ (Relevant source part starts here and spans across multiple lines).
+
+
+
+Reentrancy in DogeviathanBasic.createCollectible() (0x08715190074e24cf2145e8a61b784a1b5ac9a505.sol#2022-2043):
+	External calls:
+	- _safeMint(voidOwner,lastTokenId) (0x08715190074e24cf2145e8a61b784a1b5ac9a505.sol#2038)
+		- returndata = to.functionCall(abi.encodeWithSelector(IERC721Receiver(to).onERC721Received.selector,_msgSender(),from,tokenId,_data),ERC721: transfer to non ERC721Receiver implementer) (0x08715190074e24cf2145e8a61b784a1b5ac9a505.sol#1946-1952)
+		- (success,returndata) = target.call{value: value}(data) (0x08715190074e24cf2145e8a61b784a1b5ac9a505.sol#124)
+	External calls sending eth:
+	- _safeMint(voidOwner,lastTokenId) (0x08715190074e24cf2145e8a61b784a1b5ac9a505.sol#2038)
+		- (success,returndata) = target.call{value: value}(data) (0x08715190074e24cf2145e8a61b784a1b5ac9a505.sol#124)
+	State variables written after the call(s):
+	- lastPrice = lastPrice * 1010 / 1000 (0x08715190074e24cf2145e8a61b784a1b5ac9a505.sol#2039)
+	DogeviathanBasic.lastPrice (0x08715190074e24cf2145e8a61b784a1b5ac9a505.sol#1986) can be used in cross function reentrancies:
+	- DogeviathanBasic.constructor() (0x08715190074e24cf2145e8a61b784a1b5ac9a505.sol#2003-2008)
+	- DogeviathanBasic.createCollectible() (0x08715190074e24cf2145e8a61b784a1b5ac9a505.sol#2022-2043)
+	- DogeviathanBasic.getVoidPrice() (0x08715190074e24cf2145e8a61b784a1b5ac9a505.sol#2016-2020)
+	- DogeviathanBasic.lastPrice (0x08715190074e24cf2145e8a61b784a1b5ac9a505.sol#1986)
+	- tokenCounter = tokenCounter + 1 (0x08715190074e24cf2145e8a61b784a1b5ac9a505.sol#2042)
+	DogeviathanBasic.tokenCounter (0x08715190074e24cf2145e8a61b784a1b5ac9a505.sol#1985) can be used in cross function reentrancies:
+	- DogeviathanBasic.constructor() (0x08715190074e24cf2145e8a61b784a1b5ac9a505.sol#2003-2008)
+	- DogeviathanBasic.createCollectible() (0x08715190074e24cf2145e8a61b784a1b5ac9a505.sol#2022-2043)
+	- DogeviathanBasic.getVoidPrice() (0x08715190074e24cf2145e8a61b784a1b5ac9a505.sol#2016-2020)
+	- DogeviathanBasic.tokenCounter (0x08715190074e24cf2145e8a61b784a1b5ac9a505.sol#1985)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+ERC721.tokenByIndex(uint256) (0x08715190074e24cf2145e8a61b784a1b5ac9a505.sol#1685-1688) ignores return value by (tokenId,None) = _tokenOwners.at(index) (0x08715190074e24cf2145e8a61b784a1b5ac9a505.sol#1686)
+ERC721._mint(address,uint256) (0x08715190074e24cf2145e8a61b784a1b5ac9a505.sol#1838-1849) ignores return value by _holderTokens[to].add(tokenId) (0x08715190074e24cf2145e8a61b784a1b5ac9a505.sol#1844)
+ERC721._mint(address,uint256) (0x08715190074e24cf2145e8a61b784a1b5ac9a505.sol#1838-1849) ignores return value by _tokenOwners.set(tokenId,to) (0x08715190074e24cf2145e8a61b784a1b5ac9a505.sol#1846)
+ERC721._burn(uint256) (0x08715190074e24cf2145e8a61b784a1b5ac9a505.sol#1861-1879) ignores return value by _holderTokens[owner].remove(tokenId) (0x08715190074e24cf2145e8a61b784a1b5ac9a505.sol#1874)
+ERC721._burn(uint256) (0x08715190074e24cf2145e8a61b784a1b5ac9a505.sol#1861-1879) ignores return value by _tokenOwners.remove(tokenId) (0x08715190074e24cf2145e8a61b784a1b5ac9a505.sol#1876)
+ERC721._transfer(address,address,uint256) (0x08715190074e24cf2145e8a61b784a1b5ac9a505.sol#1892-1907) ignores return value by _holderTokens[from].remove(tokenId) (0x08715190074e24cf2145e8a61b784a1b5ac9a505.sol#1901)
+ERC721._transfer(address,address,uint256) (0x08715190074e24cf2145e8a61b784a1b5ac9a505.sol#1892-1907) ignores return value by _holderTokens[to].add(tokenId) (0x08715190074e24cf2145e8a61b784a1b5ac9a505.sol#1902)
+ERC721._transfer(address,address,uint256) (0x08715190074e24cf2145e8a61b784a1b5ac9a505.sol#1892-1907) ignores return value by _tokenOwners.set(tokenId,to) (0x08715190074e24cf2145e8a61b784a1b5ac9a505.sol#1904)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+Reentrancy in DogeviathanBasic.createCollectible() (0x08715190074e24cf2145e8a61b784a1b5ac9a505.sol#2022-2043):
+	External calls:
+	- _safeMint(voidOwner,lastTokenId) (0x08715190074e24cf2145e8a61b784a1b5ac9a505.sol#2038)
+		- returndata = to.functionCall(abi.encodeWithSelector(IERC721Receiver(to).onERC721Received.selector,_msgSender(),from,tokenId,_data),ERC721: transfer to non ERC721Receiver implementer) (0x08715190074e24cf2145e8a61b784a1b5ac9a505.sol#1946-1952)
+		- (success,returndata) = target.call{value: value}(data) (0x08715190074e24cf2145e8a61b784a1b5ac9a505.sol#124)
+	External calls sending eth:
+	- _safeMint(voidOwner,lastTokenId) (0x08715190074e24cf2145e8a61b784a1b5ac9a505.sol#2038)
+		- (success,returndata) = target.call{value: value}(data) (0x08715190074e24cf2145e8a61b784a1b5ac9a505.sol#124)
+	State variables written after the call(s):
+	- tokenIdToOwner[lastTokenId] = voidOwner (0x08715190074e24cf2145e8a61b784a1b5ac9a505.sol#2040)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in DogeviathanBasic.createCollectible() (0x08715190074e24cf2145e8a61b784a1b5ac9a505.sol#2022-2043):
+	External calls:
+	- _safeMint(voidOwner,lastTokenId) (0x08715190074e24cf2145e8a61b784a1b5ac9a505.sol#2038)
+		- returndata = to.functionCall(abi.encodeWithSelector(IERC721Receiver(to).onERC721Received.selector,_msgSender(),from,tokenId,_data),ERC721: transfer to non ERC721Receiver implementer) (0x08715190074e24cf2145e8a61b784a1b5ac9a505.sol#1946-1952)
+		- (success,returndata) = target.call{value: value}(data) (0x08715190074e24cf2145e8a61b784a1b5ac9a505.sol#124)
+	External calls sending eth:
+	- _safeMint(voidOwner,lastTokenId) (0x08715190074e24cf2145e8a61b784a1b5ac9a505.sol#2038)
+		- (success,returndata) = target.call{value: value}(data) (0x08715190074e24cf2145e8a61b784a1b5ac9a505.sol#124)
+	Event emitted after the call(s):
+	- createdCollectible(lastTokenId) (0x08715190074e24cf2145e8a61b784a1b5ac9a505.sol#2041)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+DogeviathanBasic.getVoidPrice() (0x08715190074e24cf2145e8a61b784a1b5ac9a505.sol#2016-2020) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(block.timestamp >= SALE_START_TIMESTAMP,Sale has not started) (0x08715190074e24cf2145e8a61b784a1b5ac9a505.sol#2017)
+DogeviathanBasic.createCollectible() (0x08715190074e24cf2145e8a61b784a1b5ac9a505.sol#2022-2043) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(block.timestamp >= SALE_START_TIMESTAMP,Sale has not started) (0x08715190074e24cf2145e8a61b784a1b5ac9a505.sol#2025)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Address.isContract(address) (0x08715190074e24cf2145e8a61b784a1b5ac9a505.sol#31-40) uses assembly
+	- INLINE ASM (0x08715190074e24cf2145e8a61b784a1b5ac9a505.sol#38)
+Address._verifyCallResult(bool,bytes,string) (0x08715190074e24cf2145e8a61b784a1b5ac9a505.sol#176-193) uses assembly
+	- INLINE ASM (0x08715190074e24cf2145e8a61b784a1b5ac9a505.sol#185-188)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#assembly-usage
+
+Context._msgData() (0x08715190074e24cf2145e8a61b784a1b5ac9a505.sol#213-216) is never used and should be removed
+ERC721._setBaseURI(string) (0x08715190074e24cf2145e8a61b784a1b5ac9a505.sol#1926-1928) is never used and should be removed
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dead-code
+
+Version constraint 0.6.12 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- SignedImmutables
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup.
+It is used by:
+	- 0.6.12 (0x08715190074e24cf2145e8a61b784a1b5ac9a505.sol#3)
+solc-0.6.12 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in Address.sendValue(address,uint256) (0x08715190074e24cf2145e8a61b784a1b5ac9a505.sol#58-64):
+	- (success,None) = recipient.call{value: amount}() (0x08715190074e24cf2145e8a61b784a1b5ac9a505.sol#62)
+Low level call in Address.functionCallWithValue(address,bytes,uint256,string) (0x08715190074e24cf2145e8a61b784a1b5ac9a505.sol#119-126):
+	- (success,returndata) = target.call{value: value}(data) (0x08715190074e24cf2145e8a61b784a1b5ac9a505.sol#124)
+Low level call in Address.functionStaticCall(address,bytes,string) (0x08715190074e24cf2145e8a61b784a1b5ac9a505.sol#144-150):
+	- (success,returndata) = target.staticcall(data) (0x08715190074e24cf2145e8a61b784a1b5ac9a505.sol#148)
+Low level call in Address.functionDelegateCall(address,bytes,string) (0x08715190074e24cf2145e8a61b784a1b5ac9a505.sol#168-174):
+	- (success,returndata) = target.delegatecall(data) (0x08715190074e24cf2145e8a61b784a1b5ac9a505.sol#172)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Function SafeMathOuter.add_outer(uint256,uint256) (0x08715190074e24cf2145e8a61b784a1b5ac9a505.sol#1095-1100) is not in mixedCase
+Function SafeMathOuter.sub_outer(uint256,uint256) (0x08715190074e24cf2145e8a61b784a1b5ac9a505.sol#1112-1114) is not in mixedCase
+Function SafeMathOuter.mul_outer(uint256,uint256) (0x08715190074e24cf2145e8a61b784a1b5ac9a505.sol#1143-1155) is not in mixedCase
+Function SafeMathOuter.div_outer(uint256,uint256) (0x08715190074e24cf2145e8a61b784a1b5ac9a505.sol#1169-1171) is not in mixedCase
+Function SafeMathOuter.mod_outer(uint256,uint256) (0x08715190074e24cf2145e8a61b784a1b5ac9a505.sol#1205-1207) is not in mixedCase
+Parameter ERC721.safeTransferFrom(address,address,uint256,bytes)._data (0x08715190074e24cf2145e8a61b784a1b5ac9a505.sol#1750) is not in mixedCase
+Event DogeviathanBasic.createdCollectible(uint256) (0x08715190074e24cf2145e8a61b784a1b5ac9a505.sol#2001) is not in CapWords
+Parameter DogeviathanBasic.setTokenURI(uint256,string)._tokenURI (0x08715190074e24cf2145e8a61b784a1b5ac9a505.sol#2067) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Redundant expression "this (0x08715190074e24cf2145e8a61b784a1b5ac9a505.sol#214)" inContext (0x08715190074e24cf2145e8a61b784a1b5ac9a505.sol#208-217)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#redundant-statements
+./0x08715190074e24cf2145e8a61b784a1b5ac9a505.sol analyzed (16 contracts with 94 detectors), 32 result(s) found
+
+real	0m2.934s
+user	0m2.689s
+sys	0m0.248s

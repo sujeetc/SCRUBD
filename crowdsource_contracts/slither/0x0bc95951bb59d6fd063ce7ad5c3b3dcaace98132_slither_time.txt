@@ -1,0 +1,223 @@
+'solc --version' running
+'solc ./0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+ViVICO.successful() (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#292-308) sends eth to arbitrary user
+	Dangerous calls:
+	- creator.transfer(address(this).balance) (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#304)
+ViVICO.claimEth() (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#310-316) sends eth to arbitrary user
+	Dangerous calls:
+	- creator.transfer(address(this).balance) (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#314)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+ViVICO.successful() (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#292-308) ignores return value by tokenReward.transfer(creator,remanent) (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#300)
+ViVICO.refund() (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#357-393) ignores return value by tokenReward.transfer(creator,remanent) (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#385)
+ViVICO.externalTokensRecovery(ERC20Basic) (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#398-404) ignores return value by _address.transfer(msg.sender,remainder) (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#402)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+Reentrancy in ViVICO.contribute() (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#192-247):
+	External calls:
+	- require(bool)(tokenReward.transfer(msg.sender,tokenBought.add(tempBalance))) (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#231)
+	State variables written after the call(s):
+	- totalDistributed = totalDistributed.add(tokenBought) (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#243)
+	ViVICO.totalDistributed (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#115) can be used in cross function reentrancies:
+	- ViVICO.checkIfFundingCompleteOrExpired() (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#252-287)
+	- ViVICO.claimEth() (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#310-316)
+	- ViVICO.contribute() (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#192-247)
+	- ViVICO.totalDistributed (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#115)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+Reentrancy in ViVICO.claimTokensByAdmin(address) (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#339-352):
+	External calls:
+	- require(bool)(tokenReward.transfer(_target,tokens)) (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#347)
+	State variables written after the call(s):
+	- tokensSent[_target] = tokensSent[_target].add(tokens) (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#349)
+Reentrancy in ViVICO.claimTokensByUser() (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#321-334):
+	External calls:
+	- require(bool)(tokenReward.transfer(msg.sender,tokens)) (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#329)
+	State variables written after the call(s):
+	- tokensSent[msg.sender] = tokensSent[msg.sender].add(tokens) (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#331)
+Reentrancy in ViVICO.contribute() (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#192-247):
+	External calls:
+	- require(bool)(tokenReward.transfer(msg.sender,tokenBought.add(tempBalance))) (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#231)
+	State variables written after the call(s):
+	- tokensSent[msg.sender] = tokensSent[msg.sender].add(tokenBought.add(tempBalance)) (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#233)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in ViVICO.claimTokensByAdmin(address) (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#339-352):
+	External calls:
+	- require(bool)(tokenReward.transfer(_target,tokens)) (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#347)
+	Event emitted after the call(s):
+	- LogContributorsPayout(_target,tokens) (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#351)
+Reentrancy in ViVICO.claimTokensByUser() (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#321-334):
+	External calls:
+	- require(bool)(tokenReward.transfer(msg.sender,tokens)) (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#329)
+	Event emitted after the call(s):
+	- LogContributorsPayout(msg.sender,tokens) (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#333)
+Reentrancy in ViVICO.contribute() (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#192-247):
+	External calls:
+	- require(bool)(tokenReward.transfer(msg.sender,tokenBought.add(tempBalance))) (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#231)
+	Event emitted after the call(s):
+	- LogContributorsPayout(msg.sender,tokenBought.add(tempBalance)) (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#235)
+	- LogFundingReceived(msg.sender,msg.value,totalRaised) (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#244)
+Reentrancy in ViVICO.contribute() (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#192-247):
+	External calls:
+	- require(bool)(tokenReward.transfer(msg.sender,tokenBought.add(tempBalance))) (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#231)
+	- checkIfFundingCompleteOrExpired() (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#246)
+		- remanent = tokenReward.balanceOf(this) (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#298)
+		- tokenReward.transfer(creator,remanent) (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#300)
+	External calls sending eth:
+	- checkIfFundingCompleteOrExpired() (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#246)
+		- creator.transfer(address(this).balance) (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#304)
+	Event emitted after the call(s):
+	- LogBeneficiaryPaid(creator) (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#306)
+		- checkIfFundingCompleteOrExpired() (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#246)
+	- LogContributorsPayout(creator,remanent) (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#301)
+		- checkIfFundingCompleteOrExpired() (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#246)
+	- LogFundingFailed(totalRaised) (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#282)
+		- checkIfFundingCompleteOrExpired() (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#246)
+	- LogFundingSuccessful(totalRaised) (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#260)
+		- checkIfFundingCompleteOrExpired() (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#246)
+	- LogFundingSuccessful(totalRaised) (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#274)
+		- checkIfFundingCompleteOrExpired() (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#246)
+Reentrancy in ViVICO.refund() (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#357-393):
+	External calls:
+	- require(bool)(tokenReward.transferFrom(msg.sender,address(this),holderTokens)) (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#373)
+	External calls sending eth:
+	- msg.sender.transfer(holderETH) (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#375)
+	Event emitted after the call(s):
+	- LogRefund(msg.sender,holderETH) (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#377)
+Reentrancy in ViVICO.refund() (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#357-393):
+	External calls:
+	- remanent = tokenReward.balanceOf(this) (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#382)
+	- tokenReward.transfer(creator,remanent) (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#385)
+	External calls sending eth:
+	- creator.transfer(address(this).balance) (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#384)
+	Event emitted after the call(s):
+	- LogBeneficiaryPaid(creator) (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#387)
+	- LogContributorsPayout(creator,remanent) (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#388)
+Reentrancy in ViVICO.successful() (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#292-308):
+	External calls:
+	- remanent = tokenReward.balanceOf(this) (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#298)
+	- tokenReward.transfer(creator,remanent) (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#300)
+	Event emitted after the call(s):
+	- LogContributorsPayout(creator,remanent) (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#301)
+Reentrancy in ViVICO.successful() (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#292-308):
+	External calls:
+	- remanent = tokenReward.balanceOf(this) (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#298)
+	- tokenReward.transfer(creator,remanent) (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#300)
+	External calls sending eth:
+	- creator.transfer(address(this).balance) (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#304)
+	Event emitted after the call(s):
+	- LogBeneficiaryPaid(creator) (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#306)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+ViVICO.setMainSaleStart(uint256) (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#179-187) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(_startTime > now) (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#181)
+ViVICO.contribute() (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#192-247) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(now >= PreSaleStart) (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#204)
+	- require(bool)(now >= MainSaleStart) (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#211)
+	- now <= MainSaleStart.add(604800) (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#213)
+	- now <= MainSaleStart.add(1209600) (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#215)
+	- now <= MainSaleStart.add(1814400) (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#217)
+ViVICO.checkIfFundingCompleteOrExpired() (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#252-287) uses timestamp for comparisons
+	Dangerous comparisons:
+	- state == State.PreSale && now > PreSaleDeadline (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#263)
+	- state == State.MainSale && now > MainSaleDeadline (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#267)
+ViVICO.successful() (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#292-308) uses timestamp for comparisons
+	Dangerous comparisons:
+	- now > completedAt.add(1209600) (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#296)
+ViVICO.refund() (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#357-393) uses timestamp for comparisons
+	Dangerous comparisons:
+	- now < completedAt.add(7776000) (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#361)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+ViVICO.contribute() (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#192-247) compares to a boolean constant:
+	-require(bool)(whiteList[msg.sender] == true) (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#193)
+ViVICO.contribute() (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#192-247) compares to a boolean constant:
+	-KYCValid[msg.sender] == true (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#225)
+ViVICO.claimTokensByUser() (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#321-334) compares to a boolean constant:
+	-require(bool)(KYCValid[msg.sender] == true) (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#323)
+ViVICO.claimTokensByAdmin(address) (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#339-352) compares to a boolean constant:
+	-require(bool)(KYCValid[_target] == true) (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#341)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#boolean-equality
+
+Version constraint 0.4.24 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ABIEncoderV2PackedStorage_0.4.x
+	- ExpExponentCleanup
+	- EventStructWrongData.
+It is used by:
+	- 0.4.24 (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#1)
+solc-0.4.24 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Contract admined (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#53-90) is not in CapWords
+Parameter admined.adminshipLevel(address,uint8)._newAdmin (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#79) is not in mixedCase
+Parameter admined.adminshipLevel(address,uint8)._level (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#79) is not in mixedCase
+Parameter ViVICO.whitelistAddress(address,bool)._user (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#165) is not in mixedCase
+Parameter ViVICO.whitelistAddress(address,bool)._flag (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#165) is not in mixedCase
+Parameter ViVICO.validateKYC(address,bool)._user (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#172) is not in mixedCase
+Parameter ViVICO.validateKYC(address,bool)._flag (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#172) is not in mixedCase
+Parameter ViVICO.setMainSaleStart(uint256)._startTime (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#179) is not in mixedCase
+Parameter ViVICO.claimTokensByAdmin(address)._target (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#339) is not in mixedCase
+Parameter ViVICO.externalTokensRecovery(ERC20Basic)._address (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#398) is not in mixedCase
+Variable ViVICO.PreSaleStart (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#107) is not in mixedCase
+Variable ViVICO.MainSaleStart (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#109) is not in mixedCase
+Variable ViVICO.MainSaleDeadline (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#110) is not in mixedCase
+Variable ViVICO.PreSaleDistributed (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#114) is not in mixedCase
+Variable ViVICO.KYCValid (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#132) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in ViVICO.claimEth() (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#310-316):
+	External calls:
+	- creator.transfer(address(this).balance) (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#314)
+	Event emitted after the call(s):
+	- LogBeneficiaryPaid(creator) (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#315)
+Reentrancy in ViVICO.refund() (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#357-393):
+	External calls:
+	- msg.sender.transfer(holderETH) (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#375)
+	Event emitted after the call(s):
+	- LogRefund(msg.sender,holderETH) (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#377)
+Reentrancy in ViVICO.refund() (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#357-393):
+	External calls:
+	- creator.transfer(address(this).balance) (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#384)
+	Event emitted after the call(s):
+	- LogBeneficiaryPaid(creator) (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#387)
+	- LogContributorsPayout(creator,remanent) (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#388)
+Reentrancy in ViVICO.successful() (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#292-308):
+	External calls:
+	- creator.transfer(address(this).balance) (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#304)
+	Event emitted after the call(s):
+	- LogBeneficiaryPaid(creator) (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#306)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+ViVICO.slitherConstructorVariables() (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#92-416) uses literals with too many digits:
+	- softCap = 11000000 * (10 ** 18) (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#117)
+ViVICO.slitherConstructorVariables() (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#92-416) uses literals with too many digits:
+	- hardCap = 140000000 * (10 ** 18) (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#118)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+ViVICO.hardCap (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#118) should be constant 
+ViVICO.softCap (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#117) should be constant 
+ViVICO.version (0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol#125) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+./0x0bc95951bb59d6fd063ce7ad5c3b3dcaace98132.sol analyzed (4 contracts with 94 detectors), 52 result(s) found
+
+real	0m2.891s
+user	0m2.643s
+sys	0m0.249s

@@ -1,0 +1,702 @@
+'solc --version' running
+'solc ./0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol:
+Warning: Visibility for constructor is ignored. If you want the contract to be non-deployable, making it "abstract" is sufficient.
+   --> ./0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol:662:3:
+    |
+662 |   constructor(string memory _name, string memory _symbol) public ERC20(_name, _symbol) {
+    |   ^ (Relevant source part starts here and spans across multiple lines).
+
+Warning: Visibility for constructor is ignored. If you want the contract to be non-deployable, making it "abstract" is sufficient.
+   --> ./0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol:884:5:
+    |
+884 |     constructor() public ERC20("Mr. Frog", "MRFROG") {
+    |     ^ (Relevant source part starts here and spans across multiple lines).
+
+Warning: Visibility for constructor is ignored. If you want the contract to be non-deployable, making it "abstract" is sufficient.
+    --> ./0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol:1380:5:
+     |
+1380 |     constructor() public DividendPayingToken("MRFROG_Dividend_Tracker", "MRFROG_Dividend_Tracker") {
+     |     ^ (Relevant source part starts here and spans across multiple lines).
+
+Warning: Unused local variable.
+   --> ./0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol:711:25:
+    |
+711 |             (bool sent, bytes memory data) = user.call{value: _withdrawableDividend}("");
+    |                         ^^^^^^^^^^^^^^^^^
+
+Warning: Unused local variable.
+    --> ./0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol:1146:14:
+     |
+1146 |             (bool sent,) = marketAddress.call{value: marketFeeBalance}("");
+     |              ^^^^^^^^^
+
+Warning: Unused local variable.
+    --> ./0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol:1233:25:
+     |
+1233 |             (bool sent, bytes memory data) = diviTracker.call{value: newBalance}("");
+     |                         ^^^^^^^^^^^^^^^^^
+
+Warning: Function state mutability can be restricted to pure
+    --> ./0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol:1394:5:
+     |
+1394 |     function _transfer(address, address, uint256) internal override {
+     |     ^ (Relevant source part starts here and spans across multiple lines).
+
+Warning: Function state mutability can be restricted to pure
+    --> ./0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol:1398:5:
+     |
+1398 |     function withdrawDividend() public override {
+     |     ^ (Relevant source part starts here and spans across multiple lines).
+
+Warning: Contract code size exceeds 24576 bytes (a limit introduced in Spurious Dragon). This contract may not be deployable on mainnet. Consider enabling the optimizer (with a low "runs" value!), turning off revert strings, or using libraries.
+   --> ./0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol:785:1:
+    |
+785 | contract MRFROG is ERC20, Ownable {
+    | ^ (Relevant source part starts here and spans across multiple lines).
+
+
+
+MRFROG.swapAndLiquify(uint256) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1126-1152) sends eth to arbitrary user
+	Dangerous calls:
+	- (sent,None) = marketAddress.call{value: marketFeeBalance}() (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1146)
+MRFROG.swapEthForTokens(uint256,address,address) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1154-1165) sends eth to arbitrary user
+	Dangerous calls:
+	- uniswapV2Router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: ethAmount}(0,path,receiver,block.timestamp) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1159-1164)
+MRFROG.addLiquidity(uint256,uint256) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1205-1218) sends eth to arbitrary user
+	Dangerous calls:
+	- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,burnAddress,block.timestamp) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1209-1216)
+MRFROG.swapAndSendDividends(uint256) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1220-1240) sends eth to arbitrary user
+	Dangerous calls:
+	- (sent,data) = diviTracker.call{value: newBalance}() (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1233)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+Reentrancy in MRFROG._transfer(address,address,uint256) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1242-1355):
+	External calls:
+	- swapAndLiquify(adminAmount) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1323)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,burnAddress,block.timestamp) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1209-1216)
+		- uniswapV2Router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: ethAmount}(0,path,receiver,block.timestamp) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1159-1164)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1176-1182)
+		- (sent,None) = marketAddress.call{value: marketFeeBalance}() (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1146)
+	- swapAndSendDividends(dividendAmount) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1324)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1176-1182)
+		- uniswapV2Router.swapExactTokensForTokensSupportingFeeOnTransferTokens(tokenAmount,0,path,recipient,block.timestamp) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1195-1201)
+		- success = IERC20(DividendToken).transfer(address(dividendTracker),dividends) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1227)
+		- (sent,data) = diviTracker.call{value: newBalance}() (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1233)
+		- dividendTracker.distributeTokenDividends(dividends) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1237)
+	External calls sending eth:
+	- swapAndLiquify(adminAmount) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1323)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,burnAddress,block.timestamp) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1209-1216)
+		- uniswapV2Router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: ethAmount}(0,path,receiver,block.timestamp) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1159-1164)
+		- (sent,None) = marketAddress.call{value: marketFeeBalance}() (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1146)
+	- swapAndSendDividends(dividendAmount) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1324)
+		- (sent,data) = diviTracker.call{value: newBalance}() (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1233)
+	State variables written after the call(s):
+	- super._transfer(from,address(this),fees) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1336)
+		- _balances[sender] = _balances[sender].sub(amount,ERC20: transfer amount exceeds balance) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#515)
+		- _balances[recipient] = _balances[recipient].add(amount) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#516)
+	ERC20._balances (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#443) can be used in cross function reentrancies:
+	- ERC20._mint(address,uint256) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#520-528)
+	- ERC20._transfer(address,address,uint256) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#509-518)
+	- ERC20.balanceOf(address) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#475-477)
+	- super._transfer(from,to,amount) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1338)
+		- _balances[sender] = _balances[sender].sub(amount,ERC20: transfer amount exceeds balance) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#515)
+		- _balances[recipient] = _balances[recipient].add(amount) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#516)
+	ERC20._balances (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#443) can be used in cross function reentrancies:
+	- ERC20._mint(address,uint256) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#520-528)
+	- ERC20._transfer(address,address,uint256) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#509-518)
+	- ERC20.balanceOf(address) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#475-477)
+	- restoreFees() (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1340)
+		- liquidityFee = previousLiquidityFee (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#929)
+	MRFROG.liquidityFee (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#810) can be used in cross function reentrancies:
+	- MRFROG._transfer(address,address,uint256) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1242-1355)
+	- MRFROG.liquidityFee (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#810)
+	- MRFROG.restoreFees() (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#926-931)
+	- MRFROG.updateFees(uint256,uint256,uint256) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#961-965)
+	- restoreFees() (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1340)
+		- marketFee = previousMarketFee (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#927)
+	MRFROG.marketFee (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#808) can be used in cross function reentrancies:
+	- MRFROG._transfer(address,address,uint256) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1242-1355)
+	- MRFROG.marketFee (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#808)
+	- MRFROG.restoreFees() (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#926-931)
+	- MRFROG.swapAndLiquify(uint256) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1126-1152)
+	- swapping = false (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1325)
+	MRFROG.swapping (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#793) can be used in cross function reentrancies:
+	- MRFROG._transfer(address,address,uint256) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1242-1355)
+	- restoreFees() (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1340)
+		- tokenRewardsFee = previousTokenRewardsFee (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#928)
+	MRFROG.tokenRewardsFee (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#809) can be used in cross function reentrancies:
+	- MRFROG._transfer(address,address,uint256) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1242-1355)
+	- MRFROG.restoreFees() (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#926-931)
+	- MRFROG.tokenRewardsFee (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#809)
+	- MRFROG.updateFees(uint256,uint256,uint256) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#961-965)
+	- restoreFees() (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1340)
+		- totalFees = previousTotalFees (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#930)
+	MRFROG.totalFees (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#811) can be used in cross function reentrancies:
+	- MRFROG._transfer(address,address,uint256) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1242-1355)
+	- MRFROG.restoreFees() (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#926-931)
+	- MRFROG.totalFees (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#811)
+	- MRFROG.updateFees(uint256,uint256,uint256) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#961-965)
+Reentrancy in DividendPayingToken._withdrawDividendOfUser(address) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#704-728):
+	External calls:
+	- (sent,data) = user.call{value: _withdrawableDividend}() (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#711)
+	- success = IERC20(DividendToken).transfer(user,_withdrawableDividend) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#715)
+	External calls sending eth:
+	- (sent,data) = user.call{value: _withdrawableDividend}() (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#711)
+	State variables written after the call(s):
+	- withdrawnDividends[user] = withdrawnDividends[user].sub(_withdrawableDividend) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#720)
+	DividendPayingToken.withdrawnDividends (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#658) can be used in cross function reentrancies:
+	- DividendPayingToken._withdrawDividendOfUser(address) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#704-728)
+	- DividendPayingToken.withdrawableDividendOf(address) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#735-737)
+	- DividendPayingToken.withdrawnDividendOf(address) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#739-741)
+Reentrancy in MRFROGDividendTracker.process(uint256) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1519-1564):
+	External calls:
+	- processAccount(address(account),true) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1545)
+		- (sent,data) = user.call{value: _withdrawableDividend}() (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#711)
+		- success = IERC20(DividendToken).transfer(user,_withdrawableDividend) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#715)
+	External calls sending eth:
+	- processAccount(address(account),true) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1545)
+		- (sent,data) = user.call{value: _withdrawableDividend}() (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#711)
+	State variables written after the call(s):
+	- lastProcessedIndex = _lastProcessedIndex (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1561)
+	MRFROGDividendTracker.lastProcessedIndex (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1366) can be used in cross function reentrancies:
+	- MRFROGDividendTracker.getAccount(address) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1430-1473)
+	- MRFROGDividendTracker.getLastProcessedIndex() (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1421-1423)
+	- MRFROGDividendTracker.lastProcessedIndex (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1366)
+	- MRFROGDividendTracker.process(uint256) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1519-1564)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+Reentrancy in MRFROG.updateDividendTracker(address) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#988-1002):
+	External calls:
+	- newDividendTracker.excludeFromDividends(address(newDividendTracker)) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#995)
+	- newDividendTracker.excludeFromDividends(address(this)) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#996)
+	- newDividendTracker.excludeFromDividends(address(uniswapV2Router)) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#997)
+	State variables written after the call(s):
+	- dividendTracker = newDividendTracker (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1001)
+	MRFROG.dividendTracker (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#795) can be used in cross function reentrancies:
+	- MRFROG._setAutomatedMarketMakerPair(address,bool) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1037-1046)
+	- MRFROG._transfer(address,address,uint256) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1242-1355)
+	- MRFROG.blacklistAddress(address,bool) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1011-1014)
+	- MRFROG.claim() (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1110-1112)
+	- MRFROG.constructor() (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#884-916)
+	- MRFROG.dividendTokenBalanceOf(address) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1075-1077)
+	- MRFROG.dividendTracker (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#795)
+	- MRFROG.enableDividends(address) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1019-1021)
+	- MRFROG.excludeFromDividends(address) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1015-1017)
+	- MRFROG.getAccountDividendsInfo(address) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1079-1090)
+	- MRFROG.getAccountDividendsInfoAtIndex(uint256) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1092-1103)
+	- MRFROG.getClaimWait() (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1059-1061)
+	- MRFROG.getLastProcessedIndex() (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1114-1116)
+	- MRFROG.getNumberOfDividendTokenHolders() (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1118-1120)
+	- MRFROG.getTotalDividendsDistributed() (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1063-1065)
+	- MRFROG.processDividendTracker(uint256) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1105-1108)
+	- MRFROG.swapAndSendDividends(uint256) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1220-1240)
+	- MRFROG.updateClaimWait(uint256) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1055-1057)
+	- MRFROG.updateDividendTracker(address) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#988-1002)
+	- MRFROG.updateMinimumBalanceForDividends(uint256) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#938-940)
+	- MRFROG.updateTokenForDividend(address) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#947-952)
+	- MRFROG.whitelistDxSale(address,address) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#978-987)
+	- MRFROG.withdrawableDividendOf(address) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1071-1073)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+MRFROG.getAccountDividendsInfo(address) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1079-1090) ignores return value by dividendTracker.getAccount(account) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1089)
+MRFROG.getAccountDividendsInfoAtIndex(uint256) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1092-1103) ignores return value by dividendTracker.getAccountAtIndex(index) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1102)
+MRFROG.claim() (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1110-1112) ignores return value by dividendTracker.processAccount(msg.sender,false) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1111)
+MRFROG.addLiquidity(uint256,uint256) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1205-1218) ignores return value by uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,burnAddress,block.timestamp) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1209-1216)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+DividendPayingToken.constructor(string,string)._name (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#662) shadows:
+	- ERC20._name (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#449) (state variable)
+DividendPayingToken.constructor(string,string)._symbol (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#662) shadows:
+	- ERC20._symbol (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#450) (state variable)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#local-variable-shadowing
+
+DividendPayingToken.updateMasterContract(address) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#670-672) should emit an event for: 
+	- masterContract = newAddress (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#671) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-access-control
+
+MRFROG.updatedividendTime(uint256) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#932-934) should emit an event for: 
+	- dividendTime = _dividendTime (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#933) 
+MRFROG.updateTradingEnabledTime(uint256) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#935-937) should emit an event for: 
+	- tradingEnabledTimestamp = newTimeInEpoch (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#936) 
+MRFROG.updateMaxWalletAmount(uint256) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#941-943) should emit an event for: 
+	- _maxWalletToken = newAmountNoDecimials * (10 ** 18) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#942) 
+MRFROG.updateSwapAtAmount(uint256) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#944-946) should emit an event for: 
+	- swapTokensAtAmount = newAmountNoDecimials * (10 ** 18) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#945) 
+MRFROG.updateFees(uint256,uint256,uint256) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#961-965) should emit an event for: 
+	- tokenRewardsFee = _tokenRewardsFee (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#962) 
+	- liquidityFee = _liquidityFee (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#963) 
+	- totalFees = _tokenRewardsFee.add(_liquidityFee).add(_marketFee) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#964) 
+MRFROG.updateBuyFees(uint256,uint256,uint256) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#966-971) should emit an event for: 
+	- buyTokenRewardsFee = _tokenRewardsFee (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#967) 
+	- buyLiquidityFee = _liquidityFee (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#968) 
+	- buyMarketFee = _marketFee (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#969) 
+	- buyTotalFees = _tokenRewardsFee.add(_liquidityFee).add(_marketFee) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#970) 
+MRFROG.updateSellFees(uint256,uint256,uint256) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#972-977) should emit an event for: 
+	- sellTokenRewardsFee = _tokenRewardsFee (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#973) 
+	- sellLiquidityFee = _liquidityFee (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#974) 
+	- sellMarketFee = _marketFee (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#975) 
+	- sellTotalFees = _tokenRewardsFee.add(_liquidityFee).add(_marketFee) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#976) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+MRFROG.updateTokenForDividend(address).newAddress (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#947) lacks a zero-check on :
+		- DividendToken = newAddress (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#949)
+MRFROG.updateMarketAddress(address).newAddress (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#952) lacks a zero-check on :
+		- marketAddress = newAddress (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#953)
+MRFROG.updateMarketTokenFeeAddress(address).newAddress (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#957) lacks a zero-check on :
+		- marketTokenAddressForFee = newAddress (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#958)
+MRFROG.whitelistDxSale(address,address)._presaleAddress (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#978) lacks a zero-check on :
+		- presaleAddress = _presaleAddress (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#979)
+DividendPayingToken.updateMasterContract(address).newAddress (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#670) lacks a zero-check on :
+		- masterContract = newAddress (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#671)
+MRFROGDividendTracker.updateTokenForDividend(address).newAddress (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1390) lacks a zero-check on :
+		- DividendToken = newAddress (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1391)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+DividendPayingToken._withdrawDividendOfUser(address) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#704-728) has external calls inside a loop: (sent,data) = user.call{value: _withdrawableDividend}() (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#711)
+DividendPayingToken._withdrawDividendOfUser(address) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#704-728) has external calls inside a loop: success = IERC20(DividendToken).transfer(user,_withdrawableDividend) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#715)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation/#calls-inside-a-loop
+
+Reentrancy in MRFROG._transfer(address,address,uint256) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1242-1355):
+	External calls:
+	- swapAndLiquify(adminAmount) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1323)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,burnAddress,block.timestamp) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1209-1216)
+		- uniswapV2Router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: ethAmount}(0,path,receiver,block.timestamp) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1159-1164)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1176-1182)
+		- (sent,None) = marketAddress.call{value: marketFeeBalance}() (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1146)
+	- swapAndSendDividends(dividendAmount) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1324)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1176-1182)
+		- uniswapV2Router.swapExactTokensForTokensSupportingFeeOnTransferTokens(tokenAmount,0,path,recipient,block.timestamp) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1195-1201)
+		- success = IERC20(DividendToken).transfer(address(dividendTracker),dividends) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1227)
+		- (sent,data) = diviTracker.call{value: newBalance}() (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1233)
+		- dividendTracker.distributeTokenDividends(dividends) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1237)
+	External calls sending eth:
+	- swapAndLiquify(adminAmount) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1323)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,burnAddress,block.timestamp) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1209-1216)
+		- uniswapV2Router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: ethAmount}(0,path,receiver,block.timestamp) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1159-1164)
+		- (sent,None) = marketAddress.call{value: marketFeeBalance}() (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1146)
+	- swapAndSendDividends(dividendAmount) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1324)
+		- (sent,data) = diviTracker.call{value: newBalance}() (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1233)
+	State variables written after the call(s):
+	- swapAndSendDividends(dividendAmount) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1324)
+		- _allowances[owner][spender] = amount (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#544)
+Reentrancy in MRFROG._transfer(address,address,uint256) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1242-1355):
+	External calls:
+	- swapAndLiquify(adminAmount) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1323)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,burnAddress,block.timestamp) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1209-1216)
+		- uniswapV2Router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: ethAmount}(0,path,receiver,block.timestamp) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1159-1164)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1176-1182)
+		- (sent,None) = marketAddress.call{value: marketFeeBalance}() (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1146)
+	- swapAndSendDividends(dividendAmount) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1324)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1176-1182)
+		- uniswapV2Router.swapExactTokensForTokensSupportingFeeOnTransferTokens(tokenAmount,0,path,recipient,block.timestamp) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1195-1201)
+		- success = IERC20(DividendToken).transfer(address(dividendTracker),dividends) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1227)
+		- (sent,data) = diviTracker.call{value: newBalance}() (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1233)
+		- dividendTracker.distributeTokenDividends(dividends) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1237)
+	- dividendTracker.setBalance(address(from),balanceOf(from)) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1342)
+	- dividendTracker.setBalance(address(to),balanceOf(to)) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1343)
+	External calls sending eth:
+	- swapAndLiquify(adminAmount) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1323)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,burnAddress,block.timestamp) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1209-1216)
+		- uniswapV2Router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: ethAmount}(0,path,receiver,block.timestamp) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1159-1164)
+		- (sent,None) = marketAddress.call{value: marketFeeBalance}() (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1146)
+	- swapAndSendDividends(dividendAmount) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1324)
+		- (sent,data) = diviTracker.call{value: newBalance}() (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1233)
+	State variables written after the call(s):
+	- processDividendTime += dividendTime (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1347)
+Reentrancy in MRFROGDividendTracker.processAccount(address,bool) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1566-1576):
+	External calls:
+	- amount = _withdrawDividendOfUser(account) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1567)
+		- (sent,data) = user.call{value: _withdrawableDividend}() (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#711)
+		- success = IERC20(DividendToken).transfer(user,_withdrawableDividend) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#715)
+	External calls sending eth:
+	- amount = _withdrawDividendOfUser(account) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1567)
+		- (sent,data) = user.call{value: _withdrawableDividend}() (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#711)
+	State variables written after the call(s):
+	- lastClaimTimes[account] = block.timestamp (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1570)
+Reentrancy in MRFROG.swapAndLiquify(uint256) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1126-1152):
+	External calls:
+	- swapTokensForEth(initHalf) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1135)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1176-1182)
+	- swapEthForTokens(marketFeeBalance,marketTokenAddressForFee,marketAddress) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1144)
+		- uniswapV2Router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: ethAmount}(0,path,receiver,block.timestamp) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1159-1164)
+	- (sent,None) = marketAddress.call{value: marketFeeBalance}() (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1146)
+	- addLiquidity(finalHalf,finalBalance) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1150)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,burnAddress,block.timestamp) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1209-1216)
+	External calls sending eth:
+	- swapEthForTokens(marketFeeBalance,marketTokenAddressForFee,marketAddress) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1144)
+		- uniswapV2Router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: ethAmount}(0,path,receiver,block.timestamp) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1159-1164)
+	- (sent,None) = marketAddress.call{value: marketFeeBalance}() (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1146)
+	- addLiquidity(finalHalf,finalBalance) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1150)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,burnAddress,block.timestamp) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1209-1216)
+	State variables written after the call(s):
+	- addLiquidity(finalHalf,finalBalance) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1150)
+		- _allowances[owner][spender] = amount (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#544)
+Reentrancy in MRFROG.updateTokenForDividend(address) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#947-952):
+	External calls:
+	- dividendTracker.updateTokenForDividend(newAddress) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#948)
+	State variables written after the call(s):
+	- DividendToken = newAddress (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#949)
+Reentrancy in MRFROG.whitelistDxSale(address,address) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#978-987):
+	External calls:
+	- dividendTracker.excludeFromDividends(_presaleAddress) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#981)
+	State variables written after the call(s):
+	- excludeFromFees(_presaleAddress,true) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#982)
+		- _isExcludedFromFees[account] = excluded (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1009)
+	- canTransferBeforeTradingIsEnabled[_routerAddress] = true (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#984)
+Reentrancy in MRFROG.whitelistDxSale(address,address) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#978-987):
+	External calls:
+	- dividendTracker.excludeFromDividends(_presaleAddress) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#981)
+	- dividendTracker.excludeFromDividends(_routerAddress) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#985)
+	State variables written after the call(s):
+	- excludeFromFees(_routerAddress,true) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#986)
+		- _isExcludedFromFees[account] = excluded (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1009)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in MRFROG._setAutomatedMarketMakerPair(address,bool) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1037-1046):
+	External calls:
+	- dividendTracker.excludeFromDividends(pair) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1042)
+	Event emitted after the call(s):
+	- SetAutomatedMarketMakerPair(pair,value) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1045)
+Reentrancy in MRFROG._transfer(address,address,uint256) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1242-1355):
+	External calls:
+	- swapAndLiquify(adminAmount) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1323)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,burnAddress,block.timestamp) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1209-1216)
+		- uniswapV2Router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: ethAmount}(0,path,receiver,block.timestamp) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1159-1164)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1176-1182)
+		- (sent,None) = marketAddress.call{value: marketFeeBalance}() (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1146)
+	- swapAndSendDividends(dividendAmount) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1324)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1176-1182)
+		- uniswapV2Router.swapExactTokensForTokensSupportingFeeOnTransferTokens(tokenAmount,0,path,recipient,block.timestamp) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1195-1201)
+		- success = IERC20(DividendToken).transfer(address(dividendTracker),dividends) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1227)
+		- (sent,data) = diviTracker.call{value: newBalance}() (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1233)
+		- dividendTracker.distributeTokenDividends(dividends) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1237)
+	External calls sending eth:
+	- swapAndLiquify(adminAmount) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1323)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,burnAddress,block.timestamp) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1209-1216)
+		- uniswapV2Router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: ethAmount}(0,path,receiver,block.timestamp) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1159-1164)
+		- (sent,None) = marketAddress.call{value: marketFeeBalance}() (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1146)
+	- swapAndSendDividends(dividendAmount) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1324)
+		- (sent,data) = diviTracker.call{value: newBalance}() (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1233)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#545)
+		- swapAndSendDividends(dividendAmount) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1324)
+	- SendDividends(tokens,dividends) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1238)
+		- swapAndSendDividends(dividendAmount) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1324)
+	- Transfer(sender,recipient,amount) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#517)
+		- super._transfer(from,to,amount) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1338)
+	- Transfer(sender,recipient,amount) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#517)
+		- super._transfer(from,address(this),fees) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1336)
+Reentrancy in MRFROG._transfer(address,address,uint256) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1242-1355):
+	External calls:
+	- swapAndLiquify(adminAmount) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1323)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,burnAddress,block.timestamp) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1209-1216)
+		- uniswapV2Router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: ethAmount}(0,path,receiver,block.timestamp) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1159-1164)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1176-1182)
+		- (sent,None) = marketAddress.call{value: marketFeeBalance}() (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1146)
+	- swapAndSendDividends(dividendAmount) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1324)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1176-1182)
+		- uniswapV2Router.swapExactTokensForTokensSupportingFeeOnTransferTokens(tokenAmount,0,path,recipient,block.timestamp) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1195-1201)
+		- success = IERC20(DividendToken).transfer(address(dividendTracker),dividends) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1227)
+		- (sent,data) = diviTracker.call{value: newBalance}() (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1233)
+		- dividendTracker.distributeTokenDividends(dividends) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1237)
+	- dividendTracker.setBalance(address(from),balanceOf(from)) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1342)
+	- dividendTracker.setBalance(address(to),balanceOf(to)) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1343)
+	- (iterations,claims,lastProcessedIndex) = dividendTracker.process(gas) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1348-1353)
+	External calls sending eth:
+	- swapAndLiquify(adminAmount) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1323)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,burnAddress,block.timestamp) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1209-1216)
+		- uniswapV2Router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: ethAmount}(0,path,receiver,block.timestamp) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1159-1164)
+		- (sent,None) = marketAddress.call{value: marketFeeBalance}() (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1146)
+	- swapAndSendDividends(dividendAmount) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1324)
+		- (sent,data) = diviTracker.call{value: newBalance}() (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1233)
+	Event emitted after the call(s):
+	- ProcessedDividendTracker(iterations,claims,lastProcessedIndex,true,gas,tx.origin) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1349)
+Reentrancy in DividendPayingToken._withdrawDividendOfUser(address) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#704-728):
+	External calls:
+	- (sent,data) = user.call{value: _withdrawableDividend}() (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#711)
+	Event emitted after the call(s):
+	- DividendWithdrawn(user,_withdrawableDividend,DividendToken) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#713)
+Reentrancy in DividendPayingToken._withdrawDividendOfUser(address) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#704-728):
+	External calls:
+	- success = IERC20(DividendToken).transfer(user,_withdrawableDividend) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#715)
+	Event emitted after the call(s):
+	- DividendWithdrawn(user,_withdrawableDividend,DividendToken) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#716)
+Reentrancy in MRFROGDividendTracker.processAccount(address,bool) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1566-1576):
+	External calls:
+	- amount = _withdrawDividendOfUser(account) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1567)
+		- (sent,data) = user.call{value: _withdrawableDividend}() (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#711)
+		- success = IERC20(DividendToken).transfer(user,_withdrawableDividend) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#715)
+	External calls sending eth:
+	- amount = _withdrawDividendOfUser(account) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1567)
+		- (sent,data) = user.call{value: _withdrawableDividend}() (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#711)
+	Event emitted after the call(s):
+	- Claim(account,amount,automatic) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1571)
+Reentrancy in MRFROG.processDividendTracker(uint256) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1105-1108):
+	External calls:
+	- (iterations,claims,lastProcessedIndex) = dividendTracker.process(gas) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1106)
+	Event emitted after the call(s):
+	- ProcessedDividendTracker(iterations,claims,lastProcessedIndex,false,gas,tx.origin) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1107)
+Reentrancy in MRFROG.swapAndLiquify(uint256) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1126-1152):
+	External calls:
+	- swapTokensForEth(initHalf) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1135)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1176-1182)
+	- swapEthForTokens(marketFeeBalance,marketTokenAddressForFee,marketAddress) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1144)
+		- uniswapV2Router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: ethAmount}(0,path,receiver,block.timestamp) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1159-1164)
+	- (sent,None) = marketAddress.call{value: marketFeeBalance}() (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1146)
+	- addLiquidity(finalHalf,finalBalance) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1150)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,burnAddress,block.timestamp) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1209-1216)
+	External calls sending eth:
+	- swapEthForTokens(marketFeeBalance,marketTokenAddressForFee,marketAddress) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1144)
+		- uniswapV2Router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: ethAmount}(0,path,receiver,block.timestamp) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1159-1164)
+	- (sent,None) = marketAddress.call{value: marketFeeBalance}() (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1146)
+	- addLiquidity(finalHalf,finalBalance) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1150)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,burnAddress,block.timestamp) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1209-1216)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#545)
+		- addLiquidity(finalHalf,finalBalance) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1150)
+	- SwapAndLiquify(half,finalBalance,otherHalf) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1151)
+Reentrancy in MRFROG.swapAndSendDividends(uint256) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1220-1240):
+	External calls:
+	- swapTokensForTokens(tokens,address(this)) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1225)
+		- uniswapV2Router.swapExactTokensForTokensSupportingFeeOnTransferTokens(tokenAmount,0,path,recipient,block.timestamp) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1195-1201)
+	- success = IERC20(DividendToken).transfer(address(dividendTracker),dividends) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1227)
+	- swapTokensForEth(tokens) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1230)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1176-1182)
+	- (sent,data) = diviTracker.call{value: newBalance}() (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1233)
+	- dividendTracker.distributeTokenDividends(dividends) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1237)
+	External calls sending eth:
+	- (sent,data) = diviTracker.call{value: newBalance}() (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1233)
+	Event emitted after the call(s):
+	- SendDividends(tokens,dividends) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1238)
+Reentrancy in MRFROG.updateDividendTracker(address) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#988-1002):
+	External calls:
+	- newDividendTracker.excludeFromDividends(address(newDividendTracker)) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#995)
+	- newDividendTracker.excludeFromDividends(address(this)) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#996)
+	- newDividendTracker.excludeFromDividends(address(uniswapV2Router)) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#997)
+	Event emitted after the call(s):
+	- UpdateDividendTracker(newAddress,address(dividendTracker)) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#999)
+Reentrancy in MRFROG.updateTokenForDividend(address) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#947-952):
+	External calls:
+	- dividendTracker.updateTokenForDividend(newAddress) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#948)
+	Event emitted after the call(s):
+	- UpdateDividendToken(newAddress,address(DividendToken)) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#950)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+MRFROG.getTradingIsEnabled() (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1122-1124) uses timestamp for comparisons
+	Dangerous comparisons:
+	- block.timestamp >= tradingEnabledTimestamp (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1123)
+MRFROG._transfer(address,address,uint256) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1242-1355) uses timestamp for comparisons
+	Dangerous comparisons:
+	- ! swapping && tradingIsEnabled && automatedMarketMakerPairs[to] && from != address(uniswapV2Router) && ! _isExcludedFromFees[to] (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1293-1297)
+	- tradingIsEnabled && canSwap && ! swapping && ! automatedMarketMakerPairs[from] && from != burnAddress && to != burnAddress (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1313-1318)
+	- takeFee = tradingIsEnabled && ! swapping (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1327)
+	- canDividend = block.timestamp >= processDividendTime (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1344)
+	- ! swapping && canDividend (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1345)
+MRFROGDividendTracker.getAccount(address) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1430-1473) uses timestamp for comparisons
+	Dangerous comparisons:
+	- nextClaimTime > block.timestamp (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1470-1472)
+MRFROGDividendTracker.canAutoClaim(uint256) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1494-1500) uses timestamp for comparisons
+	Dangerous comparisons:
+	- lastClaimTime > block.timestamp (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1495)
+	- block.timestamp.sub(lastClaimTime) >= claimWait (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1499)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+5 different versions of Solidity are used:
+	- Version constraint ^0.7.6 is used by:
+		-^0.7.6 (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#17)
+		-^0.7.6 (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#265)
+		-^0.7.6 (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#361)
+		-^0.7.6 (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#372)
+		-^0.7.6 (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#394)
+		-^0.7.6 (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#428)
+		-^0.7.6 (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#637)
+		-^0.7.6 (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#783)
+	- Version constraint >=0.6.0<0.8.0 is used by:
+		->=0.6.0<0.8.0 (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#39)
+	- Version constraint >=0.6.2 is used by:
+		->=0.6.2 (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#53)
+		->=0.6.2 (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#149)
+	- Version constraint >=0.5.0 is used by:
+		->=0.5.0 (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#193)
+		->=0.5.0 (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#211)
+	- Version constraint ^0.7.0 is used by:
+		-^0.7.0 (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#327)
+		-^0.7.0 (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#438)
+		-^0.7.0 (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#555)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#different-pragma-directives-are-used
+
+MRFROG._transfer(address,address,uint256) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1242-1355) has a high cyclomatic complexity (14).
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#cyclomatic-complexity
+
+Context._msgData() (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#46-49) is never used and should be removed
+DividendPayingToken._transfer(address,address,uint256) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#748-754) is never used and should be removed
+ERC20._setupDecimals(uint8) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#548-550) is never used and should be removed
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dead-code
+
+MRFROG.totalFees (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#811) is set pre-construction with a non-constant function or state variable:
+	- tokenRewardsFee.add(marketFee)
+MRFROG.buyTotalFees (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#816) is set pre-construction with a non-constant function or state variable:
+	- buyTokenRewardsFee.add(buyMarketFee)
+MRFROG.sellTotalFees (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#821) is set pre-construction with a non-constant function or state variable:
+	- sellTokenRewardsFee.add(sellMarketFee)
+MRFROG.previousMarketFee (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#823) is set pre-construction with a non-constant function or state variable:
+	- marketFee
+MRFROG.previousTokenRewardsFee (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#824) is set pre-construction with a non-constant function or state variable:
+	- tokenRewardsFee
+MRFROG.previousLiquidityFee (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#825) is set pre-construction with a non-constant function or state variable:
+	- liquidityFee
+MRFROG.previousTotalFees (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#826) is set pre-construction with a non-constant function or state variable:
+	- totalFees
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#function-initializing-state
+
+Version constraint ^0.7.6 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- SignedImmutables
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching.
+It is used by:
+	- ^0.7.6 (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#17)
+	- ^0.7.6 (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#265)
+	- ^0.7.6 (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#361)
+	- ^0.7.6 (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#372)
+	- ^0.7.6 (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#394)
+	- ^0.7.6 (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#428)
+	- ^0.7.6 (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#637)
+	- ^0.7.6 (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#783)
+Version constraint >=0.6.0<0.8.0 is too complex.
+It is used by:
+	- >=0.6.0<0.8.0 (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#39)
+Version constraint >=0.6.2 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- MissingEscapingInFormatting
+	- ArraySliceDynamicallyEncodedBaseType
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow.
+It is used by:
+	- >=0.6.2 (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#53)
+	- >=0.6.2 (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#149)
+Version constraint >=0.5.0 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor
+	- IncorrectEventSignatureInLibraries
+	- ABIEncoderV2PackedStorage.
+It is used by:
+	- >=0.5.0 (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#193)
+	- >=0.5.0 (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#211)
+Version constraint ^0.7.0 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- SignedImmutables
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup.
+It is used by:
+	- ^0.7.0 (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#327)
+	- ^0.7.0 (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#438)
+	- ^0.7.0 (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#555)
+solc-0.7.6 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in DividendPayingToken._withdrawDividendOfUser(address) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#704-728):
+	- (sent,data) = user.call{value: _withdrawableDividend}() (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#711)
+Low level call in MRFROG.swapAndLiquify(uint256) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1126-1152):
+	- (sent,None) = marketAddress.call{value: marketFeeBalance}() (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1146)
+Low level call in MRFROG.swapAndSendDividends(uint256) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1220-1240):
+	- (sent,data) = diviTracker.call{value: newBalance}() (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1233)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Function IUniswapV2Router01.WETH() (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#57) is not in mixedCase
+Function IUniswapV2Pair.DOMAIN_SEPARATOR() (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#228) is not in mixedCase
+Function IUniswapV2Pair.PERMIT_TYPEHASH() (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#229) is not in mixedCase
+Function IUniswapV2Pair.MINIMUM_LIQUIDITY() (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#246) is not in mixedCase
+Parameter DividendPayingToken.dividendOf(address)._owner (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#731) is not in mixedCase
+Parameter DividendPayingToken.withdrawableDividendOf(address)._owner (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#735) is not in mixedCase
+Parameter DividendPayingToken.withdrawnDividendOf(address)._owner (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#739) is not in mixedCase
+Parameter DividendPayingToken.accumulativeDividendOf(address)._owner (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#743) is not in mixedCase
+Constant DividendPayingToken.magnitude (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#644) is not in UPPER_CASE_WITH_UNDERSCORES
+Variable DividendPayingToken.DividendToken (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#649) is not in mixedCase
+Parameter MRFROG.swapAndLiquifyOwner(uint256)._tokens (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#920) is not in mixedCase
+Parameter MRFROG.updatedividendTime(uint256)._dividendTime (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#932) is not in mixedCase
+Parameter MRFROG.updateFees(uint256,uint256,uint256)._tokenRewardsFee (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#961) is not in mixedCase
+Parameter MRFROG.updateFees(uint256,uint256,uint256)._liquidityFee (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#961) is not in mixedCase
+Parameter MRFROG.updateFees(uint256,uint256,uint256)._marketFee (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#961) is not in mixedCase
+Parameter MRFROG.updateBuyFees(uint256,uint256,uint256)._tokenRewardsFee (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#966) is not in mixedCase
+Parameter MRFROG.updateBuyFees(uint256,uint256,uint256)._liquidityFee (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#966) is not in mixedCase
+Parameter MRFROG.updateBuyFees(uint256,uint256,uint256)._marketFee (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#966) is not in mixedCase
+Parameter MRFROG.updateSellFees(uint256,uint256,uint256)._tokenRewardsFee (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#972) is not in mixedCase
+Parameter MRFROG.updateSellFees(uint256,uint256,uint256)._liquidityFee (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#972) is not in mixedCase
+Parameter MRFROG.updateSellFees(uint256,uint256,uint256)._marketFee (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#972) is not in mixedCase
+Parameter MRFROG.whitelistDxSale(address,address)._presaleAddress (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#978) is not in mixedCase
+Parameter MRFROG.whitelistDxSale(address,address)._routerAddress (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#978) is not in mixedCase
+Variable MRFROG.DividendToken (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#791) is not in mixedCase
+Variable MRFROG._maxWalletToken (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#802) is not in mixedCase
+Variable MRFROG._isExcludedMaxSellTransactionAmount (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#839) is not in mixedCase
+Parameter MRFROGDividendTracker.getAccount(address)._account (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1430) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Redundant expression "this (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#47)" inContext (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#41-50)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#redundant-statements
+
+MRFROG.constructor() (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#884-916) uses literals with too many digits:
+	- _mint(owner(),420690000000000 * (10 ** 18)) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#915)
+MRFROG.updateGasForProcessing(uint256) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1048-1053) uses literals with too many digits:
+	- require(bool,string)(newValue >= 200000 && newValue <= 1000000,MRFROG: gasForProcessing must be between 200,000 and 500,000) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1049)
+MRFROG.slitherConstructorVariables() (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#785-1357) uses literals with too many digits:
+	- maxBuyTranscationAmount = 8413800000000 * (10 ** 18) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#799)
+MRFROG.slitherConstructorVariables() (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#785-1357) uses literals with too many digits:
+	- maxSellTransactionAmount = 4206900000000 * (10 ** 18) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#800)
+MRFROG.slitherConstructorVariables() (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#785-1357) uses literals with too many digits:
+	- swapTokensAtAmount = 10000000 * (10 ** 18) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#801)
+MRFROG.slitherConstructorVariables() (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#785-1357) uses literals with too many digits:
+	- _maxWalletToken = 420690000000000 * (10 ** 18) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#802)
+MRFROG.slitherConstructorVariables() (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#785-1357) uses literals with too many digits:
+	- gasForProcessing = 300000 (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#831)
+MRFROGDividendTracker.constructor() (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1380-1383) uses literals with too many digits:
+	- minimumTokenBalanceForDividends = 100000 * (10 ** 18) (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1382)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+DividendPayingToken.lastAmount (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#647) is never used in MRFROGDividendTracker (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#1360-1579)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-state-variable
+
+DividendPayingToken.lastAmount (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#647) should be constant 
+MRFROG.maxBuyTranscationAmount (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#799) should be constant 
+MRFROG.maxSellTransactionAmount (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#800) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+
+MRFROG.burnAddress (0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol#797) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+./0x0aabf9daefcd484405479d2748cbaedb53c33d87.sol analyzed (17 contracts with 94 detectors), 114 result(s) found
+
+real	0m6.154s
+user	0m5.909s
+sys	0m0.246s

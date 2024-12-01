@@ -1,0 +1,101 @@
+'solc --version' running
+'solc ./0xafc36ac17c5d84504064f944b27292e795d03398.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+ERC20 (0xafc36ac17c5d84504064f944b27292e795d03398.sol#29-32) has incorrect ERC20 function interface:ERC20.transfer(address,uint256) (0xafc36ac17c5d84504064f944b27292e795d03398.sol#30)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-erc20-interface
+
+IOU.withdraw() (0xafc36ac17c5d84504064f944b27292e795d03398.sol#120-177) uses a dangerous strict equality:
+	- token.balanceOf(address(this)) == 0 || iou_purchased[msg.sender] > token.balanceOf(address(this)) (0xafc36ac17c5d84504064f944b27292e795d03398.sol#162)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-strict-equalities
+
+Reentrancy in IOU.withdraw() (0xafc36ac17c5d84504064f944b27292e795d03398.sol#120-177):
+	External calls:
+	- block.number > 4199999 && iou_purchased[msg.sender] > token.balanceOf(address(this)) (0xafc36ac17c5d84504064f944b27292e795d03398.sol#139)
+	State variables written after the call(s):
+	- iou_purchased[msg.sender] = 0 (0xafc36ac17c5d84504064f944b27292e795d03398.sol#152)
+	IOU.iou_purchased (0xafc36ac17c5d84504064f944b27292e795d03398.sol#36) can be used in cross function reentrancies:
+	- IOU.iou_purchased (0xafc36ac17c5d84504064f944b27292e795d03398.sol#36)
+	- IOU.purchase() (0xafc36ac17c5d84504064f944b27292e795d03398.sol#179-195)
+	- IOU.withdraw() (0xafc36ac17c5d84504064f944b27292e795d03398.sol#120-177)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+IOU.updateAvailability(uint256) (0xafc36ac17c5d84504064f944b27292e795d03398.sol#87-91) should emit an event for: 
+	- total_iou_available = _iou_amount (0xafc36ac17c5d84504064f944b27292e795d03398.sol#90) 
+IOU.updatePrice(uint256) (0xafc36ac17c5d84504064f944b27292e795d03398.sol#96-98) should emit an event for: 
+	- price_per_eth = _price (0xafc36ac17c5d84504064f944b27292e795d03398.sol#97) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+Reentrancy in IOU.withdraw() (0xafc36ac17c5d84504064f944b27292e795d03398.sol#120-177):
+	External calls:
+	- block.number > 4199999 && iou_purchased[msg.sender] > token.balanceOf(address(this)) (0xafc36ac17c5d84504064f944b27292e795d03398.sol#139)
+	State variables written after the call(s):
+	- eth_sent[msg.sender] = 0 (0xafc36ac17c5d84504064f944b27292e795d03398.sol#151)
+	- total_iou_purchased -= iou_purchased[msg.sender] (0xafc36ac17c5d84504064f944b27292e795d03398.sol#148)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Deprecated standard detected THROW (0xafc36ac17c5d84504064f944b27292e795d03398.sol#88):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0xafc36ac17c5d84504064f944b27292e795d03398.sol#111):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0xafc36ac17c5d84504064f944b27292e795d03398.sol#145):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0xafc36ac17c5d84504064f944b27292e795d03398.sol#162):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0xafc36ac17c5d84504064f944b27292e795d03398.sol#167):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0xafc36ac17c5d84504064f944b27292e795d03398.sol#180):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0xafc36ac17c5d84504064f944b27292e795d03398.sol#181):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0xafc36ac17c5d84504064f944b27292e795d03398.sol#187):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0xafc36ac17c5d84504064f944b27292e795d03398.sol#62):
+	- Usage of "throw" should be replaced with "revert()"
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#deprecated-standards
+
+Version constraint ^0.4.11 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ExpExponentCleanup
+	- NestedArrayFunctionCallDecoder
+	- ZeroFunctionSelector
+	- DelegateCallReturnValue
+	- ECRecoverMalformedInput
+	- SkipEmptyStringLiteral.
+It is used by:
+	- ^0.4.11 (0xafc36ac17c5d84504064f944b27292e795d03398.sol#1)
+solc-0.4.11 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Parameter IOU.updateAvailability(uint256)._iou_amount (0xafc36ac17c5d84504064f944b27292e795d03398.sol#87) is not in mixedCase
+Parameter IOU.updatePrice(uint256)._price (0xafc36ac17c5d84504064f944b27292e795d03398.sol#96) is not in mixedCase
+Variable IOU.iou_purchased (0xafc36ac17c5d84504064f944b27292e795d03398.sol#36) is not in mixedCase
+Variable IOU.eth_sent (0xafc36ac17c5d84504064f944b27292e795d03398.sol#39) is not in mixedCase
+Variable IOU.total_iou_available (0xafc36ac17c5d84504064f944b27292e795d03398.sol#42) is not in mixedCase
+Variable IOU.total_iou_purchased (0xafc36ac17c5d84504064f944b27292e795d03398.sol#45) is not in mixedCase
+Variable IOU.total_iou_withdrawn (0xafc36ac17c5d84504064f944b27292e795d03398.sol#48) is not in mixedCase
+Variable IOU.price_per_eth (0xafc36ac17c5d84504064f944b27292e795d03398.sol#51) is not in mixedCase
+Variable IOU.halt_purchases (0xafc36ac17c5d84504064f944b27292e795d03398.sol#60) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+IOU.slitherConstructorVariables() (0xafc36ac17c5d84504064f944b27292e795d03398.sol#34-207) uses literals with too many digits:
+	- total_iou_available = 40000000000000000000000 (0xafc36ac17c5d84504064f944b27292e795d03398.sol#42)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+IOU.seller (0xafc36ac17c5d84504064f944b27292e795d03398.sol#57) should be constant 
+IOU.token (0xafc36ac17c5d84504064f944b27292e795d03398.sol#54) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+./0xafc36ac17c5d84504064f944b27292e795d03398.sol analyzed (2 contracts with 94 detectors), 29 result(s) found
+
+real	0m1.646s
+user	0m1.367s
+sys	0m0.281s

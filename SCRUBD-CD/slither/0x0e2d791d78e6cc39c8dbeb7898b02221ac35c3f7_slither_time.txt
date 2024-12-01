@@ -1,0 +1,303 @@
+'solc --version' running
+'solc ./0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol:
+Warning: Function state mutability can be restricted to view
+   --> ./0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol:347:5:
+    |
+347 |     function _getTaxes(address _sender, address _recipient, uint256 _amount) private returns (uint256) {
+    |     ^ (Relevant source part starts here and spans across multiple lines).
+
+
+
+Taxable.payTaxes(uint256,uint256) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#107-118) sends eth to arbitrary user
+	Dangerous calls:
+	- _address.transfer(_amount) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#113)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+Reentrancy in PumpToken._disperseEth() (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#380-393):
+	External calls:
+	- payTaxes(_newEth,_d) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#390)
+		- External.deposit(_amount) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#115)
+	External calls sending eth:
+	- payTaxes(_newEth,_d) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#390)
+		- _address.transfer(_amount) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#113)
+	State variables written after the call(s):
+	- m_LastEthBal = address(this).balance (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#392)
+	PumpToken.m_LastEthBal (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#218) can be used in cross function reentrancies:
+	- PumpToken._disperseEth() (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#380-393)
+Reentrancy in PumpToken._transfer(address,address,uint256) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#310-339):
+	External calls:
+	- require(bool,string)(! AntiBot.scanAddress(_recipient,m_UniswapV2Pair,tx.origin),Beep Beep Boop, You're a piece of poop) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#316)
+	- require(bool,string)(! AntiBot.scanAddress(_sender,m_UniswapV2Pair,tx.origin),Beep Beep Boop, You're a piece of poop) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#317)
+	- AntiBot.registerBlock(_sender,_recipient,tx.origin) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#318)
+	- _tax(_sender) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#331)
+		- m_UniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(_amount,0,_path,address(this),block.timestamp) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#367-373)
+		- External.deposit(_amount) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#115)
+	External calls sending eth:
+	- _tax(_sender) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#331)
+		- _address.transfer(_amount) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#113)
+	State variables written after the call(s):
+	- _updateBalances(_sender,_recipient,_amount,_taxes) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#338)
+		- m_Balances[_sender] = m_Balances[_sender].sub(_amount) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#342)
+		- m_Balances[_recipient] = m_Balances[_recipient].add(_netAmount) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#343)
+		- m_Balances[address(this)] = m_Balances[address(this)].add(_taxes) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#344)
+	PumpToken.m_Balances (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#216) can be used in cross function reentrancies:
+	- PumpToken._updateBalances(address,address,uint256,uint256) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#340-346)
+	- PumpToken.balanceOf(address) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#258-260)
+	- PumpToken.constructor() (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#236-245)
+Reentrancy in PumpToken.addLiquidity() (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#394-403):
+	External calls:
+	- m_UniswapV2Pair = IUniswapV2Factory(m_UniswapV2Router.factory()).createPair(address(this),m_UniswapV2Router.WETH()) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#398)
+	- m_UniswapV2Router.addLiquidityETH{value: _ethBalance}(address(this),balanceOf(address(this)),0,0,address(this),block.timestamp) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#399)
+	- IERC20(m_UniswapV2Pair).approve(m_LiqLockSvcAddress,type()(uint256).max) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#400)
+	- FTPLiqLock(m_LiqLockSvcAddress).lockTokens(m_UniswapV2Pair,block.timestamp.add(2592000),msg.sender) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#401)
+	External calls sending eth:
+	- m_UniswapV2Router.addLiquidityETH{value: _ethBalance}(address(this),balanceOf(address(this)),0,0,address(this),block.timestamp) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#399)
+	State variables written after the call(s):
+	- m_Liquidity = true (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#402)
+	PumpToken.m_Liquidity (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#206) can be used in cross function reentrancies:
+	- PumpToken._transfer(address,address,uint256) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#310-339)
+	- PumpToken.addLiquidity() (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#394-403)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+PumpToken._getTaxes(address,address,uint256) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#347-354) performs a multiplication on the result of a division:
+	- _ret = _ret.add(_amount.div(pMax).mul(totalTaxAlloc())) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#352)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+Reentrancy in PumpToken.setWebThree(address) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#432-434):
+	External calls:
+	- onlyDev() (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#432)
+		- require(bool,string)(_msgSender() == External.owner() || _msgSender() == m_WebThree,Unauthorized) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#230)
+	State variables written after the call(s):
+	- m_WebThree = _address (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#433)
+	Taxable.m_WebThree (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#88) can be used in cross function reentrancies:
+	- PumpToken.onlyDev() (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#229-232)
+	- Taxable.setTaxAlloc(address,uint256) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#119-146)
+	- PumpToken.setWebThree(address) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#432-434)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+PumpToken._transfer(address,address,uint256) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#310-339) uses tx.origin for authorization: require(bool)(! m_Blacklist[_sender] && ! m_Blacklist[_recipient] && ! m_Blacklist[tx.origin]) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#313)
+PumpToken._transfer(address,address,uint256) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#310-339) uses tx.origin for authorization: require(bool,string)(! AntiBot.scanAddress(_recipient,m_UniswapV2Pair,tx.origin),Beep Beep Boop, You're a piece of poop) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#316)
+PumpToken._transfer(address,address,uint256) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#310-339) uses tx.origin for authorization: require(bool,string)(! AntiBot.scanAddress(_sender,m_UniswapV2Pair,tx.origin),Beep Beep Boop, You're a piece of poop) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#317)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-usage-of-txorigin
+
+Taxable.setTaxAlloc(address,uint256) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#119-146) contains a tautology or contradiction:
+	- require(bool,string)(_alloc >= 0,Allocation must be at least 0) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#120)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#tautology-or-contradiction
+
+PumpToken.addLiquidity() (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#394-403) ignores return value by m_UniswapV2Router.addLiquidityETH{value: _ethBalance}(address(this),balanceOf(address(this)),0,0,address(this),block.timestamp) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#399)
+PumpToken.addLiquidity() (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#394-403) ignores return value by IERC20(m_UniswapV2Pair).approve(m_LiqLockSvcAddress,type()(uint256).max) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#400)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+PumpToken.launch(uint256) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#404-406) should emit an event for: 
+	- m_Launched = block.timestamp.add(_timer) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#405) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+Taxable.updateDevWallet(address,uint256)._address (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#154) lacks a zero-check on :
+		- m_DevAddress = _address (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#156)
+Ownable.transferOwnership(address)._address (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#73) lacks a zero-check on :
+		- m_Owner = _address (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#75)
+PumpToken.setWebThree(address)._address (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#432) lacks a zero-check on :
+		- m_WebThree = _address (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#433)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in PumpToken._transfer(address,address,uint256) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#310-339):
+	External calls:
+	- require(bool,string)(! AntiBot.scanAddress(_recipient,m_UniswapV2Pair,tx.origin),Beep Beep Boop, You're a piece of poop) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#316)
+	- require(bool,string)(! AntiBot.scanAddress(_sender,m_UniswapV2Pair,tx.origin),Beep Beep Boop, You're a piece of poop) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#317)
+	- AntiBot.registerBlock(_sender,_recipient,tx.origin) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#318)
+	- _tax(_sender) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#331)
+		- m_UniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(_amount,0,_path,address(this),block.timestamp) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#367-373)
+		- External.deposit(_amount) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#115)
+	External calls sending eth:
+	- _tax(_sender) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#331)
+		- _address.transfer(_amount) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#113)
+	State variables written after the call(s):
+	- _tax(_sender) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#331)
+		- m_Allowances[_owner][_spender] = _amount (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#307)
+Reentrancy in PumpToken.transferFrom(address,address,uint256) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#272-276):
+	External calls:
+	- _transfer(_sender,_recipient,_amount) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#273)
+		- require(bool,string)(! AntiBot.scanAddress(_recipient,m_UniswapV2Pair,tx.origin),Beep Beep Boop, You're a piece of poop) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#316)
+		- m_UniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(_amount,0,_path,address(this),block.timestamp) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#367-373)
+		- require(bool,string)(! AntiBot.scanAddress(_sender,m_UniswapV2Pair,tx.origin),Beep Beep Boop, You're a piece of poop) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#317)
+		- AntiBot.registerBlock(_sender,_recipient,tx.origin) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#318)
+		- External.deposit(_amount) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#115)
+	External calls sending eth:
+	- _transfer(_sender,_recipient,_amount) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#273)
+		- _address.transfer(_amount) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#113)
+	State variables written after the call(s):
+	- _approve(_sender,_msgSender(),m_Allowances[_sender][_msgSender()].sub(_amount,ERC20: transfer amount exceeds allowance)) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#274)
+		- m_Allowances[_owner][_spender] = _amount (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#307)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in PumpToken._transfer(address,address,uint256) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#310-339):
+	External calls:
+	- require(bool,string)(! AntiBot.scanAddress(_recipient,m_UniswapV2Pair,tx.origin),Beep Beep Boop, You're a piece of poop) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#316)
+	- require(bool,string)(! AntiBot.scanAddress(_sender,m_UniswapV2Pair,tx.origin),Beep Beep Boop, You're a piece of poop) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#317)
+	- AntiBot.registerBlock(_sender,_recipient,tx.origin) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#318)
+	- _tax(_sender) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#331)
+		- m_UniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(_amount,0,_path,address(this),block.timestamp) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#367-373)
+		- External.deposit(_amount) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#115)
+	External calls sending eth:
+	- _tax(_sender) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#331)
+		- _address.transfer(_amount) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#113)
+	Event emitted after the call(s):
+	- Approval(_owner,_spender,_amount) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#308)
+		- _tax(_sender) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#331)
+	- Transfer(_sender,_recipient,_netAmount) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#345)
+		- _updateBalances(_sender,_recipient,_amount,_taxes) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#338)
+Reentrancy in PumpToken.transferFrom(address,address,uint256) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#272-276):
+	External calls:
+	- _transfer(_sender,_recipient,_amount) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#273)
+		- require(bool,string)(! AntiBot.scanAddress(_recipient,m_UniswapV2Pair,tx.origin),Beep Beep Boop, You're a piece of poop) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#316)
+		- m_UniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(_amount,0,_path,address(this),block.timestamp) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#367-373)
+		- require(bool,string)(! AntiBot.scanAddress(_sender,m_UniswapV2Pair,tx.origin),Beep Beep Boop, You're a piece of poop) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#317)
+		- AntiBot.registerBlock(_sender,_recipient,tx.origin) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#318)
+		- External.deposit(_amount) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#115)
+	External calls sending eth:
+	- _transfer(_sender,_recipient,_amount) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#273)
+		- _address.transfer(_amount) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#113)
+	Event emitted after the call(s):
+	- Approval(_owner,_spender,_amount) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#308)
+		- _approve(_sender,_msgSender(),m_Allowances[_sender][_msgSender()].sub(_amount,ERC20: transfer amount exceeds allowance)) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#274)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+PumpToken._walletCapped(address) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#295-297) uses timestamp for comparisons
+	Dangerous comparisons:
+	- _recipient != m_UniswapV2Pair && _recipient != address(m_UniswapV2Router) && block.timestamp <= m_Launched.add(3600) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#296)
+PumpToken._checkTX() (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#298-303) uses timestamp for comparisons
+	Dangerous comparisons:
+	- block.timestamp <= m_Launched.add(900) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#299)
+PumpToken._transfer(address,address,uint256) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#310-339) uses timestamp for comparisons
+	Dangerous comparisons:
+	- _isExchangeTransfer(_sender,_recipient) && block.timestamp >= m_Launched (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#315)
+	- require(bool)(block.timestamp >= m_Launched) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#326)
+	- require(bool,string)(block.timestamp >= m_Launched.add(604800),Dumping discouraged) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#335)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Version constraint ^0.8.7 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- VerbatimInvalidDeduplication
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- SignedImmutables.
+It is used by:
+	- ^0.8.7 (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#15)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Parameter Ownable.transferOwnership(address)._address (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#73) is not in mixedCase
+Variable Ownable.m_Owner (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#63) is not in mixedCase
+Parameter Taxable.payTaxes(uint256,uint256)._eth (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#107) is not in mixedCase
+Parameter Taxable.payTaxes(uint256,uint256)._d (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#107) is not in mixedCase
+Parameter Taxable.setTaxAlloc(address,uint256)._address (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#119) is not in mixedCase
+Parameter Taxable.setTaxAlloc(address,uint256)._alloc (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#119) is not in mixedCase
+Parameter Taxable.getTaxAlloc(address)._address (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#150) is not in mixedCase
+Parameter Taxable.updateDevWallet(address,uint256)._address (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#154) is not in mixedCase
+Parameter Taxable.updateDevWallet(address,uint256)._alloc (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#154) is not in mixedCase
+Variable Taxable.External (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#84) is not in mixedCase
+Variable Taxable.m_ExternalServiceAddress (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#85) is not in mixedCase
+Variable Taxable.m_DevAddress (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#86) is not in mixedCase
+Variable Taxable.m_DevAlloc (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#87) is not in mixedCase
+Variable Taxable.m_WebThree (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#88) is not in mixedCase
+Variable Taxable.m_TaxAlloc (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#89) is not in mixedCase
+Variable Taxable.m_TaxAddresses (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#90) is not in mixedCase
+Variable Taxable.m_TaxIdx (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#91) is not in mixedCase
+Variable Taxable.m_TotalAlloc (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#92) is not in mixedCase
+Variable Taxable.m_TotalAddresses (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#93) is not in mixedCase
+Variable Taxable.m_DidDeploy (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#94) is not in mixedCase
+Function IUniswapV2Router02.WETH() (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#173) is not in mixedCase
+Parameter PumpToken.balanceOf(address)._account (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#258) is not in mixedCase
+Parameter PumpToken.transfer(address,uint256)._recipient (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#261) is not in mixedCase
+Parameter PumpToken.transfer(address,uint256)._amount (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#261) is not in mixedCase
+Parameter PumpToken.allowance(address,address)._owner (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#265) is not in mixedCase
+Parameter PumpToken.allowance(address,address)._spender (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#265) is not in mixedCase
+Parameter PumpToken.approve(address,uint256)._spender (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#268) is not in mixedCase
+Parameter PumpToken.approve(address,uint256)._amount (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#268) is not in mixedCase
+Parameter PumpToken.transferFrom(address,address,uint256)._sender (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#272) is not in mixedCase
+Parameter PumpToken.transferFrom(address,address,uint256)._recipient (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#272) is not in mixedCase
+Parameter PumpToken.transferFrom(address,address,uint256)._amount (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#272) is not in mixedCase
+Parameter PumpToken.launch(uint256)._timer (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#404) is not in mixedCase
+Parameter PumpToken.checkIfBlacklist(address)._address (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#407) is not in mixedCase
+Parameter PumpToken.blacklist(address)._address (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#410) is not in mixedCase
+Parameter PumpToken.rmBlacklist(address)._address (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#415) is not in mixedCase
+Parameter PumpToken.updateTaxAlloc(address,uint256)._address (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#418) is not in mixedCase
+Parameter PumpToken.updateTaxAlloc(address,uint256)._alloc (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#418) is not in mixedCase
+Parameter PumpToken.addTaxWhitelist(address)._address (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#426) is not in mixedCase
+Parameter PumpToken.rmTaxWhitelist(address)._address (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#429) is not in mixedCase
+Parameter PumpToken.setWebThree(address)._address (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#432) is not in mixedCase
+Variable PumpToken.m_Name (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#198) is not in mixedCase
+Variable PumpToken.m_Symbol (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#199) is not in mixedCase
+Variable PumpToken.m_Decimals (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#200) is not in mixedCase
+Variable PumpToken.m_UniswapV2Pair (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#202) is not in mixedCase
+Variable PumpToken.m_UniswapV2Router (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#203) is not in mixedCase
+Variable PumpToken.m_WalletLimit (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#205) is not in mixedCase
+Variable PumpToken.m_Liquidity (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#206) is not in mixedCase
+Variable PumpToken.AntiBot (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#210) is not in mixedCase
+Variable PumpToken.m_AntibotSvcAddress (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#211) is not in mixedCase
+Variable PumpToken.m_LiqLockSvcAddress (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#213) is not in mixedCase
+Variable PumpToken.m_Blacklist (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#214) is not in mixedCase
+Variable PumpToken.m_ExcludedAddresses (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#215) is not in mixedCase
+Variable PumpToken.m_Balances (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#216) is not in mixedCase
+Variable PumpToken.m_Allowances (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#217) is not in mixedCase
+Variable PumpToken.m_LastEthBal (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#218) is not in mixedCase
+Variable PumpToken.m_Launched (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#219) is not in mixedCase
+Variable PumpToken.m_IsSwap (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#220) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in PumpToken._disperseEth() (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#380-393):
+	External calls:
+	- payTaxes(_newEth,_d) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#390)
+		- _address.transfer(_amount) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#113)
+	State variables written after the call(s):
+	- m_LastEthBal = address(this).balance (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#392)
+Reentrancy in PumpToken._transfer(address,address,uint256) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#310-339):
+	External calls:
+	- _tax(_sender) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#331)
+		- _address.transfer(_amount) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#113)
+	State variables written after the call(s):
+	- _updateBalances(_sender,_recipient,_amount,_taxes) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#338)
+		- m_Balances[_sender] = m_Balances[_sender].sub(_amount) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#342)
+		- m_Balances[_recipient] = m_Balances[_recipient].add(_netAmount) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#343)
+		- m_Balances[address(this)] = m_Balances[address(this)].add(_taxes) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#344)
+	Event emitted after the call(s):
+	- Transfer(_sender,_recipient,_netAmount) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#345)
+		- _updateBalances(_sender,_recipient,_amount,_taxes) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#338)
+Reentrancy in PumpToken.transferFrom(address,address,uint256) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#272-276):
+	External calls:
+	- _transfer(_sender,_recipient,_amount) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#273)
+		- _address.transfer(_amount) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#113)
+	State variables written after the call(s):
+	- _approve(_sender,_msgSender(),m_Allowances[_sender][_msgSender()].sub(_amount,ERC20: transfer amount exceeds allowance)) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#274)
+		- m_Allowances[_owner][_spender] = _amount (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#307)
+	Event emitted after the call(s):
+	- Approval(_owner,_spender,_amount) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#308)
+		- _approve(_sender,_msgSender(),m_Allowances[_sender][_msgSender()].sub(_amount,ERC20: transfer amount exceeds allowance)) (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#274)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+PumpToken.slitherConstructorVariables() (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#194-436) uses literals with too many digits:
+	- pMax = 100000 (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#221)
+PumpToken.slitherConstructorConstantVariables() (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#194-436) uses literals with too many digits:
+	- TOTAL_SUPPLY = 100000000000 * 10 ** 9 (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#197)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+PumpToken.m_AntibotSvcAddress (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#211) should be constant 
+PumpToken.m_Decimals (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#200) should be constant 
+PumpToken.m_LiqLockSvcAddress (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#213) should be constant 
+PumpToken.m_Name (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#198) should be constant 
+PumpToken.m_Symbol (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#199) should be constant 
+PumpToken.m_WalletLimit (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#205) should be constant 
+PumpToken.pMax (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#221) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+
+PumpToken.AntiBot (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#210) should be immutable 
+PumpToken.m_UniswapV2Router (0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol#203) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+./0x0e2d791d78e6cc39c8dbeb7898b02221ac35c3f7.sol analyzed (11 contracts with 94 detectors), 95 result(s) found
+
+real	0m2.675s
+user	0m2.537s
+sys	0m0.140s

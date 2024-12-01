@@ -1,0 +1,281 @@
+'solc --version' running
+'solc ./swc-107-multicall.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/manual_dataset' running
+
+SimpleDAO.withdraw_multi_call(address,address) (swc-107-multicall.sol#23-29) sends eth to arbitrary user
+	Dangerous calls:
+	- require(bool)(a1.call.value(c)()) (swc-107-multicall.sol#24)
+	- require(bool)(a2.call.value(c)()) (swc-107-multicall.sol#25)
+SimpleDAO.withdraw_for_loop(address[]) (swc-107-multicall.sol#31-35) sends eth to arbitrary user
+	Dangerous calls:
+	- require(bool)(addr[a].call.value(c)()) (swc-107-multicall.sol#33)
+SimpleDAO.withdraw_for_loop_1(address[],address) (swc-107-multicall.sol#36-41) sends eth to arbitrary user
+	Dangerous calls:
+	- require(bool)(addr[a].call.value(c)()) (swc-107-multicall.sol#38)
+	- require(bool)(a2.call.value(c)()) (swc-107-multicall.sol#40)
+SimpleDAO.withdraw_while_1() (swc-107-multicall.sol#44-50) sends eth to arbitrary user
+	Dangerous calls:
+	- require(bool)(msg.sender.call.value(c)()) (swc-107-multicall.sol#48)
+SimpleDAO.withdraw_while_2() (swc-107-multicall.sol#52-59) sends eth to arbitrary user
+	Dangerous calls:
+	- require(bool)(msg.sender.call.value(c)()) (swc-107-multicall.sol#57)
+SimpleDAO.non_buggy_while_1() (swc-107-multicall.sol#62-68) sends eth to arbitrary user
+	Dangerous calls:
+	- require(bool)(msg.sender.call.value(c)()) (swc-107-multicall.sol#66)
+SimpleDAO.non_buggy_do_while_1() (swc-107-multicall.sol#71-77) sends eth to arbitrary user
+	Dangerous calls:
+	- require(bool)(msg.sender.call.value(c)()) (swc-107-multicall.sol#75)
+SimpleDAO.withdraw_do_while_2() (swc-107-multicall.sol#81-87) sends eth to arbitrary user
+	Dangerous calls:
+	- require(bool)(msg.sender.call.value(c)()) (swc-107-multicall.sol#85)
+SimpleDAO.buggy_for_1() (swc-107-multicall.sol#91-96) sends eth to arbitrary user
+	Dangerous calls:
+	- require(bool)(msg.sender.call.value(c)()) (swc-107-multicall.sol#94)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+Reentrancy in SimpleDAO.buggy_for_1() (swc-107-multicall.sol#91-96):
+	External calls:
+	- require(bool)(msg.sender.call.value(c)()) (swc-107-multicall.sol#94)
+	State variables written after the call(s):
+	- b > 10 (swc-107-multicall.sol#92)
+	SimpleDAO.b (swc-107-multicall.sol#10) can be used in cross function reentrancies:
+	- SimpleDAO.b (swc-107-multicall.sol#10)
+	- SimpleDAO.buggy_for_1() (swc-107-multicall.sol#91-96)
+	- SimpleDAO.non_buggy_do_while_1() (swc-107-multicall.sol#71-77)
+	- SimpleDAO.non_buggy_while_1() (swc-107-multicall.sol#62-68)
+	- SimpleDAO.withdraw_do_while_2() (swc-107-multicall.sol#81-87)
+	- SimpleDAO.withdraw_while_1() (swc-107-multicall.sol#44-50)
+	- SimpleDAO.withdraw_while_2() (swc-107-multicall.sol#52-59)
+	- b ++ (swc-107-multicall.sol#92)
+	SimpleDAO.b (swc-107-multicall.sol#10) can be used in cross function reentrancies:
+	- SimpleDAO.b (swc-107-multicall.sol#10)
+	- SimpleDAO.buggy_for_1() (swc-107-multicall.sol#91-96)
+	- SimpleDAO.non_buggy_do_while_1() (swc-107-multicall.sol#71-77)
+	- SimpleDAO.non_buggy_while_1() (swc-107-multicall.sol#62-68)
+	- SimpleDAO.withdraw_do_while_2() (swc-107-multicall.sol#81-87)
+	- SimpleDAO.withdraw_while_1() (swc-107-multicall.sol#44-50)
+	- SimpleDAO.withdraw_while_2() (swc-107-multicall.sol#52-59)
+Reentrancy in SimpleDAO.non_buggy_do_while_1() (swc-107-multicall.sol#71-77):
+	External calls:
+	- require(bool)(msg.sender.call.value(c)()) (swc-107-multicall.sol#75)
+	State variables written after the call(s):
+	- a = a - 10 (swc-107-multicall.sol#74)
+	SimpleDAO.a (swc-107-multicall.sol#9) can be used in cross function reentrancies:
+	- SimpleDAO.a (swc-107-multicall.sol#9)
+	- SimpleDAO.non_buggy_do_while_1() (swc-107-multicall.sol#71-77)
+	- SimpleDAO.non_buggy_while_1() (swc-107-multicall.sol#62-68)
+	- SimpleDAO.withdraw_do_while_2() (swc-107-multicall.sol#81-87)
+	- SimpleDAO.withdraw_for_loop(address[]) (swc-107-multicall.sol#31-35)
+	- SimpleDAO.withdraw_for_loop_1(address[],address) (swc-107-multicall.sol#36-41)
+Reentrancy in SimpleDAO.non_buggy_while_1() (swc-107-multicall.sol#62-68):
+	External calls:
+	- require(bool)(msg.sender.call.value(c)()) (swc-107-multicall.sol#66)
+	State variables written after the call(s):
+	- a = a - 10 (swc-107-multicall.sol#65)
+	SimpleDAO.a (swc-107-multicall.sol#9) can be used in cross function reentrancies:
+	- SimpleDAO.a (swc-107-multicall.sol#9)
+	- SimpleDAO.non_buggy_do_while_1() (swc-107-multicall.sol#71-77)
+	- SimpleDAO.non_buggy_while_1() (swc-107-multicall.sol#62-68)
+	- SimpleDAO.withdraw_do_while_2() (swc-107-multicall.sol#81-87)
+	- SimpleDAO.withdraw_for_loop(address[]) (swc-107-multicall.sol#31-35)
+	- SimpleDAO.withdraw_for_loop_1(address[],address) (swc-107-multicall.sol#36-41)
+Reentrancy in SimpleDAO.withdraw_do_while_2() (swc-107-multicall.sol#81-87):
+	External calls:
+	- require(bool)(msg.sender.call.value(c)()) (swc-107-multicall.sol#85)
+	State variables written after the call(s):
+	- a = b - 10 (swc-107-multicall.sol#84)
+	SimpleDAO.a (swc-107-multicall.sol#9) can be used in cross function reentrancies:
+	- SimpleDAO.a (swc-107-multicall.sol#9)
+	- SimpleDAO.non_buggy_do_while_1() (swc-107-multicall.sol#71-77)
+	- SimpleDAO.non_buggy_while_1() (swc-107-multicall.sol#62-68)
+	- SimpleDAO.withdraw_do_while_2() (swc-107-multicall.sol#81-87)
+	- SimpleDAO.withdraw_for_loop(address[]) (swc-107-multicall.sol#31-35)
+	- SimpleDAO.withdraw_for_loop_1(address[],address) (swc-107-multicall.sol#36-41)
+Reentrancy in SimpleDAO.withdraw_for_loop(address[]) (swc-107-multicall.sol#31-35):
+	External calls:
+	- require(bool)(addr[a].call.value(c)()) (swc-107-multicall.sol#33)
+	State variables written after the call(s):
+	- a > 10 (swc-107-multicall.sol#32)
+	SimpleDAO.a (swc-107-multicall.sol#9) can be used in cross function reentrancies:
+	- SimpleDAO.a (swc-107-multicall.sol#9)
+	- SimpleDAO.non_buggy_do_while_1() (swc-107-multicall.sol#71-77)
+	- SimpleDAO.non_buggy_while_1() (swc-107-multicall.sol#62-68)
+	- SimpleDAO.withdraw_do_while_2() (swc-107-multicall.sol#81-87)
+	- SimpleDAO.withdraw_for_loop(address[]) (swc-107-multicall.sol#31-35)
+	- SimpleDAO.withdraw_for_loop_1(address[],address) (swc-107-multicall.sol#36-41)
+	- a ++ (swc-107-multicall.sol#32)
+	SimpleDAO.a (swc-107-multicall.sol#9) can be used in cross function reentrancies:
+	- SimpleDAO.a (swc-107-multicall.sol#9)
+	- SimpleDAO.non_buggy_do_while_1() (swc-107-multicall.sol#71-77)
+	- SimpleDAO.non_buggy_while_1() (swc-107-multicall.sol#62-68)
+	- SimpleDAO.withdraw_do_while_2() (swc-107-multicall.sol#81-87)
+	- SimpleDAO.withdraw_for_loop(address[]) (swc-107-multicall.sol#31-35)
+	- SimpleDAO.withdraw_for_loop_1(address[],address) (swc-107-multicall.sol#36-41)
+Reentrancy in SimpleDAO.withdraw_for_loop_1(address[],address) (swc-107-multicall.sol#36-41):
+	External calls:
+	- require(bool)(addr[a].call.value(c)()) (swc-107-multicall.sol#38)
+	State variables written after the call(s):
+	- a > 10 (swc-107-multicall.sol#37)
+	SimpleDAO.a (swc-107-multicall.sol#9) can be used in cross function reentrancies:
+	- SimpleDAO.a (swc-107-multicall.sol#9)
+	- SimpleDAO.non_buggy_do_while_1() (swc-107-multicall.sol#71-77)
+	- SimpleDAO.non_buggy_while_1() (swc-107-multicall.sol#62-68)
+	- SimpleDAO.withdraw_do_while_2() (swc-107-multicall.sol#81-87)
+	- SimpleDAO.withdraw_for_loop(address[]) (swc-107-multicall.sol#31-35)
+	- SimpleDAO.withdraw_for_loop_1(address[],address) (swc-107-multicall.sol#36-41)
+	- a ++ (swc-107-multicall.sol#37)
+	SimpleDAO.a (swc-107-multicall.sol#9) can be used in cross function reentrancies:
+	- SimpleDAO.a (swc-107-multicall.sol#9)
+	- SimpleDAO.non_buggy_do_while_1() (swc-107-multicall.sol#71-77)
+	- SimpleDAO.non_buggy_while_1() (swc-107-multicall.sol#62-68)
+	- SimpleDAO.withdraw_do_while_2() (swc-107-multicall.sol#81-87)
+	- SimpleDAO.withdraw_for_loop(address[]) (swc-107-multicall.sol#31-35)
+	- SimpleDAO.withdraw_for_loop_1(address[],address) (swc-107-multicall.sol#36-41)
+Reentrancy in SimpleDAO.withdraw_while_1() (swc-107-multicall.sol#44-50):
+	External calls:
+	- require(bool)(msg.sender.call.value(c)()) (swc-107-multicall.sol#48)
+	State variables written after the call(s):
+	- c = c - 10 (swc-107-multicall.sol#47)
+	SimpleDAO.c (swc-107-multicall.sol#11) can be used in cross function reentrancies:
+	- SimpleDAO.buggy_for_1() (swc-107-multicall.sol#91-96)
+	- SimpleDAO.c (swc-107-multicall.sol#11)
+	- SimpleDAO.non_buggy_do_while_1() (swc-107-multicall.sol#71-77)
+	- SimpleDAO.non_buggy_while_1() (swc-107-multicall.sol#62-68)
+	- SimpleDAO.withdraw_do_while_2() (swc-107-multicall.sol#81-87)
+	- SimpleDAO.withdraw_for_loop(address[]) (swc-107-multicall.sol#31-35)
+	- SimpleDAO.withdraw_for_loop_1(address[],address) (swc-107-multicall.sol#36-41)
+	- SimpleDAO.withdraw_multi_call(address,address) (swc-107-multicall.sol#23-29)
+	- SimpleDAO.withdraw_while_1() (swc-107-multicall.sol#44-50)
+	- SimpleDAO.withdraw_while_2() (swc-107-multicall.sol#52-59)
+Reentrancy in SimpleDAO.withdraw_while_2() (swc-107-multicall.sol#52-59):
+	External calls:
+	- require(bool)(msg.sender.call.value(c)()) (swc-107-multicall.sol#57)
+	State variables written after the call(s):
+	- b = b - 10 (swc-107-multicall.sol#56)
+	SimpleDAO.b (swc-107-multicall.sol#10) can be used in cross function reentrancies:
+	- SimpleDAO.b (swc-107-multicall.sol#10)
+	- SimpleDAO.buggy_for_1() (swc-107-multicall.sol#91-96)
+	- SimpleDAO.non_buggy_do_while_1() (swc-107-multicall.sol#71-77)
+	- SimpleDAO.non_buggy_while_1() (swc-107-multicall.sol#62-68)
+	- SimpleDAO.withdraw_do_while_2() (swc-107-multicall.sol#81-87)
+	- SimpleDAO.withdraw_while_1() (swc-107-multicall.sol#44-50)
+	- SimpleDAO.withdraw_while_2() (swc-107-multicall.sol#52-59)
+	- c = c - 10 (swc-107-multicall.sol#55)
+	SimpleDAO.c (swc-107-multicall.sol#11) can be used in cross function reentrancies:
+	- SimpleDAO.buggy_for_1() (swc-107-multicall.sol#91-96)
+	- SimpleDAO.c (swc-107-multicall.sol#11)
+	- SimpleDAO.non_buggy_do_while_1() (swc-107-multicall.sol#71-77)
+	- SimpleDAO.non_buggy_while_1() (swc-107-multicall.sol#62-68)
+	- SimpleDAO.withdraw_do_while_2() (swc-107-multicall.sol#81-87)
+	- SimpleDAO.withdraw_for_loop(address[]) (swc-107-multicall.sol#31-35)
+	- SimpleDAO.withdraw_for_loop_1(address[],address) (swc-107-multicall.sol#36-41)
+	- SimpleDAO.withdraw_multi_call(address,address) (swc-107-multicall.sol#23-29)
+	- SimpleDAO.withdraw_while_1() (swc-107-multicall.sol#44-50)
+	- SimpleDAO.withdraw_while_2() (swc-107-multicall.sol#52-59)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+SimpleDAO.withdraw_for_loop(address[]) (swc-107-multicall.sol#31-35) has external calls inside a loop: require(bool)(addr[a].call.value(c)()) (swc-107-multicall.sol#33)
+SimpleDAO.withdraw_for_loop_1(address[],address) (swc-107-multicall.sol#36-41) has external calls inside a loop: require(bool)(addr[a].call.value(c)()) (swc-107-multicall.sol#38)
+SimpleDAO.withdraw_while_1() (swc-107-multicall.sol#44-50) has external calls inside a loop: require(bool)(msg.sender.call.value(c)()) (swc-107-multicall.sol#48)
+SimpleDAO.withdraw_while_2() (swc-107-multicall.sol#52-59) has external calls inside a loop: require(bool)(msg.sender.call.value(c)()) (swc-107-multicall.sol#57)
+SimpleDAO.non_buggy_while_1() (swc-107-multicall.sol#62-68) has external calls inside a loop: require(bool)(msg.sender.call.value(c)()) (swc-107-multicall.sol#66)
+SimpleDAO.non_buggy_do_while_1() (swc-107-multicall.sol#71-77) has external calls inside a loop: require(bool)(msg.sender.call.value(c)()) (swc-107-multicall.sol#75)
+SimpleDAO.withdraw_do_while_2() (swc-107-multicall.sol#81-87) has external calls inside a loop: require(bool)(msg.sender.call.value(c)()) (swc-107-multicall.sol#85)
+SimpleDAO.buggy_for_1() (swc-107-multicall.sol#91-96) has external calls inside a loop: require(bool)(msg.sender.call.value(c)()) (swc-107-multicall.sol#94)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation/#calls-inside-a-loop
+
+SimpleDAO.withdraw_for_loop(address[]) (swc-107-multicall.sol#31-35) has costly operations inside a loop:
+	- a ++ (swc-107-multicall.sol#32)
+SimpleDAO.withdraw_for_loop_1(address[],address) (swc-107-multicall.sol#36-41) has costly operations inside a loop:
+	- a ++ (swc-107-multicall.sol#37)
+SimpleDAO.withdraw_while_1() (swc-107-multicall.sol#44-50) has costly operations inside a loop:
+	- c = c - 10 (swc-107-multicall.sol#47)
+SimpleDAO.withdraw_while_2() (swc-107-multicall.sol#52-59) has costly operations inside a loop:
+	- c = c - 10 (swc-107-multicall.sol#55)
+SimpleDAO.withdraw_while_2() (swc-107-multicall.sol#52-59) has costly operations inside a loop:
+	- b = b - 10 (swc-107-multicall.sol#56)
+SimpleDAO.non_buggy_while_1() (swc-107-multicall.sol#62-68) has costly operations inside a loop:
+	- a = a - 10 (swc-107-multicall.sol#65)
+SimpleDAO.non_buggy_do_while_1() (swc-107-multicall.sol#71-77) has costly operations inside a loop:
+	- a = a - 10 (swc-107-multicall.sol#74)
+SimpleDAO.withdraw_do_while_2() (swc-107-multicall.sol#81-87) has costly operations inside a loop:
+	- a = b - 10 (swc-107-multicall.sol#84)
+SimpleDAO.buggy_for_1() (swc-107-multicall.sol#91-96) has costly operations inside a loop:
+	- b ++ (swc-107-multicall.sol#92)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#costly-operations-inside-a-loop
+
+Version constraint 0.4.24 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ABIEncoderV2PackedStorage_0.4.x
+	- ExpExponentCleanup
+	- EventStructWrongData.
+It is used by:
+	- 0.4.24 (swc-107-multicall.sol#6)
+solc-0.4.24 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in SimpleDAO.withdraw_multi_call(address,address) (swc-107-multicall.sol#23-29):
+	- require(bool)(a1.call.value(c)()) (swc-107-multicall.sol#24)
+	- require(bool)(a2.call.value(c)()) (swc-107-multicall.sol#25)
+Low level call in SimpleDAO.withdraw_for_loop(address[]) (swc-107-multicall.sol#31-35):
+	- require(bool)(addr[a].call.value(c)()) (swc-107-multicall.sol#33)
+Low level call in SimpleDAO.withdraw_for_loop_1(address[],address) (swc-107-multicall.sol#36-41):
+	- require(bool)(addr[a].call.value(c)()) (swc-107-multicall.sol#38)
+	- require(bool)(a2.call.value(c)()) (swc-107-multicall.sol#40)
+Low level call in SimpleDAO.withdraw_while_1() (swc-107-multicall.sol#44-50):
+	- require(bool)(msg.sender.call.value(c)()) (swc-107-multicall.sol#48)
+Low level call in SimpleDAO.withdraw_while_2() (swc-107-multicall.sol#52-59):
+	- require(bool)(msg.sender.call.value(c)()) (swc-107-multicall.sol#57)
+Low level call in SimpleDAO.non_buggy_while_1() (swc-107-multicall.sol#62-68):
+	- require(bool)(msg.sender.call.value(c)()) (swc-107-multicall.sol#66)
+Low level call in SimpleDAO.non_buggy_do_while_1() (swc-107-multicall.sol#71-77):
+	- require(bool)(msg.sender.call.value(c)()) (swc-107-multicall.sol#75)
+Low level call in SimpleDAO.withdraw_do_while_2() (swc-107-multicall.sol#81-87):
+	- require(bool)(msg.sender.call.value(c)()) (swc-107-multicall.sol#85)
+Low level call in SimpleDAO.buggy_for_1() (swc-107-multicall.sol#91-96):
+	- require(bool)(msg.sender.call.value(c)()) (swc-107-multicall.sol#94)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Function SimpleDAO.withdraw_multi_call(address,address) (swc-107-multicall.sol#23-29) is not in mixedCase
+Function SimpleDAO.withdraw_for_loop(address[]) (swc-107-multicall.sol#31-35) is not in mixedCase
+Function SimpleDAO.withdraw_for_loop_1(address[],address) (swc-107-multicall.sol#36-41) is not in mixedCase
+Function SimpleDAO.withdraw_while_1() (swc-107-multicall.sol#44-50) is not in mixedCase
+Function SimpleDAO.withdraw_while_2() (swc-107-multicall.sol#52-59) is not in mixedCase
+Function SimpleDAO.non_buggy_while_1() (swc-107-multicall.sol#62-68) is not in mixedCase
+Function SimpleDAO.non_buggy_do_while_1() (swc-107-multicall.sol#71-77) is not in mixedCase
+Function SimpleDAO.withdraw_do_while_2() (swc-107-multicall.sol#81-87) is not in mixedCase
+Function SimpleDAO.buggy_for_1() (swc-107-multicall.sol#91-96) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+SimpleDAO.d (swc-107-multicall.sol#12) should be constant 
+SimpleDAO.e (swc-107-multicall.sol#13) should be constant 
+SimpleDAO.m (swc-107-multicall.sol#15) should be constant 
+SimpleDAO.n (swc-107-multicall.sol#16) should be constant 
+SimpleDAO.w (swc-107-multicall.sol#20) should be constant 
+SimpleDAO.x (swc-107-multicall.sol#19) should be constant 
+SimpleDAO.y (swc-107-multicall.sol#18) should be constant 
+SimpleDAO.z (swc-107-multicall.sol#14) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+
+withdraw_for_loop(address[]) should be declared external:
+	- SimpleDAO.withdraw_for_loop(address[]) (swc-107-multicall.sol#31-35)
+withdraw_for_loop_1(address[],address) should be declared external:
+	- SimpleDAO.withdraw_for_loop_1(address[],address) (swc-107-multicall.sol#36-41)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#public-function-that-could-be-declared-external
+./swc-107-multicall.sol analyzed (1 contracts with 94 detectors), 64 result(s) found
+
+real	0m1.360s
+user	0m1.197s
+sys	0m0.167s

@@ -1,0 +1,77 @@
+'solc --version' running
+'solc ./0x5bb52e85c21ca3df3c71da6d03be19cff89e7cf9.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x5bb52e85c21ca3df3c71da6d03be19cff89e7cf9.sol:
+./0x5bb52e85c21ca3df3c71da6d03be19cff89e7cf9.sol:34:25: Warning: This declaration shadows an existing declaration.
+    function setManager(address manager) public {
+                        ^-------------^
+./0x5bb52e85c21ca3df3c71da6d03be19cff89e7cf9.sol:27:5: The shadowed declaration is here:
+    address public manager;
+    ^--------------------^
+
+./0x5bb52e85c21ca3df3c71da6d03be19cff89e7cf9.sol:53:9: Warning: Failure condition of 'send' ignored. Consider using 'transfer' instead.
+        msg.sender.send(balances[client]);
+        ^-------------------------------^
+./0x5bb52e85c21ca3df3c71da6d03be19cff89e7cf9.sol:59:13: Warning: Failure condition of 'send' ignored. Consider using 'transfer' instead.
+            msg.sender.send(this.balance + msg.value);
+            ^---------------------------------------^
+./0x5bb52e85c21ca3df3c71da6d03be19cff89e7cf9.sol:64:9: Warning: Failure condition of 'send' ignored. Consider using 'transfer' instead.
+        manager.send(this.balance);
+        ^------------------------^
+./0x5bb52e85c21ca3df3c71da6d03be19cff89e7cf9.sol:34:5: Warning: Function state mutability can be restricted to view
+    function setManager(address manager) public {
+    ^
+Spanning multiple lines.
+
+
+CreditDepositBank.owner (0x5bb52e85c21ca3df3c71da6d03be19cff89e7cf9.sol#19) shadows:
+	- Ownable.owner (0x5bb52e85c21ca3df3c71da6d03be19cff89e7cf9.sol#4)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variable-shadowing
+
+CreditDepositBank.manager (0x5bb52e85c21ca3df3c71da6d03be19cff89e7cf9.sol#27) is never initialized. It is used in:
+	- CreditDepositBank.close() (0x5bb52e85c21ca3df3c71da6d03be19cff89e7cf9.sol#63-68)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#uninitialized-state-variables
+
+CreditDepositBank.close() (0x5bb52e85c21ca3df3c71da6d03be19cff89e7cf9.sol#63-68) uses a dangerous strict equality:
+	- this.balance == 0 (0x5bb52e85c21ca3df3c71da6d03be19cff89e7cf9.sol#65)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-strict-equalities
+
+CreditDepositBank.withdraw(address) (0x5bb52e85c21ca3df3c71da6d03be19cff89e7cf9.sol#51-54) ignores return value by msg.sender.send(balances[client]) (0x5bb52e85c21ca3df3c71da6d03be19cff89e7cf9.sol#53)
+CreditDepositBank.credit() (0x5bb52e85c21ca3df3c71da6d03be19cff89e7cf9.sol#56-61) ignores return value by msg.sender.send(this.balance + msg.value) (0x5bb52e85c21ca3df3c71da6d03be19cff89e7cf9.sol#59)
+CreditDepositBank.close() (0x5bb52e85c21ca3df3c71da6d03be19cff89e7cf9.sol#63-68) ignores return value by manager.send(this.balance) (0x5bb52e85c21ca3df3c71da6d03be19cff89e7cf9.sol#64)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-send
+
+CreditDepositBank.setManager(address).manager (0x5bb52e85c21ca3df3c71da6d03be19cff89e7cf9.sol#34) shadows:
+	- CreditDepositBank.manager (0x5bb52e85c21ca3df3c71da6d03be19cff89e7cf9.sol#27) (state variable)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#local-variable-shadowing
+
+Version constraint ^0.4.17 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ExpExponentCleanup
+	- EventStructWrongData
+	- NestedArrayFunctionCallDecoder
+	- ZeroFunctionSelector.
+It is used by:
+	- ^0.4.17 (0x5bb52e85c21ca3df3c71da6d03be19cff89e7cf9.sol#1)
+solc-0.4.17 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+CreditDepositBank.manager (0x5bb52e85c21ca3df3c71da6d03be19cff89e7cf9.sol#27) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+./0x5bb52e85c21ca3df3c71da6d03be19cff89e7cf9.sol analyzed (2 contracts with 94 detectors), 10 result(s) found
+
+real	0m1.431s
+user	0m1.243s
+sys	0m0.192s

@@ -1,0 +1,534 @@
+'solc --version' running
+'solc ./0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol:
+Warning: Contract code size exceeds 24576 bytes (a limit introduced in Spurious Dragon). This contract may not be deployable on mainnet. Consider enabling the optimizer (with a low "runs" value!), turning off revert strings, or using libraries.
+   --> ./0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol:855:1:
+    |
+855 | contract VaultWETH is Ownable, ReentrancyGuard {
+    | ^ (Relevant source part starts here and spans across multiple lines).
+
+
+
+Reentrancy in VaultWETH._claimCompoundDivs() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1098-1131):
+	External calls:
+	- exchangeRateCurrent = getExchangeRateCurrent() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1100)
+		- exchangeRateCurrent = CEther(TRUSTED_CTOKEN_ADDRESS).exchangeRateCurrent() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1180)
+	- require(bool,string)(CEther(TRUSTED_CTOKEN_ADDRESS).redeemUnderlying(amount) == 0,redeemUnderlying failed!) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1111)
+	- IWETH(TRUSTED_DEPOSIT_TOKEN_ADDRESS).deposit{value: depositTokenReceived}() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1118)
+	External calls sending eth:
+	- IWETH(TRUSTED_DEPOSIT_TOKEN_ADDRESS).deposit{value: depositTokenReceived}() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1118)
+	State variables written after the call(s):
+	- cTokenBalance[msg.sender] = cTokenBalance[msg.sender].sub(cTokenRedeemed) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1121)
+	VaultWETH.cTokenBalance (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#927) can be used in cross function reentrancies:
+	- VaultWETH.cTokenBalance (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#927)
+	- VaultWETH.getEstimatedCompoundDivsOwing(address) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1064-1068)
+Reentrancy in VaultWETH.claim(uint256) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1172-1177):
+	External calls:
+	- _claimTokenDivs() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1174)
+		- returndata = address(token).functionCall(data,SafeERC20: low-level call failed) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#599)
+		- (success,returndata) = target.call{value: weiValue}(data) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#279)
+		- IERC20(TRUSTED_DEPOSIT_TOKEN_ADDRESS).safeTransfer(msg.sender,amount) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1093)
+	- _claimCompoundDivs() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1175)
+		- exchangeRateCurrent = CEther(TRUSTED_CTOKEN_ADDRESS).exchangeRateCurrent() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1180)
+		- returndata = address(token).functionCall(data,SafeERC20: low-level call failed) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#599)
+		- (success,returndata) = target.call{value: weiValue}(data) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#279)
+		- require(bool,string)(CEther(TRUSTED_CTOKEN_ADDRESS).redeemUnderlying(amount) == 0,redeemUnderlying failed!) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1111)
+		- IWETH(TRUSTED_DEPOSIT_TOKEN_ADDRESS).deposit{value: depositTokenReceived}() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1118)
+		- IERC20(TRUSTED_DEPOSIT_TOKEN_ADDRESS).safeTransfer(msg.sender,depositTokenReceived) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1126)
+	External calls sending eth:
+	- _claimEthDivs() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1173)
+		- msg.sender.transfer(amount) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1082)
+	- _claimTokenDivs() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1174)
+		- (success,returndata) = target.call{value: weiValue}(data) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#279)
+	- _claimCompoundDivs() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1175)
+		- (success,returndata) = target.call{value: weiValue}(data) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#279)
+		- IWETH(TRUSTED_DEPOSIT_TOKEN_ADDRESS).deposit{value: depositTokenReceived}() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1118)
+	State variables written after the call(s):
+	- _claimCompoundDivs() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1175)
+		- ethDivsBalance[account] = ethDivsBalance[account].add(weiOwing) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1028)
+	VaultWETH.ethDivsBalance (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#953) can be used in cross function reentrancies:
+	- VaultWETH.ethDivsBalance (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#953)
+	- _claimCompoundDivs() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1175)
+		- lastClaimedTime[account] = block.timestamp (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1036)
+	VaultWETH.lastClaimedTime (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#939) can be used in cross function reentrancies:
+	- VaultWETH.getDepositorsList(uint256,uint256) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#990-1015)
+	- VaultWETH.lastClaimedTime (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#939)
+	- VaultWETH.platformTokenDivsOwing(address) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1039-1062)
+	- _claimCompoundDivs() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1175)
+		- lastEthDivPoints[account] = totalEthDivPoints (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1026)
+	VaultWETH.lastEthDivPoints (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#952) can be used in cross function reentrancies:
+	- VaultWETH.ethDivsOwing(address) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#966-969)
+	- VaultWETH.lastEthDivPoints (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#952)
+	- _claimCompoundDivs() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1175)
+		- lastTokenDivPoints[account] = totalTokenDivPoints (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1020)
+	VaultWETH.lastTokenDivPoints (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#948) can be used in cross function reentrancies:
+	- VaultWETH.lastTokenDivPoints (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#948)
+	- VaultWETH.tokenDivsOwing(address) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#962-965)
+	- _claimCompoundDivs() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1175)
+		- platformTokenDivsBalance[account] = platformTokenDivsBalance[account].add(platformTokensOwing) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1033)
+	VaultWETH.platformTokenDivsBalance (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#956) can be used in cross function reentrancies:
+	- VaultWETH.platformTokenDivsBalance (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#956)
+	- _claimCompoundDivs() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1175)
+		- tokenBalances[token] = tokenBalances[token].sub(amount) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1370)
+	VaultWETH.tokenBalances (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#924) can be used in cross function reentrancies:
+	- VaultWETH.tokenBalances (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#924)
+	- _claimCompoundDivs() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1175)
+		- tokenDivsBalance[account] = tokenDivsBalance[account].add(tokensOwing) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1022)
+	VaultWETH.tokenDivsBalance (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#949) can be used in cross function reentrancies:
+	- VaultWETH.tokenDivsBalance (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#949)
+Reentrancy in VaultWETH.claim(uint256) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1172-1177):
+	External calls:
+	- _claimTokenDivs() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1174)
+		- returndata = address(token).functionCall(data,SafeERC20: low-level call failed) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#599)
+		- (success,returndata) = target.call{value: weiValue}(data) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#279)
+		- IERC20(TRUSTED_DEPOSIT_TOKEN_ADDRESS).safeTransfer(msg.sender,amount) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1093)
+	- _claimCompoundDivs() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1175)
+		- exchangeRateCurrent = CEther(TRUSTED_CTOKEN_ADDRESS).exchangeRateCurrent() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1180)
+		- returndata = address(token).functionCall(data,SafeERC20: low-level call failed) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#599)
+		- (success,returndata) = target.call{value: weiValue}(data) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#279)
+		- require(bool,string)(CEther(TRUSTED_CTOKEN_ADDRESS).redeemUnderlying(amount) == 0,redeemUnderlying failed!) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1111)
+		- IWETH(TRUSTED_DEPOSIT_TOKEN_ADDRESS).deposit{value: depositTokenReceived}() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1118)
+		- IERC20(TRUSTED_DEPOSIT_TOKEN_ADDRESS).safeTransfer(msg.sender,depositTokenReceived) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1126)
+	- _claimPlatformTokenDivs(_amountOutMin_platformTokens) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1176)
+		- returndata = address(token).functionCall(data,SafeERC20: low-level call failed) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#599)
+		- (success,returndata) = target.call{value: weiValue}(data) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#279)
+		- IERC20(TRUSTED_PLATFORM_TOKEN_ADDRESS).safeTransfer(msg.sender,estimatedAmountOut) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1153)
+	External calls sending eth:
+	- _claimEthDivs() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1173)
+		- msg.sender.transfer(amount) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1082)
+	- _claimTokenDivs() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1174)
+		- (success,returndata) = target.call{value: weiValue}(data) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#279)
+	- _claimCompoundDivs() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1175)
+		- (success,returndata) = target.call{value: weiValue}(data) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#279)
+		- IWETH(TRUSTED_DEPOSIT_TOKEN_ADDRESS).deposit{value: depositTokenReceived}() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1118)
+	- _claimPlatformTokenDivs(_amountOutMin_platformTokens) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1176)
+		- (success,returndata) = target.call{value: weiValue}(data) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#279)
+	State variables written after the call(s):
+	- _claimPlatformTokenDivs(_amountOutMin_platformTokens) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1176)
+		- ethDivsBalance[account] = ethDivsBalance[account].add(weiOwing) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1028)
+	VaultWETH.ethDivsBalance (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#953) can be used in cross function reentrancies:
+	- VaultWETH.ethDivsBalance (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#953)
+	- _claimPlatformTokenDivs(_amountOutMin_platformTokens) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1176)
+		- lastClaimedTime[account] = block.timestamp (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1036)
+	VaultWETH.lastClaimedTime (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#939) can be used in cross function reentrancies:
+	- VaultWETH.getDepositorsList(uint256,uint256) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#990-1015)
+	- VaultWETH.lastClaimedTime (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#939)
+	- VaultWETH.platformTokenDivsOwing(address) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1039-1062)
+	- _claimPlatformTokenDivs(_amountOutMin_platformTokens) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1176)
+		- lastEthDivPoints[account] = totalEthDivPoints (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1026)
+	VaultWETH.lastEthDivPoints (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#952) can be used in cross function reentrancies:
+	- VaultWETH.ethDivsOwing(address) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#966-969)
+	- VaultWETH.lastEthDivPoints (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#952)
+	- _claimPlatformTokenDivs(_amountOutMin_platformTokens) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1176)
+		- lastTokenDivPoints[account] = totalTokenDivPoints (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1020)
+	VaultWETH.lastTokenDivPoints (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#948) can be used in cross function reentrancies:
+	- VaultWETH.lastTokenDivPoints (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#948)
+	- VaultWETH.tokenDivsOwing(address) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#962-965)
+	- _claimPlatformTokenDivs(_amountOutMin_platformTokens) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1176)
+		- platformTokenDivsBalance[account] = platformTokenDivsBalance[account].add(platformTokensOwing) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1033)
+		- platformTokenDivsBalance[msg.sender] = 0 (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1149)
+	VaultWETH.platformTokenDivsBalance (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#956) can be used in cross function reentrancies:
+	- VaultWETH.platformTokenDivsBalance (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#956)
+	- _claimPlatformTokenDivs(_amountOutMin_platformTokens) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1176)
+		- tokenBalances[token] = tokenBalances[token].sub(amount) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1370)
+	VaultWETH.tokenBalances (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#924) can be used in cross function reentrancies:
+	- VaultWETH.tokenBalances (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#924)
+	- _claimPlatformTokenDivs(_amountOutMin_platformTokens) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1176)
+		- tokenDivsBalance[account] = tokenDivsBalance[account].add(tokensOwing) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1022)
+	VaultWETH.tokenDivsBalance (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#949) can be used in cross function reentrancies:
+	- VaultWETH.tokenDivsBalance (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#949)
+Reentrancy in VaultWETH.deposit(uint256,uint256,uint256) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1189-1224):
+	External calls:
+	- IERC20(TRUSTED_DEPOSIT_TOKEN_ADDRESS).safeTransferFrom(msg.sender,address(this),amount) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1195)
+	- IERC20(TRUSTED_DEPOSIT_TOKEN_ADDRESS).safeApprove(TRUSTED_CTOKEN_ADDRESS,0) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1200)
+	- IERC20(TRUSTED_DEPOSIT_TOKEN_ADDRESS).safeApprove(TRUSTED_CTOKEN_ADDRESS,amount) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1201)
+	- IWETH(TRUSTED_DEPOSIT_TOKEN_ADDRESS).withdraw(amount) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1205)
+	- CEther(TRUSTED_CTOKEN_ADDRESS).mint{value: amount}() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1206)
+	External calls sending eth:
+	- CEther(TRUSTED_CTOKEN_ADDRESS).mint{value: amount}() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1206)
+	State variables written after the call(s):
+	- depositTokenBalance[msg.sender] = depositTokenBalance[msg.sender].add(amount) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1215)
+	VaultWETH.depositTokenBalance (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#928) can be used in cross function reentrancies:
+	- VaultWETH.depositTokenBalance (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#928)
+	- VaultWETH.ethDivsOwing(address) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#966-969)
+	- VaultWETH.getDepositorsList(uint256,uint256) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#990-1015)
+	- VaultWETH.getEstimatedCompoundDivsOwing(address) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1064-1068)
+	- VaultWETH.platformTokenDivsOwing(address) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1039-1062)
+	- VaultWETH.tokenDivsOwing(address) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#962-965)
+Reentrancy in VaultWETH.deposit(uint256,uint256,uint256) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1189-1224):
+	External calls:
+	- IERC20(TRUSTED_DEPOSIT_TOKEN_ADDRESS).safeTransferFrom(msg.sender,address(this),amount) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1195)
+	- IERC20(TRUSTED_DEPOSIT_TOKEN_ADDRESS).safeApprove(TRUSTED_CTOKEN_ADDRESS,0) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1200)
+	- IERC20(TRUSTED_DEPOSIT_TOKEN_ADDRESS).safeApprove(TRUSTED_CTOKEN_ADDRESS,amount) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1201)
+	- IWETH(TRUSTED_DEPOSIT_TOKEN_ADDRESS).withdraw(amount) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1205)
+	- CEther(TRUSTED_CTOKEN_ADDRESS).mint{value: amount}() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1206)
+	- handleEthFee(msg.value,_amountOutMin_ethFeeBuyBack,deadline) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1218)
+		- returndata = address(token).functionCall(data,SafeERC20: low-level call failed) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#599)
+		- (success,returndata) = target.call{value: weiValue}(data) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#279)
+		- uniswapRouterV2.swapExactETHForTokens{value: buyBackFeeAmount}(_amountOutMin_ethFeeBuyBack,path,address(this),deadline) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1355)
+		- IERC20(TRUSTED_PLATFORM_TOKEN_ADDRESS).safeTransfer(BURN_ADDRESS,platformTokensReceived) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1358)
+	External calls sending eth:
+	- CEther(TRUSTED_CTOKEN_ADDRESS).mint{value: amount}() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1206)
+	- handleEthFee(msg.value,_amountOutMin_ethFeeBuyBack,deadline) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1218)
+		- (success,returndata) = target.call{value: weiValue}(data) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#279)
+		- uniswapRouterV2.swapExactETHForTokens{value: buyBackFeeAmount}(_amountOutMin_ethFeeBuyBack,path,address(this),deadline) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1355)
+	State variables written after the call(s):
+	- handleEthFee(msg.value,_amountOutMin_ethFeeBuyBack,deadline) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1218)
+		- totalEthDivPoints = totalEthDivPoints.add(amount.mul(POINT_MULTIPLIER).div(totalDepositedTokens)) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#973)
+	VaultWETH.totalEthDivPoints (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#954) can be used in cross function reentrancies:
+	- VaultWETH.ethDivsOwing(address) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#966-969)
+	- VaultWETH.totalEthDivPoints (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#954)
+Reentrancy in VaultWETH.withdraw(uint256,uint256,uint256,uint256) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1225-1266):
+	External calls:
+	- require(bool,string)(CEther(TRUSTED_CTOKEN_ADDRESS).redeemUnderlying(amount) == 0,redeemUnderlying failed!) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1237)
+	- IWETH(TRUSTED_DEPOSIT_TOKEN_ADDRESS).deposit{value: depositTokenReceived}() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1244)
+	- IERC20(TRUSTED_DEPOSIT_TOKEN_ADDRESS).safeTransfer(msg.sender,depositTokenReceivedAfterFee) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1256)
+	- handleFee(feeAmount,_amountOutMin_tokenFeeBuyBack,deadline) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1258)
+		- returndata = address(token).functionCall(data,SafeERC20: low-level call failed) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#599)
+		- IERC20(TRUSTED_DEPOSIT_TOKEN_ADDRESS).safeApprove(address(uniswapRouterV2),0) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1323)
+		- (success,returndata) = target.call{value: weiValue}(data) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#279)
+		- IERC20(TRUSTED_DEPOSIT_TOKEN_ADDRESS).safeApprove(address(uniswapRouterV2),buyBackFeeAmount) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1324)
+		- uniswapRouterV2.swapExactTokensForTokens(buyBackFeeAmount,_amountOutMin_tokenFeeBuyBack,path,address(this),deadline) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1331)
+		- IERC20(TRUSTED_PLATFORM_TOKEN_ADDRESS).safeTransfer(BURN_ADDRESS,platformTokensReceived) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1334)
+	External calls sending eth:
+	- IWETH(TRUSTED_DEPOSIT_TOKEN_ADDRESS).deposit{value: depositTokenReceived}() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1244)
+	- handleFee(feeAmount,_amountOutMin_tokenFeeBuyBack,deadline) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1258)
+		- (success,returndata) = target.call{value: weiValue}(data) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#279)
+	State variables written after the call(s):
+	- handleFee(feeAmount,_amountOutMin_tokenFeeBuyBack,deadline) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1258)
+		- tokenBalances[token] = tokenBalances[token].add(amount) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1367)
+	VaultWETH.tokenBalances (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#924) can be used in cross function reentrancies:
+	- VaultWETH.tokenBalances (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#924)
+	- handleFee(feeAmount,_amountOutMin_tokenFeeBuyBack,deadline) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1258)
+		- totalTokenDivPoints = totalTokenDivPoints.add(amount.mul(POINT_MULTIPLIER).div(totalDepositedTokens)) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#980)
+	VaultWETH.totalTokenDivPoints (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#950) can be used in cross function reentrancies:
+	- VaultWETH.tokenDivsOwing(address) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#962-965)
+	- VaultWETH.totalTokenDivPoints (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#950)
+Reentrancy in VaultWETH.withdraw(uint256,uint256,uint256,uint256) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1225-1266):
+	External calls:
+	- require(bool,string)(CEther(TRUSTED_CTOKEN_ADDRESS).redeemUnderlying(amount) == 0,redeemUnderlying failed!) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1237)
+	- IWETH(TRUSTED_DEPOSIT_TOKEN_ADDRESS).deposit{value: depositTokenReceived}() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1244)
+	- IERC20(TRUSTED_DEPOSIT_TOKEN_ADDRESS).safeTransfer(msg.sender,depositTokenReceivedAfterFee) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1256)
+	- handleFee(feeAmount,_amountOutMin_tokenFeeBuyBack,deadline) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1258)
+		- returndata = address(token).functionCall(data,SafeERC20: low-level call failed) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#599)
+		- IERC20(TRUSTED_DEPOSIT_TOKEN_ADDRESS).safeApprove(address(uniswapRouterV2),0) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1323)
+		- (success,returndata) = target.call{value: weiValue}(data) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#279)
+		- IERC20(TRUSTED_DEPOSIT_TOKEN_ADDRESS).safeApprove(address(uniswapRouterV2),buyBackFeeAmount) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1324)
+		- uniswapRouterV2.swapExactTokensForTokens(buyBackFeeAmount,_amountOutMin_tokenFeeBuyBack,path,address(this),deadline) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1331)
+		- IERC20(TRUSTED_PLATFORM_TOKEN_ADDRESS).safeTransfer(BURN_ADDRESS,platformTokensReceived) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1334)
+	- handleEthFee(msg.value,_amountOutMin_ethFeeBuyBack,deadline) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1259)
+		- returndata = address(token).functionCall(data,SafeERC20: low-level call failed) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#599)
+		- (success,returndata) = target.call{value: weiValue}(data) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#279)
+		- uniswapRouterV2.swapExactETHForTokens{value: buyBackFeeAmount}(_amountOutMin_ethFeeBuyBack,path,address(this),deadline) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1355)
+		- IERC20(TRUSTED_PLATFORM_TOKEN_ADDRESS).safeTransfer(BURN_ADDRESS,platformTokensReceived) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1358)
+	External calls sending eth:
+	- IWETH(TRUSTED_DEPOSIT_TOKEN_ADDRESS).deposit{value: depositTokenReceived}() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1244)
+	- handleFee(feeAmount,_amountOutMin_tokenFeeBuyBack,deadline) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1258)
+		- (success,returndata) = target.call{value: weiValue}(data) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#279)
+	- handleEthFee(msg.value,_amountOutMin_ethFeeBuyBack,deadline) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1259)
+		- (success,returndata) = target.call{value: weiValue}(data) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#279)
+		- uniswapRouterV2.swapExactETHForTokens{value: buyBackFeeAmount}(_amountOutMin_ethFeeBuyBack,path,address(this),deadline) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1355)
+	State variables written after the call(s):
+	- handleEthFee(msg.value,_amountOutMin_ethFeeBuyBack,deadline) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1259)
+		- tokenBalances[token] = tokenBalances[token].add(amount) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1367)
+	VaultWETH.tokenBalances (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#924) can be used in cross function reentrancies:
+	- VaultWETH.tokenBalances (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#924)
+	- handleEthFee(msg.value,_amountOutMin_ethFeeBuyBack,deadline) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1259)
+		- totalEthDivPoints = totalEthDivPoints.add(amount.mul(POINT_MULTIPLIER).div(totalDepositedTokens)) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#973)
+	VaultWETH.totalEthDivPoints (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#954) can be used in cross function reentrancies:
+	- VaultWETH.ethDivsOwing(address) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#966-969)
+	- VaultWETH.totalEthDivPoints (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#954)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+VaultWETH._claimPlatformTokenDivs(uint256) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1132-1157) uses a dangerous strict equality:
+	- amount == 0 (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1136)
+VaultWETH._claimTokenDivs() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1087-1097) uses a dangerous strict equality:
+	- amount == 0 (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1091)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-strict-equalities
+
+VaultWETH.deposit(uint256,uint256,uint256) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1189-1224) ignores return value by holders.add(msg.sender) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1220)
+VaultWETH.withdraw(uint256,uint256,uint256,uint256) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1225-1266) ignores return value by holders.remove(msg.sender) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1262)
+VaultWETH.emergencyWithdraw(uint256) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1269-1311) ignores return value by holders.remove(msg.sender) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1307)
+VaultWETH.handleFee(uint256,uint256,uint256) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1313-1336) ignores return value by uniswapRouterV2.swapExactTokensForTokens(buyBackFeeAmount,_amountOutMin_tokenFeeBuyBack,path,address(this),deadline) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1331)
+VaultWETH.handleEthFee(uint256,uint256,uint256) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1338-1360) ignores return value by uniswapRouterV2.swapExactETHForTokens{value: buyBackFeeAmount}(_amountOutMin_ethFeeBuyBack,path,address(this),deadline) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1355)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+Reentrancy in VaultWETH._claimCompoundDivs() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1098-1131):
+	External calls:
+	- exchangeRateCurrent = getExchangeRateCurrent() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1100)
+		- exchangeRateCurrent = CEther(TRUSTED_CTOKEN_ADDRESS).exchangeRateCurrent() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1180)
+	- require(bool,string)(CEther(TRUSTED_CTOKEN_ADDRESS).redeemUnderlying(amount) == 0,redeemUnderlying failed!) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1111)
+	- IWETH(TRUSTED_DEPOSIT_TOKEN_ADDRESS).deposit{value: depositTokenReceived}() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1118)
+	External calls sending eth:
+	- IWETH(TRUSTED_DEPOSIT_TOKEN_ADDRESS).deposit{value: depositTokenReceived}() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1118)
+	State variables written after the call(s):
+	- decreaseTokenBalance(TRUSTED_CTOKEN_ADDRESS,cTokenRedeemed) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1123)
+		- tokenBalances[token] = tokenBalances[token].sub(amount) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1370)
+	- totalCTokens = totalCTokens.sub(cTokenRedeemed) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1122)
+	- totalTokensWithdrawnByUser[msg.sender] = totalTokensWithdrawnByUser[msg.sender].add(depositTokenReceived) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1125)
+Reentrancy in VaultWETH._claimCompoundDivs() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1098-1131):
+	External calls:
+	- exchangeRateCurrent = getExchangeRateCurrent() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1100)
+		- exchangeRateCurrent = CEther(TRUSTED_CTOKEN_ADDRESS).exchangeRateCurrent() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1180)
+	- require(bool,string)(CEther(TRUSTED_CTOKEN_ADDRESS).redeemUnderlying(amount) == 0,redeemUnderlying failed!) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1111)
+	- IWETH(TRUSTED_DEPOSIT_TOKEN_ADDRESS).deposit{value: depositTokenReceived}() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1118)
+	- IERC20(TRUSTED_DEPOSIT_TOKEN_ADDRESS).safeTransfer(msg.sender,depositTokenReceived) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1126)
+	External calls sending eth:
+	- IWETH(TRUSTED_DEPOSIT_TOKEN_ADDRESS).deposit{value: depositTokenReceived}() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1118)
+	State variables written after the call(s):
+	- totalEarnedCompoundDivs[msg.sender] = totalEarnedCompoundDivs[msg.sender].add(depositTokenReceived) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1128)
+Reentrancy in VaultWETH._claimPlatformTokenDivs(uint256) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1132-1157):
+	External calls:
+	- IERC20(TRUSTED_PLATFORM_TOKEN_ADDRESS).safeTransfer(msg.sender,estimatedAmountOut) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1153)
+	State variables written after the call(s):
+	- totalEarnedPlatformTokenDivs[msg.sender] = totalEarnedPlatformTokenDivs[msg.sender].add(estimatedAmountOut) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1154)
+Reentrancy in VaultWETH._claimTokenDivs() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1087-1097):
+	External calls:
+	- IERC20(TRUSTED_DEPOSIT_TOKEN_ADDRESS).safeTransfer(msg.sender,amount) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1093)
+	State variables written after the call(s):
+	- totalEarnedTokenDivs[msg.sender] = totalEarnedTokenDivs[msg.sender].add(amount) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1094)
+Reentrancy in VaultWETH.deposit(uint256,uint256,uint256) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1189-1224):
+	External calls:
+	- IERC20(TRUSTED_DEPOSIT_TOKEN_ADDRESS).safeTransferFrom(msg.sender,address(this),amount) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1195)
+	State variables written after the call(s):
+	- totalTokensDepositedByUser[msg.sender] = totalTokensDepositedByUser[msg.sender].add(amount) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1198)
+Reentrancy in VaultWETH.deposit(uint256,uint256,uint256) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1189-1224):
+	External calls:
+	- IERC20(TRUSTED_DEPOSIT_TOKEN_ADDRESS).safeTransferFrom(msg.sender,address(this),amount) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1195)
+	- IERC20(TRUSTED_DEPOSIT_TOKEN_ADDRESS).safeApprove(TRUSTED_CTOKEN_ADDRESS,0) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1200)
+	- IERC20(TRUSTED_DEPOSIT_TOKEN_ADDRESS).safeApprove(TRUSTED_CTOKEN_ADDRESS,amount) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1201)
+	- IWETH(TRUSTED_DEPOSIT_TOKEN_ADDRESS).withdraw(amount) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1205)
+	- CEther(TRUSTED_CTOKEN_ADDRESS).mint{value: amount}() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1206)
+	External calls sending eth:
+	- CEther(TRUSTED_CTOKEN_ADDRESS).mint{value: amount}() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1206)
+	State variables written after the call(s):
+	- cTokenBalance[msg.sender] = cTokenBalance[msg.sender].add(cTokenReceived) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1211)
+	- increaseTokenBalance(TRUSTED_CTOKEN_ADDRESS,cTokenReceived) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1213)
+		- tokenBalances[token] = tokenBalances[token].add(amount) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1367)
+	- totalCTokens = totalCTokens.add(cTokenReceived) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1212)
+	- totalDepositedTokens = totalDepositedTokens.add(amount) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1216)
+Reentrancy in VaultWETH.deposit(uint256,uint256,uint256) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1189-1224):
+	External calls:
+	- IERC20(TRUSTED_DEPOSIT_TOKEN_ADDRESS).safeTransferFrom(msg.sender,address(this),amount) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1195)
+	- IERC20(TRUSTED_DEPOSIT_TOKEN_ADDRESS).safeApprove(TRUSTED_CTOKEN_ADDRESS,0) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1200)
+	- IERC20(TRUSTED_DEPOSIT_TOKEN_ADDRESS).safeApprove(TRUSTED_CTOKEN_ADDRESS,amount) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1201)
+	- IWETH(TRUSTED_DEPOSIT_TOKEN_ADDRESS).withdraw(amount) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1205)
+	- CEther(TRUSTED_CTOKEN_ADDRESS).mint{value: amount}() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1206)
+	- handleEthFee(msg.value,_amountOutMin_ethFeeBuyBack,deadline) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1218)
+		- returndata = address(token).functionCall(data,SafeERC20: low-level call failed) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#599)
+		- (success,returndata) = target.call{value: weiValue}(data) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#279)
+		- uniswapRouterV2.swapExactETHForTokens{value: buyBackFeeAmount}(_amountOutMin_ethFeeBuyBack,path,address(this),deadline) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1355)
+		- IERC20(TRUSTED_PLATFORM_TOKEN_ADDRESS).safeTransfer(BURN_ADDRESS,platformTokensReceived) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1358)
+	External calls sending eth:
+	- CEther(TRUSTED_CTOKEN_ADDRESS).mint{value: amount}() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1206)
+	- handleEthFee(msg.value,_amountOutMin_ethFeeBuyBack,deadline) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1218)
+		- (success,returndata) = target.call{value: weiValue}(data) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#279)
+		- uniswapRouterV2.swapExactETHForTokens{value: buyBackFeeAmount}(_amountOutMin_ethFeeBuyBack,path,address(this),deadline) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1355)
+	State variables written after the call(s):
+	- depositTime[msg.sender] = block.timestamp (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1221)
+Reentrancy in VaultWETH.emergencyWithdraw(uint256) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1269-1311):
+	External calls:
+	- require(bool,string)(CEther(TRUSTED_CTOKEN_ADDRESS).redeemUnderlying(amount) == 0,redeemUnderlying failed!) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1281)
+	- IWETH(TRUSTED_DEPOSIT_TOKEN_ADDRESS).deposit{value: depositTokenReceived}() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1288)
+	External calls sending eth:
+	- IWETH(TRUSTED_DEPOSIT_TOKEN_ADDRESS).deposit{value: depositTokenReceived}() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1288)
+	State variables written after the call(s):
+	- cTokenBalance[msg.sender] = cTokenBalance[msg.sender].sub(cTokenRedeemed) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1291)
+	- decreaseTokenBalance(TRUSTED_CTOKEN_ADDRESS,cTokenRedeemed) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1293)
+		- tokenBalances[token] = tokenBalances[token].sub(amount) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1370)
+	- totalCTokens = totalCTokens.sub(cTokenRedeemed) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1292)
+	- totalTokensWithdrawnByUser[msg.sender] = totalTokensWithdrawnByUser[msg.sender].add(depositTokenReceived) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1295)
+Reentrancy in VaultWETH.withdraw(uint256,uint256,uint256,uint256) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1225-1266):
+	External calls:
+	- require(bool,string)(CEther(TRUSTED_CTOKEN_ADDRESS).redeemUnderlying(amount) == 0,redeemUnderlying failed!) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1237)
+	- IWETH(TRUSTED_DEPOSIT_TOKEN_ADDRESS).deposit{value: depositTokenReceived}() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1244)
+	External calls sending eth:
+	- IWETH(TRUSTED_DEPOSIT_TOKEN_ADDRESS).deposit{value: depositTokenReceived}() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1244)
+	State variables written after the call(s):
+	- cTokenBalance[msg.sender] = cTokenBalance[msg.sender].sub(cTokenRedeemed) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1247)
+	- decreaseTokenBalance(TRUSTED_CTOKEN_ADDRESS,cTokenRedeemed) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1249)
+		- tokenBalances[token] = tokenBalances[token].sub(amount) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1370)
+	- totalCTokens = totalCTokens.sub(cTokenRedeemed) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1248)
+	- totalTokensWithdrawnByUser[msg.sender] = totalTokensWithdrawnByUser[msg.sender].add(depositTokenReceived) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1251)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+VaultWETH.updateAccount(address) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1017-1037) uses timestamp for comparisons
+	Dangerous comparisons:
+	- platformTokensOwing > 0 (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1032)
+VaultWETH.platformTokenDivsOwing(address) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1039-1062) uses timestamp for comparisons
+	Dangerous comparisons:
+	- _now > stakingEndTime (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1046)
+	- lastClaimedTime[account] >= _now (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1050)
+VaultWETH._claimPlatformTokenDivs(uint256) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1132-1157) uses timestamp for comparisons
+	Dangerous comparisons:
+	- amount == 0 (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1136)
+	- require(bool,string)(estimatedAmountOut >= _amountOutMin_platformTokens,_claimPlatformTokenDivs: slippage error!) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1143)
+	- IERC20(TRUSTED_PLATFORM_TOKEN_ADDRESS).balanceOf(address(this)) < estimatedAmountOut (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1145)
+VaultWETH.withdraw(uint256,uint256,uint256,uint256) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1225-1266) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(block.timestamp.sub(depositTime[msg.sender]) > LOCKUP_DURATION,You recently deposited, please wait before withdrawing.) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1228)
+VaultWETH.emergencyWithdraw(uint256) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1269-1311) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(block.timestamp.sub(depositTime[msg.sender]) > LOCKUP_DURATION,You recently deposited, please wait before withdrawing.) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1272)
+VaultWETH.claimAnyToken(address,uint256) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1390-1397) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(now > contractStartTime.add(ADMIN_CAN_CLAIM_AFTER),Contract not expired yet!) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1391)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Address.isContract(address) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#182-191) uses assembly
+	- INLINE ASM (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#189)
+Address._functionCallWithValue(address,bytes,uint256,string) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#275-296) uses assembly
+	- INLINE ASM (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#288-291)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#assembly-usage
+
+Version constraint 0.6.11 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- SignedImmutables
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup.
+It is used by:
+	- 0.6.11 (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#3)
+solc-0.6.11 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in Address.sendValue(address,uint256) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#209-215):
+	- (success,None) = recipient.call{value: amount}() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#213)
+Low level call in Address._functionCallWithValue(address,bytes,uint256,string) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#275-296):
+	- (success,returndata) = target.call{value: weiValue}(data) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#279)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Function IUniswapV2Router.WETH() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#819) is not in mixedCase
+Parameter VaultWETH.getConvertedBalance(uint256)._cTokenBalance (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1070) is not in mixedCase
+Parameter VaultWETH.claimPlatformTokenDivs(uint256)._amountOutMin_platformTokens (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1168) is not in mixedCase
+Parameter VaultWETH.claim(uint256)._amountOutMin_platformTokens (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1172) is not in mixedCase
+Parameter VaultWETH.deposit(uint256,uint256,uint256)._amountOutMin_ethFeeBuyBack (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1189) is not in mixedCase
+Parameter VaultWETH.withdraw(uint256,uint256,uint256,uint256)._amountOutMin_ethFeeBuyBack (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1225) is not in mixedCase
+Parameter VaultWETH.withdraw(uint256,uint256,uint256,uint256)._amountOutMin_tokenFeeBuyBack (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1225) is not in mixedCase
+Parameter VaultWETH.handleFee(uint256,uint256,uint256)._amountOutMin_tokenFeeBuyBack (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1313) is not in mixedCase
+Parameter VaultWETH.handleEthFee(uint256,uint256,uint256)._amountOutMin_ethFeeBuyBack (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1338) is not in mixedCase
+Variable VaultWETH.TRUSTED_DEPOSIT_TOKEN_ADDRESS (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#887) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in VaultWETH._claimEthDivs() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1076-1086):
+	External calls:
+	- msg.sender.transfer(amount) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1082)
+	State variables written after the call(s):
+	- totalEarnedEthDivs[msg.sender] = totalEarnedEthDivs[msg.sender].add(amount) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1083)
+	Event emitted after the call(s):
+	- EtherRewardClaimed(msg.sender,amount) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1085)
+Reentrancy in VaultWETH.claim(uint256) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1172-1177):
+	External calls:
+	- _claimEthDivs() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1173)
+		- msg.sender.transfer(amount) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1082)
+	External calls sending eth:
+	- _claimEthDivs() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1173)
+		- msg.sender.transfer(amount) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1082)
+	- _claimTokenDivs() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1174)
+		- (success,returndata) = target.call{value: weiValue}(data) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#279)
+	State variables written after the call(s):
+	- _claimTokenDivs() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1174)
+		- ethDivsBalance[account] = ethDivsBalance[account].add(weiOwing) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1028)
+	- _claimTokenDivs() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1174)
+		- lastClaimedTime[account] = block.timestamp (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1036)
+	- _claimTokenDivs() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1174)
+		- lastEthDivPoints[account] = totalEthDivPoints (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1026)
+	- _claimTokenDivs() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1174)
+		- lastTokenDivPoints[account] = totalTokenDivPoints (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1020)
+	- _claimTokenDivs() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1174)
+		- platformTokenDivsBalance[account] = platformTokenDivsBalance[account].add(platformTokensOwing) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1033)
+	- _claimTokenDivs() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1174)
+		- tokenBalances[token] = tokenBalances[token].sub(amount) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1370)
+	- _claimTokenDivs() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1174)
+		- tokenDivsBalance[msg.sender] = 0 (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1090)
+		- tokenDivsBalance[account] = tokenDivsBalance[account].add(tokensOwing) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1022)
+	- _claimTokenDivs() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1174)
+		- totalEarnedTokenDivs[msg.sender] = totalEarnedTokenDivs[msg.sender].add(amount) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1094)
+	Event emitted after the call(s):
+	- TokenRewardClaimed(msg.sender,amount) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1096)
+		- _claimTokenDivs() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1174)
+Reentrancy in VaultWETH.claim(uint256) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1172-1177):
+	External calls:
+	- _claimEthDivs() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1173)
+		- msg.sender.transfer(amount) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1082)
+	External calls sending eth:
+	- _claimEthDivs() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1173)
+		- msg.sender.transfer(amount) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1082)
+	- _claimTokenDivs() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1174)
+		- (success,returndata) = target.call{value: weiValue}(data) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#279)
+	- _claimCompoundDivs() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1175)
+		- (success,returndata) = target.call{value: weiValue}(data) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#279)
+		- IWETH(TRUSTED_DEPOSIT_TOKEN_ADDRESS).deposit{value: depositTokenReceived}() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1118)
+	State variables written after the call(s):
+	- _claimCompoundDivs() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1175)
+		- cTokenBalance[msg.sender] = cTokenBalance[msg.sender].sub(cTokenRedeemed) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1121)
+	- _claimCompoundDivs() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1175)
+		- ethDivsBalance[account] = ethDivsBalance[account].add(weiOwing) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1028)
+	- _claimCompoundDivs() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1175)
+		- lastClaimedTime[account] = block.timestamp (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1036)
+	- _claimCompoundDivs() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1175)
+		- lastEthDivPoints[account] = totalEthDivPoints (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1026)
+	- _claimCompoundDivs() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1175)
+		- lastTokenDivPoints[account] = totalTokenDivPoints (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1020)
+	- _claimCompoundDivs() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1175)
+		- platformTokenDivsBalance[account] = platformTokenDivsBalance[account].add(platformTokensOwing) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1033)
+	- _claimCompoundDivs() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1175)
+		- tokenBalances[token] = tokenBalances[token].sub(amount) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1370)
+	- _claimCompoundDivs() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1175)
+		- tokenDivsBalance[account] = tokenDivsBalance[account].add(tokensOwing) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1022)
+	- _claimCompoundDivs() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1175)
+		- totalCTokens = totalCTokens.sub(cTokenRedeemed) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1122)
+	- _claimCompoundDivs() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1175)
+		- totalEarnedCompoundDivs[msg.sender] = totalEarnedCompoundDivs[msg.sender].add(depositTokenReceived) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1128)
+	- _claimCompoundDivs() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1175)
+		- totalTokensWithdrawnByUser[msg.sender] = totalTokensWithdrawnByUser[msg.sender].add(depositTokenReceived) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1125)
+	Event emitted after the call(s):
+	- CompoundRewardClaimed(msg.sender,depositTokenReceived) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1130)
+		- _claimCompoundDivs() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1175)
+Reentrancy in VaultWETH.claim(uint256) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1172-1177):
+	External calls:
+	- _claimEthDivs() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1173)
+		- msg.sender.transfer(amount) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1082)
+	External calls sending eth:
+	- _claimEthDivs() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1173)
+		- msg.sender.transfer(amount) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1082)
+	- _claimTokenDivs() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1174)
+		- (success,returndata) = target.call{value: weiValue}(data) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#279)
+	- _claimCompoundDivs() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1175)
+		- (success,returndata) = target.call{value: weiValue}(data) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#279)
+		- IWETH(TRUSTED_DEPOSIT_TOKEN_ADDRESS).deposit{value: depositTokenReceived}() (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1118)
+	- _claimPlatformTokenDivs(_amountOutMin_platformTokens) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1176)
+		- (success,returndata) = target.call{value: weiValue}(data) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#279)
+	State variables written after the call(s):
+	- _claimPlatformTokenDivs(_amountOutMin_platformTokens) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1176)
+		- ethDivsBalance[account] = ethDivsBalance[account].add(weiOwing) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1028)
+	- _claimPlatformTokenDivs(_amountOutMin_platformTokens) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1176)
+		- lastClaimedTime[account] = block.timestamp (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1036)
+	- _claimPlatformTokenDivs(_amountOutMin_platformTokens) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1176)
+		- lastEthDivPoints[account] = totalEthDivPoints (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1026)
+	- _claimPlatformTokenDivs(_amountOutMin_platformTokens) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1176)
+		- lastTokenDivPoints[account] = totalTokenDivPoints (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1020)
+	- _claimPlatformTokenDivs(_amountOutMin_platformTokens) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1176)
+		- platformTokenDivsBalance[account] = platformTokenDivsBalance[account].add(platformTokensOwing) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1033)
+		- platformTokenDivsBalance[msg.sender] = 0 (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1149)
+	- _claimPlatformTokenDivs(_amountOutMin_platformTokens) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1176)
+		- tokenBalances[token] = tokenBalances[token].sub(amount) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1370)
+	- _claimPlatformTokenDivs(_amountOutMin_platformTokens) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1176)
+		- tokenDivsBalance[account] = tokenDivsBalance[account].add(tokensOwing) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1022)
+	- _claimPlatformTokenDivs(_amountOutMin_platformTokens) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1176)
+		- totalEarnedPlatformTokenDivs[msg.sender] = totalEarnedPlatformTokenDivs[msg.sender].add(estimatedAmountOut) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1154)
+	Event emitted after the call(s):
+	- PlatformTokenRewardClaimed(msg.sender,estimatedAmountOut) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1156)
+		- _claimPlatformTokenDivs(_amountOutMin_platformTokens) (0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol#1176)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+./0x01de5bce5c5ee4f92e8f4183f6f4e4f12f9a86cd.sol analyzed (11 contracts with 94 detectors), 49 result(s) found
+
+real	0m4.206s
+user	0m3.862s
+sys	0m0.344s

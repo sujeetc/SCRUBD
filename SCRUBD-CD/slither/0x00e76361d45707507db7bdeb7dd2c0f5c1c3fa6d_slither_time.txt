@@ -1,0 +1,184 @@
+'solc --version' running
+'solc ./0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+Reentrancy in DekuInu._transfer(address,address,uint256) (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#225-270):
+	External calls:
+	- swapTokensForEth(contractTokenBalance) (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#261)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#277-283)
+	External calls sending eth:
+	- sendETHToFee(address(this).balance) (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#264)
+		- _feeAddrWallet1.transfer(amount.div(2)) (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#287)
+		- _feeAddrWallet2.transfer(amount.div(2)) (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#288)
+	State variables written after the call(s):
+	- _tokenTransfer(from,to,amount) (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#269)
+		- _rOwned[address(this)] = _rOwned[address(this)].add(rTeam) (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#335)
+		- _rOwned[sender] = _rOwned[sender].sub(rAmount) (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#325)
+		- _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount) (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#326)
+	DekuInu._rOwned (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#115) can be used in cross function reentrancies:
+	- DekuInu._takeTeam(uint256) (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#332-336)
+	- DekuInu._transferStandard(address,address,uint256) (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#323-330)
+	- DekuInu.balanceOf(address) (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#180-182)
+	- DekuInu.constructor() (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#149-158)
+	- _tokenTransfer(from,to,amount) (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#269)
+		- _rTotal = _rTotal.sub(rFee) (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#343)
+	DekuInu._rTotal (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#124) can be used in cross function reentrancies:
+	- DekuInu._getCurrentSupply() (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#394-399)
+	- DekuInu._reflectFee(uint256,uint256) (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#342-345)
+	- DekuInu.constructor() (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#149-158)
+	- DekuInu.tokenFromReflection(uint256) (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#212-216)
+Reentrancy in DekuInu.openTrading() (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#291-303):
+	External calls:
+	- uniswapV2Pair = IUniswapV2Factory(_uniswapV2Router.factory()).createPair(address(this),_uniswapV2Router.WETH()) (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#296)
+	- uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#297)
+	External calls sending eth:
+	- uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#297)
+	State variables written after the call(s):
+	- tradingOpen = true (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#301)
+	DekuInu.tradingOpen (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#138) can be used in cross function reentrancies:
+	- DekuInu.openTrading() (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#291-303)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+DekuInu.openTrading() (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#291-303) ignores return value by uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#297)
+DekuInu.openTrading() (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#291-303) ignores return value by IERC20(uniswapV2Pair).approve(address(uniswapV2Router),type()(uint256).max) (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#302)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+DekuInu.allowance(address,address).owner (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#189) shadows:
+	- Ownable.owner() (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#73-75) (function)
+DekuInu._approve(address,address,uint256).owner (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#218) shadows:
+	- Ownable.owner() (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#73-75) (function)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#local-variable-shadowing
+
+DekuInu.setMaxTx(uint256) (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#208-210) should emit an event for: 
+	- _maxTxAmount = maxTransactionAmount (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#209) 
+DekuInu.updateMaxTx(uint256) (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#338-340) should emit an event for: 
+	- _maxTxAmount = fee (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#339) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+Reentrancy in DekuInu._transfer(address,address,uint256) (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#225-270):
+	External calls:
+	- swapTokensForEth(contractTokenBalance) (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#261)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#277-283)
+	External calls sending eth:
+	- sendETHToFee(address(this).balance) (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#264)
+		- _feeAddrWallet1.transfer(amount.div(2)) (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#287)
+		- _feeAddrWallet2.transfer(amount.div(2)) (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#288)
+	State variables written after the call(s):
+	- _tokenTransfer(from,to,amount) (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#269)
+		- _tFeeTotal = _tFeeTotal.add(tFee) (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#344)
+Reentrancy in DekuInu.openTrading() (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#291-303):
+	External calls:
+	- uniswapV2Pair = IUniswapV2Factory(_uniswapV2Router.factory()).createPair(address(this),_uniswapV2Router.WETH()) (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#296)
+	- uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#297)
+	External calls sending eth:
+	- uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#297)
+	State variables written after the call(s):
+	- _maxTxAmount = 20000000000 * 10 ** 9 (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#300)
+	- cooldownEnabled = true (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#299)
+	- swapEnabled = true (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#298)
+Reentrancy in DekuInu.transferFrom(address,address,uint256) (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#198-202):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#199)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#277-283)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#199)
+		- _feeAddrWallet1.transfer(amount.div(2)) (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#287)
+		- _feeAddrWallet2.transfer(amount.div(2)) (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#288)
+	State variables written after the call(s):
+	- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#200)
+		- _allowances[owner][spender] = amount (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#221)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in DekuInu._transfer(address,address,uint256) (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#225-270):
+	External calls:
+	- swapTokensForEth(contractTokenBalance) (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#261)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#277-283)
+	External calls sending eth:
+	- sendETHToFee(address(this).balance) (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#264)
+		- _feeAddrWallet1.transfer(amount.div(2)) (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#287)
+		- _feeAddrWallet2.transfer(amount.div(2)) (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#288)
+	Event emitted after the call(s):
+	- Transfer(sender,recipient,tTransferAmount) (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#329)
+		- _tokenTransfer(from,to,amount) (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#269)
+Reentrancy in DekuInu.transferFrom(address,address,uint256) (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#198-202):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#199)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#277-283)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#199)
+		- _feeAddrWallet1.transfer(amount.div(2)) (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#287)
+		- _feeAddrWallet2.transfer(amount.div(2)) (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#288)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#222)
+		- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#200)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+DekuInu._transfer(address,address,uint256) (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#225-270) uses timestamp for comparisons
+	Dangerous comparisons:
+	- _buyMap[from] != 0 && (_buyMap[from] + (86400) >= block.timestamp) (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#233-234)
+	- require(bool)(cooldown[to] < block.timestamp) (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#254)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Version constraint ^0.8.4 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- SignedImmutables.
+It is used by:
+	- ^0.8.4 (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#5)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Function IUniswapV2Router02.WETH() (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#102) is not in mixedCase
+Constant DekuInu._tTotal (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#123) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant DekuInu._name (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#132) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant DekuInu._symbol (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#133) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant DekuInu._decimals (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#134) is not in UPPER_CASE_WITH_UNDERSCORES
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in DekuInu._transfer(address,address,uint256) (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#225-270):
+	External calls:
+	- sendETHToFee(address(this).balance) (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#264)
+		- _feeAddrWallet1.transfer(amount.div(2)) (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#287)
+		- _feeAddrWallet2.transfer(amount.div(2)) (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#288)
+	State variables written after the call(s):
+	- _tokenTransfer(from,to,amount) (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#269)
+		- _rOwned[address(this)] = _rOwned[address(this)].add(rTeam) (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#335)
+		- _rOwned[sender] = _rOwned[sender].sub(rAmount) (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#325)
+		- _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount) (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#326)
+	- _tokenTransfer(from,to,amount) (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#269)
+		- _rTotal = _rTotal.sub(rFee) (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#343)
+	- _tokenTransfer(from,to,amount) (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#269)
+		- _tFeeTotal = _tFeeTotal.add(tFee) (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#344)
+	Event emitted after the call(s):
+	- Transfer(sender,recipient,tTransferAmount) (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#329)
+		- _tokenTransfer(from,to,amount) (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#269)
+Reentrancy in DekuInu.transferFrom(address,address,uint256) (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#198-202):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#199)
+		- _feeAddrWallet1.transfer(amount.div(2)) (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#287)
+		- _feeAddrWallet2.transfer(amount.div(2)) (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#288)
+	State variables written after the call(s):
+	- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#200)
+		- _allowances[owner][spender] = amount (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#221)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#222)
+		- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#200)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+DekuInu.openTrading() (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#291-303) uses literals with too many digits:
+	- _maxTxAmount = 20000000000 * 10 ** 9 (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#300)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+DekuInu._tOwned (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#116) is never used in DekuInu (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#113-401)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-state-variable
+
+DekuInu._feeAddrWallet1 (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#129) should be immutable 
+DekuInu._feeAddrWallet2 (0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol#130) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+./0x00e76361d45707507db7bdeb7dd2c0f5c1c3fa6d.sol analyzed (7 contracts with 94 detectors), 26 result(s) found
+
+real	0m2.525s
+user	0m2.289s
+sys	0m0.240s

@@ -1,0 +1,68 @@
+'solc --version' running
+'solc ./0xa584c5eaccb5dd4a5c0fc0a785dee952becc4c06.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0xa584c5eaccb5dd4a5c0fc0a785dee952becc4c06.sol:
+./0xa584c5eaccb5dd4a5c0fc0a785dee952becc4c06.sol:38:13: Warning: This declaration shadows an existing declaration.
+            uint amount = address(this).balance;
+            ^---------^
+./0xa584c5eaccb5dd4a5c0fc0a785dee952becc4c06.sol:12:5: The shadowed declaration is here:
+    uint256 public amount;
+    ^-------------------^
+
+./0xa584c5eaccb5dd4a5c0fc0a785dee952becc4c06.sol:39:17: Warning: Failure condition of 'send' ignored. Consider using 'transfer' instead.
+                owner.send(amount);
+                ^----------------^
+
+
+Crowdsale.fallback() (0xa584c5eaccb5dd4a5c0fc0a785dee952becc4c06.sol#29-35) performs a multiplication on the result of a division:
+	- tobesent = amount / price (0xa584c5eaccb5dd4a5c0fc0a785dee952becc4c06.sol#32)
+	- tokenReward.transfer(msg.sender,tobesent * 10e7) (0xa584c5eaccb5dd4a5c0fc0a785dee952becc4c06.sol#33)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+token (0xa584c5eaccb5dd4a5c0fc0a785dee952becc4c06.sol#3-5) has incorrect ERC20 function interface:token.transfer(address,uint256) (0xa584c5eaccb5dd4a5c0fc0a785dee952becc4c06.sol#4)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-erc20-interface
+
+Crowdsale.safeWithdrawal() (0xa584c5eaccb5dd4a5c0fc0a785dee952becc4c06.sol#37-40) ignores return value by owner.send(amount) (0xa584c5eaccb5dd4a5c0fc0a785dee952becc4c06.sol#39)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-send
+
+Crowdsale.safeWithdrawal().amount (0xa584c5eaccb5dd4a5c0fc0a785dee952becc4c06.sol#38) shadows:
+	- Crowdsale.amount (0xa584c5eaccb5dd4a5c0fc0a785dee952becc4c06.sol#12) (state variable)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#local-variable-shadowing
+
+Crowdsale.updateOwner(address) (0xa584c5eaccb5dd4a5c0fc0a785dee952becc4c06.sol#25-27) should emit an event for: 
+	- owner = newOwner (0xa584c5eaccb5dd4a5c0fc0a785dee952becc4c06.sol#26) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-access-control
+
+Crowdsale.updateOwner(address).newOwner (0xa584c5eaccb5dd4a5c0fc0a785dee952becc4c06.sol#25) lacks a zero-check on :
+		- owner = newOwner (0xa584c5eaccb5dd4a5c0fc0a785dee952becc4c06.sol#26)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Version constraint ^0.4.18 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ExpExponentCleanup
+	- EventStructWrongData
+	- NestedArrayFunctionCallDecoder.
+It is used by:
+	- ^0.4.18 (0xa584c5eaccb5dd4a5c0fc0a785dee952becc4c06.sol#1)
+solc-0.4.22 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Contract token (0xa584c5eaccb5dd4a5c0fc0a785dee952becc4c06.sol#3-5) is not in CapWords
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+./0xa584c5eaccb5dd4a5c0fc0a785dee952becc4c06.sol analyzed (2 contracts with 94 detectors), 9 result(s) found
+
+real	0m1.363s
+user	0m1.131s
+sys	0m0.234s

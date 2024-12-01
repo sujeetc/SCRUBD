@@ -1,0 +1,153 @@
+'solc --version' running
+'solc ./0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol:
+./0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol:6:5: Warning: Function is marked pure. Be careful, pureness is not enforced yet.
+    function getBonusFactor(uint256 soldToUser)
+    ^
+Spanning multiple lines.
+
+
+CrwdToken.rescueToken(ERC20Basic,address) (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#547-552) ignores return value by _foreignToken.transfer(_to,_foreignToken.balanceOf(this)) (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#551)
+CrwdTimelock.release(address) (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#617-625) ignores return value by token.transfer(_beneficiary,amount) (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#621)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+Reentrancy in CrwdTimelock.assignToBeneficiary(address,uint256) (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#603-612):
+	External calls:
+	- require(bool)(token.balanceOf(this) >= assignedBalance.add(_amount)) (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#608)
+	State variables written after the call(s):
+	- assignedBalance = assignedBalance.add(balances[_beneficiary]) (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#611)
+	CrwdTimelock.assignedBalance (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#587) can be used in cross function reentrancies:
+	- CrwdTimelock.assignToBeneficiary(address,uint256) (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#603-612)
+	- CrwdTimelock.assignedBalance (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#587)
+	- CrwdTimelock.release(address) (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#617-625)
+	- balances[_beneficiary] = _amount (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#609)
+	CrwdTimelock.balances (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#585) can be used in cross function reentrancies:
+	- CrwdTimelock.assignToBeneficiary(address,uint256) (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#603-612)
+	- CrwdTimelock.balances (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#585)
+	- CrwdTimelock.release(address) (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#617-625)
+Reentrancy in CrwdTimelock.release(address) (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#617-625):
+	External calls:
+	- token.transfer(_beneficiary,amount) (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#621)
+	State variables written after the call(s):
+	- balances[_beneficiary] = 0 (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#623)
+	CrwdTimelock.balances (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#585) can be used in cross function reentrancies:
+	- CrwdTimelock.assignToBeneficiary(address,uint256) (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#603-612)
+	- CrwdTimelock.balances (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#585)
+	- CrwdTimelock.release(address) (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#617-625)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+CrwdToken.updateEthICOThresholds(uint256,uint256,uint256,uint256) (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#414-429) should emit an event for: 
+	- weiICOMinimum = _newWeiICOMinimum (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#421) 
+	- endBlock = _newEndBlock (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#424) 
+CrwdTimelock.assignToBeneficiary(address,uint256) (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#603-612) should emit an event for: 
+	- assignedBalance = assignedBalance.sub(balances[_beneficiary]) (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#605) 
+	- assignedBalance = assignedBalance.add(balances[_beneficiary]) (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#611) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+CrwdToken.CrwdToken(address,address,address,address,address,address,address,address)._stateControl (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#267) lacks a zero-check on :
+		- stateControl = _stateControl (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#276)
+CrwdToken.CrwdToken(address,address,address,address,address,address,address,address)._whitelistControl (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#268) lacks a zero-check on :
+		- whitelistControl = _whitelistControl (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#277)
+CrwdToken.CrwdToken(address,address,address,address,address,address,address,address)._withdrawControl (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#269) lacks a zero-check on :
+		- withdrawControl = _withdrawControl (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#278)
+CrwdToken.CrwdToken(address,address,address,address,address,address,address,address)._tokenAssignmentControl (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#270) lacks a zero-check on :
+		- tokenAssignmentControl = _tokenAssignmentControl (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#279)
+CrwdToken.CrwdToken(address,address,address,address,address,address,address,address)._lockedTeam (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#272) lacks a zero-check on :
+		- teamTimeLock = address(new CrwdTimelock(this,_lockedTeam,releaseTime)) (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#289)
+CrwdToken.CrwdToken(address,address,address,address,address,address,address,address)._lockedDev (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#273) lacks a zero-check on :
+		- devTimeLock = address(new CrwdTimelock(this,_lockedDev,releaseTime)) (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#290)
+CrwdToken.CrwdToken(address,address,address,address,address,address,address,address)._lockedCountry (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#274) lacks a zero-check on :
+		- countryTimeLock = address(new CrwdTimelock(this,_lockedCountry,releaseTime)) (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#291)
+CrwdToken.CrwdToken(address,address,address,address,address,address,address,address)._notLocked (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#271) lacks a zero-check on :
+		- miscNotLocked = _notLocked (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#292)
+CrwdTimelock.CrwdTimelock(CrwdToken,address,uint256)._controller (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#596) lacks a zero-check on :
+		- controller = _controller (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#599)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in CrwdTimelock.release(address) (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#617-625):
+	External calls:
+	- token.transfer(_beneficiary,amount) (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#621)
+	State variables written after the call(s):
+	- assignedBalance = assignedBalance.sub(amount) (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#622)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+CrwdTimelock.CrwdTimelock(CrwdToken,address,uint256) (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#596-601) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(_releaseTime > now) (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#597)
+CrwdTimelock.release(address) (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#617-625) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(now >= releaseTime) (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#618)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+CrwdToken.fallback() (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#331-345) compares to a boolean constant:
+	-require(bool)(whitelist[msg.sender] == true) (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#334)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#boolean-equality
+
+Version constraint ^0.4.11 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ExpExponentCleanup
+	- NestedArrayFunctionCallDecoder
+	- ZeroFunctionSelector
+	- DelegateCallReturnValue
+	- ECRecoverMalformedInput
+	- SkipEmptyStringLiteral.
+It is used by:
+	- ^0.4.11 (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#1)
+solc-0.4.16 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Constant Bonus.pointMultiplier (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#4) is not in UPPER_CASE_WITH_UNDERSCORES
+Parameter BasicToken.transfer(address,uint256)._to (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#128) is not in mixedCase
+Parameter BasicToken.transfer(address,uint256)._value (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#128) is not in mixedCase
+Parameter BasicToken.balanceOf(address)._owner (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#140) is not in mixedCase
+Parameter StandardToken.transferFrom(address,address,uint256)._from (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#156) is not in mixedCase
+Parameter StandardToken.transferFrom(address,address,uint256)._to (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#156) is not in mixedCase
+Parameter StandardToken.transferFrom(address,address,uint256)._value (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#156) is not in mixedCase
+Parameter StandardToken.approve(address,uint256)._spender (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#174) is not in mixedCase
+Parameter StandardToken.approve(address,uint256)._value (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#174) is not in mixedCase
+Parameter StandardToken.allowance(address,address)._owner (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#193) is not in mixedCase
+Parameter StandardToken.allowance(address,address)._spender (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#193) is not in mixedCase
+Parameter CrwdToken.setBonusPhase(bool)._isBonusPhase (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#384) is not in mixedCase
+Parameter CrwdToken.moveToState(CrwdToken.States)._newState (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#403) is not in mixedCase
+Parameter CrwdToken.updateEthICOThresholds(uint256,uint256,uint256,uint256)._newWeiICOMinimum (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#414) is not in mixedCase
+Parameter CrwdToken.updateEthICOThresholds(uint256,uint256,uint256,uint256)._newWeiICOMaximum (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#414) is not in mixedCase
+Parameter CrwdToken.updateEthICOThresholds(uint256,uint256,uint256,uint256)._silencePeriod (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#414) is not in mixedCase
+Parameter CrwdToken.updateEthICOThresholds(uint256,uint256,uint256,uint256)._newEndBlock (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#414) is not in mixedCase
+Parameter CrwdToken.addToWhitelist(address)._whitelisted (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#493) is not in mixedCase
+Parameter CrwdToken.requestPayout(uint256)._amount (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#539) is not in mixedCase
+Parameter CrwdToken.rescueToken(ERC20Basic,address)._foreignToken (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#547) is not in mixedCase
+Parameter CrwdToken.rescueToken(ERC20Basic,address)._to (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#547) is not in mixedCase
+Parameter CrwdToken.transfer(address,uint256)._to (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#560) is not in mixedCase
+Parameter CrwdToken.transfer(address,uint256)._value (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#560) is not in mixedCase
+Parameter CrwdToken.transferFrom(address,address,uint256)._from (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#566) is not in mixedCase
+Parameter CrwdToken.transferFrom(address,address,uint256)._to (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#566) is not in mixedCase
+Parameter CrwdToken.transferFrom(address,address,uint256)._value (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#566) is not in mixedCase
+Parameter CrwdToken.balanceOf(address)._account (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#572) is not in mixedCase
+Variable CrwdToken.ETH_CRWDTOKEN (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#249) is not in mixedCase
+Constant CrwdToken.pointMultiplier (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#251) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant CrwdToken.per_mill (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#382) is not in UPPER_CASE_WITH_UNDERSCORES
+Parameter CrwdTimelock.assignToBeneficiary(address,uint256)._beneficiary (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#603) is not in mixedCase
+Parameter CrwdTimelock.assignToBeneficiary(address,uint256)._amount (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#603) is not in mixedCase
+Parameter CrwdTimelock.release(address)._beneficiary (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#617) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Bonus.getBonusFactor(uint256) (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#6-78) uses literals with too many digits:
+	- tokenSold >= 100000 (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#13)
+CrwdToken.slitherConstructorConstantVariables() (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#199-581) uses literals with too many digits:
+	- maxTotalSupply = 45000000 * pointMultiplier (0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol#253)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+./0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a.sol analyzed (8 contracts with 94 detectors), 56 result(s) found
+
+real	0m2.301s
+user	0m2.054s
+sys	0m0.248s

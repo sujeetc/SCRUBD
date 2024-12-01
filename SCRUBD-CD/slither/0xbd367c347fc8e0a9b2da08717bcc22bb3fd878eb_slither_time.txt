@@ -1,0 +1,82 @@
+'solc --version' running
+'solc ./0xbd367c347fc8e0a9b2da08717bcc22bb3fd878eb.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+Reentrancy in HoldPresaleContract.unlockTokens() (0xbd367c347fc8e0a9b2da08717bcc22bb3fd878eb.sol#307-322):
+	External calls:
+	- OppToken.transfer(msg.sender,holderList[contributor].tokens) (0xbd367c347fc8e0a9b2da08717bcc22bb3fd878eb.sol#312)
+	State variables written after the call(s):
+	- holderList[contributor].withdrawed = true (0xbd367c347fc8e0a9b2da08717bcc22bb3fd878eb.sol#313)
+	HoldPresaleContract.holderList (0xbd367c347fc8e0a9b2da08717bcc22bb3fd878eb.sol#260) can be used in cross function reentrancies:
+	- HoldPresaleContract.addHolder(address,uint256,uint8,uint256) (0xbd367c347fc8e0a9b2da08717bcc22bb3fd878eb.sol#287-301)
+	- HoldPresaleContract.holderList (0xbd367c347fc8e0a9b2da08717bcc22bb3fd878eb.sol#260)
+	- HoldPresaleContract.unlockTokens() (0xbd367c347fc8e0a9b2da08717bcc22bb3fd878eb.sol#307-322)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+HoldPresaleContract.setPresaleCont(address).pres (0xbd367c347fc8e0a9b2da08717bcc22bb3fd878eb.sol#282) lacks a zero-check on :
+		- presaleCont = pres (0xbd367c347fc8e0a9b2da08717bcc22bb3fd878eb.sol#284)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in HoldPresaleContract.unlockTokens() (0xbd367c347fc8e0a9b2da08717bcc22bb3fd878eb.sol#307-322):
+	External calls:
+	- OppToken.transfer(msg.sender,holderList[contributor].tokens) (0xbd367c347fc8e0a9b2da08717bcc22bb3fd878eb.sol#312)
+	Event emitted after the call(s):
+	- TokensTransfered(contributor,holderList[contributor].tokens) (0xbd367c347fc8e0a9b2da08717bcc22bb3fd878eb.sol#314)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+HoldPresaleContract.unlockTokens() (0xbd367c347fc8e0a9b2da08717bcc22bb3fd878eb.sol#307-322) uses timestamp for comparisons
+	Dangerous comparisons:
+	- now >= holderList[contributor].holdPeriodTimestamp (0xbd367c347fc8e0a9b2da08717bcc22bb3fd878eb.sol#311)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+HoldPresaleContract.addHolder(address,uint256,uint8,uint256) (0xbd367c347fc8e0a9b2da08717bcc22bb3fd878eb.sol#287-301) compares to a boolean constant:
+	-holderList[holder].isActive == false (0xbd367c347fc8e0a9b2da08717bcc22bb3fd878eb.sol#288)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#boolean-equality
+
+Version constraint ^0.4.15 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ExpExponentCleanup
+	- NestedArrayFunctionCallDecoder
+	- ZeroFunctionSelector.
+It is used by:
+	- ^0.4.15 (0xbd367c347fc8e0a9b2da08717bcc22bb3fd878eb.sol#1)
+solc-0.4.15 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Parameter BasicToken.transfer(address,uint256)._to (0xbd367c347fc8e0a9b2da08717bcc22bb3fd878eb.sol#59) is not in mixedCase
+Parameter BasicToken.transfer(address,uint256)._value (0xbd367c347fc8e0a9b2da08717bcc22bb3fd878eb.sol#59) is not in mixedCase
+Parameter BasicToken.balanceOf(address)._owner (0xbd367c347fc8e0a9b2da08717bcc22bb3fd878eb.sol#74) is not in mixedCase
+Parameter StandardToken.transferFrom(address,address,uint256)._from (0xbd367c347fc8e0a9b2da08717bcc22bb3fd878eb.sol#109) is not in mixedCase
+Parameter StandardToken.transferFrom(address,address,uint256)._to (0xbd367c347fc8e0a9b2da08717bcc22bb3fd878eb.sol#109) is not in mixedCase
+Parameter StandardToken.transferFrom(address,address,uint256)._value (0xbd367c347fc8e0a9b2da08717bcc22bb3fd878eb.sol#109) is not in mixedCase
+Parameter StandardToken.approve(address,uint256)._spender (0xbd367c347fc8e0a9b2da08717bcc22bb3fd878eb.sol#129) is not in mixedCase
+Parameter StandardToken.approve(address,uint256)._value (0xbd367c347fc8e0a9b2da08717bcc22bb3fd878eb.sol#129) is not in mixedCase
+Parameter StandardToken.allowance(address,address)._owner (0xbd367c347fc8e0a9b2da08717bcc22bb3fd878eb.sol#148) is not in mixedCase
+Parameter StandardToken.allowance(address,address)._spender (0xbd367c347fc8e0a9b2da08717bcc22bb3fd878eb.sol#148) is not in mixedCase
+Parameter StandardToken.increaseApproval(address,uint256)._spender (0xbd367c347fc8e0a9b2da08717bcc22bb3fd878eb.sol#158) is not in mixedCase
+Parameter StandardToken.increaseApproval(address,uint256)._addedValue (0xbd367c347fc8e0a9b2da08717bcc22bb3fd878eb.sol#158) is not in mixedCase
+Parameter StandardToken.decreaseApproval(address,uint256)._spender (0xbd367c347fc8e0a9b2da08717bcc22bb3fd878eb.sol#165) is not in mixedCase
+Parameter StandardToken.decreaseApproval(address,uint256)._subtractedValue (0xbd367c347fc8e0a9b2da08717bcc22bb3fd878eb.sol#165) is not in mixedCase
+Parameter HoldPresaleContract.addAssetsOwner(address)._owner (0xbd367c347fc8e0a9b2da08717bcc22bb3fd878eb.sol#324) is not in mixedCase
+Parameter HoldPresaleContract.removeAssetsOwner(address)._owner (0xbd367c347fc8e0a9b2da08717bcc22bb3fd878eb.sol#329) is not in mixedCase
+Parameter HoldPresaleContract.getAssetsOwners(uint256)._index (0xbd367c347fc8e0a9b2da08717bcc22bb3fd878eb.sol#335) is not in mixedCase
+Variable HoldPresaleContract.OppToken (0xbd367c347fc8e0a9b2da08717bcc22bb3fd878eb.sol#249) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+OpportyToken.slitherConstructorConstantVariables() (0xbd367c347fc8e0a9b2da08717bcc22bb3fd878eb.sol#185-201) uses literals with too many digits:
+	- INITIAL_SUPPLY = 1000000000 * (10 ** uint256(decimals)) (0xbd367c347fc8e0a9b2da08717bcc22bb3fd878eb.sol#191)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+./0xbd367c347fc8e0a9b2da08717bcc22bb3fd878eb.sol analyzed (8 contracts with 94 detectors), 26 result(s) found
+
+real	0m2.020s
+user	0m1.798s
+sys	0m0.224s

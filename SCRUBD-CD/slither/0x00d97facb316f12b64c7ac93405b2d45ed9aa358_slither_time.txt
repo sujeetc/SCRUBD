@@ -1,0 +1,189 @@
+'solc --version' running
+'solc ./0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+Reentrancy in KIRITOINU._transfer(address,address,uint256) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#252-274):
+	External calls:
+	- swapTokensForEth(contractTokenBalance) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#265)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#281-287)
+	External calls sending eth:
+	- sendETHToFee(address(this).balance) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#268)
+		- _feeAddrWallet1.transfer(amount / 3) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#293)
+		- _feeAddrWallet2.transfer(amount / 3) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#294)
+		- _feeAddrWallet3.transfer(amount / 3) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#295)
+	State variables written after the call(s):
+	- _tokenTransfer(from,to,amount) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#273)
+		- _rOwned[address(this)] = _rOwned[address(this)].add(rTeam) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#329)
+		- _rOwned[sender] = _rOwned[sender].sub(rAmount) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#319)
+		- _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#320)
+	KIRITOINU._rOwned (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#150) can be used in cross function reentrancies:
+	- KIRITOINU._takeTeam(uint256) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#326-330)
+	- KIRITOINU._transferStandard(address,address,uint256) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#317-324)
+	- KIRITOINU.balanceOf(address) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#211-213)
+	- KIRITOINU.constructor() (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#184-193)
+	- _tokenTransfer(from,to,amount) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#273)
+		- _rTotal = _rTotal.sub(rFee) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#333)
+	KIRITOINU._rTotal (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#158) can be used in cross function reentrancies:
+	- KIRITOINU._getCurrentSupply() (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#379-384)
+	- KIRITOINU._reflectFee(uint256,uint256) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#332-335)
+	- KIRITOINU.constructor() (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#184-193)
+	- KIRITOINU.tokenFromReflection(uint256) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#239-243)
+Reentrancy in KIRITOINU.openTrading() (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#298-310):
+	External calls:
+	- uniswapV2Pair = IUniswapV2Factory(_uniswapV2Router.factory()).createPair(address(this),_uniswapV2Router.WETH()) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#303)
+	- uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#304)
+	External calls sending eth:
+	- uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#304)
+	State variables written after the call(s):
+	- tradingOpen = true (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#308)
+	KIRITOINU.tradingOpen (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#173) can be used in cross function reentrancies:
+	- KIRITOINU.openTrading() (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#298-310)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+KIRITOINU.bots (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#154) is never initialized. It is used in:
+	- KIRITOINU._transfer(address,address,uint256) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#252-274)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#uninitialized-state-variables
+
+KIRITOINU.openTrading() (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#298-310) ignores return value by uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#304)
+KIRITOINU.openTrading() (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#298-310) ignores return value by IERC20(uniswapV2Pair).approve(address(uniswapV2Router),type()(uint256).max) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#309)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+KIRITOINU.allowance(address,address).owner (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#220) shadows:
+	- Ownable.owner() (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#108-110) (function)
+KIRITOINU._approve(address,address,uint256).owner (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#245) shadows:
+	- Ownable.owner() (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#108-110) (function)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#local-variable-shadowing
+
+Reentrancy in KIRITOINU._transfer(address,address,uint256) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#252-274):
+	External calls:
+	- swapTokensForEth(contractTokenBalance) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#265)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#281-287)
+	External calls sending eth:
+	- sendETHToFee(address(this).balance) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#268)
+		- _feeAddrWallet1.transfer(amount / 3) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#293)
+		- _feeAddrWallet2.transfer(amount / 3) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#294)
+		- _feeAddrWallet3.transfer(amount / 3) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#295)
+	State variables written after the call(s):
+	- _tokenTransfer(from,to,amount) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#273)
+		- _tFeeTotal = _tFeeTotal.add(tFee) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#334)
+Reentrancy in KIRITOINU.openTrading() (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#298-310):
+	External calls:
+	- uniswapV2Pair = IUniswapV2Factory(_uniswapV2Router.factory()).createPair(address(this),_uniswapV2Router.WETH()) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#303)
+	- uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#304)
+	External calls sending eth:
+	- uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#304)
+	State variables written after the call(s):
+	- _maxTxAmount = 1000000000 * 10 ** 9 (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#307)
+	- cooldownEnabled = false (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#306)
+	- swapEnabled = true (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#305)
+Reentrancy in KIRITOINU.transferFrom(address,address,uint256) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#229-233):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#230)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#281-287)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#230)
+		- _feeAddrWallet1.transfer(amount / 3) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#293)
+		- _feeAddrWallet2.transfer(amount / 3) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#294)
+		- _feeAddrWallet3.transfer(amount / 3) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#295)
+	State variables written after the call(s):
+	- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#231)
+		- _allowances[owner][spender] = amount (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#248)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in KIRITOINU._transfer(address,address,uint256) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#252-274):
+	External calls:
+	- swapTokensForEth(contractTokenBalance) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#265)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#281-287)
+	External calls sending eth:
+	- sendETHToFee(address(this).balance) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#268)
+		- _feeAddrWallet1.transfer(amount / 3) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#293)
+		- _feeAddrWallet2.transfer(amount / 3) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#294)
+		- _feeAddrWallet3.transfer(amount / 3) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#295)
+	Event emitted after the call(s):
+	- Transfer(sender,recipient,tTransferAmount) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#323)
+		- _tokenTransfer(from,to,amount) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#273)
+Reentrancy in KIRITOINU.transferFrom(address,address,uint256) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#229-233):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#230)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#281-287)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#230)
+		- _feeAddrWallet1.transfer(amount / 3) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#293)
+		- _feeAddrWallet2.transfer(amount / 3) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#294)
+		- _feeAddrWallet3.transfer(amount / 3) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#295)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#249)
+		- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#231)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+Version constraint ^0.8.4 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- SignedImmutables.
+It is used by:
+	- ^0.8.4 (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#40)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Function IUniswapV2Router02.WETH() (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#137) is not in mixedCase
+Constant KIRITOINU._tTotal (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#157) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant KIRITOINU._name (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#167) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant KIRITOINU._symbol (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#168) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant KIRITOINU._decimals (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#169) is not in UPPER_CASE_WITH_UNDERSCORES
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in KIRITOINU._transfer(address,address,uint256) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#252-274):
+	External calls:
+	- sendETHToFee(address(this).balance) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#268)
+		- _feeAddrWallet1.transfer(amount / 3) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#293)
+		- _feeAddrWallet2.transfer(amount / 3) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#294)
+		- _feeAddrWallet3.transfer(amount / 3) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#295)
+	State variables written after the call(s):
+	- _tokenTransfer(from,to,amount) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#273)
+		- _rOwned[address(this)] = _rOwned[address(this)].add(rTeam) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#329)
+		- _rOwned[sender] = _rOwned[sender].sub(rAmount) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#319)
+		- _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#320)
+	- _tokenTransfer(from,to,amount) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#273)
+		- _rTotal = _rTotal.sub(rFee) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#333)
+	- _tokenTransfer(from,to,amount) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#273)
+		- _tFeeTotal = _tFeeTotal.add(tFee) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#334)
+	Event emitted after the call(s):
+	- Transfer(sender,recipient,tTransferAmount) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#323)
+		- _tokenTransfer(from,to,amount) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#273)
+Reentrancy in KIRITOINU.transferFrom(address,address,uint256) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#229-233):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#230)
+		- _feeAddrWallet1.transfer(amount / 3) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#293)
+		- _feeAddrWallet2.transfer(amount / 3) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#294)
+		- _feeAddrWallet3.transfer(amount / 3) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#295)
+	State variables written after the call(s):
+	- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#231)
+		- _allowances[owner][spender] = amount (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#248)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#249)
+		- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#231)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+KIRITOINU._transfer(address,address,uint256) (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#252-274) uses literals with too many digits:
+	- contractETHBalance > 300000000000000000 (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#267)
+KIRITOINU.openTrading() (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#298-310) uses literals with too many digits:
+	- _maxTxAmount = 1000000000 * 10 ** 9 (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#307)
+KIRITOINU.slitherConstructorConstantVariables() (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#148-386) uses literals with too many digits:
+	- _tTotal = 1000000000000 * 10 ** 9 (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#157)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+KIRITOINU._tOwned (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#151) is never used in KIRITOINU (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#148-386)
+KIRITOINU.cooldown (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#155) is never used in KIRITOINU (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#148-386)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-state-variable
+
+KIRITOINU._feeAddrWallet1 (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#163) should be immutable 
+KIRITOINU._feeAddrWallet2 (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#164) should be immutable 
+KIRITOINU._feeAddrWallet3 (0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol#165) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+./0x00d97facb316f12b64c7ac93405b2d45ed9aa358.sol analyzed (7 contracts with 94 detectors), 28 result(s) found
+
+real	0m3.080s
+user	0m2.808s
+sys	0m0.272s

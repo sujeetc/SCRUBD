@@ -1,0 +1,276 @@
+'solc --version' running
+'solc ./0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol:
+./0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol:53:5: Warning: No visibility specified. Defaulting to "public".
+    function Owned() {
+    ^
+Spanning multiple lines.
+./0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol:66:5: Warning: No visibility specified. Defaulting to "public".
+    function changeOwnership(address _newOwner) onlyOwner {
+    ^
+Spanning multiple lines.
+./0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol:79:5: Warning: No visibility specified. Defaulting to "public".
+    function proposeOwnership(address _newOwnerCandidate) onlyOwner {
+    ^
+Spanning multiple lines.
+./0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol:86:5: Warning: No visibility specified. Defaulting to "public".
+    function acceptOwnership() {
+    ^
+Spanning multiple lines.
+./0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol:98:5: Warning: No visibility specified. Defaulting to "public".
+    function removeOwnership(address _dac) onlyOwner {
+    ^
+Spanning multiple lines.
+./0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol:149:5: Warning: No visibility specified. Defaulting to "public".
+    function Escapable(address _escapeHatchCaller, address _escapeHatchDestination) {
+    ^
+Spanning multiple lines.
+./0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol:197:5: Warning: No visibility specified. Defaulting to "public".
+    function changeHatchEscapeCaller(address _newEscapeHatchCaller) onlyEscapeHatchCallerOrOwner {
+    ^
+Spanning multiple lines.
+
+
+WithdrawContract.doPayment(uint256,address,ERC20,uint256) (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#478-487) sends eth to arbitrary user
+	Dangerous calls:
+	- ! _dest.send(_amount) (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#481)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+Reentrancy in WithdrawContract.withdraw() (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#362-398):
+	External calls:
+	- require(bool)(doPayment(i - 1,msg.sender,currentToken,acc)) (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#380)
+		- ! _token.transfer(_dest,_amount) (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#483)
+	- acc += d.amount * rewardToken.balanceOfAt(msg.sender,d.block) / rewardToken.totalSupplyAt(d.block) (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#387-389)
+	External calls sending eth:
+	- require(bool)(doPayment(i - 1,msg.sender,currentToken,acc)) (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#380)
+		- ! _dest.send(_amount) (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#481)
+	State variables written after the call(s):
+	- nextDepositToPayout[msg.sender] = i (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#379)
+	WithdrawContract.nextDepositToPayout (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#253) can be used in cross function reentrancies:
+	- WithdrawContract.canWithdraw(address) (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#438-450)
+	- WithdrawContract.getPendingReward(ERC20,address) (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#422-433)
+	- WithdrawContract.nextDepositToPayout (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#253)
+	- WithdrawContract.withdraw() (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#362-398)
+	- nextDepositToPayout[msg.sender] = i (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#395)
+	WithdrawContract.nextDepositToPayout (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#253) can be used in cross function reentrancies:
+	- WithdrawContract.canWithdraw(address) (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#438-450)
+	- WithdrawContract.getPendingReward(ERC20,address) (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#422-433)
+	- WithdrawContract.nextDepositToPayout (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#253)
+	- WithdrawContract.withdraw() (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#362-398)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+Escapable.escapeHatch(address) (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#174-190) ignores return value by token.transfer(escapeHatchDestination,balance) (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#188)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+WithdrawContract.canWithdraw(address) (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#438-450) uses a dangerous strict equality:
+	- nextDepositToPayout[_holder] == deposits.length (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#439)
+WithdrawContract.doPayment(uint256,address,ERC20,uint256) (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#478-487) uses a dangerous strict equality:
+	- address(_token) == 0 (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#480)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-strict-equalities
+
+Escapable.changeHatchEscapeCaller(address) (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#197-199) should emit an event for: 
+	- escapeHatchCaller = _newEscapeHatchCaller (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#198) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-access-control
+
+Escapable.Escapable(address,address)._escapeHatchCaller (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#149) lacks a zero-check on :
+		- escapeHatchCaller = _escapeHatchCaller (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#150)
+Escapable.Escapable(address,address)._escapeHatchDestination (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#149) lacks a zero-check on :
+		- escapeHatchDestination = _escapeHatchDestination (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#151)
+Escapable.changeHatchEscapeCaller(address)._newEscapeHatchCaller (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#197) lacks a zero-check on :
+		- escapeHatchCaller = _newEscapeHatchCaller (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#198)
+Owned.proposeOwnership(address)._newOwnerCandidate (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#79) lacks a zero-check on :
+		- newOwnerCandidate = _newOwnerCandidate (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#80)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+WithdrawContract.doPayment(uint256,address,ERC20,uint256) (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#478-487) has external calls inside a loop: ! _dest.send(_amount) (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#481)
+WithdrawContract.doPayment(uint256,address,ERC20,uint256) (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#478-487) has external calls inside a loop: ! _token.transfer(_dest,_amount) (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#483)
+WithdrawContract.withdraw() (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#362-398) has external calls inside a loop: acc += d.amount * rewardToken.balanceOfAt(msg.sender,d.block) / rewardToken.totalSupplyAt(d.block) (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#387-389)
+WithdrawContract.getPendingReward(ERC20,address) (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#422-433) has external calls inside a loop: acc += d.amount * rewardToken.balanceOfAt(_holder,d.block) / rewardToken.totalSupplyAt(d.block) (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#427-429)
+WithdrawContract.canWithdraw(address) (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#438-450) has external calls inside a loop: amount = d.amount * rewardToken.balanceOfAt(_holder,d.block) / rewardToken.totalSupplyAt(d.block) (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#443-445)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation/#calls-inside-a-loop
+
+Reentrancy in WithdrawContract.newTokenDeposit(ERC20,uint256,uint256) (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#325-342):
+	External calls:
+	- require(bool)(_token.transferFrom(msg.sender,address(this),_amount)) (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#333)
+	State variables written after the call(s):
+	- _idDeposit = deposits.length ++ (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#334)
+	- d.token = _token (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#339)
+	- d.amount = _amount (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#340)
+	- d.block = block.number - 1 (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#338)
+	- d.block = _block (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#338)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in WithdrawContract.doPayment(uint256,address,ERC20,uint256) (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#478-487):
+	External calls:
+	- ! _token.transfer(_dest,_amount) (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#483)
+	External calls sending eth:
+	- ! _dest.send(_amount) (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#481)
+	Event emitted after the call(s):
+	- Withdraw(_idDeposit,_dest,_token,_amount) (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#485)
+Reentrancy in Escapable.escapeHatch(address) (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#174-190):
+	External calls:
+	- balance = token.balanceOf(this) (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#187)
+	- token.transfer(escapeHatchDestination,balance) (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#188)
+	Event emitted after the call(s):
+	- EscapeHatchCalled(_token,balance) (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#189)
+Reentrancy in WithdrawContract.newTokenDeposit(ERC20,uint256,uint256) (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#325-342):
+	External calls:
+	- require(bool)(_token.transferFrom(msg.sender,address(this),_amount)) (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#333)
+	Event emitted after the call(s):
+	- NewDeposit(_idDeposit,_token,_amount) (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#341)
+Reentrancy in WithdrawContract.withdraw() (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#362-398):
+	External calls:
+	- require(bool)(doPayment(i - 1,msg.sender,currentToken,acc)) (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#380)
+		- ! _token.transfer(_dest,_amount) (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#483)
+	- acc += d.amount * rewardToken.balanceOfAt(msg.sender,d.block) / rewardToken.totalSupplyAt(d.block) (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#387-389)
+	External calls sending eth:
+	- require(bool)(doPayment(i - 1,msg.sender,currentToken,acc)) (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#380)
+		- ! _dest.send(_amount) (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#481)
+	Event emitted after the call(s):
+	- Withdraw(_idDeposit,_dest,_token,_amount) (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#485)
+		- require(bool)(doPayment(i - 1,msg.sender,currentToken,acc)) (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#380)
+Reentrancy in WithdrawContract.withdraw() (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#362-398):
+	External calls:
+	- require(bool)(doPayment(i - 1,msg.sender,currentToken,acc)) (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#380)
+		- ! _token.transfer(_dest,_amount) (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#483)
+	- acc += d.amount * rewardToken.balanceOfAt(msg.sender,d.block) / rewardToken.totalSupplyAt(d.block) (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#387-389)
+	- require(bool)(doPayment(i - 1,msg.sender,currentToken,acc)) (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#396)
+		- ! _token.transfer(_dest,_amount) (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#483)
+	External calls sending eth:
+	- require(bool)(doPayment(i - 1,msg.sender,currentToken,acc)) (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#380)
+		- ! _dest.send(_amount) (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#481)
+	- require(bool)(doPayment(i - 1,msg.sender,currentToken,acc)) (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#396)
+		- ! _dest.send(_amount) (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#481)
+	Event emitted after the call(s):
+	- Withdraw(_idDeposit,_dest,_token,_amount) (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#485)
+		- require(bool)(doPayment(i - 1,msg.sender,currentToken,acc)) (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#396)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+Escapable.escapeHatch(address) (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#174-190) compares to a boolean constant:
+	-require(bool)(escapeBlacklist[_token] == false) (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#175)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#boolean-equality
+
+2 different versions of Solidity are used:
+	- Version constraint ^0.4.15 is used by:
+		-^0.4.15 (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#2)
+		-^0.4.15 (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#35)
+		-^0.4.15 (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#126)
+	- Version constraint ^0.4.18 is used by:
+		-^0.4.18 (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#206)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#different-pragma-directives-are-used
+
+Escapable.blacklistEscapeToken(address) (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#162-165) is never used and should be removed
+WithdrawContract.getBalance(ERC20,address) (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#489-495) is never used and should be removed
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dead-code
+
+Deprecated standard detected require(bool)(msg.gas > 149000) (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#368):
+	- Usage of "msg.gas" should be replaced with "gasleft()"
+Deprecated standard detected (i < deposits.length) && (msg.gas > 148000) (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#369):
+	- Usage of "msg.gas" should be replaced with "gasleft()"
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#deprecated-standards
+
+Version constraint ^0.4.15 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ExpExponentCleanup
+	- NestedArrayFunctionCallDecoder
+	- ZeroFunctionSelector.
+It is used by:
+	- ^0.4.15 (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#2)
+	- ^0.4.15 (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#35)
+	- ^0.4.15 (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#126)
+Version constraint ^0.4.18 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ExpExponentCleanup
+	- EventStructWrongData
+	- NestedArrayFunctionCallDecoder.
+It is used by:
+	- ^0.4.18 (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#206)
+solc-0.4.18 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Parameter Owned.changeOwnership(address)._newOwner (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#66) is not in mixedCase
+Parameter Owned.proposeOwnership(address)._newOwnerCandidate (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#79) is not in mixedCase
+Parameter Owned.removeOwnership(address)._dac (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#98) is not in mixedCase
+Parameter Escapable.blacklistEscapeToken(address)._token (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#162) is not in mixedCase
+Parameter Escapable.isTokenEscapable(address)._token (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#167) is not in mixedCase
+Parameter Escapable.escapeHatch(address)._token (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#174) is not in mixedCase
+Parameter Escapable.changeHatchEscapeCaller(address)._newEscapeHatchCaller (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#197) is not in mixedCase
+Parameter WithdrawContract.newEtherDeposit(uint256)._block (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#296) is not in mixedCase
+Parameter WithdrawContract.newTokenDeposit(ERC20,uint256,uint256)._token (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#325) is not in mixedCase
+Parameter WithdrawContract.newTokenDeposit(ERC20,uint256,uint256)._amount (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#325) is not in mixedCase
+Parameter WithdrawContract.newTokenDeposit(ERC20,uint256,uint256)._block (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#325) is not in mixedCase
+Parameter WithdrawContract.cancelPaymentGlobally(uint256)._idDeposit (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#348) is not in mixedCase
+Parameter WithdrawContract.skipPayment(uint256,bool)._idDeposit (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#406) is not in mixedCase
+Parameter WithdrawContract.skipPayment(uint256,bool)._skip (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#406) is not in mixedCase
+Parameter WithdrawContract.getPendingReward(ERC20,address)._token (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#422) is not in mixedCase
+Parameter WithdrawContract.getPendingReward(ERC20,address)._holder (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#422) is not in mixedCase
+Parameter WithdrawContract.canWithdraw(address)._holder (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#438) is not in mixedCase
+Parameter WithdrawContract.isDepositSkiped(address,uint256)._holder (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#462) is not in mixedCase
+Parameter WithdrawContract.isDepositSkiped(address,uint256)._idDeposit (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#462) is not in mixedCase
+Parameter WithdrawContract.doPayment(uint256,address,ERC20,uint256)._idDeposit (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#478) is not in mixedCase
+Parameter WithdrawContract.doPayment(uint256,address,ERC20,uint256)._dest (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#478) is not in mixedCase
+Parameter WithdrawContract.doPayment(uint256,address,ERC20,uint256)._token (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#478) is not in mixedCase
+Parameter WithdrawContract.doPayment(uint256,address,ERC20,uint256)._amount (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#478) is not in mixedCase
+Parameter WithdrawContract.getBalance(ERC20,address)._token (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#489) is not in mixedCase
+Parameter WithdrawContract.getBalance(ERC20,address)._holder (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#489) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in WithdrawContract.doPayment(uint256,address,ERC20,uint256) (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#478-487):
+	External calls:
+	- ! _dest.send(_amount) (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#481)
+	Event emitted after the call(s):
+	- Withdraw(_idDeposit,_dest,_token,_amount) (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#485)
+Reentrancy in Escapable.escapeHatch(address) (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#174-190):
+	External calls:
+	- escapeHatchDestination.transfer(balance) (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#181)
+	Event emitted after the call(s):
+	- EscapeHatchCalled(_token,balance) (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#182)
+Reentrancy in WithdrawContract.withdraw() (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#362-398):
+	External calls:
+	- require(bool)(doPayment(i - 1,msg.sender,currentToken,acc)) (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#380)
+		- ! _dest.send(_amount) (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#481)
+	State variables written after the call(s):
+	- nextDepositToPayout[msg.sender] = i (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#379)
+	- nextDepositToPayout[msg.sender] = i (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#395)
+Reentrancy in WithdrawContract.withdraw() (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#362-398):
+	External calls:
+	- require(bool)(doPayment(i - 1,msg.sender,currentToken,acc)) (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#380)
+		- ! _dest.send(_amount) (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#481)
+	- require(bool)(doPayment(i - 1,msg.sender,currentToken,acc)) (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#396)
+		- ! _dest.send(_amount) (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#481)
+	Event emitted after the call(s):
+	- Withdraw(_idDeposit,_dest,_token,_amount) (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#485)
+		- require(bool)(doPayment(i - 1,msg.sender,currentToken,acc)) (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#396)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+Loop condition i < deposits.length (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#424) should use cached array length instead of referencing `length` member of the storage array.
+ Loop condition i < deposits.length (0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol#440) should use cached array length instead of referencing `length` member of the storage array.
+ Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#cache-array-length
+./0x0efef0b34638addc8833ba729ae20016b5f24ffc.sol analyzed (5 contracts with 94 detectors), 61 result(s) found
+
+real	0m2.657s
+user	0m2.404s
+sys	0m0.255s

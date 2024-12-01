@@ -1,0 +1,444 @@
+'solc --version' running
+'solc ./0x1684843a68f7e6489c666d524f178edb1af27772.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+BabyDubbz.swapBack() (0x1684843a68f7e6489c666d524f178edb1af27772.sol#967-1003) sends eth to arbitrary user
+	Dangerous calls:
+	- address(investmentFeeReceiver).transfer(amountETHInvestment) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#990)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+Reentrancy in BabyDubbz._transferFrom(address,address,uint256) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#853-920):
+	External calls:
+	- swapBack() (0x1684843a68f7e6489c666d524f178edb1af27772.sol#895)
+		- router.swapExactTokensForETHSupportingFeeOnTransferTokens(amountToSwap,0,path,address(this),block.timestamp) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#979)
+		- distributor.deposit{value: amountETHReflection}() (0x1684843a68f7e6489c666d524f178edb1af27772.sol#989)
+		- router.addLiquidityETH{value: amountETHLiquidity}(address(this),amountToLiquify,0,0,autoLiquidityReceiver,block.timestamp) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#993-1000)
+	- triggerAutoBuyback() (0x1684843a68f7e6489c666d524f178edb1af27772.sol#899)
+		- router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: amount}(0,path,to,block.timestamp) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#1038)
+	External calls sending eth:
+	- swapBack() (0x1684843a68f7e6489c666d524f178edb1af27772.sol#895)
+		- distributor.deposit{value: amountETHReflection}() (0x1684843a68f7e6489c666d524f178edb1af27772.sol#989)
+		- address(investmentFeeReceiver).transfer(amountETHInvestment) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#990)
+		- router.addLiquidityETH{value: amountETHLiquidity}(address(this),amountToLiquify,0,0,autoLiquidityReceiver,block.timestamp) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#993-1000)
+	- triggerAutoBuyback() (0x1684843a68f7e6489c666d524f178edb1af27772.sol#899)
+		- router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: amount}(0,path,to,block.timestamp) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#1038)
+	State variables written after the call(s):
+	- _balances[sender] = _balances[sender].sub(amount,Insufficient Balance) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#902)
+	BabyDubbz._balances (0x1684843a68f7e6489c666d524f178edb1af27772.sol#715) can be used in cross function reentrancies:
+	- BabyDubbz._basicTransfer(address,address,uint256) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#922-927)
+	- BabyDubbz._transferFrom(address,address,uint256) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#853-920)
+	- BabyDubbz.balanceOf(address) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#823-825)
+	- BabyDubbz.constructor() (0x1684843a68f7e6489c666d524f178edb1af27772.sol#778-799)
+	- BabyDubbz.setIsDividendExempt(address,bool) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#1124-1132)
+	- BabyDubbz.shouldSwapBack() (0x1684843a68f7e6489c666d524f178edb1af27772.sol#963-965)
+	- BabyDubbz.takeFee(address,uint256) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#954-961)
+	- _balances[recipient] = _balances[recipient].add(amountReceived) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#906)
+	BabyDubbz._balances (0x1684843a68f7e6489c666d524f178edb1af27772.sol#715) can be used in cross function reentrancies:
+	- BabyDubbz._basicTransfer(address,address,uint256) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#922-927)
+	- BabyDubbz._transferFrom(address,address,uint256) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#853-920)
+	- BabyDubbz.balanceOf(address) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#823-825)
+	- BabyDubbz.constructor() (0x1684843a68f7e6489c666d524f178edb1af27772.sol#778-799)
+	- BabyDubbz.setIsDividendExempt(address,bool) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#1124-1132)
+	- BabyDubbz.shouldSwapBack() (0x1684843a68f7e6489c666d524f178edb1af27772.sol#963-965)
+	- BabyDubbz.takeFee(address,uint256) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#954-961)
+	- amountReceived = takeFee(recipient,amount) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#904)
+		- _balances[address(this)] = _balances[address(this)].add(feeAmount) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#957)
+	BabyDubbz._balances (0x1684843a68f7e6489c666d524f178edb1af27772.sol#715) can be used in cross function reentrancies:
+	- BabyDubbz._basicTransfer(address,address,uint256) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#922-927)
+	- BabyDubbz._transferFrom(address,address,uint256) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#853-920)
+	- BabyDubbz.balanceOf(address) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#823-825)
+	- BabyDubbz.constructor() (0x1684843a68f7e6489c666d524f178edb1af27772.sol#778-799)
+	- BabyDubbz.setIsDividendExempt(address,bool) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#1124-1132)
+	- BabyDubbz.shouldSwapBack() (0x1684843a68f7e6489c666d524f178edb1af27772.sol#963-965)
+	- BabyDubbz.takeFee(address,uint256) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#954-961)
+	- triggerAutoBuyback() (0x1684843a68f7e6489c666d524f178edb1af27772.sol#899)
+		- inSwap = true (0x1684843a68f7e6489c666d524f178edb1af27772.sol#773)
+		- inSwap = false (0x1684843a68f7e6489c666d524f178edb1af27772.sol#775)
+	BabyDubbz.inSwap (0x1684843a68f7e6489c666d524f178edb1af27772.sol#771) can be used in cross function reentrancies:
+	- BabyDubbz._transferFrom(address,address,uint256) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#853-920)
+	- BabyDubbz.inSwap (0x1684843a68f7e6489c666d524f178edb1af27772.sol#771)
+	- BabyDubbz.shouldAutoBuyback() (0x1684843a68f7e6489c666d524f178edb1af27772.sol#1006-1013)
+	- BabyDubbz.shouldSwapBack() (0x1684843a68f7e6489c666d524f178edb1af27772.sol#963-965)
+	- BabyDubbz.swapping() (0x1684843a68f7e6489c666d524f178edb1af27772.sol#772-776)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+DividendDistributor.distributeDividend(address) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#640-653) ignores return value by MAGIC.transfer(shareholder,amount) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#648)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+Reentrancy in DividendDistributor.distributeDividend(address) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#640-653):
+	External calls:
+	- MAGIC.transfer(shareholder,amount) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#648)
+	State variables written after the call(s):
+	- shares[shareholder].totalRealised = shares[shareholder].totalRealised.add(amount) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#650)
+	DividendDistributor.shares (0x1684843a68f7e6489c666d524f178edb1af27772.sol#534) can be used in cross function reentrancies:
+	- DividendDistributor.distributeDividend(address) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#640-653)
+	- DividendDistributor.getUnpaidEarnings(address) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#660-673)
+	- DividendDistributor.setShare(address,uint256) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#571-585)
+	- DividendDistributor.shares (0x1684843a68f7e6489c666d524f178edb1af27772.sol#534)
+	- shares[shareholder].totalExcluded = getCumulativeDividends(shares[shareholder].amount) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#651)
+	DividendDistributor.shares (0x1684843a68f7e6489c666d524f178edb1af27772.sol#534) can be used in cross function reentrancies:
+	- DividendDistributor.distributeDividend(address) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#640-653)
+	- DividendDistributor.getUnpaidEarnings(address) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#660-673)
+	- DividendDistributor.setShare(address,uint256) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#571-585)
+	- DividendDistributor.shares (0x1684843a68f7e6489c666d524f178edb1af27772.sol#534)
+Reentrancy in DividendDistributor.process(uint256) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#607-633):
+	External calls:
+	- distributeDividend(shareholders[currentIndex]) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#625)
+		- MAGIC.transfer(shareholder,amount) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#648)
+	State variables written after the call(s):
+	- currentIndex = 0 (0x1684843a68f7e6489c666d524f178edb1af27772.sol#621)
+	DividendDistributor.currentIndex (0x1684843a68f7e6489c666d524f178edb1af27772.sol#545) can be used in cross function reentrancies:
+	- DividendDistributor.process(uint256) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#607-633)
+	- currentIndex ++ (0x1684843a68f7e6489c666d524f178edb1af27772.sol#630)
+	DividendDistributor.currentIndex (0x1684843a68f7e6489c666d524f178edb1af27772.sol#545) can be used in cross function reentrancies:
+	- DividendDistributor.process(uint256) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#607-633)
+Reentrancy in DividendDistributor.setShare(address,uint256) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#571-585):
+	External calls:
+	- distributeDividend(shareholder) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#573)
+		- MAGIC.transfer(shareholder,amount) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#648)
+	State variables written after the call(s):
+	- shares[shareholder].amount = amount (0x1684843a68f7e6489c666d524f178edb1af27772.sol#583)
+	DividendDistributor.shares (0x1684843a68f7e6489c666d524f178edb1af27772.sol#534) can be used in cross function reentrancies:
+	- DividendDistributor.distributeDividend(address) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#640-653)
+	- DividendDistributor.getUnpaidEarnings(address) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#660-673)
+	- DividendDistributor.setShare(address,uint256) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#571-585)
+	- DividendDistributor.shares (0x1684843a68f7e6489c666d524f178edb1af27772.sol#534)
+	- shares[shareholder].totalExcluded = getCumulativeDividends(shares[shareholder].amount) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#584)
+	DividendDistributor.shares (0x1684843a68f7e6489c666d524f178edb1af27772.sol#534) can be used in cross function reentrancies:
+	- DividendDistributor.distributeDividend(address) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#640-653)
+	- DividendDistributor.getUnpaidEarnings(address) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#660-673)
+	- DividendDistributor.setShare(address,uint256) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#571-585)
+	- DividendDistributor.shares (0x1684843a68f7e6489c666d524f178edb1af27772.sol#534)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+BabyDubbz.swapBack() (0x1684843a68f7e6489c666d524f178edb1af27772.sol#967-1003) ignores return value by router.addLiquidityETH{value: amountETHLiquidity}(address(this),amountToLiquify,0,0,autoLiquidityReceiver,block.timestamp) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#993-1000)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+DividendDistributor.setDistributionCriteria(uint256,uint256) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#566-569) should emit an event for: 
+	- minPeriod = _minPeriod (0x1684843a68f7e6489c666d524f178edb1af27772.sol#567) 
+	- minDistribution = _minDistribution (0x1684843a68f7e6489c666d524f178edb1af27772.sol#568) 
+BabyDubbz.setAutoBuybackSettings(bool,uint256,uint256,uint256) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#1041-1048) should emit an event for: 
+	- autoBuybackCap = _cap (0x1684843a68f7e6489c666d524f178edb1af27772.sol#1043) 
+	- autoBuybackAmount = _amount (0x1684843a68f7e6489c666d524f178edb1af27772.sol#1045) 
+BabyDubbz.setSellFees(uint256,uint256,uint256,uint256) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#1071-1083) should emit an event for: 
+	- liquidityFeeSell = _liquidityFee (0x1684843a68f7e6489c666d524f178edb1af27772.sol#1078) 
+	- buybackFeeSell = _buybackFee (0x1684843a68f7e6489c666d524f178edb1af27772.sol#1079) 
+	- reflectionFeeSell = _reflectionFee (0x1684843a68f7e6489c666d524f178edb1af27772.sol#1080) 
+	- investmentFeeSell = _investmentFee (0x1684843a68f7e6489c666d524f178edb1af27772.sol#1081) 
+	- totalFeeSell = _liquidityFee + (_buybackFee) + (_reflectionFee) + (_investmentFee) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#1082) 
+BabyDubbz.setBuyFees(uint256,uint256,uint256,uint256) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#1085-1097) should emit an event for: 
+	- liquidityFeeBuy = _liquidityFee (0x1684843a68f7e6489c666d524f178edb1af27772.sol#1092) 
+	- buybackFeeBuy = _buybackFee (0x1684843a68f7e6489c666d524f178edb1af27772.sol#1093) 
+	- reflectionFeeBuy = _reflectionFee (0x1684843a68f7e6489c666d524f178edb1af27772.sol#1094) 
+	- investmentFeeBuy = _investmentFee (0x1684843a68f7e6489c666d524f178edb1af27772.sol#1095) 
+	- totalFeeBuy = _liquidityFee + (_buybackFee) + (_reflectionFee) + (_investmentFee) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#1096) 
+BabyDubbz.setTxLimit(uint256) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#1119-1122) should emit an event for: 
+	- _maxTxAmount = amount (0x1684843a68f7e6489c666d524f178edb1af27772.sol#1121) 
+BabyDubbz.setSwapBackSettings(bool,uint256) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#1142-1145) should emit an event for: 
+	- swapThreshold = _amount (0x1684843a68f7e6489c666d524f178edb1af27772.sol#1144) 
+BabyDubbz.setTargetLiquidity(uint256,uint256) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#1154-1157) should emit an event for: 
+	- targetLiquidity = _target (0x1684843a68f7e6489c666d524f178edb1af27772.sol#1155) 
+	- targetLiquidityDenominator = _denominator (0x1684843a68f7e6489c666d524f178edb1af27772.sol#1156) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+Auth.transferOwnership(address).adr (0x1684843a68f7e6489c666d524f178edb1af27772.sol#64) lacks a zero-check on :
+		- owner = adr (0x1684843a68f7e6489c666d524f178edb1af27772.sol#65)
+BabyDubbz.setFeeReceivers(address,address)._autoLiquidityReceiver (0x1684843a68f7e6489c666d524f178edb1af27772.sol#1099) lacks a zero-check on :
+		- autoLiquidityReceiver = _autoLiquidityReceiver (0x1684843a68f7e6489c666d524f178edb1af27772.sol#1100)
+BabyDubbz.setFeeReceivers(address,address)._investmentFeeReceiver (0x1684843a68f7e6489c666d524f178edb1af27772.sol#1099) lacks a zero-check on :
+		- investmentFeeReceiver = _investmentFeeReceiver (0x1684843a68f7e6489c666d524f178edb1af27772.sol#1101)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+DividendDistributor.distributeDividend(address) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#640-653) has external calls inside a loop: MAGIC.transfer(shareholder,amount) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#648)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation/#calls-inside-a-loop
+
+Reentrancy in DividendDistributor.deposit() (0x1684843a68f7e6489c666d524f178edb1af27772.sol#587-605):
+	External calls:
+	- router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: msg.value}(0,path,address(this),block.timestamp) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#594-599)
+	State variables written after the call(s):
+	- dividendsPerShare = dividendsPerShare.add(dividendsPerShareAccuracyFactor.mul(amount).div(totalShares)) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#604)
+	- totalDividends = totalDividends.add(amount) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#603)
+Reentrancy in DividendDistributor.distributeDividend(address) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#640-653):
+	External calls:
+	- MAGIC.transfer(shareholder,amount) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#648)
+	State variables written after the call(s):
+	- shareholderClaims[shareholder] = block.timestamp (0x1684843a68f7e6489c666d524f178edb1af27772.sol#649)
+Reentrancy in DividendDistributor.setShare(address,uint256) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#571-585):
+	External calls:
+	- distributeDividend(shareholder) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#573)
+		- MAGIC.transfer(shareholder,amount) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#648)
+	State variables written after the call(s):
+	- addShareholder(shareholder) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#577)
+		- shareholderIndexes[shareholder] = shareholders.length (0x1684843a68f7e6489c666d524f178edb1af27772.sol#680)
+	- removeShareholder(shareholder) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#579)
+		- shareholderIndexes[shareholders[shareholders.length - 1]] = shareholderIndexes[shareholder] (0x1684843a68f7e6489c666d524f178edb1af27772.sol#686)
+	- addShareholder(shareholder) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#577)
+		- shareholders.push(shareholder) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#681)
+	- removeShareholder(shareholder) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#579)
+		- shareholders[shareholderIndexes[shareholder]] = shareholders[shareholders.length - 1] (0x1684843a68f7e6489c666d524f178edb1af27772.sol#685)
+		- shareholders.pop() (0x1684843a68f7e6489c666d524f178edb1af27772.sol#687)
+	- totalShares = totalShares.sub(shares[shareholder].amount).add(amount) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#582)
+Reentrancy in BabyDubbz.triggerAutoBuyback() (0x1684843a68f7e6489c666d524f178edb1af27772.sol#1015-1022):
+	External calls:
+	- buyTokens(autoBuybackAmount,DEAD) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#1016)
+		- router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: amount}(0,path,to,block.timestamp) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#1038)
+	State variables written after the call(s):
+	- autoBuybackAccumulator = autoBuybackAccumulator.add(autoBuybackAmount) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#1018)
+	- autoBuybackBlockLast = block.number (0x1684843a68f7e6489c666d524f178edb1af27772.sol#1017)
+	- autoBuybackEnabled = false (0x1684843a68f7e6489c666d524f178edb1af27772.sol#1020)
+Reentrancy in BabyDubbz.triggerZeusBuyback(uint256) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#1024-1031):
+	External calls:
+	- buyTokens(amount,DEAD) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#1025)
+		- router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: amount}(0,path,to,block.timestamp) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#1038)
+	State variables written after the call(s):
+	- autoBuybackAccumulator = autoBuybackAccumulator.add(autoBuybackAmount) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#1027)
+	- autoBuybackBlockLast = block.number (0x1684843a68f7e6489c666d524f178edb1af27772.sol#1026)
+	- autoBuybackEnabled = false (0x1684843a68f7e6489c666d524f178edb1af27772.sol#1029)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in BabyDubbz._transferFrom(address,address,uint256) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#853-920):
+	External calls:
+	- swapBack() (0x1684843a68f7e6489c666d524f178edb1af27772.sol#895)
+		- router.swapExactTokensForETHSupportingFeeOnTransferTokens(amountToSwap,0,path,address(this),block.timestamp) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#979)
+		- distributor.deposit{value: amountETHReflection}() (0x1684843a68f7e6489c666d524f178edb1af27772.sol#989)
+		- router.addLiquidityETH{value: amountETHLiquidity}(address(this),amountToLiquify,0,0,autoLiquidityReceiver,block.timestamp) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#993-1000)
+	- triggerAutoBuyback() (0x1684843a68f7e6489c666d524f178edb1af27772.sol#899)
+		- router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: amount}(0,path,to,block.timestamp) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#1038)
+	- distributor.setShare(sender,balanceOf(sender)) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#910)
+	- distributor.setShare(recipient,balanceOf(recipient)) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#913)
+	- distributor.process(distributorGas) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#916)
+	External calls sending eth:
+	- swapBack() (0x1684843a68f7e6489c666d524f178edb1af27772.sol#895)
+		- distributor.deposit{value: amountETHReflection}() (0x1684843a68f7e6489c666d524f178edb1af27772.sol#989)
+		- address(investmentFeeReceiver).transfer(amountETHInvestment) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#990)
+		- router.addLiquidityETH{value: amountETHLiquidity}(address(this),amountToLiquify,0,0,autoLiquidityReceiver,block.timestamp) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#993-1000)
+	- triggerAutoBuyback() (0x1684843a68f7e6489c666d524f178edb1af27772.sol#899)
+		- router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: amount}(0,path,to,block.timestamp) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#1038)
+	Event emitted after the call(s):
+	- Transfer(sender,recipient,amountReceived) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#918)
+Reentrancy in BabyDubbz._transferFrom(address,address,uint256) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#853-920):
+	External calls:
+	- swapBack() (0x1684843a68f7e6489c666d524f178edb1af27772.sol#895)
+		- router.swapExactTokensForETHSupportingFeeOnTransferTokens(amountToSwap,0,path,address(this),block.timestamp) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#979)
+		- distributor.deposit{value: amountETHReflection}() (0x1684843a68f7e6489c666d524f178edb1af27772.sol#989)
+		- router.addLiquidityETH{value: amountETHLiquidity}(address(this),amountToLiquify,0,0,autoLiquidityReceiver,block.timestamp) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#993-1000)
+	- triggerAutoBuyback() (0x1684843a68f7e6489c666d524f178edb1af27772.sol#899)
+		- router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: amount}(0,path,to,block.timestamp) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#1038)
+	External calls sending eth:
+	- swapBack() (0x1684843a68f7e6489c666d524f178edb1af27772.sol#895)
+		- distributor.deposit{value: amountETHReflection}() (0x1684843a68f7e6489c666d524f178edb1af27772.sol#989)
+		- address(investmentFeeReceiver).transfer(amountETHInvestment) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#990)
+		- router.addLiquidityETH{value: amountETHLiquidity}(address(this),amountToLiquify,0,0,autoLiquidityReceiver,block.timestamp) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#993-1000)
+	- triggerAutoBuyback() (0x1684843a68f7e6489c666d524f178edb1af27772.sol#899)
+		- router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: amount}(0,path,to,block.timestamp) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#1038)
+	Event emitted after the call(s):
+	- Transfer(sender,address(this),feeAmount) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#958)
+		- amountReceived = takeFee(recipient,amount) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#904)
+Reentrancy in BabyDubbz.swapBack() (0x1684843a68f7e6489c666d524f178edb1af27772.sol#967-1003):
+	External calls:
+	- router.swapExactTokensForETHSupportingFeeOnTransferTokens(amountToSwap,0,path,address(this),block.timestamp) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#979)
+	- distributor.deposit{value: amountETHReflection}() (0x1684843a68f7e6489c666d524f178edb1af27772.sol#989)
+	- router.addLiquidityETH{value: amountETHLiquidity}(address(this),amountToLiquify,0,0,autoLiquidityReceiver,block.timestamp) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#993-1000)
+	External calls sending eth:
+	- distributor.deposit{value: amountETHReflection}() (0x1684843a68f7e6489c666d524f178edb1af27772.sol#989)
+	- address(investmentFeeReceiver).transfer(amountETHInvestment) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#990)
+	- router.addLiquidityETH{value: amountETHLiquidity}(address(this),amountToLiquify,0,0,autoLiquidityReceiver,block.timestamp) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#993-1000)
+	Event emitted after the call(s):
+	- AutoLiquify(amountETHLiquidity,amountToLiquify) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#1001)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+DividendDistributor.shouldDistribute(address) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#635-638) uses timestamp for comparisons
+	Dangerous comparisons:
+	- shareholderClaims[shareholder] + minPeriod < block.timestamp && getUnpaidEarnings(shareholder) > minDistribution (0x1684843a68f7e6489c666d524f178edb1af27772.sol#636-637)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+4 different versions of Solidity are used:
+	- Version constraint ^0.8.9 is used by:
+		-^0.8.9 (0x1684843a68f7e6489c666d524f178edb1af27772.sol#7)
+		-^0.8.9 (0x1684843a68f7e6489c666d524f178edb1af27772.sol#96)
+		-^0.8.9 (0x1684843a68f7e6489c666d524f178edb1af27772.sol#501)
+		-^0.8.9 (0x1684843a68f7e6489c666d524f178edb1af27772.sol#694)
+	- Version constraint >=0.5.0 is used by:
+		->=0.5.0 (0x1684843a68f7e6489c666d524f178edb1af27772.sol#75)
+	- Version constraint ^0.8.0 is used by:
+		-^0.8.0 (0x1684843a68f7e6489c666d524f178edb1af27772.sol#127)
+	- Version constraint >=0.6.2 is used by:
+		->=0.6.2 (0x1684843a68f7e6489c666d524f178edb1af27772.sol#355)
+		->=0.6.2 (0x1684843a68f7e6489c666d524f178edb1af27772.sol#454)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#different-pragma-directives-are-used
+
+DividendDistributor.process(uint256) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#607-633) has costly operations inside a loop:
+	- currentIndex = 0 (0x1684843a68f7e6489c666d524f178edb1af27772.sol#621)
+DividendDistributor.distributeDividend(address) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#640-653) has costly operations inside a loop:
+	- totalDistributed = totalDistributed.add(amount) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#647)
+DividendDistributor.process(uint256) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#607-633) has costly operations inside a loop:
+	- currentIndex ++ (0x1684843a68f7e6489c666d524f178edb1af27772.sol#630)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#costly-operations-inside-a-loop
+
+BabyDubbz._transferFrom(address,address,uint256) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#853-920) has a high cyclomatic complexity (17).
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#cyclomatic-complexity
+
+BabyDubbz._maxTxAmount (0x1684843a68f7e6489c666d524f178edb1af27772.sol#712) is set pre-construction with a non-constant function or state variable:
+	- _totalSupply.div(800)
+BabyDubbz._maxWallet (0x1684843a68f7e6489c666d524f178edb1af27772.sol#713) is set pre-construction with a non-constant function or state variable:
+	- _totalSupply.div(40)
+BabyDubbz.swapThreshold (0x1684843a68f7e6489c666d524f178edb1af27772.sol#770) is set pre-construction with a non-constant function or state variable:
+	- _totalSupply / 2000
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#function-initializing-state
+
+Version constraint ^0.8.9 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- VerbatimInvalidDeduplication
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation.
+It is used by:
+	- ^0.8.9 (0x1684843a68f7e6489c666d524f178edb1af27772.sol#7)
+	- ^0.8.9 (0x1684843a68f7e6489c666d524f178edb1af27772.sol#96)
+	- ^0.8.9 (0x1684843a68f7e6489c666d524f178edb1af27772.sol#501)
+	- ^0.8.9 (0x1684843a68f7e6489c666d524f178edb1af27772.sol#694)
+Version constraint >=0.5.0 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor
+	- IncorrectEventSignatureInLibraries
+	- ABIEncoderV2PackedStorage.
+It is used by:
+	- >=0.5.0 (0x1684843a68f7e6489c666d524f178edb1af27772.sol#75)
+Version constraint ^0.8.0 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- SignedImmutables
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching.
+It is used by:
+	- ^0.8.0 (0x1684843a68f7e6489c666d524f178edb1af27772.sol#127)
+Version constraint >=0.6.2 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- MissingEscapingInFormatting
+	- ArraySliceDynamicallyEncodedBaseType
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow.
+It is used by:
+	- >=0.6.2 (0x1684843a68f7e6489c666d524f178edb1af27772.sol#355)
+	- >=0.6.2 (0x1684843a68f7e6489c666d524f178edb1af27772.sol#454)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Function IUniswapV2Router01.WETH() (0x1684843a68f7e6489c666d524f178edb1af27772.sol#359) is not in mixedCase
+Parameter DividendDistributor.setDistributionCriteria(uint256,uint256)._minPeriod (0x1684843a68f7e6489c666d524f178edb1af27772.sol#566) is not in mixedCase
+Parameter DividendDistributor.setDistributionCriteria(uint256,uint256)._minDistribution (0x1684843a68f7e6489c666d524f178edb1af27772.sol#566) is not in mixedCase
+Variable DividendDistributor.MAGIC (0x1684843a68f7e6489c666d524f178edb1af27772.sol#527) is not in mixedCase
+Parameter BabyDubbz.setAutoBuybackSettings(bool,uint256,uint256,uint256)._enabled (0x1684843a68f7e6489c666d524f178edb1af27772.sol#1041) is not in mixedCase
+Parameter BabyDubbz.setAutoBuybackSettings(bool,uint256,uint256,uint256)._cap (0x1684843a68f7e6489c666d524f178edb1af27772.sol#1041) is not in mixedCase
+Parameter BabyDubbz.setAutoBuybackSettings(bool,uint256,uint256,uint256)._amount (0x1684843a68f7e6489c666d524f178edb1af27772.sol#1041) is not in mixedCase
+Parameter BabyDubbz.setAutoBuybackSettings(bool,uint256,uint256,uint256)._period (0x1684843a68f7e6489c666d524f178edb1af27772.sol#1041) is not in mixedCase
+Parameter BabyDubbz.setSellFees(uint256,uint256,uint256,uint256)._liquidityFee (0x1684843a68f7e6489c666d524f178edb1af27772.sol#1072) is not in mixedCase
+Parameter BabyDubbz.setSellFees(uint256,uint256,uint256,uint256)._buybackFee (0x1684843a68f7e6489c666d524f178edb1af27772.sol#1073) is not in mixedCase
+Parameter BabyDubbz.setSellFees(uint256,uint256,uint256,uint256)._reflectionFee (0x1684843a68f7e6489c666d524f178edb1af27772.sol#1074) is not in mixedCase
+Parameter BabyDubbz.setSellFees(uint256,uint256,uint256,uint256)._investmentFee (0x1684843a68f7e6489c666d524f178edb1af27772.sol#1075) is not in mixedCase
+Parameter BabyDubbz.setBuyFees(uint256,uint256,uint256,uint256)._liquidityFee (0x1684843a68f7e6489c666d524f178edb1af27772.sol#1086) is not in mixedCase
+Parameter BabyDubbz.setBuyFees(uint256,uint256,uint256,uint256)._buybackFee (0x1684843a68f7e6489c666d524f178edb1af27772.sol#1087) is not in mixedCase
+Parameter BabyDubbz.setBuyFees(uint256,uint256,uint256,uint256)._reflectionFee (0x1684843a68f7e6489c666d524f178edb1af27772.sol#1088) is not in mixedCase
+Parameter BabyDubbz.setBuyFees(uint256,uint256,uint256,uint256)._investmentFee (0x1684843a68f7e6489c666d524f178edb1af27772.sol#1089) is not in mixedCase
+Parameter BabyDubbz.setFeeReceivers(address,address)._autoLiquidityReceiver (0x1684843a68f7e6489c666d524f178edb1af27772.sol#1099) is not in mixedCase
+Parameter BabyDubbz.setFeeReceivers(address,address)._investmentFeeReceiver (0x1684843a68f7e6489c666d524f178edb1af27772.sol#1099) is not in mixedCase
+Parameter BabyDubbz.setSwapBackSettings(bool,uint256)._enabled (0x1684843a68f7e6489c666d524f178edb1af27772.sol#1142) is not in mixedCase
+Parameter BabyDubbz.setSwapBackSettings(bool,uint256)._amount (0x1684843a68f7e6489c666d524f178edb1af27772.sol#1142) is not in mixedCase
+Parameter BabyDubbz.setTargetLiquidity(uint256,uint256)._target (0x1684843a68f7e6489c666d524f178edb1af27772.sol#1154) is not in mixedCase
+Parameter BabyDubbz.setTargetLiquidity(uint256,uint256)._denominator (0x1684843a68f7e6489c666d524f178edb1af27772.sol#1154) is not in mixedCase
+Parameter BabyDubbz.setDistributionCriteria(uint256,uint256)._minPeriod (0x1684843a68f7e6489c666d524f178edb1af27772.sol#1159) is not in mixedCase
+Parameter BabyDubbz.setDistributionCriteria(uint256,uint256)._minDistribution (0x1684843a68f7e6489c666d524f178edb1af27772.sol#1159) is not in mixedCase
+Constant BabyDubbz._name (0x1684843a68f7e6489c666d524f178edb1af27772.sol#707) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant BabyDubbz._symbol (0x1684843a68f7e6489c666d524f178edb1af27772.sol#708) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant BabyDubbz._decimals (0x1684843a68f7e6489c666d524f178edb1af27772.sol#709) is not in UPPER_CASE_WITH_UNDERSCORES
+Variable BabyDubbz._maxTxAmount (0x1684843a68f7e6489c666d524f178edb1af27772.sol#712) is not in mixedCase
+Variable BabyDubbz._maxWallet (0x1684843a68f7e6489c666d524f178edb1af27772.sol#713) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in BabyDubbz._transferFrom(address,address,uint256) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#853-920):
+	External calls:
+	- swapBack() (0x1684843a68f7e6489c666d524f178edb1af27772.sol#895)
+		- address(investmentFeeReceiver).transfer(amountETHInvestment) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#990)
+	External calls sending eth:
+	- swapBack() (0x1684843a68f7e6489c666d524f178edb1af27772.sol#895)
+		- distributor.deposit{value: amountETHReflection}() (0x1684843a68f7e6489c666d524f178edb1af27772.sol#989)
+		- address(investmentFeeReceiver).transfer(amountETHInvestment) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#990)
+		- router.addLiquidityETH{value: amountETHLiquidity}(address(this),amountToLiquify,0,0,autoLiquidityReceiver,block.timestamp) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#993-1000)
+	- triggerAutoBuyback() (0x1684843a68f7e6489c666d524f178edb1af27772.sol#899)
+		- router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: amount}(0,path,to,block.timestamp) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#1038)
+	State variables written after the call(s):
+	- _balances[sender] = _balances[sender].sub(amount,Insufficient Balance) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#902)
+	- _balances[recipient] = _balances[recipient].add(amountReceived) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#906)
+	- amountReceived = takeFee(recipient,amount) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#904)
+		- _balances[address(this)] = _balances[address(this)].add(feeAmount) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#957)
+	- triggerAutoBuyback() (0x1684843a68f7e6489c666d524f178edb1af27772.sol#899)
+		- autoBuybackAccumulator = autoBuybackAccumulator.add(autoBuybackAmount) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#1018)
+	- triggerAutoBuyback() (0x1684843a68f7e6489c666d524f178edb1af27772.sol#899)
+		- autoBuybackBlockLast = block.number (0x1684843a68f7e6489c666d524f178edb1af27772.sol#1017)
+	- triggerAutoBuyback() (0x1684843a68f7e6489c666d524f178edb1af27772.sol#899)
+		- autoBuybackEnabled = false (0x1684843a68f7e6489c666d524f178edb1af27772.sol#1020)
+	- triggerAutoBuyback() (0x1684843a68f7e6489c666d524f178edb1af27772.sol#899)
+		- inSwap = true (0x1684843a68f7e6489c666d524f178edb1af27772.sol#773)
+		- inSwap = false (0x1684843a68f7e6489c666d524f178edb1af27772.sol#775)
+	Event emitted after the call(s):
+	- Transfer(sender,address(this),feeAmount) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#958)
+		- amountReceived = takeFee(recipient,amount) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#904)
+	- Transfer(sender,recipient,amountReceived) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#918)
+Reentrancy in BabyDubbz.swapBack() (0x1684843a68f7e6489c666d524f178edb1af27772.sol#967-1003):
+	External calls:
+	- address(investmentFeeReceiver).transfer(amountETHInvestment) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#990)
+	External calls sending eth:
+	- distributor.deposit{value: amountETHReflection}() (0x1684843a68f7e6489c666d524f178edb1af27772.sol#989)
+	- address(investmentFeeReceiver).transfer(amountETHInvestment) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#990)
+	- router.addLiquidityETH{value: amountETHLiquidity}(address(this),amountToLiquify,0,0,autoLiquidityReceiver,block.timestamp) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#993-1000)
+	Event emitted after the call(s):
+	- AutoLiquify(amountETHLiquidity,amountToLiquify) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#1001)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+BabyDubbz.setDistributorSettings(uint256) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#1163-1166) uses literals with too many digits:
+	- require(bool)(gas < 900000) (0x1684843a68f7e6489c666d524f178edb1af27772.sol#1164)
+BabyDubbz.slitherConstructorVariables() (0x1684843a68f7e6489c666d524f178edb1af27772.sol#700-1182) uses literals with too many digits:
+	- distributorGas = 500000 (0x1684843a68f7e6489c666d524f178edb1af27772.sol#767)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+BabyDubbz._totalSupply (0x1684843a68f7e6489c666d524f178edb1af27772.sol#711) should be constant 
+BabyDubbz.feeDenominator (0x1684843a68f7e6489c666d524f178edb1af27772.sol#729) should be constant 
+DividendDistributor.MAGIC (0x1684843a68f7e6489c666d524f178edb1af27772.sol#527) should be constant 
+DividendDistributor.dividendsPerShareAccuracyFactor (0x1684843a68f7e6489c666d524f178edb1af27772.sol#540) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+
+BabyDubbz.distributor (0x1684843a68f7e6489c666d524f178edb1af27772.sol#765) should be immutable 
+BabyDubbz.distributorAddress (0x1684843a68f7e6489c666d524f178edb1af27772.sol#766) should be immutable 
+BabyDubbz.pair (0x1684843a68f7e6489c666d524f178edb1af27772.sol#748) should be immutable 
+BabyDubbz.router (0x1684843a68f7e6489c666d524f178edb1af27772.sol#747) should be immutable 
+DividendDistributor._token (0x1684843a68f7e6489c666d524f178edb1af27772.sol#519) should be immutable 
+DividendDistributor.router (0x1684843a68f7e6489c666d524f178edb1af27772.sol#528) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+./0x1684843a68f7e6489c666d524f178edb1af27772.sol analyzed (9 contracts with 94 detectors), 82 result(s) found
+
+real	0m3.597s
+user	0m3.333s
+sys	0m0.265s

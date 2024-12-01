@@ -1,0 +1,437 @@
+'solc --version' running
+'solc ./0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol:
+Warning: Return value of low-level calls not used.
+    --> ./0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol:1271:5:
+     |
+1271 |     treasuryWallet.call{ value: amount }('');
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: Return value of low-level calls not used.
+    --> ./0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol:1741:5:
+     |
+1741 |     _msgSender().call{ value: rewardsSent }('');
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: Failure condition of 'send' ignored. Consider using 'transfer' instead.
+    --> ./0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol:1786:5:
+     |
+1786 |     payable(owner()).send(address(this).balance);
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: Contract code size exceeds 24576 bytes (a limit introduced in Spurious Dragon). This contract may not be deployable on mainnet. Consider enabling the optimizer (with a low "runs" value!), turning off revert strings, or using libraries.
+   --> ./0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol:824:1:
+    |
+824 | contract SOTL is Context, IERC20, Ownable {
+    | ^ (Relevant source part starts here and spans across multiple lines).
+
+
+
+SOTL._sendETHToTreasury(uint256) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1270-1272) sends eth to arbitrary user
+	Dangerous calls:
+	- treasuryWallet.call{value: amount}() (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1271)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+Reentrancy in SOTL._transfer(address,address,uint256) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1141-1240):
+	External calls:
+	- _swapTokens(_contractTokenBalance) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1219)
+		- treasuryWallet.call{value: amount}() (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1271)
+		- uniswapV2Router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: amount}(0,path,buybackReceiver,block.timestamp) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1281-1288)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1302-1308)
+	External calls sending eth:
+	- _swapTokens(_contractTokenBalance) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1219)
+		- treasuryWallet.call{value: amount}() (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1271)
+		- uniswapV2Router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: amount}(0,path,buybackReceiver,block.timestamp) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1281-1288)
+	State variables written after the call(s):
+	- _isSelling = true (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1222)
+	SOTL._isSelling (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#890) can be used in cross function reentrancies:
+	- SOTL._liquidityFeeAggregate(address) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1518-1527)
+	- SOTL._transfer(address,address,uint256) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1141-1240)
+	- _isSelling = false (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1239)
+	SOTL._isSelling (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#890) can be used in cross function reentrancies:
+	- SOTL._liquidityFeeAggregate(address) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1518-1527)
+	- SOTL._transfer(address,address,uint256) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1141-1240)
+	- _tokenTransfer(from,to,amount,takeFee) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1238)
+		- _rOwned[address(this)] = _rOwned[address(this)].add(rLiquidity) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1505)
+		- _rOwned[sender] = _rOwned[sender].sub(rAmount) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1347)
+		- _rOwned[sender] = _rOwned[sender].sub(rAmount) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1367)
+		- _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1348)
+		- _rOwned[sender] = _rOwned[sender].sub(rAmount) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1389)
+		- _rOwned[sender] = _rOwned[sender].sub(rAmount) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1410)
+		- _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1390)
+		- _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1369)
+		- _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1412)
+	SOTL._rOwned (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#833) can be used in cross function reentrancies:
+	- SOTL._getCurrentSupply() (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1489-1500)
+	- SOTL._takeLiquidity(uint256) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1502-1508)
+	- SOTL._transferBothExcluded(address,address,uint256) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1396-1416)
+	- SOTL._transferFromExcluded(address,address,uint256) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1375-1394)
+	- SOTL._transferStandard(address,address,uint256) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1334-1352)
+	- SOTL._transferToExcluded(address,address,uint256) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1354-1373)
+	- SOTL.balanceOf(address) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#970-973)
+	- SOTL.constructor() (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#916-919)
+	- SOTL.deliver(uint256) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1074-1084)
+	- SOTL.excludeFromReward(address) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1107-1114)
+	- _tokenTransfer(from,to,amount,takeFee) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1238)
+		- _rTotal = _rTotal.sub(rFee) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1419)
+	SOTL._rTotal (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#853) can be used in cross function reentrancies:
+	- SOTL._getCurrentSupply() (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1489-1500)
+	- SOTL._reflectFee(uint256,uint256) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1418-1421)
+	- SOTL.constructor() (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#916-919)
+	- SOTL.deliver(uint256) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1074-1084)
+	- SOTL.tokenFromReflection(uint256) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1101-1105)
+	- _rewardsLastClaim[from] = block.timestamp (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1221)
+	SOTL._rewardsLastClaim (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#841) can be used in cross function reentrancies:
+	- SOTL._transfer(address,address,uint256) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1141-1240)
+	- SOTL.canClaimRewards(address) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1745-1754)
+	- SOTL.claimETHRewards() (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1728-1743)
+	- SOTL.claimTokenRewards(address) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1756-1774)
+	- SOTL.getLastETHRewardsClaim(address) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1062-1068)
+	- _tokenTransfer(from,to,amount,takeFee) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1238)
+		- _tOwned[address(this)] = _tOwned[address(this)].add(tLiquidity) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1507)
+		- _tOwned[sender] = _tOwned[sender].sub(tAmount) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1388)
+		- _tOwned[sender] = _tOwned[sender].sub(tAmount) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1409)
+		- _tOwned[recipient] = _tOwned[recipient].add(tTransferAmount) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1368)
+		- _tOwned[recipient] = _tOwned[recipient].add(tTransferAmount) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1411)
+	SOTL._tOwned (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#834) can be used in cross function reentrancies:
+	- SOTL._getCurrentSupply() (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1489-1500)
+	- SOTL._takeLiquidity(uint256) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1502-1508)
+	- SOTL._transferBothExcluded(address,address,uint256) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1396-1416)
+	- SOTL._transferFromExcluded(address,address,uint256) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1375-1394)
+	- SOTL._transferToExcluded(address,address,uint256) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1354-1373)
+	- SOTL.balanceOf(address) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#970-973)
+	- SOTL.excludeFromReward(address) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1107-1114)
+	- SOTL.includeInReward(address) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1116-1127)
+	- _tokenTransfer(from,to,amount,takeFee) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1238)
+		- buybackFee = _previousBuybackFee (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1560)
+		- buybackFee = 0 (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1553)
+	SOTL.buybackFee (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#866) can be used in cross function reentrancies:
+	- SOTL._liquidityFeeAggregate(address) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1518-1527)
+	- SOTL._removeAllFee() (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1537-1554)
+	- SOTL._restoreAllFee() (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1556-1561)
+	- SOTL._swapTokens(uint256) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1242-1268)
+	- SOTL.buybackFee (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#866)
+	- SOTL.getSellSlippage(address) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1563-1569)
+	- SOTL.openTrading() (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#937-944)
+	- SOTL.setNewFeesPercentages(uint256,uint256,uint256,uint256) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1607-1613)
+	- _tokenTransfer(from,to,amount,takeFee) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1238)
+		- ethRewardsFee = _previousETHRewardsFee (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1559)
+		- ethRewardsFee = 0 (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1552)
+	SOTL.ethRewardsFee (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#862) can be used in cross function reentrancies:
+	- SOTL._liquidityFeeAggregate(address) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1518-1527)
+	- SOTL._removeAllFee() (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1537-1554)
+	- SOTL._restoreAllFee() (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1556-1561)
+	- SOTL._swapTokens(uint256) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1242-1268)
+	- SOTL.ethRewardsFee (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#862)
+	- SOTL.getSellSlippage(address) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1563-1569)
+	- SOTL.openTrading() (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#937-944)
+	- SOTL.setNewFeesPercentages(uint256,uint256,uint256,uint256) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1607-1613)
+	- _tokenTransfer(from,to,amount,takeFee) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1238)
+		- treasuryFee = _previousTreasuryFee (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1558)
+		- treasuryFee = 0 (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1551)
+	SOTL.treasuryFee (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#859) can be used in cross function reentrancies:
+	- SOTL._liquidityFeeAggregate(address) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1518-1527)
+	- SOTL._removeAllFee() (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1537-1554)
+	- SOTL._restoreAllFee() (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1556-1561)
+	- SOTL._swapTokens(uint256) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1242-1268)
+	- SOTL.getSellSlippage(address) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1563-1569)
+	- SOTL.openTrading() (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#937-944)
+	- SOTL.setNewFeesPercentages(uint256,uint256,uint256,uint256) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1607-1613)
+	- SOTL.treasuryFee (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#859)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+SOTL.claimTokenRewards(address) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1756-1774) ignores return value by IERC20(token).transfer(_msgSender(),rewardsSent) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1772)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+SOTL.calculateETHRewards(address) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1698-1707) performs a multiplication on the result of a division:
+	- baseRewards = ethRewardsBalance.mul(balanceOf(wallet)).div(_tTotal.sub(balanceOf(deadAddress))) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1699-1701)
+	- rewardsWithBooster = baseRewards.add(baseRewards.mul(boostRewardsPercent).div(10 ** 2)) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1702-1704)
+SOTL.calculateTokenRewards(address,address) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1709-1726) performs a multiplication on the result of a division:
+	- baseRewards = contractTokenBalance.mul(balanceOf(wallet)).div(_tTotal.sub(balanceOf(deadAddress))) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1716-1718)
+	- rewardsWithBooster = baseRewards.add(baseRewards.mul(boostRewardsPercent).div(10 ** 2)) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1719-1721)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+SOTL._transfer(address,address,uint256) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1141-1240) uses a dangerous strict equality:
+	- block.timestamp == launchTime (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1193)
+SOTL.canClaimRewards(address) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1745-1754) uses a dangerous strict equality:
+	- _rewardsLastClaim[user] == 0 (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1746)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-strict-equalities
+
+SOTL.setRewardsClaimTimeSeconds(uint256) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1601-1604) contains a tautology or contradiction:
+	- require(bool,string)(_seconds >= 0 && _seconds <= 60 * 60 * 24 * 7,claim time delay must be greater or equal to 0 seconds and less than or equal to 7 days) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1602)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#tautology-or-contradiction
+
+SOTL._sendETHToTreasury(uint256) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1270-1272) ignores return value by treasuryWallet.call{value: amount}() (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1271)
+SOTL.claimETHRewards() (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1728-1743) ignores return value by _msgSender().call{value: rewardsSent}() (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1741)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-low-level-calls
+
+SOTL.emergencyWithdraw() (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1785-1787) ignores return value by address(owner()).send(address(this).balance) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1786)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-send
+
+SOTL.allowance(address,address).owner (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#984) shadows:
+	- Ownable.owner() (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#359-361) (function)
+SOTL._approve(address,address,uint256).owner (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1130) shadows:
+	- Ownable.owner() (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#359-361) (function)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#local-variable-shadowing
+
+SOTL.setRewardsClaimTimeSeconds(uint256) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1601-1604) should emit an event for: 
+	- rewardsClaimTimeSeconds = _seconds (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1603) 
+SOTL.setNewFeesPercentages(uint256,uint256,uint256,uint256) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1607-1613) should emit an event for: 
+	- reflectionFee = _reflectionNewFee (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1609) 
+	- treasuryFee = _treasuryNewFee (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1610) 
+	- ethRewardsFee = _ethRewardsNewFee (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1611) 
+	- buybackFee = _buybackRewardsNewFee (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1612) 
+SOTL.setFeeSellMultiplier(uint256) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1615-1618) should emit an event for: 
+	- feeSellMultiplier = multiplier (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1617) 
+SOTL.setBoostRewardsPercent(uint256) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1645-1647) should emit an event for: 
+	- boostRewardsPercent = perc (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1646) 
+SOTL.setFeeRate(uint256) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1776-1778) should emit an event for: 
+	- feeRate = _rate (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1777) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+SOTL.setTreasuryAddress(address)._treasuryWallet (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1620) lacks a zero-check on :
+		- treasuryWallet = address(_treasuryWallet) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1621)
+SOTL.setBuybackTokenAddress(address)._tokenAddress (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1629) lacks a zero-check on :
+		- buybackTokenAddress = _tokenAddress (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1630)
+SOTL.setBuybackReceiver(address)._receiver (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1633) lacks a zero-check on :
+		- buybackReceiver = _receiver (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1634)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in SOTL._swapTokens(uint256) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1242-1268):
+	External calls:
+	- _swapTokensForEth(_contractTokenBalance) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1244)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1302-1308)
+	State variables written after the call(s):
+	- ethRewardsBalance += ethBalanceUpdate.mul(ethRewardsFee).div(_liquidityFeeTotal) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1249-1251)
+Reentrancy in SOTL._transfer(address,address,uint256) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1141-1240):
+	External calls:
+	- _swapTokens(_contractTokenBalance) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1219)
+		- treasuryWallet.call{value: amount}() (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1271)
+		- uniswapV2Router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: amount}(0,path,buybackReceiver,block.timestamp) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1281-1288)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1302-1308)
+	External calls sending eth:
+	- _swapTokens(_contractTokenBalance) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1219)
+		- treasuryWallet.call{value: amount}() (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1271)
+		- uniswapV2Router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: amount}(0,path,buybackReceiver,block.timestamp) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1281-1288)
+	State variables written after the call(s):
+	- _tokenTransfer(from,to,amount,takeFee) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1238)
+		- _previousBuybackFee = buybackFee (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1548)
+	- _tokenTransfer(from,to,amount,takeFee) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1238)
+		- _previousETHRewardsFee = ethRewardsFee (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1547)
+	- _tokenTransfer(from,to,amount,takeFee) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1238)
+		- _previousReflectFee = reflectionFee (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1545)
+	- _tokenTransfer(from,to,amount,takeFee) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1238)
+		- _previousTreasuryFee = treasuryFee (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1546)
+	- _tokenTransfer(from,to,amount,takeFee) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1238)
+		- _tFeeTotal = _tFeeTotal.add(tFee) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1420)
+	- _tokenTransfer(from,to,amount,takeFee) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1238)
+		- reflectionFee = _previousReflectFee (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1557)
+		- reflectionFee = 0 (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1550)
+Reentrancy in SOTL.initContract() (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#921-935):
+	External calls:
+	- uniswapV2Pair = IUniswapV2Factory(_uniswapV2Router.factory()).createPair(address(this),_uniswapV2Router.WETH()) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#925-928)
+	State variables written after the call(s):
+	- _isExcludedFee[owner()] = true (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#932)
+	- _isExcludedFee[address(this)] = true (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#933)
+	- _isExcludedFee[treasuryWallet] = true (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#934)
+	- uniswapV2Router = _uniswapV2Router (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#930)
+Reentrancy in SOTL.transferFrom(address,address,uint256) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1002-1017):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1007)
+		- treasuryWallet.call{value: amount}() (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1271)
+		- uniswapV2Router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: amount}(0,path,buybackReceiver,block.timestamp) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1281-1288)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1302-1308)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1007)
+		- treasuryWallet.call{value: amount}() (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1271)
+		- uniswapV2Router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: amount}(0,path,buybackReceiver,block.timestamp) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1281-1288)
+	State variables written after the call(s):
+	- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1008-1015)
+		- _allowances[owner][spender] = amount (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1137)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in SOTL._buyBackTokens(uint256) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1274-1291):
+	External calls:
+	- uniswapV2Router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: amount}(0,path,buybackReceiver,block.timestamp) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1281-1288)
+	Event emitted after the call(s):
+	- SwapETHForTokens(buybackReceiver,amount,path) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1290)
+Reentrancy in SOTL._swapTokens(uint256) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1242-1268):
+	External calls:
+	- _swapTokensForEth(_contractTokenBalance) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1244)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1302-1308)
+	- _sendETHToTreasury(treasuryETHBalance) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1258)
+		- treasuryWallet.call{value: amount}() (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1271)
+	- _buyBackTokens(buybackETHBalance) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1266)
+		- uniswapV2Router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: amount}(0,path,buybackReceiver,block.timestamp) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1281-1288)
+	External calls sending eth:
+	- _sendETHToTreasury(treasuryETHBalance) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1258)
+		- treasuryWallet.call{value: amount}() (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1271)
+	- _buyBackTokens(buybackETHBalance) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1266)
+		- uniswapV2Router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: amount}(0,path,buybackReceiver,block.timestamp) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1281-1288)
+	Event emitted after the call(s):
+	- SwapETHForTokens(buybackReceiver,amount,path) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1290)
+		- _buyBackTokens(buybackETHBalance) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1266)
+Reentrancy in SOTL._swapTokensForEth(uint256) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1293-1311):
+	External calls:
+	- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1302-1308)
+	Event emitted after the call(s):
+	- SwapTokensForETH(tokenAmount,path) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1310)
+Reentrancy in SOTL._transfer(address,address,uint256) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1141-1240):
+	External calls:
+	- _swapTokens(_contractTokenBalance) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1219)
+		- treasuryWallet.call{value: amount}() (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1271)
+		- uniswapV2Router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: amount}(0,path,buybackReceiver,block.timestamp) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1281-1288)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1302-1308)
+	External calls sending eth:
+	- _swapTokens(_contractTokenBalance) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1219)
+		- treasuryWallet.call{value: amount}() (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1271)
+		- uniswapV2Router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: amount}(0,path,buybackReceiver,block.timestamp) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1281-1288)
+	Event emitted after the call(s):
+	- Transfer(sender,recipient,tTransferAmount) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1351)
+		- _tokenTransfer(from,to,amount,takeFee) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1238)
+	- Transfer(sender,recipient,tTransferAmount) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1393)
+		- _tokenTransfer(from,to,amount,takeFee) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1238)
+	- Transfer(sender,recipient,tTransferAmount) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1372)
+		- _tokenTransfer(from,to,amount,takeFee) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1238)
+	- Transfer(sender,recipient,tTransferAmount) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1415)
+		- _tokenTransfer(from,to,amount,takeFee) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1238)
+Reentrancy in SOTL.claimETHRewards() (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1728-1743):
+	External calls:
+	- _msgSender().call{value: rewardsSent}() (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1741)
+	Event emitted after the call(s):
+	- SendETHRewards(_msgSender(),rewardsSent) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1742)
+Reentrancy in SOTL.claimTokenRewards(address) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1756-1774):
+	External calls:
+	- IERC20(token).transfer(_msgSender(),rewardsSent) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1772)
+	Event emitted after the call(s):
+	- SendTokenRewards(_msgSender(),token,rewardsSent) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1773)
+Reentrancy in SOTL.transferFrom(address,address,uint256) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1002-1017):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1007)
+		- treasuryWallet.call{value: amount}() (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1271)
+		- uniswapV2Router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: amount}(0,path,buybackReceiver,block.timestamp) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1281-1288)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1302-1308)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1007)
+		- treasuryWallet.call{value: amount}() (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1271)
+		- uniswapV2Router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: amount}(0,path,buybackReceiver,block.timestamp) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1281-1288)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1138)
+		- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1008-1015)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+SOTL._transfer(address,address,uint256) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1141-1240) uses timestamp for comparisons
+	Dangerous comparisons:
+	- block.timestamp <= launchTime + 1800 (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1171)
+	- block.timestamp == launchTime (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1193)
+SOTL._liquidityFeeAggregate(address) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1518-1527) uses timestamp for comparisons
+	Dangerous comparisons:
+	- _isSelling && ! canClaimRewards(seller) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1523-1525)
+SOTL.canClaimRewards(address) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1745-1754) uses timestamp for comparisons
+	Dangerous comparisons:
+	- _rewardsLastClaim[user] == 0 (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1746)
+	- block.timestamp > launchTime.add(rewardsClaimTimeSeconds) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1747-1748)
+	- block.timestamp > _rewardsLastClaim[user].add(rewardsClaimTimeSeconds) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1751-1752)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Address.isContract(address) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#419-429) uses assembly
+	- INLINE ASM (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#425-427)
+Address.verifyCallResult(bool,bytes,string) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#588-608) uses assembly
+	- INLINE ASM (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#600-603)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#assembly-usage
+
+SOTL.setBoostRewardsContract(address) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1649-1660) compares to a boolean constant:
+	-require(bool,string)(_contCheck.passesTest(address(0)) == true || _contCheck.passesTest(address(0)) == false,contract does not implement interface) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1653-1657)
+SOTL.setFeeExclusionContract(address) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1662-1673) compares to a boolean constant:
+	-require(bool,string)(_contCheck.passesTest(address(0)) == true || _contCheck.passesTest(address(0)) == false,contract does not implement interface) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1666-1670)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#boolean-equality
+
+SOTL.includeInReward(address) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1116-1127) has costly operations inside a loop:
+	- _excluded.pop() (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1123)
+SOTL.amnestySniper(address) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1686-1696) has costly operations inside a loop:
+	- _confirmedSnipers.pop() (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1692)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#costly-operations-inside-a-loop
+
+SOTL._transfer(address,address,uint256) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1141-1240) has a high cyclomatic complexity (12).
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#cyclomatic-complexity
+
+Context._msgData() (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#327-329) is never used and should be removed
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dead-code
+
+SOTL._previousReflectFee (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#857) is set pre-construction with a non-constant function or state variable:
+	- reflectionFee
+SOTL._previousTreasuryFee (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#860) is set pre-construction with a non-constant function or state variable:
+	- treasuryFee
+SOTL._previousETHRewardsFee (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#863) is set pre-construction with a non-constant function or state variable:
+	- ethRewardsFee
+SOTL._previousBuybackFee (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#867) is set pre-construction with a non-constant function or state variable:
+	- buybackFee
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#function-initializing-state
+
+Version constraint ^0.8.4 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- SignedImmutables.
+It is used by:
+	- ^0.8.4 (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#9)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in Address.sendValue(address,uint256) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#447-452):
+	- (success,None) = recipient.call{value: amount}() (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#450)
+Low level call in Address.functionCallWithValue(address,bytes,uint256,string) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#515-526):
+	- (success,returndata) = target.call{value: value}(data) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#524)
+Low level call in Address.functionStaticCall(address,bytes,string) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#544-553):
+	- (success,returndata) = target.staticcall(data) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#551)
+Low level call in Address.functionDelegateCall(address,bytes,string) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#571-580):
+	- (success,returndata) = target.delegatecall(data) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#578)
+Low level call in SOTL._sendETHToTreasury(uint256) (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1270-1272):
+	- treasuryWallet.call{value: amount}() (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1271)
+Low level call in SOTL.claimETHRewards() (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1728-1743):
+	- _msgSender().call{value: rewardsSent}() (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1741)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Function IUniswapV2Pair.DOMAIN_SEPARATOR() (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#626) is not in mixedCase
+Function IUniswapV2Pair.PERMIT_TYPEHASH() (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#627) is not in mixedCase
+Function IUniswapV2Pair.MINIMUM_LIQUIDITY() (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#644) is not in mixedCase
+Function IUniswapV2Router01.WETH() (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#680) is not in mixedCase
+Function SOTL.MaxTXAmount() (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#962-964) is not in mixedCase
+Function SOTL.MaxWalletSize() (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#966-968) is not in mixedCase
+Parameter SOTL.isUniswapPair(address)._pair (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1571) is not in mixedCase
+Parameter SOTL.setRewardsClaimTimeSeconds(uint256)._seconds (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1601) is not in mixedCase
+Parameter SOTL.setNewFeesPercentages(uint256,uint256,uint256,uint256)._reflectionNewFee (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1607) is not in mixedCase
+Parameter SOTL.setNewFeesPercentages(uint256,uint256,uint256,uint256)._treasuryNewFee (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1607) is not in mixedCase
+Parameter SOTL.setNewFeesPercentages(uint256,uint256,uint256,uint256)._ethRewardsNewFee (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1607) is not in mixedCase
+Parameter SOTL.setNewFeesPercentages(uint256,uint256,uint256,uint256)._buybackRewardsNewFee (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1607) is not in mixedCase
+Parameter SOTL.setTreasuryAddress(address)._treasuryWallet (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1620) is not in mixedCase
+Parameter SOTL.setIsMaxBuyActivated(bool)._value (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1625) is not in mixedCase
+Parameter SOTL.setBuybackTokenAddress(address)._tokenAddress (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1629) is not in mixedCase
+Parameter SOTL.setBuybackReceiver(address)._receiver (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1633) is not in mixedCase
+Parameter SOTL.addUniswapPair(address)._pair (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1637) is not in mixedCase
+Parameter SOTL.removeUniswapPair(address)._pair (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1641) is not in mixedCase
+Parameter SOTL.setBoostRewardsContract(address)._contract (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1649) is not in mixedCase
+Parameter SOTL.setFeeExclusionContract(address)._contract (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1662) is not in mixedCase
+Parameter SOTL.setFeeRate(uint256)._rate (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1776) is not in mixedCase
+Constant SOTL._name (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#847) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant SOTL._symbol (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#848) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant SOTL._decimals (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#849) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant SOTL._tTotal (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#852) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant SOTL._uniswapRouterAddress (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#886-887) is not in UPPER_CASE_WITH_UNDERSCORES
+Variable SOTL._maxTxAmount (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#894) is not in mixedCase
+Variable SOTL._maxWalletSize (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#895) is not in mixedCase
+Variable SOTL._maximumBuyAmount (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#896) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Loop condition i < _excluded.length (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#1492) should use cached array length instead of referencing `length` member of the storage array.
+ Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#cache-array-length
+
+SOTL._maximumBuyAmount (0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol#896) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+./0x01490172fd413bb9b74ca73c5df1e245ef14412a.sol analyzed (11 contracts with 94 detectors), 85 result(s) found
+
+real	0m5.807s
+user	0m5.540s
+sys	0m0.268s

@@ -1,0 +1,89 @@
+'solc --version' running
+'solc ./0x730f8c40a08d02349a2d64e3193cf207a2a2dfe7.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x730f8c40a08d02349a2d64e3193cf207a2a2dfe7.sol:
+./0x730f8c40a08d02349a2d64e3193cf207a2a2dfe7.sol:9:9: Warning: Use of the "var" keyword is deprecated.
+        var acc = Acc[msg.sender];
+        ^-----^
+./0x730f8c40a08d02349a2d64e3193cf207a2a2dfe7.sol:19:9: Warning: Use of the "var" keyword is deprecated.
+        var acc = Acc[msg.sender];
+        ^-----^
+./0x730f8c40a08d02349a2d64e3193cf207a2a2dfe7.sol:49:5: Warning: Defining constructors as functions with the same name as the contract is deprecated. Use "constructor(...) { ... }" instead.
+    function PG_Bank(address log) public{
+    ^ (Relevant source part starts here and spans across multiple lines).
+
+
+Log (0x730f8c40a08d02349a2d64e3193cf207a2a2dfe7.sol#55-79) contract sets array length with a user-controlled value:
+	- History.push(LastMsg) (0x730f8c40a08d02349a2d64e3193cf207a2a2dfe7.sol#76)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#array-length-assignment
+
+Reentrancy in PG_Bank.Collect(uint256) (0x730f8c40a08d02349a2d64e3193cf207a2a2dfe7.sol#15-28):
+	External calls:
+	- msg.sender.call.value(_am)() (0x730f8c40a08d02349a2d64e3193cf207a2a2dfe7.sol#22)
+	State variables written after the call(s):
+	- acc.balance -= _am (0x730f8c40a08d02349a2d64e3193cf207a2a2dfe7.sol#24)
+	PG_Bank.Acc (0x730f8c40a08d02349a2d64e3193cf207a2a2dfe7.sol#43) can be used in cross function reentrancies:
+	- PG_Bank.Acc (0x730f8c40a08d02349a2d64e3193cf207a2a2dfe7.sol#43)
+	- PG_Bank.Collect(uint256) (0x730f8c40a08d02349a2d64e3193cf207a2a2dfe7.sol#15-28)
+	- PG_Bank.Put(uint256) (0x730f8c40a08d02349a2d64e3193cf207a2a2dfe7.sol#5-13)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+PG_Bank.Put(uint256) (0x730f8c40a08d02349a2d64e3193cf207a2a2dfe7.sol#5-13) uses timestamp for comparisons
+	Dangerous comparisons:
+	- _unlockTime > now (0x730f8c40a08d02349a2d64e3193cf207a2a2dfe7.sol#11)
+PG_Bank.Collect(uint256) (0x730f8c40a08d02349a2d64e3193cf207a2a2dfe7.sol#15-28) uses timestamp for comparisons
+	Dangerous comparisons:
+	- acc.balance >= MinSum && acc.balance >= _am && now > acc.unlockTime (0x730f8c40a08d02349a2d64e3193cf207a2a2dfe7.sol#20)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Version constraint ^0.4.25 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ABIEncoderV2PackedStorage_0.4.x.
+It is used by:
+	- ^0.4.25 (0x730f8c40a08d02349a2d64e3193cf207a2a2dfe7.sol#1)
+solc-0.4.25 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in PG_Bank.Collect(uint256) (0x730f8c40a08d02349a2d64e3193cf207a2a2dfe7.sol#15-28):
+	- msg.sender.call.value(_am)() (0x730f8c40a08d02349a2d64e3193cf207a2a2dfe7.sol#22)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Contract PG_Bank (0x730f8c40a08d02349a2d64e3193cf207a2a2dfe7.sol#3-52) is not in CapWords
+Function PG_Bank.Put(uint256) (0x730f8c40a08d02349a2d64e3193cf207a2a2dfe7.sol#5-13) is not in mixedCase
+Parameter PG_Bank.Put(uint256)._unlockTime (0x730f8c40a08d02349a2d64e3193cf207a2a2dfe7.sol#5) is not in mixedCase
+Function PG_Bank.Collect(uint256) (0x730f8c40a08d02349a2d64e3193cf207a2a2dfe7.sol#15-28) is not in mixedCase
+Parameter PG_Bank.Collect(uint256)._am (0x730f8c40a08d02349a2d64e3193cf207a2a2dfe7.sol#15) is not in mixedCase
+Variable PG_Bank.Acc (0x730f8c40a08d02349a2d64e3193cf207a2a2dfe7.sol#43) is not in mixedCase
+Variable PG_Bank.LogFile (0x730f8c40a08d02349a2d64e3193cf207a2a2dfe7.sol#45) is not in mixedCase
+Variable PG_Bank.MinSum (0x730f8c40a08d02349a2d64e3193cf207a2a2dfe7.sol#47) is not in mixedCase
+Function Log.AddMessage(address,uint256,string) (0x730f8c40a08d02349a2d64e3193cf207a2a2dfe7.sol#69-77) is not in mixedCase
+Parameter Log.AddMessage(address,uint256,string)._adr (0x730f8c40a08d02349a2d64e3193cf207a2a2dfe7.sol#69) is not in mixedCase
+Parameter Log.AddMessage(address,uint256,string)._val (0x730f8c40a08d02349a2d64e3193cf207a2a2dfe7.sol#69) is not in mixedCase
+Parameter Log.AddMessage(address,uint256,string)._data (0x730f8c40a08d02349a2d64e3193cf207a2a2dfe7.sol#69) is not in mixedCase
+Variable Log.History (0x730f8c40a08d02349a2d64e3193cf207a2a2dfe7.sol#65) is not in mixedCase
+Variable Log.LastMsg (0x730f8c40a08d02349a2d64e3193cf207a2a2dfe7.sol#67) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+PG_Bank.MinSum (0x730f8c40a08d02349a2d64e3193cf207a2a2dfe7.sol#47) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+
+AddMessage(address,uint256,string) should be declared external:
+	- Log.AddMessage(address,uint256,string) (0x730f8c40a08d02349a2d64e3193cf207a2a2dfe7.sol#69-77)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#public-function-that-could-be-declared-external
+./0x730f8c40a08d02349a2d64e3193cf207a2a2dfe7.sol analyzed (2 contracts with 94 detectors), 23 result(s) found
+
+real	0m1.504s
+user	0m1.248s
+sys	0m0.258s

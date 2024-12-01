@@ -1,0 +1,331 @@
+'solc --version' running
+'solc ./0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol:
+Warning: SPDX license identifier not provided in source file. Before publishing, consider adding a comment containing "SPDX-License-Identifier: <SPDX-License>" to each source file. Use "SPDX-License-Identifier: UNLICENSED" for non-open-source code. Please see https://spdx.org for more information.
+--> 0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol
+
+
+
+Router.batchStakeFT(address[],uint256[]) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#610-647) sends eth to arbitrary user
+	Dangerous calls:
+	- IPool(_poolList[i]).stakeFT{value: _totalFee}(_userSellNumList[i],msg.sender) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#626-629)
+Router.batchSwapFTforNFT(address[],Router.input[],address) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#747-792) sends eth to arbitrary user
+	Dangerous calls:
+	- _profitAmount = IPool(_poolList[i]).swapFTforNFT{value: _totalFee}(InputArray[i].tokenIds,msg.sender) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#767-769)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+Reentrancy in Router.batchSwapFTforNFT(address[],Router.input[],address) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#747-792):
+	External calls:
+	- _paymentToken = IPool(_poolList[i]).paymentToken() (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#756)
+	- _profitAmount = IPool(_poolList[i]).swapFTforNFT{value: _totalFee}(InputArray[i].tokenIds,msg.sender) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#767-769)
+	- _profitAmount = IPool(_poolList[i]).swapFTforNFT(InputArray[i].tokenIds,msg.sender) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#771-774)
+	External calls sending eth:
+	- _profitAmount = IPool(_poolList[i]).swapFTforNFT{value: _totalFee}(InputArray[i].tokenIds,msg.sender) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#767-769)
+	State variables written after the call(s):
+	- _updateFee(_supporter,_paymentToken,_profitAmount) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#777)
+		- supporterFee[_supporter][_paymentToken] += _supporterFee (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#1018)
+	Router.supporterFee (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#484) can be used in cross function reentrancies:
+	- Router._updateFee(address,address,uint256) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#1006-1022)
+	- Router.getSupporterFee(address,address) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#933-935)
+	- Router.withdrawSupportFee(address) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#864-879)
+	- _updateFee(_supporter,_paymentToken,_profitAmount) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#777)
+		- totalProtocolFee[_paymentToken] += _protocolFee (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#1017)
+		- totalProtocolFee[_paymentToken] += _profitAmount (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#1020)
+	Router.totalProtocolFee (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#481) can be used in cross function reentrancies:
+	- Router._updateFee(address,address,uint256) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#1006-1022)
+	- Router.getTotalProtocolFee(address) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#928-930)
+	- Router.withdrawProtocolFee(address) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#838-857)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+Router.withdrawProtocolFee(address) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#838-857) ignores return value by IERC20(_paymentToken).transfer(msg.sender,_totalFee) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#855)
+Router.withdrawSupportFee(address) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#864-879) ignores return value by IERC20(_paymentToken).transfer(msg.sender,_totalFee) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#877)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+FixedPointMathLib.fpow(uint256,uint256,uint256) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#51-104) performs a multiplication on the result of a division:
+	- x = xxRound_fpow_asm_0 / baseUnit (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#89)
+	- zx_fpow_asm_0 = z * x (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#91)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+Reentrancy in Router.batchSwapNFTforFT(address[],Router.input[],uint256[],address) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#688-722):
+	External calls:
+	- _paymentToken = IPool(_poolList[i]).paymentToken() (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#697)
+	- _profitAmount = IPool(_poolList[i]).swapNFTforFT(InputArray[i].tokenIds,_minExpects[i],msg.sender) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#703-707)
+	State variables written after the call(s):
+	- _updateFee(_supporter,_paymentToken,_profitAmount) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#709)
+		- supporterFee[_supporter][_paymentToken] += _supporterFee (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#1018)
+	Router.supporterFee (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#484) can be used in cross function reentrancies:
+	- Router._updateFee(address,address,uint256) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#1006-1022)
+	- Router.getSupporterFee(address,address) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#933-935)
+	- Router.withdrawSupportFee(address) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#864-879)
+	- _updateFee(_supporter,_paymentToken,_profitAmount) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#709)
+		- totalProtocolFee[_paymentToken] += _protocolFee (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#1017)
+		- totalProtocolFee[_paymentToken] += _profitAmount (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#1020)
+	Router.totalProtocolFee (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#481) can be used in cross function reentrancies:
+	- Router._updateFee(address,address,uint256) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#1006-1022)
+	- Router.getTotalProtocolFee(address) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#928-930)
+	- Router.withdrawProtocolFee(address) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#838-857)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+Router.batchStakeNFT(address[],Router.input[]) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#584-595) has external calls inside a loop: IPool(_poolList[i]).stakeNFT(InputArray[i].tokenIds,msg.sender) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#589)
+Router.batchStakeFT(address[],uint256[]) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#610-647) has external calls inside a loop: _stakeFTprice = IPool(_poolList[i]).stakeFTprice() (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#616)
+Router.batchStakeFT(address[],uint256[]) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#610-647) has external calls inside a loop: _paymentToken = IPool(_poolList[i]).paymentToken() (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#617)
+Router.batchStakeFT(address[],uint256[]) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#610-647) has external calls inside a loop: _totalFee = IPool(_poolList[i]).getCalcSellInfo(_userSellNumList[i],_stakeFTprice) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#618-621)
+Router.batchStakeFT(address[],uint256[]) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#610-647) has external calls inside a loop: IPool(_poolList[i]).stakeFT{value: _totalFee}(_userSellNumList[i],msg.sender) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#626-629)
+Router.batchStakeFT(address[],uint256[]) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#610-647) has external calls inside a loop: IPool(_poolList[i]).stakeFT(_userSellNumList[i],msg.sender) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#631)
+Router.batchSwapNFTforFT(address[],Router.input[],uint256[],address) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#688-722) has external calls inside a loop: _poolInfo = IPool(_poolList[i]).getPoolInfo() (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#696)
+Router.batchSwapNFTforFT(address[],Router.input[],uint256[],address) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#688-722) has external calls inside a loop: _paymentToken = IPool(_poolList[i]).paymentToken() (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#697)
+Router.batchSwapNFTforFT(address[],Router.input[],uint256[],address) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#688-722) has external calls inside a loop: _totalFee = IPool(_poolList[i]).getCalcSellInfo(InputArray[i].tokenIds.length,_poolInfo.spotPrice) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#698-701)
+Router.batchSwapNFTforFT(address[],Router.input[],uint256[],address) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#688-722) has external calls inside a loop: _profitAmount = IPool(_poolList[i]).swapNFTforFT(InputArray[i].tokenIds,_minExpects[i],msg.sender) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#703-707)
+Router.batchSwapFTforNFT(address[],Router.input[],address) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#747-792) has external calls inside a loop: _poolInfo = IPool(_poolList[i]).getPoolInfo() (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#755)
+Router.batchSwapFTforNFT(address[],Router.input[],address) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#747-792) has external calls inside a loop: _paymentToken = IPool(_poolList[i]).paymentToken() (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#756)
+Router.batchSwapFTforNFT(address[],Router.input[],address) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#747-792) has external calls inside a loop: _totalFee = IPool(_poolList[i]).getCalcBuyInfo(InputArray[i].tokenIds.length,_poolInfo.spotPrice) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#757-760)
+Router.batchSwapFTforNFT(address[],Router.input[],address) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#747-792) has external calls inside a loop: _profitAmount = IPool(_poolList[i]).swapFTforNFT{value: _totalFee}(InputArray[i].tokenIds,msg.sender) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#767-769)
+Router.batchSwapFTforNFT(address[],Router.input[],address) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#747-792) has external calls inside a loop: _profitAmount = IPool(_poolList[i]).swapFTforNFT(InputArray[i].tokenIds,msg.sender) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#771-774)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation/#calls-inside-a-loop
+
+Reentrancy in Router.swapFTforNFT(address,uint256[],address) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#725-744):
+	External calls:
+	- _paymentToken = IPool(_pool).paymentToken() (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#732)
+	- _profitAmount = IPool(_pool).swapFTforNFT{value: msg.value}(_tokenIds,msg.sender) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#738-741)
+	External calls sending eth:
+	- _profitAmount = IPool(_pool).swapFTforNFT{value: msg.value}(_tokenIds,msg.sender) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#738-741)
+	State variables written after the call(s):
+	- _updateFee(_supporter,_paymentToken,_profitAmount) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#742)
+		- supporterFee[_supporter][_paymentToken] += _supporterFee (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#1018)
+	- _updateFee(_supporter,_paymentToken,_profitAmount) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#742)
+		- totalProtocolFee[_paymentToken] += _protocolFee (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#1017)
+		- totalProtocolFee[_paymentToken] += _profitAmount (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#1020)
+Reentrancy in Router.swapNFTforFT(address,uint256[],uint256,address) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#664-685):
+	External calls:
+	- _paymentToken = IPool(_pool).paymentToken() (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#672)
+	- _profitAmount = IPool(_pool).swapNFTforFT(_tokenIds,_minExpectFee,msg.sender) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#678-682)
+	State variables written after the call(s):
+	- _updateFee(_supporter,_paymentToken,_profitAmount) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#683)
+		- supporterFee[_supporter][_paymentToken] += _supporterFee (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#1018)
+	- _updateFee(_supporter,_paymentToken,_profitAmount) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#683)
+		- totalProtocolFee[_paymentToken] += _protocolFee (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#1017)
+		- totalProtocolFee[_paymentToken] += _profitAmount (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#1020)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in Router.batchStakeFT(address[],uint256[]) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#610-647):
+	External calls:
+	- _stakeFTprice = IPool(_poolList[i]).stakeFTprice() (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#616)
+	- _paymentToken = IPool(_poolList[i]).paymentToken() (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#617)
+	- IPool(_poolList[i]).stakeFT{value: _totalFee}(_userSellNumList[i],msg.sender) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#626-629)
+	- IPool(_poolList[i]).stakeFT(_userSellNumList[i],msg.sender) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#631)
+	External calls sending eth:
+	- IPool(_poolList[i]).stakeFT{value: _totalFee}(_userSellNumList[i],msg.sender) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#626-629)
+	Event emitted after the call(s):
+	- StakeFT(msg.sender,_poolList[i],_userSellNumList[i],_totalFee) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#634-639)
+Reentrancy in Router.batchStakeNFT(address[],Router.input[]) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#584-595):
+	External calls:
+	- IPool(_poolList[i]).stakeNFT(InputArray[i].tokenIds,msg.sender) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#589)
+	Event emitted after the call(s):
+	- StakeNFT(msg.sender,_poolList[i],InputArray[i].tokenIds) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#590)
+Reentrancy in Router.batchSwapFTforNFT(address[],Router.input[],address) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#747-792):
+	External calls:
+	- _paymentToken = IPool(_poolList[i]).paymentToken() (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#756)
+	- _profitAmount = IPool(_poolList[i]).swapFTforNFT{value: _totalFee}(InputArray[i].tokenIds,msg.sender) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#767-769)
+	- _profitAmount = IPool(_poolList[i]).swapFTforNFT(InputArray[i].tokenIds,msg.sender) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#771-774)
+	External calls sending eth:
+	- _profitAmount = IPool(_poolList[i]).swapFTforNFT{value: _totalFee}(InputArray[i].tokenIds,msg.sender) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#767-769)
+	Event emitted after the call(s):
+	- SwapFTforNFT(msg.sender,_poolList[i],InputArray[i].tokenIds,_totalFee,_supporter) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#778-784)
+Reentrancy in Router.batchSwapNFTforFT(address[],Router.input[],uint256[],address) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#688-722):
+	External calls:
+	- _paymentToken = IPool(_poolList[i]).paymentToken() (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#697)
+	- _profitAmount = IPool(_poolList[i]).swapNFTforFT(InputArray[i].tokenIds,_minExpects[i],msg.sender) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#703-707)
+	Event emitted after the call(s):
+	- SwapNFTforFT(msg.sender,_poolList[i],InputArray[i].tokenIds,_totalFee,_supporter) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#711-717)
+Reentrancy in Router.stake(address,uint256[]) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#650-661):
+	External calls:
+	- _stakeFTprice = IPool(_pool).stakeFTprice() (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#654)
+	- IPool(_pool).stake{value: msg.value}(_tokenIds,msg.sender) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#659)
+	External calls sending eth:
+	- IPool(_pool).stake{value: msg.value}(_tokenIds,msg.sender) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#659)
+	Event emitted after the call(s):
+	- Stake(msg.sender,_pool,_tokenIds,_tokenIds.length,_totalFee) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#660)
+Reentrancy in Router.stakeFT(address,uint256) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#598-607):
+	External calls:
+	- _stakeFTprice = IPool(_pool).stakeFTprice() (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#599)
+	- IPool(_pool).stakeFT{value: msg.value}(_userSellNum,msg.sender) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#605)
+	External calls sending eth:
+	- IPool(_pool).stakeFT{value: msg.value}(_userSellNum,msg.sender) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#605)
+	Event emitted after the call(s):
+	- StakeFT(msg.sender,_pool,_userSellNum,_totalFee) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#606)
+Reentrancy in Router.stakeNFT(address,uint256[]) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#579-582):
+	External calls:
+	- IPool(_pool).stakeNFT(_tokenIds,msg.sender) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#580)
+	Event emitted after the call(s):
+	- StakeNFT(msg.sender,_pool,_tokenIds) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#581)
+Reentrancy in Router.swapFTforNFT(address,uint256[],address) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#725-744):
+	External calls:
+	- _paymentToken = IPool(_pool).paymentToken() (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#732)
+	- _profitAmount = IPool(_pool).swapFTforNFT{value: msg.value}(_tokenIds,msg.sender) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#738-741)
+	External calls sending eth:
+	- _profitAmount = IPool(_pool).swapFTforNFT{value: msg.value}(_tokenIds,msg.sender) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#738-741)
+	Event emitted after the call(s):
+	- SwapFTforNFT(msg.sender,_pool,_tokenIds,_totalFee,_supporter) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#743)
+Reentrancy in Router.swapNFTforFT(address,uint256[],uint256,address) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#664-685):
+	External calls:
+	- _paymentToken = IPool(_pool).paymentToken() (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#672)
+	- _profitAmount = IPool(_pool).swapNFTforFT(_tokenIds,_minExpectFee,msg.sender) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#678-682)
+	Event emitted after the call(s):
+	- SwapNFTforFT(msg.sender,_pool,_tokenIds,_totalFee,_supporter) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#684)
+Reentrancy in Router.withdraw(address,uint256,uint256[]) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#811-818):
+	External calls:
+	- _totalFee = IPool(_pool).withdraw(_tokenIds,msg.sender) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#816)
+	Event emitted after the call(s):
+	- Withdraw(msg.sender,_pool,_tokenIds,_userSellNum,_totalFee) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#817)
+Reentrancy in Router.withdrawFT(address,uint256,uint256[]) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#801-808):
+	External calls:
+	- _totalFee = IPool(_pool).withdrawFT(_userSellNum,_tokenIds,msg.sender) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#806)
+	Event emitted after the call(s):
+	- WithdrawFT(msg.sender,_pool,_tokenIds,_userSellNum,_totalFee) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#807)
+Reentrancy in Router.withdrawFTpart(address,uint256) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#827-830):
+	External calls:
+	- IPool(_pool).withdrawFTpart(_userSellNum,msg.sender) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#828)
+	Event emitted after the call(s):
+	- WithdrawFTpart(msg.sender,_pool,_userSellNum) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#829)
+Reentrancy in Router.withdrawNFT(address,uint256[]) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#795-798):
+	External calls:
+	- _totalFee = IPool(_pool).withdrawNFT(_tokenIds,msg.sender) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#796)
+	Event emitted after the call(s):
+	- WithdrawNFT(msg.sender,_pool,_tokenIds,_totalFee) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#797)
+Reentrancy in Router.withdrawNFTpart(address,uint256[]) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#821-824):
+	External calls:
+	- IPool(_pool).withdrawNFTpart(_tokenIds,msg.sender) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#822)
+	Event emitted after the call(s):
+	- WithdrawNFTpart(msg.sender,_pool,_tokenIds) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#823)
+Reentrancy in Router.withdrawPart(address,uint256[]) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#832-835):
+	External calls:
+	- IPool(_pool).withdrawPart(_tokenIds,msg.sender) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#833)
+	Event emitted after the call(s):
+	- WithdrawPart(msg.sender,_pool,_tokenIds) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#834)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+FixedPointMathLib.fmul(uint256,uint256,uint256) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#9-26) uses assembly
+	- INLINE ASM (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#14-25)
+FixedPointMathLib.fdiv(uint256,uint256,uint256) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#28-49) uses assembly
+	- INLINE ASM (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#33-48)
+FixedPointMathLib.fpow(uint256,uint256,uint256) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#51-104) uses assembly
+	- INLINE ASM (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#56-103)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#assembly-usage
+
+Router.onlyFactory() (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#492-495) compares to a boolean constant:
+	-require(bool,string)(isFactoryApprove[msg.sender] == true,onlyFactory) (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#493)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#boolean-equality
+
+2 different versions of Solidity are used:
+	- Version constraint =0.8.17 is used by:
+		-=0.8.17 (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#4)
+		-=0.8.17 (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#110)
+		-=0.8.17 (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#454)
+	- Version constraint ^0.8.0 is used by:
+		-^0.8.0 (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#259)
+		-^0.8.0 (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#344)
+		-^0.8.0 (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#371)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#different-pragma-directives-are-used
+
+Context._msgData() (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#361-363) is never used and should be removed
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dead-code
+
+Version constraint =0.8.17 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- VerbatimInvalidDeduplication
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess.
+It is used by:
+	- =0.8.17 (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#4)
+	- =0.8.17 (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#110)
+	- =0.8.17 (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#454)
+Version constraint ^0.8.0 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- SignedImmutables
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching.
+It is used by:
+	- ^0.8.0 (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#259)
+	- ^0.8.0 (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#344)
+	- ^0.8.0 (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#371)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Struct Router.input (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#487-489) is not in CapWords
+Parameter Router.stakeNFT(address,uint256[])._pool (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#579) is not in mixedCase
+Parameter Router.stakeNFT(address,uint256[])._tokenIds (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#579) is not in mixedCase
+Parameter Router.batchStakeNFT(address[],Router.input[])._poolList (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#585) is not in mixedCase
+Parameter Router.batchStakeNFT(address[],Router.input[]).InputArray (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#586) is not in mixedCase
+Parameter Router.stakeFT(address,uint256)._pool (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#598) is not in mixedCase
+Parameter Router.stakeFT(address,uint256)._userSellNum (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#598) is not in mixedCase
+Parameter Router.batchStakeFT(address[],uint256[])._poolList (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#611) is not in mixedCase
+Parameter Router.batchStakeFT(address[],uint256[])._userSellNumList (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#612) is not in mixedCase
+Parameter Router.stake(address,uint256[])._pool (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#650) is not in mixedCase
+Parameter Router.stake(address,uint256[])._tokenIds (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#650) is not in mixedCase
+Parameter Router.swapNFTforFT(address,uint256[],uint256,address)._pool (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#665) is not in mixedCase
+Parameter Router.swapNFTforFT(address,uint256[],uint256,address)._tokenIds (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#666) is not in mixedCase
+Parameter Router.swapNFTforFT(address,uint256[],uint256,address)._minExpectFee (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#667) is not in mixedCase
+Parameter Router.swapNFTforFT(address,uint256[],uint256,address)._supporter (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#668) is not in mixedCase
+Parameter Router.batchSwapNFTforFT(address[],Router.input[],uint256[],address)._poolList (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#689) is not in mixedCase
+Parameter Router.batchSwapNFTforFT(address[],Router.input[],uint256[],address).InputArray (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#690) is not in mixedCase
+Parameter Router.batchSwapNFTforFT(address[],Router.input[],uint256[],address)._minExpects (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#691) is not in mixedCase
+Parameter Router.batchSwapNFTforFT(address[],Router.input[],uint256[],address)._supporter (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#692) is not in mixedCase
+Parameter Router.swapFTforNFT(address,uint256[],address)._pool (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#726) is not in mixedCase
+Parameter Router.swapFTforNFT(address,uint256[],address)._tokenIds (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#727) is not in mixedCase
+Parameter Router.swapFTforNFT(address,uint256[],address)._supporter (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#728) is not in mixedCase
+Parameter Router.batchSwapFTforNFT(address[],Router.input[],address)._poolList (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#748) is not in mixedCase
+Parameter Router.batchSwapFTforNFT(address[],Router.input[],address).InputArray (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#749) is not in mixedCase
+Parameter Router.batchSwapFTforNFT(address[],Router.input[],address)._supporter (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#750) is not in mixedCase
+Parameter Router.withdrawNFT(address,uint256[])._pool (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#795) is not in mixedCase
+Parameter Router.withdrawNFT(address,uint256[])._tokenIds (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#795) is not in mixedCase
+Parameter Router.withdrawFT(address,uint256,uint256[])._pool (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#802) is not in mixedCase
+Parameter Router.withdrawFT(address,uint256,uint256[])._userSellNum (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#803) is not in mixedCase
+Parameter Router.withdrawFT(address,uint256,uint256[])._tokenIds (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#804) is not in mixedCase
+Parameter Router.withdraw(address,uint256,uint256[])._pool (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#812) is not in mixedCase
+Parameter Router.withdraw(address,uint256,uint256[])._userSellNum (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#813) is not in mixedCase
+Parameter Router.withdraw(address,uint256,uint256[])._tokenIds (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#814) is not in mixedCase
+Parameter Router.withdrawNFTpart(address,uint256[])._pool (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#821) is not in mixedCase
+Parameter Router.withdrawNFTpart(address,uint256[])._tokenIds (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#821) is not in mixedCase
+Parameter Router.withdrawFTpart(address,uint256)._pool (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#827) is not in mixedCase
+Parameter Router.withdrawFTpart(address,uint256)._userSellNum (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#827) is not in mixedCase
+Parameter Router.withdrawPart(address,uint256[])._pool (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#832) is not in mixedCase
+Parameter Router.withdrawPart(address,uint256[])._tokenIds (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#832) is not in mixedCase
+Parameter Router.withdrawProtocolFee(address)._paymentToken (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#838) is not in mixedCase
+Parameter Router.withdrawFee(address)._pool (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#859) is not in mixedCase
+Parameter Router.withdrawSupportFee(address)._paymentToken (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#864) is not in mixedCase
+Parameter Router.getIsCollectionApprove(address)._collection (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#883) is not in mixedCase
+Parameter Router.getIsBondingCurveApprove(address)._bondingCurve (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#892) is not in mixedCase
+Parameter Router.getIsPaymentTokenApprove(address)._paymentToken (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#901) is not in mixedCase
+Parameter Router.getIsFactoryApprove(address)._factory (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#910) is not in mixedCase
+Parameter Router.getIsSupporterApprove(address)._supporter (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#919) is not in mixedCase
+Parameter Router.getTotalProtocolFee(address)._paymentToken (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#928) is not in mixedCase
+Parameter Router.getSupporterFee(address,address)._supporter (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#933) is not in mixedCase
+Parameter Router.getSupporterFee(address,address)._paymentToken (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#933) is not in mixedCase
+Parameter Router.setCollectionApprove(address,bool)._collection (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#939) is not in mixedCase
+Parameter Router.setCollectionApprove(address,bool)._approve (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#939) is not in mixedCase
+Parameter Router.setBondingCurveApprove(address,bool)._bondingCurve (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#948) is not in mixedCase
+Parameter Router.setBondingCurveApprove(address,bool)._approve (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#948) is not in mixedCase
+Parameter Router.setPaymentTokenApprove(address,bool)._paymentToken (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#957) is not in mixedCase
+Parameter Router.setPaymentTokenApprove(address,bool)._approve (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#957) is not in mixedCase
+Parameter Router.setFactoryApprove(address,bool)._factory (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#966) is not in mixedCase
+Parameter Router.setFactoryApprove(address,bool)._approve (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#966) is not in mixedCase
+Parameter Router.setSupporterApprove(address,bool)._supporter (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#975) is not in mixedCase
+Parameter Router.setSupporterApprove(address,bool)._approve (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#975) is not in mixedCase
+Parameter Router.setPoolProtocolFeeRatio(address,uint256)._pool (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#985) is not in mixedCase
+Parameter Router.setPoolProtocolFeeRatio(address,uint256)._newProtocolFeeRatio (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#986) is not in mixedCase
+Parameter Router.setPoolRouter(address,address)._pool (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#992) is not in mixedCase
+Parameter Router.setPoolRouter(address,address)._newRouter (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#992) is not in mixedCase
+Parameter Router.setPool(address,bool)._pool (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#1000) is not in mixedCase
+Parameter Router.setPool(address,bool)._approve (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#1000) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Router.supporterFeeRatio (0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol#463) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+./0x2db5a56957a3530235e52ae5eb433e6afcb44512.sol analyzed (6 contracts with 94 detectors), 114 result(s) found
+
+real	0m2.568s
+user	0m2.307s
+sys	0m0.263s

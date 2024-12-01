@@ -1,0 +1,202 @@
+'solc --version' running
+'solc ./0x00e5b0e005ae310312942197e0898de60e30a3a3.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+SHIBUTT.sendETHToFee(uint256) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#389-392) sends eth to arbitrary user
+	Dangerous calls:
+	- _teamAddress.transfer(amount.div(2)) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#390)
+	- _marketingFunds.transfer(amount.div(2)) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#391)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+Reentrancy in SHIBUTT._transfer(address,address,uint256) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#322-373):
+	External calls:
+	- swapTokensForEth(contractTokenBalance) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#359)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#380-386)
+	External calls sending eth:
+	- sendETHToFee(address(this).balance) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#362)
+		- _teamAddress.transfer(amount.div(2)) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#390)
+		- _marketingFunds.transfer(amount.div(2)) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#391)
+	State variables written after the call(s):
+	- _tokenTransfer(from,to,amount,takeFee) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#372)
+		- _rOwned[address(this)] = _rOwned[address(this)].add(rTeam) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#475)
+		- _rOwned[sender] = _rOwned[sender].sub(rAmount) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#465)
+		- _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#466)
+	SHIBUTT._rOwned (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#177) can be used in cross function reentrancies:
+	- SHIBUTT._takeTeam(uint256) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#472-476)
+	- SHIBUTT._transferStandard(address,address,uint256) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#452-470)
+	- SHIBUTT.balanceOf(address) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#235-237)
+	- SHIBUTT.constructor(address,address) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#208-217)
+	- _tokenTransfer(from,to,amount,takeFee) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#372)
+		- _rTotal = _rTotal.sub(rFee) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#479)
+	SHIBUTT._rTotal (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#183) can be used in cross function reentrancies:
+	- SHIBUTT._getCurrentSupply() (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#550-555)
+	- SHIBUTT._reflectFee(uint256,uint256) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#478-481)
+	- SHIBUTT.constructor(address,address) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#208-217)
+	- SHIBUTT.tokenFromReflection(uint256) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#287-298)
+Reentrancy in SHIBUTT.openTrading() (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#394-417):
+	External calls:
+	- uniswapV2Pair = IUniswapV2Factory(_uniswapV2Router.factory()).createPair(address(this),_uniswapV2Router.WETH()) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#400-401)
+	- uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#402-409)
+	External calls sending eth:
+	- uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#402-409)
+	State variables written after the call(s):
+	- tradingOpen = true (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#412)
+	SHIBUTT.tradingOpen (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#195) can be used in cross function reentrancies:
+	- SHIBUTT.openTrading() (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#394-417)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+SHIBUTT.openTrading() (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#394-417) ignores return value by uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#402-409)
+SHIBUTT.openTrading() (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#394-417) ignores return value by IERC20(uniswapV2Pair).approve(address(uniswapV2Router),type()(uint256).max) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#413-416)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+SHIBUTT.allowance(address,address).owner (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#248) shadows:
+	- Ownable.owner() (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#154-156) (function)
+SHIBUTT._approve(address,address,uint256).owner (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#312) shadows:
+	- Ownable.owner() (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#154-156) (function)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#local-variable-shadowing
+
+Ownable.constructor().msgSender (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#149) lacks a zero-check on :
+		- _owner = msgSender (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#150)
+SHIBUTT.constructor(address,address).addr1 (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#208) lacks a zero-check on :
+		- _teamAddress = addr1 (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#209)
+SHIBUTT.constructor(address,address).addr2 (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#208) lacks a zero-check on :
+		- _marketingFunds = addr2 (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#210)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in SHIBUTT._transfer(address,address,uint256) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#322-373):
+	External calls:
+	- swapTokensForEth(contractTokenBalance) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#359)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#380-386)
+	External calls sending eth:
+	- sendETHToFee(address(this).balance) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#362)
+		- _teamAddress.transfer(amount.div(2)) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#390)
+		- _marketingFunds.transfer(amount.div(2)) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#391)
+	State variables written after the call(s):
+	- _tokenTransfer(from,to,amount,takeFee) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#372)
+		- _tFeeTotal = _tFeeTotal.add(tFee) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#480)
+	- _tokenTransfer(from,to,amount,takeFee) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#372)
+		- _taxFee = 5 (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#307)
+		- _taxFee = 0 (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#302)
+	- _tokenTransfer(from,to,amount,takeFee) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#372)
+		- _teamFee = 12 (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#308)
+		- _teamFee = 0 (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#303)
+Reentrancy in SHIBUTT.openTrading() (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#394-417):
+	External calls:
+	- uniswapV2Pair = IUniswapV2Factory(_uniswapV2Router.factory()).createPair(address(this),_uniswapV2Router.WETH()) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#400-401)
+	- uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#402-409)
+	External calls sending eth:
+	- uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#402-409)
+	State variables written after the call(s):
+	- cooldownEnabled = true (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#411)
+	- swapEnabled = true (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#410)
+Reentrancy in SHIBUTT.transferFrom(address,address,uint256) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#266-281):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#271)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#380-386)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#271)
+		- _teamAddress.transfer(amount.div(2)) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#390)
+		- _marketingFunds.transfer(amount.div(2)) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#391)
+	State variables written after the call(s):
+	- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#272-279)
+		- _allowances[owner][spender] = amount (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#318)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in SHIBUTT._transfer(address,address,uint256) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#322-373):
+	External calls:
+	- swapTokensForEth(contractTokenBalance) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#359)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#380-386)
+	External calls sending eth:
+	- sendETHToFee(address(this).balance) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#362)
+		- _teamAddress.transfer(amount.div(2)) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#390)
+		- _marketingFunds.transfer(amount.div(2)) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#391)
+	Event emitted after the call(s):
+	- Transfer(sender,recipient,tTransferAmount) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#469)
+		- _tokenTransfer(from,to,amount,takeFee) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#372)
+Reentrancy in SHIBUTT.transferFrom(address,address,uint256) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#266-281):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#271)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#380-386)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#271)
+		- _teamAddress.transfer(amount.div(2)) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#390)
+		- _marketingFunds.transfer(amount.div(2)) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#391)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#319)
+		- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#272-279)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+SHIBUTT._transfer(address,address,uint256) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#322-373) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(cooldown[to] < block.timestamp) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#354)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Version constraint ^0.8.4 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- SignedImmutables.
+It is used by:
+	- ^0.8.4 (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#21)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Function IUniswapV2Router02.WETH() (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#76) is not in mixedCase
+Constant SHIBUTT._name (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#172) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant SHIBUTT._symbol (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#173) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant SHIBUTT._decimals (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#174) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant SHIBUTT._tTotal (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#182) is not in UPPER_CASE_WITH_UNDERSCORES
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in SHIBUTT._transfer(address,address,uint256) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#322-373):
+	External calls:
+	- sendETHToFee(address(this).balance) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#362)
+		- _teamAddress.transfer(amount.div(2)) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#390)
+		- _marketingFunds.transfer(amount.div(2)) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#391)
+	State variables written after the call(s):
+	- _tokenTransfer(from,to,amount,takeFee) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#372)
+		- _rOwned[address(this)] = _rOwned[address(this)].add(rTeam) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#475)
+		- _rOwned[sender] = _rOwned[sender].sub(rAmount) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#465)
+		- _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#466)
+	- _tokenTransfer(from,to,amount,takeFee) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#372)
+		- _rTotal = _rTotal.sub(rFee) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#479)
+	- _tokenTransfer(from,to,amount,takeFee) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#372)
+		- _tFeeTotal = _tFeeTotal.add(tFee) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#480)
+	- _tokenTransfer(from,to,amount,takeFee) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#372)
+		- _taxFee = 5 (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#307)
+		- _taxFee = 0 (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#302)
+	- _tokenTransfer(from,to,amount,takeFee) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#372)
+		- _teamFee = 12 (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#308)
+		- _teamFee = 0 (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#303)
+	Event emitted after the call(s):
+	- Transfer(sender,recipient,tTransferAmount) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#469)
+		- _tokenTransfer(from,to,amount,takeFee) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#372)
+Reentrancy in SHIBUTT.transferFrom(address,address,uint256) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#266-281):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#271)
+		- _teamAddress.transfer(amount.div(2)) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#390)
+		- _marketingFunds.transfer(amount.div(2)) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#391)
+	State variables written after the call(s):
+	- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#272-279)
+		- _allowances[owner][spender] = amount (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#318)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#319)
+		- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#272-279)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+SHIBUTT.slitherConstructorConstantVariables() (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#169-563) uses literals with too many digits:
+	- _tTotal = 1000000000000 * 10 ** 9 (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#182)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+SHIBUTT._tOwned (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#178) is never used in SHIBUTT (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#169-563)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-state-variable
+
+SHIBUTT._marketingFunds (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#192) should be immutable 
+SHIBUTT._teamAddress (0x00e5b0e005ae310312942197e0898de60e30a3a3.sol#191) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+./0x00e5b0e005ae310312942197e0898de60e30a3a3.sol analyzed (7 contracts with 94 detectors), 28 result(s) found
+
+real	0m2.794s
+user	0m2.529s
+sys	0m0.266s

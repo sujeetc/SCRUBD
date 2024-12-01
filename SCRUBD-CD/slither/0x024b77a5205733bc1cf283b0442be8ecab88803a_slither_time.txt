@@ -1,0 +1,238 @@
+'solc --version' running
+'solc ./0x024b77a5205733bc1cf283b0442be8ecab88803a.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+AKIHIRO.sendETHToFee(uint256) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#291-295) sends eth to arbitrary user
+	Dangerous calls:
+	- _feeAddrWallet1.transfer(amount.div(3)) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#292)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+Reentrancy in AKIHIRO._transfer(address,address,uint256) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#226-262):
+	External calls:
+	- swapAndLiquify(contractTokenBalance) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#248)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,target,block.timestamp) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#289)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#269-275)
+	External calls sending eth:
+	- swapAndLiquify(contractTokenBalance) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#248)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,target,block.timestamp) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#289)
+	- sendETHToFee(address(this).balance) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#251)
+		- _feeAddrWallet1.transfer(amount.div(3)) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#292)
+		- _marketingWallet1.transfer(amount.div(3)) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#293)
+		- _marketingWallet2.transfer(amount.div(3)) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#294)
+	State variables written after the call(s):
+	- _transferStandard(from,to,amount) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#261)
+		- _tOwned[sender] = _tOwned[sender].sub(tAmount) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#317)
+		- _tOwned[recipient] = _tOwned[recipient].add(transferAmount) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#318)
+		- _tOwned[address(this)] = _tOwned[address(this)].add(tfee) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#319)
+	AKIHIRO._tOwned (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#117) can be used in cross function reentrancies:
+	- AKIHIRO._transferStandard(address,address,uint256) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#315-321)
+	- AKIHIRO.balanceOf(address) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#181-183)
+	- AKIHIRO.burnToRyoshi() (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#205-209)
+	- AKIHIRO.constructor() (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#150-163)
+Reentrancy in AKIHIRO.openTrading() (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#297-303):
+	External calls:
+	- addLiquidity(balanceOf(address(this)),address(this).balance,owner()) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#299)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,target,block.timestamp) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#289)
+	State variables written after the call(s):
+	- tradingOpen = true (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#301)
+	AKIHIRO.tradingOpen (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#142) can be used in cross function reentrancies:
+	- AKIHIRO.openTrading() (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#297-303)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+AKIHIRO.recoverTokens(address) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#343-347) ignores return value by recoveryToken.transfer(_feeAddrWallet1,recoveryToken.balanceOf(address(this))) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#346)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+AKIHIRO.swapAndLiquify(uint256) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#278-285) performs a multiplication on the result of a division:
+	- half = liqfee.div(2) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#279)
+	- addLiquidity(tokenAmount.sub(swapTotal),address(this).balance.mul(half).div(part),_feeAddrWallet1) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#284)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+AKIHIRO.addLiquidity(uint256,uint256,address) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#287-290) ignores return value by uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,target,block.timestamp) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#289)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+AKIHIRO.allowance(address,address).owner (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#190) shadows:
+	- Ownable.owner() (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#75-77) (function)
+AKIHIRO._approve(address,address,uint256).owner (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#219) shadows:
+	- Ownable.owner() (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#75-77) (function)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#local-variable-shadowing
+
+Reentrancy in AKIHIRO._transfer(address,address,uint256) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#226-262):
+	External calls:
+	- swapAndLiquify(contractTokenBalance) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#248)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,target,block.timestamp) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#289)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#269-275)
+	External calls sending eth:
+	- swapAndLiquify(contractTokenBalance) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#248)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,target,block.timestamp) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#289)
+	- sendETHToFee(address(this).balance) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#251)
+		- _feeAddrWallet1.transfer(amount.div(3)) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#292)
+		- _marketingWallet1.transfer(amount.div(3)) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#293)
+		- _marketingWallet2.transfer(amount.div(3)) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#294)
+	State variables written after the call(s):
+	- _tax = fee2.add(liqfee) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#257)
+Reentrancy in AKIHIRO.openTrading() (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#297-303):
+	External calls:
+	- addLiquidity(balanceOf(address(this)),address(this).balance,owner()) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#299)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,target,block.timestamp) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#289)
+	State variables written after the call(s):
+	- swapEnabled = true (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#300)
+	- time = block.timestamp + (240) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#302)
+Reentrancy in AKIHIRO.swapAndLiquify(uint256) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#278-285):
+	External calls:
+	- swapTokensForEth(swapTotal) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#283)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#269-275)
+	- addLiquidity(tokenAmount.sub(swapTotal),address(this).balance.mul(half).div(part),_feeAddrWallet1) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#284)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,target,block.timestamp) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#289)
+	External calls sending eth:
+	- addLiquidity(tokenAmount.sub(swapTotal),address(this).balance.mul(half).div(part),_feeAddrWallet1) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#284)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,target,block.timestamp) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#289)
+	State variables written after the call(s):
+	- addLiquidity(tokenAmount.sub(swapTotal),address(this).balance.mul(half).div(part),_feeAddrWallet1) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#284)
+		- _allowances[owner][spender] = amount (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#222)
+	- addLiquidity(tokenAmount.sub(swapTotal),address(this).balance.mul(half).div(part),_feeAddrWallet1) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#284)
+		- inSwap = true (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#146)
+		- inSwap = false (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#148)
+Reentrancy in AKIHIRO.transferFrom(address,address,uint256) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#199-203):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#200)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,target,block.timestamp) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#289)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#269-275)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#200)
+		- _feeAddrWallet1.transfer(amount.div(3)) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#292)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,target,block.timestamp) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#289)
+		- _marketingWallet1.transfer(amount.div(3)) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#293)
+		- _marketingWallet2.transfer(amount.div(3)) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#294)
+	State variables written after the call(s):
+	- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#201)
+		- _allowances[owner][spender] = amount (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#222)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in AKIHIRO._transfer(address,address,uint256) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#226-262):
+	External calls:
+	- swapAndLiquify(contractTokenBalance) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#248)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,target,block.timestamp) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#289)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#269-275)
+	External calls sending eth:
+	- swapAndLiquify(contractTokenBalance) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#248)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,target,block.timestamp) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#289)
+	- sendETHToFee(address(this).balance) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#251)
+		- _feeAddrWallet1.transfer(amount.div(3)) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#292)
+		- _marketingWallet1.transfer(amount.div(3)) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#293)
+		- _marketingWallet2.transfer(amount.div(3)) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#294)
+	Event emitted after the call(s):
+	- Transfer(sender,recipient,transferAmount) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#320)
+		- _transferStandard(from,to,amount) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#261)
+Reentrancy in AKIHIRO.swapAndLiquify(uint256) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#278-285):
+	External calls:
+	- swapTokensForEth(swapTotal) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#283)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#269-275)
+	- addLiquidity(tokenAmount.sub(swapTotal),address(this).balance.mul(half).div(part),_feeAddrWallet1) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#284)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,target,block.timestamp) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#289)
+	External calls sending eth:
+	- addLiquidity(tokenAmount.sub(swapTotal),address(this).balance.mul(half).div(part),_feeAddrWallet1) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#284)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,target,block.timestamp) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#289)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#223)
+		- addLiquidity(tokenAmount.sub(swapTotal),address(this).balance.mul(half).div(part),_feeAddrWallet1) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#284)
+Reentrancy in AKIHIRO.transferFrom(address,address,uint256) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#199-203):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#200)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,target,block.timestamp) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#289)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#269-275)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#200)
+		- _feeAddrWallet1.transfer(amount.div(3)) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#292)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,target,block.timestamp) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#289)
+		- _marketingWallet1.transfer(amount.div(3)) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#293)
+		- _marketingWallet2.transfer(amount.div(3)) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#294)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#223)
+		- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#201)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+AKIHIRO._transfer(address,address,uint256) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#226-262) uses timestamp for comparisons
+	Dangerous comparisons:
+	- from == uniswapV2Pair && to != address(uniswapV2Router) && ! _isExcludedFromFee[to] && (block.timestamp < time) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#234)
+	- require(bool)(cooldown[to] < block.timestamp) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#237)
+	- require(bool,string)(block.timestamp > time,Sells prohibited for the first 5 minutes) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#245)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Version constraint ^0.8.4 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- SignedImmutables.
+It is used by:
+	- ^0.8.4 (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#7)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Function IUniswapV2Router02.WETH() (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#104) is not in mixedCase
+Constant AKIHIRO._tTotal (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#125) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant AKIHIRO._name (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#129) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant AKIHIRO._symbol (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#130) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant AKIHIRO._decimals (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#135) is not in UPPER_CASE_WITH_UNDERSCORES
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in AKIHIRO._transfer(address,address,uint256) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#226-262):
+	External calls:
+	- sendETHToFee(address(this).balance) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#251)
+		- _feeAddrWallet1.transfer(amount.div(3)) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#292)
+		- _marketingWallet1.transfer(amount.div(3)) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#293)
+		- _marketingWallet2.transfer(amount.div(3)) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#294)
+	External calls sending eth:
+	- swapAndLiquify(contractTokenBalance) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#248)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,target,block.timestamp) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#289)
+	- sendETHToFee(address(this).balance) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#251)
+		- _feeAddrWallet1.transfer(amount.div(3)) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#292)
+		- _marketingWallet1.transfer(amount.div(3)) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#293)
+		- _marketingWallet2.transfer(amount.div(3)) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#294)
+	State variables written after the call(s):
+	- _transferStandard(from,to,amount) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#261)
+		- _tOwned[sender] = _tOwned[sender].sub(tAmount) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#317)
+		- _tOwned[recipient] = _tOwned[recipient].add(transferAmount) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#318)
+		- _tOwned[address(this)] = _tOwned[address(this)].add(tfee) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#319)
+	- _tax = fee2.add(liqfee) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#257)
+	Event emitted after the call(s):
+	- Transfer(sender,recipient,transferAmount) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#320)
+		- _transferStandard(from,to,amount) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#261)
+Reentrancy in AKIHIRO.transferFrom(address,address,uint256) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#199-203):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#200)
+		- _feeAddrWallet1.transfer(amount.div(3)) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#292)
+		- _marketingWallet1.transfer(amount.div(3)) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#293)
+		- _marketingWallet2.transfer(amount.div(3)) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#294)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#200)
+		- _feeAddrWallet1.transfer(amount.div(3)) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#292)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,target,block.timestamp) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#289)
+		- _marketingWallet1.transfer(amount.div(3)) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#293)
+		- _marketingWallet2.transfer(amount.div(3)) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#294)
+	State variables written after the call(s):
+	- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#201)
+		- _allowances[owner][spender] = amount (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#222)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#223)
+		- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#201)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+AKIHIRO._maxTxAmount (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#131) should be constant 
+AKIHIRO.fee1 (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#126) should be constant 
+AKIHIRO.fee2 (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#127) should be constant 
+AKIHIRO.liqfee (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#128) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+
+AKIHIRO._feeAddrWallet1 (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#136) should be immutable 
+AKIHIRO._marketingWallet1 (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#137) should be immutable 
+AKIHIRO._marketingWallet2 (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#138) should be immutable 
+AKIHIRO._shibaDev (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#139) should be immutable 
+AKIHIRO.uniswapV2Pair (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#141) should be immutable 
+AKIHIRO.uniswapV2Router (0x024b77a5205733bc1cf283b0442be8ecab88803a.sol#140) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+./0x024b77a5205733bc1cf283b0442be8ecab88803a.sol analyzed (7 contracts with 94 detectors), 34 result(s) found
+
+real	0m2.646s
+user	0m2.435s
+sys	0m0.213s

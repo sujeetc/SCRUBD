@@ -1,0 +1,277 @@
+'solc --version' running
+'solc ./0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol:
+Warning: Return value of low-level calls not used.
+   --> ./0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol:250:27:
+    |
+250 |         if (_taxTeam > 0) payable(walletTeam).call{value: _taxTeam}("");
+    |                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: Return value of low-level calls not used.
+   --> ./0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol:251:32:
+    |
+251 |         if (_taxInsurance > 0) payable(walletInsurance).call{value: _taxInsurance}("");
+    |                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: Return value of low-level calls not used.
+   --> ./0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol:252:34:
+    |
+252 |         if (_taxLiqExchange > 0) payable(walletLiqExchange).call{value: _taxLiqExchange}("");
+    |                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: Return value of low-level calls not used.
+   --> ./0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol:318:9:
+    |
+318 |         payable(msg.sender).call{value: address(this).balance}("");
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+
+SAFX._sellTaxedTokens() (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#225-254) sends eth to arbitrary user
+	Dangerous calls:
+	- address(walletTeam).call{value: _taxTeam}() (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#250)
+	- address(walletInsurance).call{value: _taxInsurance}() (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#251)
+	- address(walletLiqExchange).call{value: _taxLiqExchange}() (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#252)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+Reentrancy in SAFX._transferFrom(address,address,uint256) (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#169-191):
+	External calls:
+	- _sellTaxedTokens() (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#179)
+		- router.swapExactTokensForETHSupportingFeeOnTransferTokens(_swapInput,0,path,address(this),block.timestamp) (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#236)
+		- address(walletTeam).call{value: _taxTeam}() (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#250)
+		- address(walletInsurance).call{value: _taxInsurance}() (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#251)
+		- address(walletLiqExchange).call{value: _taxLiqExchange}() (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#252)
+		- router.addLiquidityETH{value: _taxLiqToken}(address(this),_liquidityTokensToSwapHalf,0,0,walletLiqToken,block.timestamp) (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#253)
+	External calls sending eth:
+	- _sellTaxedTokens() (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#179)
+		- address(walletTeam).call{value: _taxTeam}() (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#250)
+		- address(walletInsurance).call{value: _taxInsurance}() (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#251)
+		- address(walletLiqExchange).call{value: _taxLiqExchange}() (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#252)
+		- router.addLiquidityETH{value: _taxLiqToken}(address(this),_liquidityTokensToSwapHalf,0,0,walletLiqToken,block.timestamp) (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#253)
+	State variables written after the call(s):
+	- _balances[sender] = _balances[sender] - amount (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#183)
+	SAFX._balances (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#54) can be used in cross function reentrancies:
+	- SAFX._balances (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#54)
+	- SAFX._basicTransfer(address,address,uint256) (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#193-198)
+	- SAFX._collectTaxedTokens(address,address,uint256) (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#200-223)
+	- SAFX._transferFrom(address,address,uint256) (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#169-191)
+	- SAFX.balanceOf(address) (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#138-140)
+	- SAFX.constructor() (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#100-114)
+	- _balances[recipient] = _balances[recipient] + amountReceived (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#187)
+	SAFX._balances (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#54) can be used in cross function reentrancies:
+	- SAFX._balances (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#54)
+	- SAFX._basicTransfer(address,address,uint256) (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#193-198)
+	- SAFX._collectTaxedTokens(address,address,uint256) (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#200-223)
+	- SAFX._transferFrom(address,address,uint256) (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#169-191)
+	- SAFX.balanceOf(address) (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#138-140)
+	- SAFX.constructor() (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#100-114)
+	- amountReceived = _collectTaxedTokens(sender,recipient,amount) (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#185)
+		- _balances[address(this)] = _balances[address(this)] + _tax (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#219)
+	SAFX._balances (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#54) can be used in cross function reentrancies:
+	- SAFX._balances (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#54)
+	- SAFX._basicTransfer(address,address,uint256) (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#193-198)
+	- SAFX._collectTaxedTokens(address,address,uint256) (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#200-223)
+	- SAFX._transferFrom(address,address,uint256) (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#169-191)
+	- SAFX.balanceOf(address) (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#138-140)
+	- SAFX.constructor() (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#100-114)
+	- amountReceived = _collectTaxedTokens(sender,recipient,amount) (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#185)
+		- _tokensInsurance += _tax * sellFeeInsurance / _fee (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#208)
+		- _tokensInsurance += _tax * buyFeeInsurance / _fee (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#213)
+	SAFX._tokensInsurance (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#73) can be used in cross function reentrancies:
+	- SAFX._collectTaxedTokens(address,address,uint256) (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#200-223)
+	- SAFX._sellTaxedTokens() (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#225-254)
+	- amountReceived = _collectTaxedTokens(sender,recipient,amount) (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#185)
+		- _tokensLiqExchange += _tax * sellFeeLiqExchange / _fee (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#209)
+		- _tokensLiqExchange += _tax * buyFeeLiqExchange / _fee (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#214)
+	SAFX._tokensLiqExchange (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#74) can be used in cross function reentrancies:
+	- SAFX._collectTaxedTokens(address,address,uint256) (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#200-223)
+	- SAFX._sellTaxedTokens() (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#225-254)
+	- amountReceived = _collectTaxedTokens(sender,recipient,amount) (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#185)
+		- _tokensLiqToken += _tax * sellFeeLiqToken / _fee (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#210)
+		- _tokensLiqToken += _tax * buyFeeLiqToken / _fee (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#215)
+	SAFX._tokensLiqToken (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#75) can be used in cross function reentrancies:
+	- SAFX._collectTaxedTokens(address,address,uint256) (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#200-223)
+	- SAFX._sellTaxedTokens() (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#225-254)
+	- amountReceived = _collectTaxedTokens(sender,recipient,amount) (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#185)
+		- _tokensTeam += _tax * sellFeeTeam / _fee (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#207)
+		- _tokensTeam += _tax * buyFeeTeam / _fee (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#212)
+	SAFX._tokensTeam (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#72) can be used in cross function reentrancies:
+	- SAFX._collectTaxedTokens(address,address,uint256) (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#200-223)
+	- SAFX._sellTaxedTokens() (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#225-254)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+SAFX.transferERC(address) (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#321-325) ignores return value by _erc20.transfer(msg.sender,_erc20.balanceOf(address(this))) (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#324)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+SAFX._collectTaxedTokens(address,address,uint256) (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#200-223) performs a multiplication on the result of a division:
+	- _tax = amount * _fee / 10000 (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#203)
+	- _tokensLiqToken += _tax * buyFeeLiqToken / _fee (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#215)
+SAFX._collectTaxedTokens(address,address,uint256) (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#200-223) performs a multiplication on the result of a division:
+	- _tax = amount * _fee / 10000 (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#203)
+	- _tokensLiqExchange += _tax * buyFeeLiqExchange / _fee (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#214)
+SAFX._collectTaxedTokens(address,address,uint256) (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#200-223) performs a multiplication on the result of a division:
+	- _tax = amount * _fee / 10000 (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#203)
+	- _tokensInsurance += _tax * buyFeeInsurance / _fee (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#213)
+SAFX._collectTaxedTokens(address,address,uint256) (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#200-223) performs a multiplication on the result of a division:
+	- _tax = amount * _fee / 10000 (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#203)
+	- _tokensTeam += _tax * buyFeeTeam / _fee (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#212)
+SAFX._collectTaxedTokens(address,address,uint256) (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#200-223) performs a multiplication on the result of a division:
+	- _tax = amount * _fee / 10000 (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#203)
+	- _tokensLiqToken += _tax * sellFeeLiqToken / _fee (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#210)
+SAFX._collectTaxedTokens(address,address,uint256) (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#200-223) performs a multiplication on the result of a division:
+	- _tax = amount * _fee / 10000 (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#203)
+	- _tokensLiqExchange += _tax * sellFeeLiqExchange / _fee (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#209)
+SAFX._collectTaxedTokens(address,address,uint256) (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#200-223) performs a multiplication on the result of a division:
+	- _tax = amount * _fee / 10000 (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#203)
+	- _tokensInsurance += _tax * sellFeeInsurance / _fee (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#208)
+SAFX._collectTaxedTokens(address,address,uint256) (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#200-223) performs a multiplication on the result of a division:
+	- _tax = amount * _fee / 10000 (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#203)
+	- _tokensTeam += _tax * sellFeeTeam / _fee (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#207)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+Reentrancy in SAFX._sellTaxedTokens() (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#225-254):
+	External calls:
+	- router.swapExactTokensForETHSupportingFeeOnTransferTokens(_swapInput,0,path,address(this),block.timestamp) (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#236)
+	State variables written after the call(s):
+	- _tokensInsurance = 0 (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#246)
+	SAFX._tokensInsurance (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#73) can be used in cross function reentrancies:
+	- SAFX._collectTaxedTokens(address,address,uint256) (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#200-223)
+	- SAFX._sellTaxedTokens() (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#225-254)
+	- _tokensLiqExchange = 0 (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#247)
+	SAFX._tokensLiqExchange (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#74) can be used in cross function reentrancies:
+	- SAFX._collectTaxedTokens(address,address,uint256) (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#200-223)
+	- SAFX._sellTaxedTokens() (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#225-254)
+	- _tokensLiqToken = 0 (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#248)
+	SAFX._tokensLiqToken (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#75) can be used in cross function reentrancies:
+	- SAFX._collectTaxedTokens(address,address,uint256) (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#200-223)
+	- SAFX._sellTaxedTokens() (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#225-254)
+	- _tokensTeam = 0 (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#245)
+	SAFX._tokensTeam (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#72) can be used in cross function reentrancies:
+	- SAFX._collectTaxedTokens(address,address,uint256) (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#200-223)
+	- SAFX._sellTaxedTokens() (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#225-254)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+SAFX._sellTaxedTokens() (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#225-254) ignores return value by address(walletTeam).call{value: _taxTeam}() (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#250)
+SAFX._sellTaxedTokens() (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#225-254) ignores return value by address(walletInsurance).call{value: _taxInsurance}() (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#251)
+SAFX._sellTaxedTokens() (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#225-254) ignores return value by address(walletLiqExchange).call{value: _taxLiqExchange}() (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#252)
+SAFX.transferETH() (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#317-319) ignores return value by address(msg.sender).call{value: address(this).balance}() (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#318)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-low-level-calls
+
+SAFX._sellTaxedTokens() (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#225-254) ignores return value by router.addLiquidityETH{value: _taxLiqToken}(address(this),_liquidityTokensToSwapHalf,0,0,walletLiqToken,block.timestamp) (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#253)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+SAFX.changeMaxWallet(uint256) (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#280-282) should emit an event for: 
+	- maxWallet = _maxWallet (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#281) 
+SAFX.changeFees(uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256) (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#284-295) should emit an event for: 
+	- buyFeeTeam = _buyFeeTeam (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#285) 
+	- buyFeeInsurance = _buyFeeInsurance (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#286) 
+	- buyFeeLiqExchange = _buyFeeLiqExchange (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#287) 
+	- buyFeeLiqToken = _buyFeeLiqToken (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#288) 
+	- buyFee = _buyFeeTeam + _buyFeeInsurance + _buyFeeLiqExchange + _buyFeeLiqToken (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#289) 
+	- sellFeeTeam = _sellFeeTeam (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#290) 
+	- sellFeeInsurance = _sellFeeInsurance (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#291) 
+	- sellFeeLiqExchange = _sellFeeLiqExchange (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#292) 
+	- sellFeeLiqToken = _sellFeeLiqToken (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#293) 
+	- sellFee = _sellFeeTeam + _sellFeeInsurance + _sellFeeLiqExchange + _sellFeeLiqToken (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#294) 
+SAFX.changeSwapSettings(uint256,uint256) (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#308-311) should emit an event for: 
+	- swapTrigger = _swapTrigger (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#309) 
+	- swapThreshold = _swapThreshold (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#310) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+Ownable.transferOwnership(address)._ownerNew (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#31) lacks a zero-check on :
+		- owner = _ownerNew (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#32)
+SAFX.changeWallets(address,address,address,address)._walletTeam (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#297) lacks a zero-check on :
+		- walletTeam = _walletTeam (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#298)
+SAFX.changeWallets(address,address,address,address)._walletInsurance (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#297) lacks a zero-check on :
+		- walletInsurance = _walletInsurance (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#299)
+SAFX.changeWallets(address,address,address,address)._walletLiqExchange (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#297) lacks a zero-check on :
+		- walletLiqExchange = _walletLiqExchange (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#300)
+SAFX.changeWallets(address,address,address,address)._walletLiqToken (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#297) lacks a zero-check on :
+		- walletLiqToken = _walletLiqToken (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#301)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in SAFX._transferFrom(address,address,uint256) (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#169-191):
+	External calls:
+	- _sellTaxedTokens() (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#179)
+		- router.swapExactTokensForETHSupportingFeeOnTransferTokens(_swapInput,0,path,address(this),block.timestamp) (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#236)
+		- address(walletTeam).call{value: _taxTeam}() (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#250)
+		- address(walletInsurance).call{value: _taxInsurance}() (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#251)
+		- address(walletLiqExchange).call{value: _taxLiqExchange}() (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#252)
+		- router.addLiquidityETH{value: _taxLiqToken}(address(this),_liquidityTokensToSwapHalf,0,0,walletLiqToken,block.timestamp) (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#253)
+	External calls sending eth:
+	- _sellTaxedTokens() (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#179)
+		- address(walletTeam).call{value: _taxTeam}() (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#250)
+		- address(walletInsurance).call{value: _taxInsurance}() (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#251)
+		- address(walletLiqExchange).call{value: _taxLiqExchange}() (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#252)
+		- router.addLiquidityETH{value: _taxLiqToken}(address(this),_liquidityTokensToSwapHalf,0,0,walletLiqToken,block.timestamp) (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#253)
+	Event emitted after the call(s):
+	- Transfer(sender,recipient,amountReceived) (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#189)
+	- Transfer(sender,address(this),_tax) (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#220)
+		- amountReceived = _collectTaxedTokens(sender,recipient,amount) (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#185)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+SAFX._collectTaxedTokens(address,address,uint256) (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#200-223) has a high cyclomatic complexity (12).
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#cyclomatic-complexity
+
+Version constraint ^0.8.0 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- SignedImmutables
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching.
+It is used by:
+	- ^0.8.0 (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#2)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in SAFX._sellTaxedTokens() (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#225-254):
+	- address(walletTeam).call{value: _taxTeam}() (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#250)
+	- address(walletInsurance).call{value: _taxInsurance}() (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#251)
+	- address(walletLiqExchange).call{value: _taxLiqExchange}() (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#252)
+Low level call in SAFX.transferETH() (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#317-319):
+	- address(msg.sender).call{value: address(this).balance}() (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#318)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Parameter Ownable.transferOwnership(address)._ownerNew (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#31) is not in mixedCase
+Parameter SAFX.changeDexPair(address,bool)._pair (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#256) is not in mixedCase
+Parameter SAFX.changeDexPair(address,bool)._value (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#256) is not in mixedCase
+Parameter SAFX.fetchDexPair(address)._pair (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#260) is not in mixedCase
+Parameter SAFX.changeNoTax(address,bool)._wallet (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#264) is not in mixedCase
+Parameter SAFX.changeNoTax(address,bool)._value (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#264) is not in mixedCase
+Parameter SAFX.fetchNoTax(address)._wallet (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#268) is not in mixedCase
+Parameter SAFX.changeNoMax(address,bool)._wallet (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#272) is not in mixedCase
+Parameter SAFX.changeNoMax(address,bool)._value (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#272) is not in mixedCase
+Parameter SAFX.fetchNoMax(address)._wallet (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#276) is not in mixedCase
+Parameter SAFX.changeMaxWallet(uint256)._maxWallet (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#280) is not in mixedCase
+Parameter SAFX.changeFees(uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256)._buyFeeTeam (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#284) is not in mixedCase
+Parameter SAFX.changeFees(uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256)._buyFeeInsurance (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#284) is not in mixedCase
+Parameter SAFX.changeFees(uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256)._buyFeeLiqExchange (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#284) is not in mixedCase
+Parameter SAFX.changeFees(uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256)._buyFeeLiqToken (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#284) is not in mixedCase
+Parameter SAFX.changeFees(uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256)._sellFeeTeam (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#284) is not in mixedCase
+Parameter SAFX.changeFees(uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256)._sellFeeInsurance (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#284) is not in mixedCase
+Parameter SAFX.changeFees(uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256)._sellFeeLiqExchange (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#284) is not in mixedCase
+Parameter SAFX.changeFees(uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256)._sellFeeLiqToken (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#284) is not in mixedCase
+Parameter SAFX.changeWallets(address,address,address,address)._walletTeam (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#297) is not in mixedCase
+Parameter SAFX.changeWallets(address,address,address,address)._walletInsurance (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#297) is not in mixedCase
+Parameter SAFX.changeWallets(address,address,address,address)._walletLiqExchange (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#297) is not in mixedCase
+Parameter SAFX.changeWallets(address,address,address,address)._walletLiqToken (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#297) is not in mixedCase
+Parameter SAFX.changeSwapSettings(uint256,uint256)._swapTrigger (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#308) is not in mixedCase
+Parameter SAFX.changeSwapSettings(uint256,uint256)._swapThreshold (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#308) is not in mixedCase
+Parameter SAFX.transferERC(address)._erc20Address (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#321) is not in mixedCase
+Variable SAFX._balances (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#54) is not in mixedCase
+Variable SAFX._allowances (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#55) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+SAFX.router (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#83) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+
+SAFX.pair (0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol#84) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+./0x0654b7f747c9ee9f5fb5eba443e9fe64f1fa77ef.sol analyzed (5 contracts with 94 detectors), 60 result(s) found
+
+real	0m2.463s
+user	0m2.301s
+sys	0m0.165s

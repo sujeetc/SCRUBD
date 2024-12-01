@@ -1,0 +1,260 @@
+'solc --version' running
+'solc ./0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+Reentrancy in Sandwich._transfer(address,address,uint256) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#1004-1049):
+	External calls:
+	- swapAndLiquify(contractTokenBalance) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#1036)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#1103-1110)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#1087-1093)
+	External calls sending eth:
+	- swapAndLiquify(contractTokenBalance) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#1036)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#1103-1110)
+	State variables written after the call(s):
+	- _tokenTransfer(from,to,amount,takeFee) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#1048)
+		- _rOwned[address(this)] = _rOwned[address(this)].add(rLiquidity) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#960)
+		- _rOwned[sender] = _rOwned[sender].sub(rAmount) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#1136)
+		- _rOwned[sender] = _rOwned[sender].sub(rAmount) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#1145)
+		- _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#1137)
+		- _rOwned[sender] = _rOwned[sender].sub(rAmount) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#1156)
+		- _rOwned[sender] = _rOwned[sender].sub(rAmount) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#876)
+		- _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#1157)
+		- _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#1147)
+		- _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#878)
+	Sandwich._rOwned (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#688) can be used in cross function reentrancies:
+	- Sandwich._getCurrentSupply() (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#945-955)
+	- Sandwich._takeLiquidity(uint256) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#957-963)
+	- Sandwich._transferBothExcluded(address,address,uint256) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#873-882)
+	- Sandwich._transferFromExcluded(address,address,uint256) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#1153-1161)
+	- Sandwich._transferStandard(address,address,uint256) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#1134-1141)
+	- Sandwich._transferToExcluded(address,address,uint256) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#1143-1151)
+	- Sandwich.balanceOf(address) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#780-783)
+	- Sandwich.constructor(address) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#740-762)
+	- Sandwich.deliver(uint256) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#825-832)
+	- Sandwich.excludeFromReward(address) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#851-859)
+	- _tokenTransfer(from,to,amount,takeFee) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#1048)
+		- _rTotal = _rTotal.sub(rFee) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#915)
+	Sandwich._rTotal (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#699) can be used in cross function reentrancies:
+	- Sandwich._getCurrentSupply() (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#945-955)
+	- Sandwich._reflectFee(uint256,uint256) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#914-917)
+	- Sandwich.constructor(address) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#740-762)
+	- Sandwich.deliver(uint256) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#825-832)
+	- Sandwich.tokenFromReflection(uint256) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#845-849)
+	- _tokenTransfer(from,to,amount,takeFee) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#1048)
+		- _tOwned[address(this)] = _tOwned[address(this)].add(tLiquidity) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#962)
+		- _tOwned[sender] = _tOwned[sender].sub(tAmount) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#875)
+		- _tOwned[sender] = _tOwned[sender].sub(tAmount) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#1155)
+		- _tOwned[recipient] = _tOwned[recipient].add(tTransferAmount) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#1146)
+		- _tOwned[recipient] = _tOwned[recipient].add(tTransferAmount) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#877)
+	Sandwich._tOwned (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#689) can be used in cross function reentrancies:
+	- Sandwich._getCurrentSupply() (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#945-955)
+	- Sandwich._takeLiquidity(uint256) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#957-963)
+	- Sandwich._transferBothExcluded(address,address,uint256) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#873-882)
+	- Sandwich._transferFromExcluded(address,address,uint256) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#1153-1161)
+	- Sandwich._transferToExcluded(address,address,uint256) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#1143-1151)
+	- Sandwich.balanceOf(address) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#780-783)
+	- Sandwich.excludeFromReward(address) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#851-859)
+	- Sandwich.includeInReward(address) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#861-872)
+Reentrancy in Sandwich.transferFrom(address,address,uint256) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#799-805):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#800)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#1103-1110)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#1087-1093)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#800)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#1103-1110)
+	State variables written after the call(s):
+	- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#802)
+		- _allowances[owner][spender] = amount (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#1000)
+	Sandwich._allowances (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#690) can be used in cross function reentrancies:
+	- Sandwich._approve(address,address,uint256) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#996-1002)
+	- Sandwich.addLiquidity(uint256,uint256) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#1096-1111)
+	- Sandwich.allowance(address,address) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#790-792)
+	- Sandwich.decreaseAllowance(address,uint256) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#812-815)
+	- Sandwich.increaseAllowance(address,uint256) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#807-810)
+	- Sandwich.swapTokensForEth(uint256) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#1074-1094)
+	- Sandwich.transferFrom(address,address,uint256) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#799-805)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+Sandwich._lockLiquidityForever(uint256) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#1163-1166) ignores return value by IUniswapV2Pair(uniswapV2Pair).transferFrom(_msgSender(),address(this),liquidity) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#1164)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+Sandwich.addLiquidity(uint256,uint256) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#1096-1111) ignores return value by uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#1103-1110)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+Sandwich.allowance(address,address).owner (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#790) shadows:
+	- Ownable.owner() (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#415-417) (function)
+Sandwich._approve(address,address,uint256).owner (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#996) shadows:
+	- Ownable.owner() (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#415-417) (function)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#local-variable-shadowing
+
+Sandwich.setTaxFeePercent(uint256) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#892-894) should emit an event for: 
+	- _taxFee = taxFee (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#893) 
+Sandwich.setLiquidityFeePercent(uint256) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#896-898) should emit an event for: 
+	- _liquidityFee = liquidityFee (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#897) 
+Sandwich.setMaxTxPercent(uint256) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#900-904) should emit an event for: 
+	- _maxTxAmount = _tTotal.mul(maxTxPercent).div(10 ** 2) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#901-903) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+Reentrancy in Sandwich._transfer(address,address,uint256) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#1004-1049):
+	External calls:
+	- swapAndLiquify(contractTokenBalance) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#1036)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#1103-1110)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#1087-1093)
+	External calls sending eth:
+	- swapAndLiquify(contractTokenBalance) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#1036)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#1103-1110)
+	State variables written after the call(s):
+	- _tokenTransfer(from,to,amount,takeFee) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#1048)
+		- _liquidityFee = _previousLiquidityFee (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#989)
+		- _liquidityFee = 0 (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#984)
+	- _tokenTransfer(from,to,amount,takeFee) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#1048)
+		- _previousLiquidityFee = _liquidityFee (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#981)
+	- _tokenTransfer(from,to,amount,takeFee) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#1048)
+		- _previousTaxFee = _taxFee (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#980)
+	- _tokenTransfer(from,to,amount,takeFee) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#1048)
+		- _tFeeTotal = _tFeeTotal.add(tFee) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#916)
+	- _tokenTransfer(from,to,amount,takeFee) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#1048)
+		- _taxFee = _previousTaxFee (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#988)
+		- _taxFee = 0 (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#983)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in Sandwich._lockLiquidityForever(uint256) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#1163-1166):
+	External calls:
+	- IUniswapV2Pair(uniswapV2Pair).transferFrom(_msgSender(),address(this),liquidity) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#1164)
+	Event emitted after the call(s):
+	- LockLiquidityForever(liquidity) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#1165)
+Reentrancy in Sandwich._transfer(address,address,uint256) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#1004-1049):
+	External calls:
+	- swapAndLiquify(contractTokenBalance) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#1036)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#1103-1110)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#1087-1093)
+	External calls sending eth:
+	- swapAndLiquify(contractTokenBalance) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#1036)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#1103-1110)
+	Event emitted after the call(s):
+	- Transfer(sender,recipient,tTransferAmount) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#1140)
+		- _tokenTransfer(from,to,amount,takeFee) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#1048)
+	- Transfer(sender,recipient,tTransferAmount) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#1150)
+		- _tokenTransfer(from,to,amount,takeFee) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#1048)
+	- Transfer(sender,recipient,tTransferAmount) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#1160)
+		- _tokenTransfer(from,to,amount,takeFee) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#1048)
+	- Transfer(sender,recipient,tTransferAmount) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#881)
+		- _tokenTransfer(from,to,amount,takeFee) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#1048)
+Reentrancy in Sandwich.swapAndLiquify(uint256) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#1051-1072):
+	External calls:
+	- swapTokensForEth(half) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#1063)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#1087-1093)
+	- addLiquidity(otherHalf,newBalance) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#1069)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#1103-1110)
+	External calls sending eth:
+	- addLiquidity(otherHalf,newBalance) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#1069)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#1103-1110)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#1001)
+		- addLiquidity(otherHalf,newBalance) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#1069)
+	- SwapAndLiquify(half,newBalance,otherHalf) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#1071)
+Reentrancy in Sandwich.transferFrom(address,address,uint256) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#799-805):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#800)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#1103-1110)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#1087-1093)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#800)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#1103-1110)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#1001)
+		- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#802)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+Ownable.unlock() (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#462-467) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(now > _lockTime,Contract is locked until 7 days) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#464)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Address.isContract(address) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#265-274) uses assembly
+	- INLINE ASM (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#272)
+Address._functionCallWithValue(address,bytes,uint256,string) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#358-379) uses assembly
+	- INLINE ASM (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#371-374)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#assembly-usage
+
+Sandwich.includeInReward(address) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#861-872) has costly operations inside a loop:
+	- _excluded.pop() (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#868)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#costly-operations-inside-a-loop
+
+Context._msgData() (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#237-240) is never used and should be removed
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dead-code
+
+Sandwich._rTotal (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#699) is set pre-construction with a non-constant function or state variable:
+	- (MAX - (MAX % _tTotal))
+Sandwich._previousTaxFee (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#707) is set pre-construction with a non-constant function or state variable:
+	- _taxFee
+Sandwich._previousLiquidityFee (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#710) is set pre-construction with a non-constant function or state variable:
+	- _liquidityFee
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#function-initializing-state
+
+Version constraint ^0.6.12 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- SignedImmutables
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup.
+It is used by:
+	- ^0.6.12 (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#3)
+solc-0.6.12 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in Address.sendValue(address,uint256) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#292-298):
+	- (success,None) = recipient.call{value: amount}() (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#296)
+Low level call in Address._functionCallWithValue(address,bytes,uint256,string) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#358-379):
+	- (success,returndata) = target.call{value: weiValue}(data) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#362)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Function IUniswapV2Pair.DOMAIN_SEPARATOR() (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#506) is not in mixedCase
+Function IUniswapV2Pair.PERMIT_TYPEHASH() (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#507) is not in mixedCase
+Function IUniswapV2Pair.MINIMUM_LIQUIDITY() (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#524) is not in mixedCase
+Function IUniswapV2Router01.WETH() (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#546) is not in mixedCase
+Parameter Sandwich.setSwapAndLiquifyEnabled(bool)._enabled (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#906) is not in mixedCase
+Parameter Sandwich.calculateTaxFee(uint256)._amount (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#965) is not in mixedCase
+Parameter Sandwich.calculateLiquidityFee(uint256)._amount (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#971) is not in mixedCase
+Function Sandwich._lockLiquidityForever(uint256) (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#1163-1166) is not in mixedCase
+Variable Sandwich._taxFee (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#706) is not in mixedCase
+Variable Sandwich._liquidityFee (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#709) is not in mixedCase
+Variable Sandwich._maxTxAmount (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#718) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Redundant expression "this (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#238)" inContext (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#232-241)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#redundant-statements
+
+Sandwich.slitherConstructorVariables() (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#684-1169) uses literals with too many digits:
+	- _tTotal = 100000000000 * 10 ** 1 * 10 ** 9 (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#698)
+Sandwich.slitherConstructorVariables() (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#684-1169) uses literals with too many digits:
+	- _maxTxAmount = 1000000000 * 10 ** 1 * 10 ** 9 (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#718)
+Sandwich.slitherConstructorVariables() (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#684-1169) uses literals with too many digits:
+	- numTokensSellToAddToLiquidity = 300000000 * 10 ** 1 * 10 ** 9 (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#719)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+Loop condition i < _excluded.length (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#948) should use cached array length instead of referencing `length` member of the storage array.
+ Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#cache-array-length
+
+Sandwich._decimals (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#704) should be constant 
+Sandwich._name (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#702) should be constant 
+Sandwich._symbol (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#703) should be constant 
+Sandwich._tTotal (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#698) should be constant 
+Sandwich.numTokensSellToAddToLiquidity (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#719) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+
+Sandwich.init (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#721) should be immutable 
+Sandwich.uniswapV2Pair (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#713) should be immutable 
+Sandwich.uniswapV2Router (0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol#712) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+./0x25ad23adf5da60190d5f44297ab7d7ab147ad9db.sol analyzed (10 contracts with 94 detectors), 50 result(s) found
+
+real	0m4.023s
+user	0m3.731s
+sys	0m0.293s

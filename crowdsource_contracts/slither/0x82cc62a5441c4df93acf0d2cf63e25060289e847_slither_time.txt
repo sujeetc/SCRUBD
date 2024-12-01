@@ -1,0 +1,61 @@
+'solc --version' running
+'solc ./0x82cc62a5441c4df93acf0d2cf63e25060289e847.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x82cc62a5441c4df93acf0d2cf63e25060289e847.sol:
+./0x82cc62a5441c4df93acf0d2cf63e25060289e847.sol:9:25: Warning: Unused function parameter. Remove or comment out the variable name to silence this warning.
+    function zeroXSwap (address to, address forwarder, bytes memory args) public payable{
+                        ^--------^
+./0x82cc62a5441c4df93acf0d2cf63e25060289e847.sol:10:21: Warning: Unused local variable.
+    	(bool success, bytes memory returnData) = forwarder.call.value(msg.value)(args);
+    	               ^---------------------^
+
+
+zeroXWrapper.zeroXSwap(address,address,bytes).forwarder (0x82cc62a5441c4df93acf0d2cf63e25060289e847.sol#9) lacks a zero-check on :
+		- (success,returnData) = forwarder.call.value(msg.value)(args) (0x82cc62a5441c4df93acf0d2cf63e25060289e847.sol#10)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in zeroXWrapper.zeroXSwap(address,address,bytes) (0x82cc62a5441c4df93acf0d2cf63e25060289e847.sol#9-12):
+	External calls:
+	- (success,returnData) = forwarder.call.value(msg.value)(args) (0x82cc62a5441c4df93acf0d2cf63e25060289e847.sol#10)
+	Event emitted after the call(s):
+	- forwarderCall(success) (0x82cc62a5441c4df93acf0d2cf63e25060289e847.sol#11)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+Version constraint ^0.5.0 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor
+	- IncorrectEventSignatureInLibraries
+	- ABIEncoderV2PackedStorage.
+It is used by:
+	- ^0.5.0 (0x82cc62a5441c4df93acf0d2cf63e25060289e847.sol#1)
+solc-0.5.0 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in zeroXWrapper.zeroXSwap(address,address,bytes) (0x82cc62a5441c4df93acf0d2cf63e25060289e847.sol#9-12):
+	- (success,returnData) = forwarder.call.value(msg.value)(args) (0x82cc62a5441c4df93acf0d2cf63e25060289e847.sol#10)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Contract zeroXWrapper (0x82cc62a5441c4df93acf0d2cf63e25060289e847.sol#5-19) is not in CapWords
+Event zeroXWrapper.forwarderCall(bool) (0x82cc62a5441c4df93acf0d2cf63e25060289e847.sol#7) is not in CapWords
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+zeroXSwap(address,address,bytes) should be declared external:
+	- zeroXWrapper.zeroXSwap(address,address,bytes) (0x82cc62a5441c4df93acf0d2cf63e25060289e847.sol#9-12)
+Moreover, the following function parameters should change its data location:
+args location should be calldata
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#public-function-that-could-be-declared-external
+./0x82cc62a5441c4df93acf0d2cf63e25060289e847.sol analyzed (1 contracts with 94 detectors), 8 result(s) found
+
+real	0m1.426s
+user	0m1.176s
+sys	0m0.252s

@@ -1,0 +1,112 @@
+'solc --version' running
+'solc ./0xdd654450e2ef8f672ef297ea3ff9aabea2e22840.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0xdd654450e2ef8f672ef297ea3ff9aabea2e22840.sol:
+./0xdd654450e2ef8f672ef297ea3ff9aabea2e22840.sol:73:14: Warning: This looks like an address but has an invalid checksum. If this is not used as an address, please prepend '00'. Correct checksummed address: '0xF8767ced61C1f86f5572E64289247B1c86083ef1'. For more information please see https://solidity.readthedocs.io/en/develop/types.html#address-literals
+    initData(0xf8767ced61c1f86f5572e64289247b1c86083ef1, 33333333 * 10**16);
+             ^----------------------------------------^
+
+
+VestingContractABX (0xdd654450e2ef8f672ef297ea3ff9aabea2e22840.sol#11-169) contract sets array length with a user-controlled value:
+	- periods.push(1524355200) (0xdd654450e2ef8f672ef297ea3ff9aabea2e22840.sol#60)
+VestingContractABX (0xdd654450e2ef8f672ef297ea3ff9aabea2e22840.sol#11-169) contract sets array length with a user-controlled value:
+	- periods.push(1526947200) (0xdd654450e2ef8f672ef297ea3ff9aabea2e22840.sol#61)
+VestingContractABX (0xdd654450e2ef8f672ef297ea3ff9aabea2e22840.sol#11-169) contract sets array length with a user-controlled value:
+	- periods.push(2 ** 256 - 1) (0xdd654450e2ef8f672ef297ea3ff9aabea2e22840.sol#62)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#array-length-assignment
+
+VestingContractABX (0xdd654450e2ef8f672ef297ea3ff9aabea2e22840.sol#11-169) has incorrect ERC20 function interface:VestingContractABX.transfer(address,uint256) (0xdd654450e2ef8f672ef297ea3ff9aabea2e22840.sol#153-167)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-erc20-interface
+
+Contract locking ether found:
+	Contract VestingContractABX (0xdd654450e2ef8f672ef297ea3ff9aabea2e22840.sol#11-169) has payable functions:
+	 - VestingContractABX.fallback() (0xdd654450e2ef8f672ef297ea3ff9aabea2e22840.sol#77-82)
+	But does not have a function to withdraw the ether
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#contracts-that-lock-ether
+
+Reentrancy in VestingContractABX.transfer(address,uint256) (0xdd654450e2ef8f672ef297ea3ff9aabea2e22840.sol#153-167):
+	External calls:
+	- require(bool)(value <= abx_token.balanceOf(this) && value <= account_data[msg.sender].current_balance && account_data[msg.sender].current_transferred + value <= account_data[msg.sender].current_limit) (0xdd654450e2ef8f672ef297ea3ff9aabea2e22840.sol#157-159)
+	- abx_token.transfer(to,value) (0xdd654450e2ef8f672ef297ea3ff9aabea2e22840.sol#161)
+	State variables written after the call(s):
+	- account_data[msg.sender].current_transferred += value (0xdd654450e2ef8f672ef297ea3ff9aabea2e22840.sol#163)
+	VestingContractABX.account_data (0xdd654450e2ef8f672ef297ea3ff9aabea2e22840.sol#26) can be used in cross function reentrancies:
+	- VestingContractABX.account_data (0xdd654450e2ef8f672ef297ea3ff9aabea2e22840.sol#26)
+	- VestingContractABX.initData(address,uint256) (0xdd654450e2ef8f672ef297ea3ff9aabea2e22840.sol#93-102)
+	- VestingContractABX.ownerTransfer(address,uint256) (0xdd654450e2ef8f672ef297ea3ff9aabea2e22840.sol#115-125)
+	- VestingContractABX.transfer(address,uint256) (0xdd654450e2ef8f672ef297ea3ff9aabea2e22840.sol#153-167)
+	- VestingContractABX.updateCurrentPeriod() (0xdd654450e2ef8f672ef297ea3ff9aabea2e22840.sol#127-151)
+	- account_data[msg.sender].current_balance -= value (0xdd654450e2ef8f672ef297ea3ff9aabea2e22840.sol#164)
+	VestingContractABX.account_data (0xdd654450e2ef8f672ef297ea3ff9aabea2e22840.sol#26) can be used in cross function reentrancies:
+	- VestingContractABX.account_data (0xdd654450e2ef8f672ef297ea3ff9aabea2e22840.sol#26)
+	- VestingContractABX.initData(address,uint256) (0xdd654450e2ef8f672ef297ea3ff9aabea2e22840.sol#93-102)
+	- VestingContractABX.ownerTransfer(address,uint256) (0xdd654450e2ef8f672ef297ea3ff9aabea2e22840.sol#115-125)
+	- VestingContractABX.transfer(address,uint256) (0xdd654450e2ef8f672ef297ea3ff9aabea2e22840.sol#153-167)
+	- VestingContractABX.updateCurrentPeriod() (0xdd654450e2ef8f672ef297ea3ff9aabea2e22840.sol#127-151)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+Reentrancy in VestingContractABX.ownerTransfer(address,uint256) (0xdd654450e2ef8f672ef297ea3ff9aabea2e22840.sol#115-125):
+	External calls:
+	- require(bool)(getBalance() > current_balance_all && value <= getBalance() - current_balance_all) (0xdd654450e2ef8f672ef297ea3ff9aabea2e22840.sol#122)
+		- abx_token.balanceOf(this) (0xdd654450e2ef8f672ef297ea3ff9aabea2e22840.sol#90)
+	- abx_token.transfer(to,value) (0xdd654450e2ef8f672ef297ea3ff9aabea2e22840.sol#123)
+	Event emitted after the call(s):
+	- OwnerTransfer(to,value) (0xdd654450e2ef8f672ef297ea3ff9aabea2e22840.sol#124)
+Reentrancy in VestingContractABX.transfer(address,uint256) (0xdd654450e2ef8f672ef297ea3ff9aabea2e22840.sol#153-167):
+	External calls:
+	- require(bool)(value <= abx_token.balanceOf(this) && value <= account_data[msg.sender].current_balance && account_data[msg.sender].current_transferred + value <= account_data[msg.sender].current_limit) (0xdd654450e2ef8f672ef297ea3ff9aabea2e22840.sol#157-159)
+	- abx_token.transfer(to,value) (0xdd654450e2ef8f672ef297ea3ff9aabea2e22840.sol#161)
+	Event emitted after the call(s):
+	- Transfer(to,value) (0xdd654450e2ef8f672ef297ea3ff9aabea2e22840.sol#165)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+VestingContractABX.updateCurrentPeriod() (0xdd654450e2ef8f672ef297ea3ff9aabea2e22840.sol#127-151) uses timestamp for comparisons
+	Dangerous comparisons:
+	- periods[i] > now (0xdd654450e2ef8f672ef297ea3ff9aabea2e22840.sol#134)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Version constraint ^0.4.21 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ABIEncoderV2PackedStorage_0.4.x
+	- ExpExponentCleanup
+	- EventStructWrongData
+	- NestedArrayFunctionCallDecoder.
+It is used by:
+	- ^0.4.21 (0xdd654450e2ef8f672ef297ea3ff9aabea2e22840.sol#1)
+solc-0.4.21 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+VestingContractABX (0xdd654450e2ef8f672ef297ea3ff9aabea2e22840.sol#11-169) should inherit from ABXToken (0xdd654450e2ef8f672ef297ea3ff9aabea2e22840.sol#3-9)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-inheritance
+
+Parameter VestingContractABX.setOwner(address)._owner (0xdd654450e2ef8f672ef297ea3ff9aabea2e22840.sol#104) is not in mixedCase
+Variable VestingContractABX.abx_token (0xdd654450e2ef8f672ef297ea3ff9aabea2e22840.sol#25) is not in mixedCase
+Variable VestingContractABX.account_data (0xdd654450e2ef8f672ef297ea3ff9aabea2e22840.sol#26) is not in mixedCase
+Variable VestingContractABX.current_period (0xdd654450e2ef8f672ef297ea3ff9aabea2e22840.sol#27) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+VestingContractABX.VestingContractABX(ABXToken) (0xdd654450e2ef8f672ef297ea3ff9aabea2e22840.sol#54-74) uses literals with too many digits:
+	- initData(0xd2A64d99025b1b0B0Eb8C65d7a89AD6444842E60,500000 * 10 ** 18) (0xdd654450e2ef8f672ef297ea3ff9aabea2e22840.sol#72)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+Loop condition i < periods.length (0xdd654450e2ef8f672ef297ea3ff9aabea2e22840.sol#133) should use cached array length instead of referencing `length` member of the storage array.
+ Loop condition i < accounts.length (0xdd654450e2ef8f672ef297ea3ff9aabea2e22840.sol#142) should use cached array length instead of referencing `length` member of the storage array.
+ Loop condition i < accounts.length (0xdd654450e2ef8f672ef297ea3ff9aabea2e22840.sol#120) should use cached array length instead of referencing `length` member of the storage array.
+ Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#cache-array-length
+./0xdd654450e2ef8f672ef297ea3ff9aabea2e22840.sol analyzed (2 contracts with 94 detectors), 20 result(s) found
+
+real	0m1.611s
+user	0m1.414s
+sys	0m0.199s

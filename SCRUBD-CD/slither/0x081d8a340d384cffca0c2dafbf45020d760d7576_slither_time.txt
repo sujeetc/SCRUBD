@@ -1,0 +1,182 @@
+'solc --version' running
+'solc ./0x081d8a340d384cffca0c2dafbf45020d760d7576.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x081d8a340d384cffca0c2dafbf45020d760d7576.sol:
+Warning: Contract code size exceeds 24576 bytes (a limit introduced in Spurious Dragon). This contract may not be deployable on mainnet. Consider enabling the optimizer (with a low "runs" value!), turning off revert strings, or using libraries.
+   --> ./0x081d8a340d384cffca0c2dafbf45020d760d7576.sol:321:1:
+    |
+321 | contract SOLIDBLOCK is IERC20, Ownable, AccessControl {
+    | ^ (Relevant source part starts here and spans across multiple lines).
+
+
+
+SOLIDBLOCK.swapTokensForETH(uint256) (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#878-901) sends eth to arbitrary user
+	Dangerous calls:
+	- (success,None) = treasuryAddress.call{value: (ETHAmount.treasury * address(this).balance) / tokenAmount}() (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#894)
+	- (success,None) = developmentAddress.call{value: (ETHAmount.development * address(this).balance) / tokenAmount}() (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#898)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+Reentrancy in SOLIDBLOCK.swapTokensForETH(uint256) (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#878-901):
+	External calls:
+	- router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#886-892)
+	- (success,None) = treasuryAddress.call{value: (ETHAmount.treasury * address(this).balance) / tokenAmount}() (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#894)
+	External calls sending eth:
+	- (success,None) = treasuryAddress.call{value: (ETHAmount.treasury * address(this).balance) / tokenAmount}() (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#894)
+	State variables written after the call(s):
+	- ETHAmount.treasury = 0 (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#896)
+	SOLIDBLOCK.ETHAmount (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#427) can be used in cross function reentrancies:
+	- SOLIDBLOCK.ETHAmount (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#427)
+	- SOLIDBLOCK.swapTokensForETH(uint256) (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#878-901)
+Reentrancy in SOLIDBLOCK.swapTokensForETH(uint256) (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#878-901):
+	External calls:
+	- router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#886-892)
+	- (success,None) = treasuryAddress.call{value: (ETHAmount.treasury * address(this).balance) / tokenAmount}() (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#894)
+	- (success,None) = developmentAddress.call{value: (ETHAmount.development * address(this).balance) / tokenAmount}() (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#898)
+	External calls sending eth:
+	- (success,None) = treasuryAddress.call{value: (ETHAmount.treasury * address(this).balance) / tokenAmount}() (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#894)
+	- (success,None) = developmentAddress.call{value: (ETHAmount.development * address(this).balance) / tokenAmount}() (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#898)
+	State variables written after the call(s):
+	- ETHAmount.development = 0 (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#900)
+	SOLIDBLOCK.ETHAmount (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#427) can be used in cross function reentrancies:
+	- SOLIDBLOCK.ETHAmount (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#427)
+	- SOLIDBLOCK.swapTokensForETH(uint256) (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#878-901)
+Reentrancy in SOLIDBLOCK.transferFrom(address,address,uint256) (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#521-529):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#525)
+		- router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#886-892)
+		- (success,None) = treasuryAddress.call{value: (ETHAmount.treasury * address(this).balance) / tokenAmount}() (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#894)
+		- (success,None) = developmentAddress.call{value: (ETHAmount.development * address(this).balance) / tokenAmount}() (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#898)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#525)
+		- (success,None) = treasuryAddress.call{value: (ETHAmount.treasury * address(this).balance) / tokenAmount}() (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#894)
+		- (success,None) = developmentAddress.call{value: (ETHAmount.development * address(this).balance) / tokenAmount}() (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#898)
+	State variables written after the call(s):
+	- _approve(sender,_msgSender(),currentAllowance - amount) (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#526)
+		- _allowances[owner][spender] = amount (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#787)
+	SOLIDBLOCK._allowances (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#325) can be used in cross function reentrancies:
+	- SOLIDBLOCK._approve(address,address,uint256) (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#784-789)
+	- SOLIDBLOCK.allowance(address,address) (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#512-514)
+	- SOLIDBLOCK.decreaseAllowance(address,uint256) (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#536-542)
+	- SOLIDBLOCK.increaseAllowance(address,uint256) (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#531-534)
+	- SOLIDBLOCK.transferFrom(address,address,uint256) (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#521-529)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+SOLIDBLOCK.rescueAnyERC20Tokens(address,address,uint256) (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#993-995) ignores return value by IERC20(_tokenAddr).transfer(_to,_amount) (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#994)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+SOLIDBLOCK.allowance(address,address).owner (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#512) shadows:
+	- Ownable.owner() (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#52-54) (function)
+SOLIDBLOCK._approve(address,address,uint256).owner (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#784) shadows:
+	- Ownable.owner() (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#52-54) (function)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#local-variable-shadowing
+
+SOLIDBLOCK.updateMaxTxAmt(uint256) (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#921-925) should emit an event for: 
+	- maxTxAmount = amount * 10 ** _decimals (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#924) 
+SOLIDBLOCK.updateMaxWalletAmt(uint256) (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#927-931) should emit an event for: 
+	- maxWalletAmount = amount * 10 ** _decimals (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#930) 
+SOLIDBLOCK.updatePresaleMaxWalletAmt(uint256) (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#933-937) should emit an event for: 
+	- presaleMaxWalletAmount = amount * 10 ** _decimals (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#936) 
+SOLIDBLOCK.updateSwapTokensAtAmount(uint256) (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#939-943) should emit an event for: 
+	- swapTokensAtAmount = amount * 10 ** 6 (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#942) 
+SOLIDBLOCK.updateCoolDownSettings(bool,uint256) (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#945-948) should emit an event for: 
+	- coolDownTime = _timeInSeconds * 1 (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#947) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+SOLIDBLOCK.updateRouterAndPair(address,address).newPair (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#962) lacks a zero-check on :
+		- pair = newPair (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#964)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in SOLIDBLOCK.transferFrom(address,address,uint256) (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#521-529):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#525)
+		- router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#886-892)
+		- (success,None) = treasuryAddress.call{value: (ETHAmount.treasury * address(this).balance) / tokenAmount}() (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#894)
+		- (success,None) = developmentAddress.call{value: (ETHAmount.development * address(this).balance) / tokenAmount}() (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#898)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#525)
+		- (success,None) = treasuryAddress.call{value: (ETHAmount.treasury * address(this).balance) / tokenAmount}() (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#894)
+		- (success,None) = developmentAddress.call{value: (ETHAmount.development * address(this).balance) / tokenAmount}() (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#898)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#788)
+		- _approve(sender,_msgSender(),currentAllowance - amount) (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#526)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+SOLIDBLOCK.activateTrading() (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#625-633) uses timestamp for comparisons
+	Dangerous comparisons:
+	- _launchStartTimestamp == 0 (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#628)
+SOLIDBLOCK._transfer(address,address,uint256) (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#792-844) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(timePassed > coolDownTime,You must wait coolDownTime) (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#821)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+SOLIDBLOCK.includeInReward(address) (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#565-576) has costly operations inside a loop:
+	- _excluded.pop() (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#572)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#costly-operations-inside-a-loop
+
+AccessControl._setRoleAdmin(bytes32,bytes32) (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#300-304) is never used and should be removed
+Context._msgData() (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#37-40) is never used and should be removed
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dead-code
+
+SOLIDBLOCK._rTotal (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#344) is set pre-construction with a non-constant function or state variable:
+	- (MAX - (MAX % _tTotal))
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#function-initializing-state
+
+Version constraint ^0.8.4 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- SignedImmutables.
+It is used by:
+	- ^0.8.4 (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#12)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in SOLIDBLOCK.swapTokensForETH(uint256) (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#878-901):
+	- (success,None) = treasuryAddress.call{value: (ETHAmount.treasury * address(this).balance) / tokenAmount}() (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#894)
+	- (success,None) = developmentAddress.call{value: (ETHAmount.development * address(this).balance) / tokenAmount}() (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#898)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Function IRouter.WETH() (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#83) is not in mixedCase
+Struct SOLIDBLOCK.valuesFromGetValues (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#401-413) is not in CapWords
+Struct SOLIDBLOCK.splitETHStruct (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#415-418) is not in CapWords
+Parameter SOLIDBLOCK.addPair(address)._pair (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#665) is not in mixedCase
+Parameter SOLIDBLOCK.removePair(address)._pair (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#669) is not in mixedCase
+Parameter SOLIDBLOCK.setTaxes(uint256,uint256,uint256,uint256)._rfi (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#677) is not in mixedCase
+Parameter SOLIDBLOCK.setTaxes(uint256,uint256,uint256,uint256)._treasury (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#677) is not in mixedCase
+Parameter SOLIDBLOCK.setTaxes(uint256,uint256,uint256,uint256)._development (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#677) is not in mixedCase
+Parameter SOLIDBLOCK.setTaxes(uint256,uint256,uint256,uint256).__burn (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#677) is not in mixedCase
+Parameter SOLIDBLOCK.setSplitETH(uint256,uint256)._treasury (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#685) is not in mixedCase
+Parameter SOLIDBLOCK.setSplitETH(uint256,uint256)._development (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#685) is not in mixedCase
+Parameter SOLIDBLOCK.updateStableCoin(address)._usdt (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#915) is not in mixedCase
+Parameter SOLIDBLOCK.updateCoolDownSettings(bool,uint256)._enabled (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#945) is not in mixedCase
+Parameter SOLIDBLOCK.updateCoolDownSettings(bool,uint256)._timeInSeconds (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#945) is not in mixedCase
+Parameter SOLIDBLOCK.rescueAnyERC20Tokens(address,address,uint256)._tokenAddr (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#993) is not in mixedCase
+Parameter SOLIDBLOCK.rescueAnyERC20Tokens(address,address,uint256)._to (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#993) is not in mixedCase
+Parameter SOLIDBLOCK.rescueAnyERC20Tokens(address,address,uint256)._amount (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#993) is not in mixedCase
+Constant SOLIDBLOCK._decimals (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#340) is not in UPPER_CASE_WITH_UNDERSCORES
+Variable SOLIDBLOCK._lastTrade (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#352) is not in mixedCase
+Constant SOLIDBLOCK.burnAddress (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#358) is not in UPPER_CASE_WITH_UNDERSCORES
+Variable SOLIDBLOCK.USDT (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#360) is not in mixedCase
+Constant SOLIDBLOCK._name (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#362) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant SOLIDBLOCK._symbol (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#363) is not in UPPER_CASE_WITH_UNDERSCORES
+Variable SOLIDBLOCK.ETHAmount (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#427) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Redundant expression "this (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#38)" inContext (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#32-41)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#redundant-statements
+
+SOLIDBLOCK.slitherConstructorVariables() (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#321-1000) uses literals with too many digits:
+	- presaleMaxWalletAmount = 100000000 * 10 ** _decimals (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#378)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+Loop condition i < _excluded.length (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#774) should use cached array length instead of referencing `length` member of the storage array.
+ Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#cache-array-length
+
+SOLIDBLOCK._tTotal (0x081d8a340d384cffca0c2dafbf45020d760d7576.sol#343) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+./0x081d8a340d384cffca0c2dafbf45020d760d7576.sol analyzed (12 contracts with 94 detectors), 50 result(s) found
+
+real	0m4.521s
+user	0m4.222s
+sys	0m0.299s

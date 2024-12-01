@@ -1,0 +1,104 @@
+'solc --version' running
+'solc ./0x1da73fc09ea07781482994036a0eecc7e6952dfb.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+TydoIco.buy() (0x1da73fc09ea07781482994036a0eecc7e6952dfb.sol#147-160) uses arbitrary from in transferFrom: token.transferFrom(address(owner),address(this),amount) (0x1da73fc09ea07781482994036a0eecc7e6952dfb.sol#154)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#arbitrary-from-in-transferfrom
+
+Reentrancy in TydoIco.refund() (0x1da73fc09ea07781482994036a0eecc7e6952dfb.sol#186-199):
+	External calls:
+	- token.transfer(owner,balances[msg.sender]) (0x1da73fc09ea07781482994036a0eecc7e6952dfb.sol#195)
+	External calls sending eth:
+	- msg.sender.transfer(weiAmount) (0x1da73fc09ea07781482994036a0eecc7e6952dfb.sol#194)
+	State variables written after the call(s):
+	- balances[msg.sender] = 0 (0x1da73fc09ea07781482994036a0eecc7e6952dfb.sol#197)
+	TydoIco.balances (0x1da73fc09ea07781482994036a0eecc7e6952dfb.sol#94) can be used in cross function reentrancies:
+	- TydoIco.balances (0x1da73fc09ea07781482994036a0eecc7e6952dfb.sol#94)
+	- TydoIco.buy() (0x1da73fc09ea07781482994036a0eecc7e6952dfb.sol#147-160)
+	- TydoIco.refund() (0x1da73fc09ea07781482994036a0eecc7e6952dfb.sol#186-199)
+	- TydoIco.withdrawTokens() (0x1da73fc09ea07781482994036a0eecc7e6952dfb.sol#209-213)
+	- ethBalances[msg.sender] = 0 (0x1da73fc09ea07781482994036a0eecc7e6952dfb.sol#196)
+	TydoIco.ethBalances (0x1da73fc09ea07781482994036a0eecc7e6952dfb.sol#95) can be used in cross function reentrancies:
+	- TydoIco.buy() (0x1da73fc09ea07781482994036a0eecc7e6952dfb.sol#147-160)
+	- TydoIco.refund() (0x1da73fc09ea07781482994036a0eecc7e6952dfb.sol#186-199)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+TydoIco.buy() (0x1da73fc09ea07781482994036a0eecc7e6952dfb.sol#147-160) ignores return value by token.transferFrom(address(owner),address(this),amount) (0x1da73fc09ea07781482994036a0eecc7e6952dfb.sol#154)
+TydoIco.refund() (0x1da73fc09ea07781482994036a0eecc7e6952dfb.sol#186-199) ignores return value by token.transfer(owner,balances[msg.sender]) (0x1da73fc09ea07781482994036a0eecc7e6952dfb.sol#195)
+TydoIco.withdrawTokens() (0x1da73fc09ea07781482994036a0eecc7e6952dfb.sol#209-213) ignores return value by token.transfer(msg.sender,balances[msg.sender]) (0x1da73fc09ea07781482994036a0eecc7e6952dfb.sol#212)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+TydoIco.buy() (0x1da73fc09ea07781482994036a0eecc7e6952dfb.sol#147-160) performs a multiplication on the result of a division:
+	- amount = msg.value.mul(COINS_PER_ETH).div(1000000000000000000).mul(tokenDecMult) (0x1da73fc09ea07781482994036a0eecc7e6952dfb.sol#150)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+Reentrancy in TydoIco.buy() (0x1da73fc09ea07781482994036a0eecc7e6952dfb.sol#147-160):
+	External calls:
+	- token.transferFrom(address(owner),address(this),amount) (0x1da73fc09ea07781482994036a0eecc7e6952dfb.sol#154)
+	State variables written after the call(s):
+	- balances[msg.sender] = balances[msg.sender].add(amount) (0x1da73fc09ea07781482994036a0eecc7e6952dfb.sol#156)
+	- ethBalances[msg.sender] += msg.value (0x1da73fc09ea07781482994036a0eecc7e6952dfb.sol#157)
+	- ethCollected = ethCollected.add(msg.value) (0x1da73fc09ea07781482994036a0eecc7e6952dfb.sol#158)
+	- tokenSold = tokenSold.add(amount) (0x1da73fc09ea07781482994036a0eecc7e6952dfb.sol#159)
+Reentrancy in TydoIco.refund() (0x1da73fc09ea07781482994036a0eecc7e6952dfb.sol#186-199):
+	External calls:
+	- token.transfer(owner,balances[msg.sender]) (0x1da73fc09ea07781482994036a0eecc7e6952dfb.sol#195)
+	External calls sending eth:
+	- msg.sender.transfer(weiAmount) (0x1da73fc09ea07781482994036a0eecc7e6952dfb.sol#194)
+	State variables written after the call(s):
+	- ethCollected = ethCollected.sub(weiAmount) (0x1da73fc09ea07781482994036a0eecc7e6952dfb.sol#198)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+TydoIco.getBonus() (0x1da73fc09ea07781482994036a0eecc7e6952dfb.sol#162-171) uses timestamp for comparisons
+	Dangerous comparisons:
+	- bonusEnds[i] > curTime (0x1da73fc09ea07781482994036a0eecc7e6952dfb.sol#166)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Version constraint ^0.4.24 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ABIEncoderV2PackedStorage_0.4.x
+	- ExpExponentCleanup
+	- EventStructWrongData.
+It is used by:
+	- ^0.4.24 (0x1da73fc09ea07781482994036a0eecc7e6952dfb.sol#1)
+solc-0.4.24 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Parameter Owned.transferOwnership(address)._newOwner (0x1da73fc09ea07781482994036a0eecc7e6952dfb.sol#75) is not in mixedCase
+Constant TydoIco.tokenDecMult (0x1da73fc09ea07781482994036a0eecc7e6952dfb.sol#98) is not in UPPER_CASE_WITH_UNDERSCORES
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in TydoIco.refund() (0x1da73fc09ea07781482994036a0eecc7e6952dfb.sol#186-199):
+	External calls:
+	- msg.sender.transfer(weiAmount) (0x1da73fc09ea07781482994036a0eecc7e6952dfb.sol#194)
+	State variables written after the call(s):
+	- balances[msg.sender] = 0 (0x1da73fc09ea07781482994036a0eecc7e6952dfb.sol#197)
+	- ethBalances[msg.sender] = 0 (0x1da73fc09ea07781482994036a0eecc7e6952dfb.sol#196)
+	- ethCollected = ethCollected.sub(weiAmount) (0x1da73fc09ea07781482994036a0eecc7e6952dfb.sol#198)
+Reentrancy in TydoIco.withdraw() (0x1da73fc09ea07781482994036a0eecc7e6952dfb.sol#201-207):
+	External calls:
+	- owner.transfer(ethCollected) (0x1da73fc09ea07781482994036a0eecc7e6952dfb.sol#204)
+	State variables written after the call(s):
+	- ethCollected = 0 (0x1da73fc09ea07781482994036a0eecc7e6952dfb.sol#205)
+	- state = 4 (0x1da73fc09ea07781482994036a0eecc7e6952dfb.sol#206)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+Loop condition i < bonuses.length (0x1da73fc09ea07781482994036a0eecc7e6952dfb.sol#165) should use cached array length instead of referencing `length` member of the storage array.
+ Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#cache-array-length
+./0x1da73fc09ea07781482994036a0eecc7e6952dfb.sol analyzed (4 contracts with 94 detectors), 16 result(s) found
+
+real	0m1.871s
+user	0m1.595s
+sys	0m0.278s

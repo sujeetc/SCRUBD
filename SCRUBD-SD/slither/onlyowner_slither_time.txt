@@ -1,0 +1,56 @@
+'solc --version' running
+'solc ./onlyowner.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/manual_dataset' running
+
+Reentrancy in VulnerableContract.withdraw_not_only_owner(uint256) (onlyowner.sol#30-39):
+	External calls:
+	- (sent,None) = msg.sender.call{value: _amount}() (onlyowner.sol#34)
+	State variables written after the call(s):
+	- balances[msg.sender] -= _amount (onlyowner.sol#38)
+	VulnerableContract.balances (onlyowner.sol#6) can be used in cross function reentrancies:
+	- VulnerableContract.balances (onlyowner.sol#6)
+	- VulnerableContract.withdraw_not_only_owner(uint256) (onlyowner.sol#30-39)
+	- VulnerableContract.withdraw_onlyowner(uint256) (onlyowner.sol#18-27)
+Reentrancy in VulnerableContract.withdraw_onlyowner(uint256) (onlyowner.sol#18-27):
+	External calls:
+	- (sent,None) = msg.sender.call{value: _amount}() (onlyowner.sol#22)
+	State variables written after the call(s):
+	- balances[msg.sender] -= _amount (onlyowner.sol#26)
+	VulnerableContract.balances (onlyowner.sol#6) can be used in cross function reentrancies:
+	- VulnerableContract.balances (onlyowner.sol#6)
+	- VulnerableContract.withdraw_not_only_owner(uint256) (onlyowner.sol#30-39)
+	- VulnerableContract.withdraw_onlyowner(uint256) (onlyowner.sol#18-27)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+Version constraint ^0.8.0 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- SignedImmutables
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching.
+It is used by:
+	- ^0.8.0 (onlyowner.sol#2)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in VulnerableContract.withdraw_onlyowner(uint256) (onlyowner.sol#18-27):
+	- (sent,None) = msg.sender.call{value: _amount}() (onlyowner.sol#22)
+Low level call in VulnerableContract.withdraw_not_only_owner(uint256) (onlyowner.sol#30-39):
+	- (sent,None) = msg.sender.call{value: _amount}() (onlyowner.sol#34)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Function VulnerableContract.withdraw_onlyowner(uint256) (onlyowner.sol#18-27) is not in mixedCase
+Parameter VulnerableContract.withdraw_onlyowner(uint256)._amount (onlyowner.sol#18) is not in mixedCase
+Function VulnerableContract.withdraw_not_only_owner(uint256) (onlyowner.sol#30-39) is not in mixedCase
+Parameter VulnerableContract.withdraw_not_only_owner(uint256)._amount (onlyowner.sol#30) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+VulnerableContract.owner (onlyowner.sol#5) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+./onlyowner.sol analyzed (1 contracts with 94 detectors), 10 result(s) found
+
+real	0m1.116s
+user	0m0.961s
+sys	0m0.158s

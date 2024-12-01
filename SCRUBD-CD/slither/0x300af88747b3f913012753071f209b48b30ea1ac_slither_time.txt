@@ -1,0 +1,295 @@
+'solc --version' running
+'solc ./0x300af88747b3f913012753071f209b48b30ea1ac.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+BabyApe.swapBack() (0x300af88747b3f913012753071f209b48b30ea1ac.sol#1156-1200) sends eth to arbitrary user
+	Dangerous calls:
+	- IBURNER(hldBurnerAddress).burnEmUp{value: hldBalance}() (0x300af88747b3f913012753071f209b48b30ea1ac.sol#1183)
+	- devWallet.transfer(devBalance) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#1184)
+	- dividendDistributor.deposit{value: amountEthReflection}() (0x300af88747b3f913012753071f209b48b30ea1ac.sol#1187)
+	- router.addLiquidityETH{value: amountEthLiquidity}(address(this),amountToLiquify,0,0,0x000000000000000000000000000000000000dEaD,block.timestamp) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#1190-1197)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+Reentrancy in BabyApe._transfer(address,address,uint256) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#1043-1077):
+	External calls:
+	- swapBack() (0x300af88747b3f913012753071f209b48b30ea1ac.sol#1056)
+		- router.swapExactTokensForETHSupportingFeeOnTransferTokens(amountToSwap,0,path,address(this),block.timestamp) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#1166-1172)
+		- IBURNER(hldBurnerAddress).burnEmUp{value: hldBalance}() (0x300af88747b3f913012753071f209b48b30ea1ac.sol#1183)
+		- dividendDistributor.deposit{value: amountEthReflection}() (0x300af88747b3f913012753071f209b48b30ea1ac.sol#1187)
+		- router.addLiquidityETH{value: amountEthLiquidity}(address(this),amountToLiquify,0,0,0x000000000000000000000000000000000000dEaD,block.timestamp) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#1190-1197)
+	External calls sending eth:
+	- swapBack() (0x300af88747b3f913012753071f209b48b30ea1ac.sol#1056)
+		- IBURNER(hldBurnerAddress).burnEmUp{value: hldBalance}() (0x300af88747b3f913012753071f209b48b30ea1ac.sol#1183)
+		- devWallet.transfer(devBalance) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#1184)
+		- dividendDistributor.deposit{value: amountEthReflection}() (0x300af88747b3f913012753071f209b48b30ea1ac.sol#1187)
+		- router.addLiquidityETH{value: amountEthLiquidity}(address(this),amountToLiquify,0,0,0x000000000000000000000000000000000000dEaD,block.timestamp) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#1190-1197)
+	State variables written after the call(s):
+	- _balances[sender] = _balances[sender].sub(amount,Insufficient Balance) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#1058)
+	BabyApe._balances (0x300af88747b3f913012753071f209b48b30ea1ac.sol#684) can be used in cross function reentrancies:
+	- BabyApe._basicTransfer(address,address,uint256) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#1079-1084)
+	- BabyApe._transfer(address,address,uint256) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#1043-1077)
+	- BabyApe.balanceOf(address) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#930-932)
+	- BabyApe.constructor(uint256,address,address,address,address) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#734-784)
+	- BabyApe.swapBack() (0x300af88747b3f913012753071f209b48b30ea1ac.sol#1156-1200)
+	- BabyApe.takeFee(address,address,uint256) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#1145-1154)
+	- _balances[recipient] = _balances[recipient].add(finalAmount) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#1061)
+	BabyApe._balances (0x300af88747b3f913012753071f209b48b30ea1ac.sol#684) can be used in cross function reentrancies:
+	- BabyApe._basicTransfer(address,address,uint256) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#1079-1084)
+	- BabyApe._transfer(address,address,uint256) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#1043-1077)
+	- BabyApe.balanceOf(address) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#930-932)
+	- BabyApe.constructor(uint256,address,address,address,address) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#734-784)
+	- BabyApe.swapBack() (0x300af88747b3f913012753071f209b48b30ea1ac.sol#1156-1200)
+	- BabyApe.takeFee(address,address,uint256) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#1145-1154)
+	- finalAmount = takeFee(sender,recipient,amount) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#1060)
+		- _balances[address(this)] = _balances[address(this)].add(feeAmount) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#1150)
+	BabyApe._balances (0x300af88747b3f913012753071f209b48b30ea1ac.sol#684) can be used in cross function reentrancies:
+	- BabyApe._basicTransfer(address,address,uint256) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#1079-1084)
+	- BabyApe._transfer(address,address,uint256) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#1043-1077)
+	- BabyApe.balanceOf(address) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#930-932)
+	- BabyApe.constructor(uint256,address,address,address,address) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#734-784)
+	- BabyApe.swapBack() (0x300af88747b3f913012753071f209b48b30ea1ac.sol#1156-1200)
+	- BabyApe.takeFee(address,address,uint256) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#1145-1154)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+DividendDistributor.distributeDividend(address) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#632-643) ignores return value by RewardToken.transfer(shareholder,amount) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#638)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+Reentrancy in DividendDistributor.distributeDividend(address) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#632-643):
+	External calls:
+	- RewardToken.transfer(shareholder,amount) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#638)
+	State variables written after the call(s):
+	- shares[shareholder].totalRealised = shares[shareholder].totalRealised.add(amount) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#640)
+	DividendDistributor.shares (0x300af88747b3f913012753071f209b48b30ea1ac.sol#531) can be used in cross function reentrancies:
+	- DividendDistributor.distributeDividend(address) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#632-643)
+	- DividendDistributor.getUnpaidEarnings(address) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#650-659)
+	- DividendDistributor.setShare(address,uint256) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#566-581)
+	- DividendDistributor.shares (0x300af88747b3f913012753071f209b48b30ea1ac.sol#531)
+	- shares[shareholder].totalExcluded = getCumulativeDividends(shares[shareholder].amount) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#641)
+	DividendDistributor.shares (0x300af88747b3f913012753071f209b48b30ea1ac.sol#531) can be used in cross function reentrancies:
+	- DividendDistributor.distributeDividend(address) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#632-643)
+	- DividendDistributor.getUnpaidEarnings(address) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#650-659)
+	- DividendDistributor.setShare(address,uint256) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#566-581)
+	- DividendDistributor.shares (0x300af88747b3f913012753071f209b48b30ea1ac.sol#531)
+Reentrancy in DividendDistributor.process(uint256) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#603-625):
+	External calls:
+	- distributeDividend(shareholders[currentIndex]) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#617)
+		- RewardToken.transfer(shareholder,amount) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#638)
+	State variables written after the call(s):
+	- currentIndex = 0 (0x300af88747b3f913012753071f209b48b30ea1ac.sol#614)
+	DividendDistributor.currentIndex (0x300af88747b3f913012753071f209b48b30ea1ac.sol#542) can be used in cross function reentrancies:
+	- DividendDistributor.process(uint256) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#603-625)
+	- currentIndex ++ (0x300af88747b3f913012753071f209b48b30ea1ac.sol#622)
+	DividendDistributor.currentIndex (0x300af88747b3f913012753071f209b48b30ea1ac.sol#542) can be used in cross function reentrancies:
+	- DividendDistributor.process(uint256) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#603-625)
+Reentrancy in DividendDistributor.setShare(address,uint256) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#566-581):
+	External calls:
+	- distributeDividend(shareholder) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#569)
+		- RewardToken.transfer(shareholder,amount) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#638)
+	State variables written after the call(s):
+	- shares[shareholder].amount = amount (0x300af88747b3f913012753071f209b48b30ea1ac.sol#579)
+	DividendDistributor.shares (0x300af88747b3f913012753071f209b48b30ea1ac.sol#531) can be used in cross function reentrancies:
+	- DividendDistributor.distributeDividend(address) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#632-643)
+	- DividendDistributor.getUnpaidEarnings(address) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#650-659)
+	- DividendDistributor.setShare(address,uint256) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#566-581)
+	- DividendDistributor.shares (0x300af88747b3f913012753071f209b48b30ea1ac.sol#531)
+	- shares[shareholder].totalExcluded = getCumulativeDividends(shares[shareholder].amount) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#580)
+	DividendDistributor.shares (0x300af88747b3f913012753071f209b48b30ea1ac.sol#531) can be used in cross function reentrancies:
+	- DividendDistributor.distributeDividend(address) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#632-643)
+	- DividendDistributor.getUnpaidEarnings(address) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#650-659)
+	- DividendDistributor.setShare(address,uint256) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#566-581)
+	- DividendDistributor.shares (0x300af88747b3f913012753071f209b48b30ea1ac.sol#531)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+BabyApe.swapBack() (0x300af88747b3f913012753071f209b48b30ea1ac.sol#1156-1200) ignores return value by router.addLiquidityETH{value: amountEthLiquidity}(address(this),amountToLiquify,0,0,0x000000000000000000000000000000000000dEaD,block.timestamp) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#1190-1197)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+BabyApe.setOwnerWallet(address) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#867-869) should emit an event for: 
+	- tokenOwner = newOwnerWallet (0x300af88747b3f913012753071f209b48b30ea1ac.sol#868) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-access-control
+
+DividendDistributor.setDistributionCriteria(uint256,uint256) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#561-564) should emit an event for: 
+	- minPeriod = newMinPeriod (0x300af88747b3f913012753071f209b48b30ea1ac.sol#562) 
+	- minDistribution = newMinDistribution (0x300af88747b3f913012753071f209b48b30ea1ac.sol#563) 
+BabyApe.changeFees(uint256,uint256,uint256,uint256,uint256,uint256) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#819-835) should emit an event for: 
+	- lpFee = initialLpFee (0x300af88747b3f913012753071f209b48b30ea1ac.sol#823) 
+	- devFee = initialDevFee (0x300af88747b3f913012753071f209b48b30ea1ac.sol#824) 
+	- totalFee = devFee.add(lpFee).add(reflectionFee).add(hldFee) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#830) 
+	- totalFeeIfSelling = devFeeOnSell.add(lpFeeOnSell).add(reflectionFeeOnSell).add(hldFee) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#831) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+DividendDistributor.constructor(address,address,address).token (0x300af88747b3f913012753071f209b48b30ea1ac.sol#555) lacks a zero-check on :
+		- _token = token (0x300af88747b3f913012753071f209b48b30ea1ac.sol#558)
+BabyApe.constructor(uint256,address,address,address,address).initialHldBurner (0x300af88747b3f913012753071f209b48b30ea1ac.sol#734) lacks a zero-check on :
+		- hldBurnerAddress = address(initialHldBurner) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#781)
+BabyApe.constructor(uint256,address,address,address,address).initialHldAdmin (0x300af88747b3f913012753071f209b48b30ea1ac.sol#734) lacks a zero-check on :
+		- hldAdmin = initialHldAdmin (0x300af88747b3f913012753071f209b48b30ea1ac.sol#782)
+BabyApe.updateHldAdmin(address).newAdmin (0x300af88747b3f913012753071f209b48b30ea1ac.sol#803) lacks a zero-check on :
+		- hldAdmin = newAdmin (0x300af88747b3f913012753071f209b48b30ea1ac.sol#804)
+BabyApe.updateHldBurnerAddress(address).newhldBurnerAddress (0x300af88747b3f913012753071f209b48b30ea1ac.sol#807) lacks a zero-check on :
+		- hldBurnerAddress = address(newhldBurnerAddress) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#808)
+BabyApe.setDevWallet(address).newDevWallet (0x300af88747b3f913012753071f209b48b30ea1ac.sol#863) lacks a zero-check on :
+		- devWallet = address(newDevWallet) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#864)
+BabyApe.setOwnerWallet(address).newOwnerWallet (0x300af88747b3f913012753071f209b48b30ea1ac.sol#867) lacks a zero-check on :
+		- tokenOwner = newOwnerWallet (0x300af88747b3f913012753071f209b48b30ea1ac.sol#868)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+DividendDistributor.distributeDividend(address) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#632-643) has external calls inside a loop: RewardToken.transfer(shareholder,amount) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#638)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation/#calls-inside-a-loop
+
+Reentrancy in DividendDistributor.deposit() (0x300af88747b3f913012753071f209b48b30ea1ac.sol#583-601):
+	External calls:
+	- router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: msg.value}(0,path,address(this),block.timestamp) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#591-596)
+	State variables written after the call(s):
+	- dividendsPerShare = dividendsPerShare.add(dividendsPerShareAccuracyFactor.mul(amount).div(totalShares)) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#600)
+	- totalDividends = totalDividends.add(amount) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#599)
+Reentrancy in DividendDistributor.distributeDividend(address) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#632-643):
+	External calls:
+	- RewardToken.transfer(shareholder,amount) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#638)
+	State variables written after the call(s):
+	- shareholderClaims[shareholder] = block.timestamp (0x300af88747b3f913012753071f209b48b30ea1ac.sol#639)
+Reentrancy in DividendDistributor.setShare(address,uint256) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#566-581):
+	External calls:
+	- distributeDividend(shareholder) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#569)
+		- RewardToken.transfer(shareholder,amount) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#638)
+	State variables written after the call(s):
+	- addShareholder(shareholder) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#573)
+		- shareholderIndexes[shareholder] = shareholders.length (0x300af88747b3f913012753071f209b48b30ea1ac.sol#666)
+	- removeShareholder(shareholder) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#575)
+		- shareholderIndexes[shareholders[shareholders.length - 1]] = shareholderIndexes[shareholder] (0x300af88747b3f913012753071f209b48b30ea1ac.sol#672)
+	- addShareholder(shareholder) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#573)
+		- shareholders.push(shareholder) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#667)
+	- removeShareholder(shareholder) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#575)
+		- shareholders[shareholderIndexes[shareholder]] = shareholders[shareholders.length - 1] (0x300af88747b3f913012753071f209b48b30ea1ac.sol#671)
+		- shareholders.pop() (0x300af88747b3f913012753071f209b48b30ea1ac.sol#673)
+	- totalShares = totalShares.sub(shares[shareholder].amount).add(amount) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#578)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in BabyApe._transfer(address,address,uint256) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#1043-1077):
+	External calls:
+	- swapBack() (0x300af88747b3f913012753071f209b48b30ea1ac.sol#1056)
+		- router.swapExactTokensForETHSupportingFeeOnTransferTokens(amountToSwap,0,path,address(this),block.timestamp) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#1166-1172)
+		- IBURNER(hldBurnerAddress).burnEmUp{value: hldBalance}() (0x300af88747b3f913012753071f209b48b30ea1ac.sol#1183)
+		- dividendDistributor.deposit{value: amountEthReflection}() (0x300af88747b3f913012753071f209b48b30ea1ac.sol#1187)
+		- router.addLiquidityETH{value: amountEthLiquidity}(address(this),amountToLiquify,0,0,0x000000000000000000000000000000000000dEaD,block.timestamp) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#1190-1197)
+	- dividendDistributor.setShare(sender,_balances[sender]) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#1065)
+	- dividendDistributor.setShare(recipient,_balances[recipient]) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#1069)
+	- dividendDistributor.process(distributorGas) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#1072)
+	External calls sending eth:
+	- swapBack() (0x300af88747b3f913012753071f209b48b30ea1ac.sol#1056)
+		- IBURNER(hldBurnerAddress).burnEmUp{value: hldBalance}() (0x300af88747b3f913012753071f209b48b30ea1ac.sol#1183)
+		- devWallet.transfer(devBalance) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#1184)
+		- dividendDistributor.deposit{value: amountEthReflection}() (0x300af88747b3f913012753071f209b48b30ea1ac.sol#1187)
+		- router.addLiquidityETH{value: amountEthLiquidity}(address(this),amountToLiquify,0,0,0x000000000000000000000000000000000000dEaD,block.timestamp) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#1190-1197)
+	Event emitted after the call(s):
+	- Transfer(sender,recipient,finalAmount) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#1075)
+Reentrancy in BabyApe._transfer(address,address,uint256) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#1043-1077):
+	External calls:
+	- swapBack() (0x300af88747b3f913012753071f209b48b30ea1ac.sol#1056)
+		- router.swapExactTokensForETHSupportingFeeOnTransferTokens(amountToSwap,0,path,address(this),block.timestamp) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#1166-1172)
+		- IBURNER(hldBurnerAddress).burnEmUp{value: hldBalance}() (0x300af88747b3f913012753071f209b48b30ea1ac.sol#1183)
+		- dividendDistributor.deposit{value: amountEthReflection}() (0x300af88747b3f913012753071f209b48b30ea1ac.sol#1187)
+		- router.addLiquidityETH{value: amountEthLiquidity}(address(this),amountToLiquify,0,0,0x000000000000000000000000000000000000dEaD,block.timestamp) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#1190-1197)
+	External calls sending eth:
+	- swapBack() (0x300af88747b3f913012753071f209b48b30ea1ac.sol#1056)
+		- IBURNER(hldBurnerAddress).burnEmUp{value: hldBalance}() (0x300af88747b3f913012753071f209b48b30ea1ac.sol#1183)
+		- devWallet.transfer(devBalance) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#1184)
+		- dividendDistributor.deposit{value: amountEthReflection}() (0x300af88747b3f913012753071f209b48b30ea1ac.sol#1187)
+		- router.addLiquidityETH{value: amountEthLiquidity}(address(this),amountToLiquify,0,0,0x000000000000000000000000000000000000dEaD,block.timestamp) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#1190-1197)
+	Event emitted after the call(s):
+	- Transfer(sender,address(this),feeAmount) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#1151)
+		- finalAmount = takeFee(sender,recipient,amount) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#1060)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+DividendDistributor.shouldDistribute(address) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#627-630) uses timestamp for comparisons
+	Dangerous comparisons:
+	- shareholderClaims[shareholder] + minPeriod < block.timestamp && getUnpaidEarnings(shareholder) > minDistribution (0x300af88747b3f913012753071f209b48b30ea1ac.sol#628-629)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+DividendDistributor.process(uint256) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#603-625) has costly operations inside a loop:
+	- currentIndex = 0 (0x300af88747b3f913012753071f209b48b30ea1ac.sol#614)
+DividendDistributor.distributeDividend(address) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#632-643) has costly operations inside a loop:
+	- totalDistributed = totalDistributed.add(amount) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#637)
+DividendDistributor.process(uint256) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#603-625) has costly operations inside a loop:
+	- currentIndex ++ (0x300af88747b3f913012753071f209b48b30ea1ac.sol#622)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#costly-operations-inside-a-loop
+
+BabyApe._transfer(address,address,uint256) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#1043-1077) has a high cyclomatic complexity (12).
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#cyclomatic-complexity
+
+Context._msgData() (0x300af88747b3f913012753071f209b48b30ea1ac.sol#141-143) is never used and should be removed
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dead-code
+
+Version constraint ^0.8.0 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- SignedImmutables
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching.
+It is used by:
+	- ^0.8.0 (0x300af88747b3f913012753071f209b48b30ea1ac.sol#10)
+	- ^0.8.0 (0x300af88747b3f913012753071f209b48b30ea1ac.sol#95)
+	- ^0.8.0 (0x300af88747b3f913012753071f209b48b30ea1ac.sol#124)
+	- ^0.8.0 (0x300af88747b3f913012753071f209b48b30ea1ac.sol#151)
+	- ^0.8.0 (0x300af88747b3f913012753071f209b48b30ea1ac.sol#381)
+	- ^0.8.0 (0x300af88747b3f913012753071f209b48b30ea1ac.sol#458)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Function IUniswapV2Router02.WETH() (0x300af88747b3f913012753071f209b48b30ea1ac.sol#487) is not in mixedCase
+Variable DividendDistributor.RewardToken (0x300af88747b3f913012753071f209b48b30ea1ac.sol#526) is not in mixedCase
+Variable BabyApe.DEAD (0x300af88747b3f913012753071f209b48b30ea1ac.sol#693) is not in mixedCase
+Variable BabyApe.ZERO (0x300af88747b3f913012753071f209b48b30ea1ac.sol#694) is not in mixedCase
+Variable BabyApe._maxTxAmount (0x300af88747b3f913012753071f209b48b30ea1ac.sol#730) is not in mixedCase
+Variable BabyApe._walletMax (0x300af88747b3f913012753071f209b48b30ea1ac.sol#731) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in BabyApe._transfer(address,address,uint256) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#1043-1077):
+	External calls:
+	- swapBack() (0x300af88747b3f913012753071f209b48b30ea1ac.sol#1056)
+		- devWallet.transfer(devBalance) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#1184)
+	External calls sending eth:
+	- swapBack() (0x300af88747b3f913012753071f209b48b30ea1ac.sol#1056)
+		- IBURNER(hldBurnerAddress).burnEmUp{value: hldBalance}() (0x300af88747b3f913012753071f209b48b30ea1ac.sol#1183)
+		- devWallet.transfer(devBalance) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#1184)
+		- dividendDistributor.deposit{value: amountEthReflection}() (0x300af88747b3f913012753071f209b48b30ea1ac.sol#1187)
+		- router.addLiquidityETH{value: amountEthLiquidity}(address(this),amountToLiquify,0,0,0x000000000000000000000000000000000000dEaD,block.timestamp) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#1190-1197)
+	State variables written after the call(s):
+	- _balances[sender] = _balances[sender].sub(amount,Insufficient Balance) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#1058)
+	- _balances[recipient] = _balances[recipient].add(finalAmount) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#1061)
+	- finalAmount = takeFee(sender,recipient,amount) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#1060)
+		- _balances[address(this)] = _balances[address(this)].add(feeAmount) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#1150)
+	Event emitted after the call(s):
+	- Transfer(sender,address(this),feeAmount) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#1151)
+		- finalAmount = takeFee(sender,recipient,amount) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#1060)
+	- Transfer(sender,recipient,finalAmount) (0x300af88747b3f913012753071f209b48b30ea1ac.sol#1075)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+BabyApe.slitherConstructorVariables() (0x300af88747b3f913012753071f209b48b30ea1ac.sol#678-1205) uses literals with too many digits:
+	- distributorGas = 500000 (0x300af88747b3f913012753071f209b48b30ea1ac.sol#682)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+BabyApe.DEAD (0x300af88747b3f913012753071f209b48b30ea1ac.sol#693) should be constant 
+BabyApe.ZERO (0x300af88747b3f913012753071f209b48b30ea1ac.sol#694) should be constant 
+BabyApe.distributorGas (0x300af88747b3f913012753071f209b48b30ea1ac.sol#682) should be constant 
+BabyApe.hldFee (0x300af88747b3f913012753071f209b48b30ea1ac.sol#705) should be constant 
+BabyApe.launchedAt (0x300af88747b3f913012753071f209b48b30ea1ac.sol#704) should be constant 
+BabyApe.tradingStatus (0x300af88747b3f913012753071f209b48b30ea1ac.sol#726) should be constant 
+DividendDistributor.dividendsPerShareAccuracyFactor (0x300af88747b3f913012753071f209b48b30ea1ac.sol#537) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+
+BabyApe._totalSupply (0x300af88747b3f913012753071f209b48b30ea1ac.sol#687) should be immutable 
+BabyApe.dividendDistributor (0x300af88747b3f913012753071f209b48b30ea1ac.sol#681) should be immutable 
+BabyApe.factory (0x300af88747b3f913012753071f209b48b30ea1ac.sol#720) should be immutable 
+BabyApe.pair (0x300af88747b3f913012753071f209b48b30ea1ac.sol#719) should be immutable 
+BabyApe.router (0x300af88747b3f913012753071f209b48b30ea1ac.sol#718) should be immutable 
+DividendDistributor.RewardToken (0x300af88747b3f913012753071f209b48b30ea1ac.sol#526) should be immutable 
+DividendDistributor._token (0x300af88747b3f913012753071f209b48b30ea1ac.sol#517) should be immutable 
+DividendDistributor.router (0x300af88747b3f913012753071f209b48b30ea1ac.sol#525) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+./0x300af88747b3f913012753071f209b48b30ea1ac.sol analyzed (11 contracts with 94 detectors), 53 result(s) found
+
+real	0m2.930s
+user	0m2.727s
+sys	0m0.207s

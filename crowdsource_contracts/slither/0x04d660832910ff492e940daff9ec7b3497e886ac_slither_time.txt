@@ -1,0 +1,316 @@
+'solc --version' running
+'solc ./0x04d660832910ff492e940daff9ec7b3497e886ac.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x04d660832910ff492e940daff9ec7b3497e886ac.sol:
+./0x04d660832910ff492e940daff9ec7b3497e886ac.sol:10:1: Warning: Experimental features are turned on. Do not use experimental features on live deployments.
+pragma experimental ABIEncoderV2;
+^-------------------------------^
+./0x04d660832910ff492e940daff9ec7b3497e886ac.sol:267:9: Warning: Variable is declared as a storage pointer. Use an explicit "storage" keyword to silence this warning.
+        Investment[] investments = investors[addr].investments;
+        ^----------------------^
+./0x04d660832910ff492e940daff9ec7b3497e886ac.sol:432:9: Warning: Failure condition of 'send' ignored. Consider using 'transfer' instead.
+        advertisingAddress.send(m_advertisingPercent.mul(receivedEther));
+        ^--------------------------------------------------------------^
+./0x04d660832910ff492e940daff9ec7b3497e886ac.sol:433:9: Warning: Failure condition of 'send' ignored. Consider using 'transfer' instead.
+        adminsAddress.send(m_adminsPercent.mul(receivedEther));
+        ^----------------------------------------------------^
+./0x04d660832910ff492e940daff9ec7b3497e886ac.sol:199:5: Warning: No visibility specified. Defaulting to "public". 
+    function investorInfo(address addr)  returns(uint overallInvestment, uint paymentTime, Investment[] investments, Percent.percent individualPercent) {
+    ^ (Relevant source part starts here and spans across multiple lines).
+./0x04d660832910ff492e940daff9ec7b3497e886ac.sol:199:5: Warning: Function state mutability can be restricted to view
+    function investorInfo(address addr)  returns(uint overallInvestment, uint paymentTime, Investment[] investments, Percent.percent individualPercent) {
+    ^ (Relevant source part starts here and spans across multiple lines).
+./0x04d660832910ff492e940daff9ec7b3497e886ac.sol:397:76: Warning: Function declared as view, but this expression (potentially) modifies the state and thus requires non-payable (the default) or payable.
+        (overallInvestment, paymentTime, investments, individualPercent) = m_investors.investorInfo(investorAddr);}
+                                                                           ^------------------------------------^
+./0x04d660832910ff492e940daff9ec7b3497e886ac.sol:476:146: Warning: Function declared as view, but this expression (potentially) modifies the state and thus requires non-payable (the default) or payable.
+ ... m_investors.investorInfo(investorAddr) ... 
+     ^------------------------------------^
+
+
+InvestorsStorage (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#177-291) contract sets array length with a user-controlled value:
+	- investors[addr].investments.push(Investment(investmentValue,paymentTime,false,false)) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#243)
+InvestorsStorage (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#177-291) contract sets array length with a user-controlled value:
+	- investors[addr].investments.push(Investment(value,now,false,false)) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#253)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#array-length-assignment
+
+Reentrancy in Revolution2.doInvest(address) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#418-473):
+	External calls:
+	- senderIsInvestor = m_investors.isInvestor(msg.sender) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#435)
+	- referrerAddr.notZero() && ! senderIsInvestor && ! m_referrals[msg.sender] && referrerAddr != msg.sender && m_investors.isInvestor(referrerAddr) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#437-438)
+	External calls sending eth:
+	- msg.sender.transfer(excess) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#427)
+	- advertisingAddress.send(m_advertisingPercent.mul(receivedEther)) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#432)
+	- adminsAddress.send(m_adminsPercent.mul(receivedEther)) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#433)
+	State variables written after the call(s):
+	- m_referrals[msg.sender] = true (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#440)
+	Revolution2.m_referrals (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#301) can be used in cross function reentrancies:
+	- Revolution2.doInvest(address) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#418-473)
+Reentrancy in Revolution2.doInvest(address) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#418-473):
+	External calls:
+	- senderIsInvestor = m_investors.isInvestor(msg.sender) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#435)
+	- referrerAddr.notZero() && ! senderIsInvestor && ! m_referrals[msg.sender] && referrerAddr != msg.sender && m_investors.isInvestor(referrerAddr) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#437-438)
+	- assert(bool)(m_investors.addInvestment(referrerAddr,referrerBonus)) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#443)
+	- dividends = calcDividends(msg.sender) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#448)
+		- (overallInvestment,paymentTime,investments,individualPercent) = m_investors.investorInfo(investorAddr) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#476)
+	- assert(bool)(m_investors.addInvestment(msg.sender,investment)) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#461)
+	- assert(bool)(m_investors.setPaymentTime(msg.sender,now)) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#462)
+	- assert(bool)(m_investors.newInvestor(msg.sender,investment,now)) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#467)
+	External calls sending eth:
+	- msg.sender.transfer(excess) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#427)
+	- advertisingAddress.send(m_advertisingPercent.mul(receivedEther)) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#432)
+	- adminsAddress.send(m_adminsPercent.mul(receivedEther)) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#433)
+	State variables written after the call(s):
+	- investmentsNumber ++ (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#471)
+	Revolution2.investmentsNumber (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#307) can be used in cross function reentrancies:
+	- Revolution2.doInvest(address) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#418-473)
+	- Revolution2.investmentsNumber (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#307)
+	- Revolution2.nextWave() (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#490-495)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+Address.toAddress(bytes) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#107-110) is declared view but contains assembly code
+Address.isNotContract(address) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#112-116) is declared view but contains assembly code
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#constant-functions-using-assembly-code
+
+Percent.div(Percent.percent,uint256) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#61-63) performs a multiplication on the result of a division:
+	- a / p.num * p.den (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#62)
+Percent.mdiv(Percent.percent,uint256) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#88-90) performs a multiplication on the result of a division:
+	- a / p.num * p.den (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#89)
+Revolution2.calcDividends(address) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#480-488) performs a multiplication on the result of a division:
+	- dividends = (now.sub(investor.paymentTime) / 3600) * p.mmul(investor.overallInvestment) / 24 (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#487)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+Reentrancy in Revolution2.getMyDividends() (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#403-416):
+	External calls:
+	- require(bool)(now.sub(getMemInvestor(msg.sender).paymentTime) > 3600) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#404)
+		- (overallInvestment,paymentTime,investments,individualPercent) = m_investors.investorInfo(investorAddr) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#476)
+	- dividends = calcDividends(msg.sender) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#406)
+		- (overallInvestment,paymentTime,investments,individualPercent) = m_investors.investorInfo(investorAddr) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#476)
+	- assert(bool)(m_investors.setPaymentTime(msg.sender,now)) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#408)
+	State variables written after the call(s):
+	- nextWave() (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#410)
+		- m_investors = new InvestorsStorage() (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#491)
+	Revolution2.m_investors (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#302) can be used in cross function reentrancies:
+	- Revolution2.disqualifyAddress(address) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#357-359)
+	- Revolution2.doInvest(address) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#418-473)
+	- Revolution2.getMemInvestor(address) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#475-478)
+	- Revolution2.getMyDividends() (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#403-416)
+	- Revolution2.investorInfo(address) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#396-397)
+	- Revolution2.investorsNumber() (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#380-382)
+	- Revolution2.nextWave() (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#490-495)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+Revolution2.doInvest(address) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#418-473) ignores return value by advertisingAddress.send(m_advertisingPercent.mul(receivedEther)) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#432)
+Revolution2.doInvest(address) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#418-473) ignores return value by adminsAddress.send(m_adminsPercent.mul(receivedEther)) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#433)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-send
+
+Revolution2.disqualifyAddress(address) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#357-359) ignores return value by m_investors.disqualify(addr) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#358)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+Revolution2.testWithdraw(address).addr (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#366) lacks a zero-check on :
+		- addr.transfer(address(this).balance) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#367)
+Revolution2.setAdvertisingAddress(address).addr (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#370) lacks a zero-check on :
+		- advertisingAddress = addr (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#372)
+Revolution2.setAdminsAddress(address).addr (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#375) lacks a zero-check on :
+		- adminsAddress = addr (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#377)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in Revolution2.getMyDividends() (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#403-416):
+	External calls:
+	- require(bool)(now.sub(getMemInvestor(msg.sender).paymentTime) > 3600) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#404)
+		- (overallInvestment,paymentTime,investments,individualPercent) = m_investors.investorInfo(investorAddr) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#476)
+	- dividends = calcDividends(msg.sender) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#406)
+		- (overallInvestment,paymentTime,investments,individualPercent) = m_investors.investorInfo(investorAddr) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#476)
+	- assert(bool)(m_investors.setPaymentTime(msg.sender,now)) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#408)
+	State variables written after the call(s):
+	- nextWave() (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#410)
+		- investmentsNumber = 0 (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#492)
+	- nextWave() (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#410)
+		- waveStartup = now (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#493)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in Revolution2.doInvest(address) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#418-473):
+	External calls:
+	- senderIsInvestor = m_investors.isInvestor(msg.sender) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#435)
+	- referrerAddr.notZero() && ! senderIsInvestor && ! m_referrals[msg.sender] && referrerAddr != msg.sender && m_investors.isInvestor(referrerAddr) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#437-438)
+	- assert(bool)(m_investors.addInvestment(referrerAddr,referrerBonus)) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#443)
+	External calls sending eth:
+	- msg.sender.transfer(excess) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#427)
+	- advertisingAddress.send(m_advertisingPercent.mul(receivedEther)) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#432)
+	- adminsAddress.send(m_adminsPercent.mul(receivedEther)) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#433)
+	Event emitted after the call(s):
+	- LogNewReferral(msg.sender,referrerAddr,now,referalBonus) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#445)
+Reentrancy in Revolution2.doInvest(address) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#418-473):
+	External calls:
+	- senderIsInvestor = m_investors.isInvestor(msg.sender) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#435)
+	- referrerAddr.notZero() && ! senderIsInvestor && ! m_referrals[msg.sender] && referrerAddr != msg.sender && m_investors.isInvestor(referrerAddr) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#437-438)
+	- assert(bool)(m_investors.addInvestment(referrerAddr,referrerBonus)) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#443)
+	- dividends = calcDividends(msg.sender) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#448)
+		- (overallInvestment,paymentTime,investments,individualPercent) = m_investors.investorInfo(investorAddr) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#476)
+	External calls sending eth:
+	- msg.sender.transfer(excess) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#427)
+	- advertisingAddress.send(m_advertisingPercent.mul(receivedEther)) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#432)
+	- adminsAddress.send(m_adminsPercent.mul(receivedEther)) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#433)
+	Event emitted after the call(s):
+	- LogAutomaticReinvest(msg.sender,now,dividends) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#451)
+Reentrancy in Revolution2.doInvest(address) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#418-473):
+	External calls:
+	- senderIsInvestor = m_investors.isInvestor(msg.sender) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#435)
+	- referrerAddr.notZero() && ! senderIsInvestor && ! m_referrals[msg.sender] && referrerAddr != msg.sender && m_investors.isInvestor(referrerAddr) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#437-438)
+	- assert(bool)(m_investors.addInvestment(referrerAddr,referrerBonus)) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#443)
+	- dividends = calcDividends(msg.sender) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#448)
+		- (overallInvestment,paymentTime,investments,individualPercent) = m_investors.investorInfo(investorAddr) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#476)
+	- assert(bool)(m_investors.newInvestor(msg.sender,investment,now)) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#467)
+	External calls sending eth:
+	- msg.sender.transfer(excess) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#427)
+	- advertisingAddress.send(m_advertisingPercent.mul(receivedEther)) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#432)
+	- adminsAddress.send(m_adminsPercent.mul(receivedEther)) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#433)
+	Event emitted after the call(s):
+	- LogNewInvestor(msg.sender,now) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#468)
+Reentrancy in Revolution2.doInvest(address) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#418-473):
+	External calls:
+	- senderIsInvestor = m_investors.isInvestor(msg.sender) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#435)
+	- referrerAddr.notZero() && ! senderIsInvestor && ! m_referrals[msg.sender] && referrerAddr != msg.sender && m_investors.isInvestor(referrerAddr) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#437-438)
+	- assert(bool)(m_investors.addInvestment(referrerAddr,referrerBonus)) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#443)
+	- dividends = calcDividends(msg.sender) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#448)
+		- (overallInvestment,paymentTime,investments,individualPercent) = m_investors.investorInfo(investorAddr) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#476)
+	- assert(bool)(m_investors.addInvestment(msg.sender,investment)) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#461)
+	- assert(bool)(m_investors.setPaymentTime(msg.sender,now)) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#462)
+	- assert(bool)(m_investors.newInvestor(msg.sender,investment,now)) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#467)
+	External calls sending eth:
+	- msg.sender.transfer(excess) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#427)
+	- advertisingAddress.send(m_advertisingPercent.mul(receivedEther)) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#432)
+	- adminsAddress.send(m_adminsPercent.mul(receivedEther)) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#433)
+	Event emitted after the call(s):
+	- LogNewInvestment(msg.sender,now,investment,receivedEther) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#472)
+Reentrancy in Revolution2.getMyDividends() (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#403-416):
+	External calls:
+	- require(bool)(now.sub(getMemInvestor(msg.sender).paymentTime) > 3600) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#404)
+		- (overallInvestment,paymentTime,investments,individualPercent) = m_investors.investorInfo(investorAddr) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#476)
+	- dividends = calcDividends(msg.sender) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#406)
+		- (overallInvestment,paymentTime,investments,individualPercent) = m_investors.investorInfo(investorAddr) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#476)
+	- assert(bool)(m_investors.setPaymentTime(msg.sender,now)) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#408)
+	Event emitted after the call(s):
+	- LogNextWave(now) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#494)
+		- nextWave() (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#410)
+Reentrancy in Revolution2.getMyDividends() (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#403-416):
+	External calls:
+	- require(bool)(now.sub(getMemInvestor(msg.sender).paymentTime) > 3600) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#404)
+		- (overallInvestment,paymentTime,investments,individualPercent) = m_investors.investorInfo(investorAddr) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#476)
+	- dividends = calcDividends(msg.sender) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#406)
+		- (overallInvestment,paymentTime,investments,individualPercent) = m_investors.investorInfo(investorAddr) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#476)
+	- assert(bool)(m_investors.setPaymentTime(msg.sender,now)) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#408)
+	External calls sending eth:
+	- msg.sender.transfer(dividends) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#414)
+	Event emitted after the call(s):
+	- LogPayDividends(msg.sender,now,dividends) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#415)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+InvestorsStorage.withdrawBody(address,uint256) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#266-285) uses timestamp for comparisons
+	Dangerous comparisons:
+	- ! investments[i].partiallyWithdrawn && investments[i].date <= now - 2592000 && valueToWithdraw + investments[i].value / 2 <= limit (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#270)
+	- ! investments[i].fullyWithdrawn && investments[i].date <= now - 5184000 && valueToWithdraw + investments[i].value / 2 <= limit (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#276)
+Revolution2.getMyDividends() (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#403-416) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(now.sub(getMemInvestor(msg.sender).paymentTime) > 3600) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#404)
+	- require(bool,string)(dividends.notZero(),cannot to pay zero dividends) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#407)
+	- assert(bool)(m_investors.setPaymentTime(msg.sender,now)) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#408)
+	- address(this).balance <= dividends (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#409)
+Revolution2.doInvest(address) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#418-473) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(investment >= minInvestment,investment must be >= minInvestment) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#421)
+	- receivedEther > investment (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#425)
+	- senderIsInvestor && dividends.notZero() (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#449)
+	- assert(bool)(m_investors.addInvestment(msg.sender,investment)) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#461)
+	- assert(bool)(m_investors.setPaymentTime(msg.sender,now)) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#462)
+	- assert(bool)(m_investors.newInvestor(msg.sender,investment,now)) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#467)
+Revolution2.calcDividends(address) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#480-488) uses timestamp for comparisons
+	Dangerous comparisons:
+	- investor.overallInvestment.isZero() || now.sub(investor.paymentTime) < 3600 (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#482)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Address.toAddress(bytes) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#107-110) uses assembly
+	- INLINE ASM (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#108-109)
+Address.isNotContract(address) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#112-116) uses assembly
+	- INLINE ASM (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#114-115)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#assembly-usage
+
+InvestorsStorage.updatePercent(address) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#206-235) has a high cyclomatic complexity (14).
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#cyclomatic-complexity
+
+Version constraint 0.4.25 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ABIEncoderV2PackedStorage_0.4.x.
+It is used by:
+	- 0.4.25 (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#9)
+solc-0.4.25 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Struct Percent.percent (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#49-52) is not in CapWords
+Parameter SafeMath.mul(uint256,uint256)._a (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#122) is not in mixedCase
+Parameter SafeMath.mul(uint256,uint256)._b (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#122) is not in mixedCase
+Parameter SafeMath.div(uint256,uint256)._a (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#133) is not in mixedCase
+Parameter SafeMath.div(uint256,uint256)._b (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#133) is not in mixedCase
+Parameter SafeMath.sub(uint256,uint256)._a (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#139) is not in mixedCase
+Parameter SafeMath.sub(uint256,uint256)._b (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#139) is not in mixedCase
+Parameter SafeMath.add(uint256,uint256)._a (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#146) is not in mixedCase
+Parameter SafeMath.add(uint256,uint256)._b (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#146) is not in mixedCase
+Variable Revolution2.m_referrals (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#301) is not in mixedCase
+Variable Revolution2.m_investors (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#302) is not in mixedCase
+Variable Revolution2.m_referal_percent (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#310) is not in mixedCase
+Variable Revolution2.m_referrer_percent (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#311) is not in mixedCase
+Variable Revolution2.m_adminsPercent (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#312) is not in mixedCase
+Variable Revolution2.m_advertisingPercent (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#313) is not in mixedCase
+Variable Revolution2.m_firstBakersPercent (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#314) is not in mixedCase
+Variable Revolution2.m_tenthBakerPercent (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#315) is not in mixedCase
+Variable Revolution2.m_fiftiethBakerPercent (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#316) is not in mixedCase
+Variable Revolution2.m_twentiethBakerPercent (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#317) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in Revolution2.doInvest(address) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#418-473):
+	External calls:
+	- msg.sender.transfer(excess) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#427)
+	Event emitted after the call(s):
+	- LogSendExcessOfEther(msg.sender,now,msg.value,investment,excess) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#429)
+Reentrancy in Revolution2.doInvest(address) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#418-473):
+	External calls:
+	- msg.sender.transfer(excess) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#427)
+	- advertisingAddress.send(m_advertisingPercent.mul(receivedEther)) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#432)
+	- adminsAddress.send(m_adminsPercent.mul(receivedEther)) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#433)
+	State variables written after the call(s):
+	- investmentsNumber ++ (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#471)
+	- m_referrals[msg.sender] = true (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#440)
+	Event emitted after the call(s):
+	- LogAutomaticReinvest(msg.sender,now,dividends) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#451)
+	- LogNewInvestment(msg.sender,now,investment,receivedEther) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#472)
+	- LogNewInvestor(msg.sender,now) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#468)
+	- LogNewReferral(msg.sender,referrerAddr,now,referalBonus) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#445)
+Reentrancy in Revolution2.getMyDividends() (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#403-416):
+	External calls:
+	- msg.sender.transfer(dividends) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#414)
+	Event emitted after the call(s):
+	- LogPayDividends(msg.sender,now,dividends) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#415)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+InvestorsStorage.updatePercent(address) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#206-235) uses literals with too many digits:
+	- investment >= 60000000000000000000000 && investment < 100000000000000000000000 (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#230)
+InvestorsStorage.updatePercent(address) (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#206-235) uses literals with too many digits:
+	- investment >= 100000000000000000000000 (0x04d660832910ff492e940daff9ec7b3497e886ac.sol#232)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+./0x04d660832910ff492e940daff9ec7b3497e886ac.sol analyzed (8 contracts with 94 detectors), 56 result(s) found
+
+real	0m2.575s
+user	0m2.313s
+sys	0m0.265s

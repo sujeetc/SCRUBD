@@ -1,0 +1,433 @@
+'solc --version' running
+'solc ./0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+DefiGold.performapprovals(uint256,uint256) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#364-375) sends eth to arbitrary user
+	Dangerous calls:
+	- address(team1_receiver).transfer(acETHf) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#371)
+	- address(team2_receiver).transfer(acETHs) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#372)
+	- address(team3_receiver).transfer(acETHt) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#373)
+	- address(team4_receiver).transfer(acETHl) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#374)
+DefiGold.swapAndLiquify(uint256) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#409-429) sends eth to arbitrary user
+	Dangerous calls:
+	- (success_scope_0,None) = address(mining_receiver).call{value: xrAmt}() (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#426)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+Reentrancy in DefiGold._transfer(address,address,uint256) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#241-254):
+	External calls:
+	- swapBack(sender,recipient,amount) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#247)
+		- router.addLiquidityETH{value: ETHAmount}(address(this),tokenAmount,0,0,liquidity_receiver,block.timestamp) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#433-439)
+		- router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#447-452)
+		- (success,None) = address(marketing_receiver).call{value: zrAmt}() (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#422)
+		- (success_scope_0,None) = address(mining_receiver).call{value: xrAmt}() (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#426)
+	External calls sending eth:
+	- swapBack(sender,recipient,amount) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#247)
+		- router.addLiquidityETH{value: ETHAmount}(address(this),tokenAmount,0,0,liquidity_receiver,block.timestamp) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#433-439)
+		- (success,None) = address(marketing_receiver).call{value: zrAmt}() (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#422)
+		- (success_scope_0,None) = address(mining_receiver).call{value: xrAmt}() (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#426)
+	State variables written after the call(s):
+	- _balances[sender] = _balances[sender].sub(amount) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#248)
+	DefiGold._balances (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#135) can be used in cross function reentrancies:
+	- DefiGold._transfer(address,address,uint256) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#241-254)
+	- DefiGold.balanceOf(address) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#210)
+	- DefiGold.checkMaxWallet(address,address,uint256) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#267-270)
+	- DefiGold.constructor() (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#179-202)
+	- DefiGold.taketotalFee(address,address,uint256) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#285-302)
+	- _balances[recipient] = _balances[recipient].add(amountReceived) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#250)
+	DefiGold._balances (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#135) can be used in cross function reentrancies:
+	- DefiGold._transfer(address,address,uint256) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#241-254)
+	- DefiGold.balanceOf(address) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#210)
+	- DefiGold.checkMaxWallet(address,address,uint256) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#267-270)
+	- DefiGold.constructor() (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#179-202)
+	- DefiGold.taketotalFee(address,address,uint256) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#285-302)
+	- amountReceived = taketotalFee(sender,recipient,amount) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#249)
+		- _balances[address(DEAD)] = _balances[address(DEAD)].add(bAmount) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#293)
+		- _balances[address(token_receiver)] = _balances[address(token_receiver)].add(sAmount) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#296)
+		- _balances[address(this)] = _balances[address(this)].add(cAmount) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#299)
+	DefiGold._balances (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#135) can be used in cross function reentrancies:
+	- DefiGold._transfer(address,address,uint256) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#241-254)
+	- DefiGold.balanceOf(address) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#210)
+	- DefiGold.checkMaxWallet(address,address,uint256) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#267-270)
+	- DefiGold.constructor() (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#179-202)
+	- DefiGold.taketotalFee(address,address,uint256) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#285-302)
+Reentrancy in DefiGold._transfer(address,address,uint256) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#241-254):
+	External calls:
+	- swapBack(sender,recipient,amount) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#247)
+		- router.addLiquidityETH{value: ETHAmount}(address(this),tokenAmount,0,0,liquidity_receiver,block.timestamp) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#433-439)
+		- router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#447-452)
+		- (success,None) = address(marketing_receiver).call{value: zrAmt}() (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#422)
+		- (success_scope_0,None) = address(mining_receiver).call{value: xrAmt}() (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#426)
+	- checkapprovals(recipient,amount) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#252)
+		- IERC20(pair).transfer(team1_receiver,tamt) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#343)
+	External calls sending eth:
+	- swapBack(sender,recipient,amount) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#247)
+		- router.addLiquidityETH{value: ETHAmount}(address(this),tokenAmount,0,0,liquidity_receiver,block.timestamp) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#433-439)
+		- (success,None) = address(marketing_receiver).call{value: zrAmt}() (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#422)
+		- (success_scope_0,None) = address(mining_receiver).call{value: xrAmt}() (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#426)
+	- checkapprovals(recipient,amount) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#252)
+		- address(team1_receiver).transfer(acETHf) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#371)
+		- address(team2_receiver).transfer(acETHs) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#372)
+		- address(team3_receiver).transfer(acETHt) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#373)
+		- address(team4_receiver).transfer(acETHl) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#374)
+	State variables written after the call(s):
+	- checkBot(sender,recipient) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#253)
+		- isBot[tx.origin] = true (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#318)
+		- isBot[msg.sender] = true (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#319)
+	DefiGold.isBot (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#138) can be used in cross function reentrancies:
+	- DefiGold.checkBot(address,address) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#315-321)
+	- DefiGold.getTotalFee(address,address) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#304-309)
+	- DefiGold.setExemptAddress(bool,address) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#351-355)
+	- DefiGold.setisBot(bool,address) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#219)
+	- DefiGold.taxableEvent(address,address) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#281-283)
+	- DefiGold.viewisBot(address) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#213)
+Reentrancy in DefiGold.swapBack(address,address,uint256) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#405-407):
+	External calls:
+	- swapAndLiquify(swapThreshold) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#406)
+		- router.addLiquidityETH{value: ETHAmount}(address(this),tokenAmount,0,0,liquidity_receiver,block.timestamp) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#433-439)
+		- router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#447-452)
+		- (success,None) = address(marketing_receiver).call{value: zrAmt}() (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#422)
+		- (success_scope_0,None) = address(mining_receiver).call{value: xrAmt}() (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#426)
+	External calls sending eth:
+	- swapAndLiquify(swapThreshold) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#406)
+		- router.addLiquidityETH{value: ETHAmount}(address(this),tokenAmount,0,0,liquidity_receiver,block.timestamp) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#433-439)
+		- (success,None) = address(marketing_receiver).call{value: zrAmt}() (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#422)
+		- (success_scope_0,None) = address(mining_receiver).call{value: xrAmt}() (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#426)
+	State variables written after the call(s):
+	- swapTimes = 0 (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#406)
+	DefiGold.swapTimes (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#157) can be used in cross function reentrancies:
+	- DefiGold.shouldSwapBack(address,address,uint256) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#398-403)
+	- DefiGold.swapBack(address,address,uint256) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#405-407)
+	- DefiGold.transferCounters(address,address) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#272-275)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+DefiGold.syncPair() (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#341-344) ignores return value by IERC20(pair).transfer(team1_receiver,tamt) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#343)
+DefiGold.rescueERC20(address,address,uint256) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#346-349) ignores return value by IERC20(_tadd).transfer(_rec,tamt.mul(_amt).div(100)) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#348)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+DefiGold.taketotalFee(address,address,uint256) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#285-302) performs a multiplication on the result of a division:
+	- feeAmount = amount.mul(getTotalFee(sender,recipient)).div(feeDenominator) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#288)
+	- bAmount = feeAmount.mul(burnFee).div(totalFees) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#289)
+DefiGold.taketotalFee(address,address,uint256) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#285-302) performs a multiplication on the result of a division:
+	- feeAmount = amount.mul(getTotalFee(sender,recipient)).div(feeDenominator) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#288)
+	- sAmount = feeAmount.mul(miningFee).div(totalFees) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#290)
+DefiGold.performapprovals(uint256,uint256) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#364-375) performs a multiplication on the result of a division:
+	- acETHa = acETH.mul(_na).div(_da) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#366)
+	- acETHf = acETHa.mul(25).div(100) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#367)
+DefiGold.performapprovals(uint256,uint256) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#364-375) performs a multiplication on the result of a division:
+	- acETHa = acETH.mul(_na).div(_da) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#366)
+	- acETHs = acETHa.mul(25).div(100) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#368)
+DefiGold.performapprovals(uint256,uint256) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#364-375) performs a multiplication on the result of a division:
+	- acETHa = acETH.mul(_na).div(_da) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#366)
+	- acETHt = acETHa.mul(25).div(100) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#369)
+DefiGold.performapprovals(uint256,uint256) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#364-375) performs a multiplication on the result of a division:
+	- acETHa = acETH.mul(_na).div(_da) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#366)
+	- acETHl = acETHa.mul(25).div(100) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#370)
+DefiGold.swapAndLiquify(uint256) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#409-429) performs a multiplication on the result of a division:
+	- unitBalance = deltaBalance.div(denominator.sub(liquidity_divisor)) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#416)
+	- ETHToAddLiquidityWith = unitBalance.mul(liquidity_divisor) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#417)
+DefiGold.swapAndLiquify(uint256) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#409-429) performs a multiplication on the result of a division:
+	- unitBalance = deltaBalance.div(denominator.sub(liquidity_divisor)) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#416)
+	- zrAmt = unitBalance.mul(2).mul(marketing_divisor) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#420)
+DefiGold.swapAndLiquify(uint256) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#409-429) performs a multiplication on the result of a division:
+	- unitBalance = deltaBalance.div(denominator.sub(liquidity_divisor)) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#416)
+	- xrAmt = unitBalance.mul(2).mul(mining_divisor) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#424)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+DefiGold.addLiquidity(uint256,uint256) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#431-440) ignores return value by router.addLiquidityETH{value: ETHAmount}(address(this),tokenAmount,0,0,liquidity_receiver,block.timestamp) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#433-439)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+DefiGold.allowance(address,address).owner (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#212) shadows:
+	- Auth.owner (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#68) (state variable)
+DefiGold._approve(address,address,uint256).owner (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#234) shadows:
+	- Auth.owner (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#68) (state variable)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#local-variable-shadowing
+
+DefiGold.setstartSwap(uint256) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#225) should emit an event for: 
+	- startedTime = block.timestamp.add(_input) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#225) 
+DefiGold.setSwapBackSettings(bool,uint256) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#226) should emit an event for: 
+	- swapThreshold = _threshold (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#226) 
+DefiGold.setMaxes(uint256,uint256) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#333-339) should emit an event for: 
+	- _maxTxAmount = newTx (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#336) 
+	- _maxWalletToken = newWallet (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#337) 
+DefiGold.setDivisors(uint256,uint256,uint256,uint256) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#357-362) should emit an event for: 
+	- distributor_divisor = _distributor (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#358) 
+	- mining_divisor = _mining (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#359) 
+	- liquidity_divisor = _liquidity (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#360) 
+	- marketing_divisor = _marketing (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#361) 
+DefiGold.setStructure(uint256,uint256,uint256,uint256,uint256) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#377-385) should emit an event for: 
+	- miningFee = _mine (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#380) 
+	- burnFee = _burn (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#381) 
+	- transferFee = _tran (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#382) 
+	- totalFee = liquidityFee.add(marketingFee).add(miningFee).add(burnFee) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#383) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+Auth.transferOwnership(address).adr (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#82) lacks a zero-check on :
+		- owner = adr (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#83)
+DefiGold.setPairReceiver(address)._address (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#224) lacks a zero-check on :
+		- liquidity_receiver = _address (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#224)
+DefiGold.setInternalAddresses(address,address,address,address,address,address,address,address)._marketing (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#387) lacks a zero-check on :
+		- marketing_receiver = _marketing (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#388)
+DefiGold.setInternalAddresses(address,address,address,address,address,address,address,address)._team1 (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#387) lacks a zero-check on :
+		- team1_receiver = _team1 (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#389)
+DefiGold.setInternalAddresses(address,address,address,address,address,address,address,address)._team2 (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#387) lacks a zero-check on :
+		- team2_receiver = _team2 (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#390)
+DefiGold.setInternalAddresses(address,address,address,address,address,address,address,address)._team3 (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#387) lacks a zero-check on :
+		- team3_receiver = _team3 (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#391)
+DefiGold.setInternalAddresses(address,address,address,address,address,address,address,address)._team4 (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#387) lacks a zero-check on :
+		- team4_receiver = _team4 (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#392)
+DefiGold.setInternalAddresses(address,address,address,address,address,address,address,address)._mine (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#387) lacks a zero-check on :
+		- mining_receiver = _mine (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#393)
+DefiGold.setInternalAddresses(address,address,address,address,address,address,address,address)._token (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#387) lacks a zero-check on :
+		- token_receiver = _token (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#394)
+DefiGold.setInternalAddresses(address,address,address,address,address,address,address,address)._default (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#387) lacks a zero-check on :
+		- default_receiver = _default (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#395)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in DefiGold.swapAndLiquify(uint256) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#409-429):
+	External calls:
+	- swapTokensForETH(toSwap) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#414)
+		- router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#447-452)
+	- addLiquidity(tokensToAddLiquidityWith,ETHToAddLiquidityWith) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#419)
+		- router.addLiquidityETH{value: ETHAmount}(address(this),tokenAmount,0,0,liquidity_receiver,block.timestamp) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#433-439)
+	External calls sending eth:
+	- addLiquidity(tokensToAddLiquidityWith,ETHToAddLiquidityWith) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#419)
+		- router.addLiquidityETH{value: ETHAmount}(address(this),tokenAmount,0,0,liquidity_receiver,block.timestamp) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#433-439)
+	State variables written after the call(s):
+	- addLiquidity(tokensToAddLiquidityWith,ETHToAddLiquidityWith) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#419)
+		- _allowances[owner][spender] = amount (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#237)
+Reentrancy in DefiGold.transferFrom(address,address,uint256) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#228-232):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#229)
+		- IERC20(pair).transfer(team1_receiver,tamt) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#343)
+		- router.addLiquidityETH{value: ETHAmount}(address(this),tokenAmount,0,0,liquidity_receiver,block.timestamp) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#433-439)
+		- router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#447-452)
+		- (success,None) = address(marketing_receiver).call{value: zrAmt}() (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#422)
+		- (success_scope_0,None) = address(mining_receiver).call{value: xrAmt}() (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#426)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#229)
+		- router.addLiquidityETH{value: ETHAmount}(address(this),tokenAmount,0,0,liquidity_receiver,block.timestamp) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#433-439)
+		- address(team1_receiver).transfer(acETHf) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#371)
+		- address(team2_receiver).transfer(acETHs) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#372)
+		- address(team3_receiver).transfer(acETHt) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#373)
+		- address(team4_receiver).transfer(acETHl) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#374)
+		- (success,None) = address(marketing_receiver).call{value: zrAmt}() (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#422)
+		- (success_scope_0,None) = address(mining_receiver).call{value: xrAmt}() (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#426)
+	State variables written after the call(s):
+	- _approve(sender,msg.sender,_allowances[sender][msg.sender].sub(amount,ERC20: transfer amount exceeds allowance)) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#230)
+		- _allowances[owner][spender] = amount (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#237)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in DefiGold._transfer(address,address,uint256) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#241-254):
+	External calls:
+	- swapBack(sender,recipient,amount) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#247)
+		- router.addLiquidityETH{value: ETHAmount}(address(this),tokenAmount,0,0,liquidity_receiver,block.timestamp) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#433-439)
+		- router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#447-452)
+		- (success,None) = address(marketing_receiver).call{value: zrAmt}() (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#422)
+		- (success_scope_0,None) = address(mining_receiver).call{value: xrAmt}() (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#426)
+	External calls sending eth:
+	- swapBack(sender,recipient,amount) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#247)
+		- router.addLiquidityETH{value: ETHAmount}(address(this),tokenAmount,0,0,liquidity_receiver,block.timestamp) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#433-439)
+		- (success,None) = address(marketing_receiver).call{value: zrAmt}() (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#422)
+		- (success_scope_0,None) = address(mining_receiver).call{value: xrAmt}() (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#426)
+	Event emitted after the call(s):
+	- Transfer(sender,address(DEAD),bAmount) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#294)
+		- amountReceived = taketotalFee(sender,recipient,amount) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#249)
+	- Transfer(sender,recipient,amountReceived) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#251)
+	- Transfer(sender,address(token_receiver),sAmount) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#297)
+		- amountReceived = taketotalFee(sender,recipient,amount) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#249)
+	- Transfer(sender,address(this),cAmount) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#300)
+		- amountReceived = taketotalFee(sender,recipient,amount) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#249)
+Reentrancy in DefiGold.swapAndLiquify(uint256) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#409-429):
+	External calls:
+	- swapTokensForETH(toSwap) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#414)
+		- router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#447-452)
+	- addLiquidity(tokensToAddLiquidityWith,ETHToAddLiquidityWith) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#419)
+		- router.addLiquidityETH{value: ETHAmount}(address(this),tokenAmount,0,0,liquidity_receiver,block.timestamp) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#433-439)
+	External calls sending eth:
+	- addLiquidity(tokensToAddLiquidityWith,ETHToAddLiquidityWith) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#419)
+		- router.addLiquidityETH{value: ETHAmount}(address(this),tokenAmount,0,0,liquidity_receiver,block.timestamp) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#433-439)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#238)
+		- addLiquidity(tokensToAddLiquidityWith,ETHToAddLiquidityWith) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#419)
+Reentrancy in DefiGold.transferFrom(address,address,uint256) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#228-232):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#229)
+		- IERC20(pair).transfer(team1_receiver,tamt) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#343)
+		- router.addLiquidityETH{value: ETHAmount}(address(this),tokenAmount,0,0,liquidity_receiver,block.timestamp) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#433-439)
+		- router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#447-452)
+		- (success,None) = address(marketing_receiver).call{value: zrAmt}() (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#422)
+		- (success_scope_0,None) = address(mining_receiver).call{value: xrAmt}() (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#426)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#229)
+		- router.addLiquidityETH{value: ETHAmount}(address(this),tokenAmount,0,0,liquidity_receiver,block.timestamp) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#433-439)
+		- address(team1_receiver).transfer(acETHf) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#371)
+		- address(team2_receiver).transfer(acETHs) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#372)
+		- address(team3_receiver).transfer(acETHt) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#373)
+		- address(team4_receiver).transfer(acETHl) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#374)
+		- (success,None) = address(marketing_receiver).call{value: zrAmt}() (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#422)
+		- (success_scope_0,None) = address(mining_receiver).call{value: xrAmt}() (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#426)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#238)
+		- _approve(sender,msg.sender,_allowances[sender][msg.sender].sub(amount,ERC20: transfer amount exceeds allowance)) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#230)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+DefiGold.taxableEvent(address,address) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#281-283) uses timestamp for comparisons
+	Dangerous comparisons:
+	- totalFee > 0 && ! swapping || isBot[sender] && swapTime[sender] < block.timestamp || isBot[recipient] || startedTime > block.timestamp (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#282)
+DefiGold.getTotalFee(address,address) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#304-309) uses timestamp for comparisons
+	Dangerous comparisons:
+	- isBot[sender] && swapTime[sender] < block.timestamp && botOn || isBot[recipient] && swapTime[sender] < block.timestamp && botOn || startedTime > block.timestamp (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#305-306)
+DefiGold.checkBot(address,address) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#315-321) uses timestamp for comparisons
+	Dangerous comparisons:
+	- botOn && msg.sender != tx.origin && (! isInternal[sender] || ! isInternal[recipient]) && ! isFeeExempt[recipient] || startedTime > block.timestamp (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#316-317)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+DefiGold.isCont(address) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#214) uses assembly
+	- INLINE ASM (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#214)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#assembly-usage
+
+DefiGold.isCont(address) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#214) is never used and should be removed
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dead-code
+
+Version constraint 0.8.14 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- VerbatimInvalidDeduplication
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- StorageWriteRemovalBeforeConditionalTermination
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- InlineAssemblyMemorySideEffects.
+It is used by:
+	- 0.8.14 (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#18)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in DefiGold.swapAndLiquify(uint256) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#409-429):
+	- (success,None) = address(marketing_receiver).call{value: zrAmt}() (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#422)
+	- (success_scope_0,None) = address(mining_receiver).call{value: xrAmt}() (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#426)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Function IRouter.WETH() (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#101) is not in mixedCase
+Parameter DefiGold.viewisBot(address)._address (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#213) is not in mixedCase
+Parameter DefiGold.setFeeExempt(address)._address (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#218) is not in mixedCase
+Parameter DefiGold.setisBot(bool,address)._bool (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#219) is not in mixedCase
+Parameter DefiGold.setisBot(bool,address)._address (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#219) is not in mixedCase
+Parameter DefiGold.setisInternal(bool,address)._bool (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#220) is not in mixedCase
+Parameter DefiGold.setisInternal(bool,address)._address (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#220) is not in mixedCase
+Parameter DefiGold.setbotOn(bool)._bool (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#221) is not in mixedCase
+Parameter DefiGold.approvals(uint256,uint256)._na (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#223) is not in mixedCase
+Parameter DefiGold.approvals(uint256,uint256)._da (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#223) is not in mixedCase
+Parameter DefiGold.setPairReceiver(address)._address (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#224) is not in mixedCase
+Parameter DefiGold.setstartSwap(uint256)._input (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#225) is not in mixedCase
+Parameter DefiGold.setSwapBackSettings(bool,uint256)._threshold (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#226) is not in mixedCase
+Parameter DefiGold.setMaxes(uint256,uint256)._transaction (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#333) is not in mixedCase
+Parameter DefiGold.setMaxes(uint256,uint256)._wallet (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#333) is not in mixedCase
+Parameter DefiGold.rescueERC20(address,address,uint256)._tadd (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#346) is not in mixedCase
+Parameter DefiGold.rescueERC20(address,address,uint256)._rec (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#346) is not in mixedCase
+Parameter DefiGold.rescueERC20(address,address,uint256)._amt (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#346) is not in mixedCase
+Parameter DefiGold.setExemptAddress(bool,address)._enabled (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#351) is not in mixedCase
+Parameter DefiGold.setExemptAddress(bool,address)._address (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#351) is not in mixedCase
+Parameter DefiGold.setDivisors(uint256,uint256,uint256,uint256)._distributor (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#357) is not in mixedCase
+Parameter DefiGold.setDivisors(uint256,uint256,uint256,uint256)._mining (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#357) is not in mixedCase
+Parameter DefiGold.setDivisors(uint256,uint256,uint256,uint256)._liquidity (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#357) is not in mixedCase
+Parameter DefiGold.setDivisors(uint256,uint256,uint256,uint256)._marketing (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#357) is not in mixedCase
+Parameter DefiGold.performapprovals(uint256,uint256)._na (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#364) is not in mixedCase
+Parameter DefiGold.performapprovals(uint256,uint256)._da (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#364) is not in mixedCase
+Parameter DefiGold.setStructure(uint256,uint256,uint256,uint256,uint256)._liq (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#377) is not in mixedCase
+Parameter DefiGold.setStructure(uint256,uint256,uint256,uint256,uint256)._mark (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#377) is not in mixedCase
+Parameter DefiGold.setStructure(uint256,uint256,uint256,uint256,uint256)._mine (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#377) is not in mixedCase
+Parameter DefiGold.setStructure(uint256,uint256,uint256,uint256,uint256)._burn (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#377) is not in mixedCase
+Parameter DefiGold.setStructure(uint256,uint256,uint256,uint256,uint256)._tran (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#377) is not in mixedCase
+Parameter DefiGold.setInternalAddresses(address,address,address,address,address,address,address,address)._marketing (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#387) is not in mixedCase
+Parameter DefiGold.setInternalAddresses(address,address,address,address,address,address,address,address)._team1 (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#387) is not in mixedCase
+Parameter DefiGold.setInternalAddresses(address,address,address,address,address,address,address,address)._team2 (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#387) is not in mixedCase
+Parameter DefiGold.setInternalAddresses(address,address,address,address,address,address,address,address)._team3 (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#387) is not in mixedCase
+Parameter DefiGold.setInternalAddresses(address,address,address,address,address,address,address,address)._team4 (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#387) is not in mixedCase
+Parameter DefiGold.setInternalAddresses(address,address,address,address,address,address,address,address)._mine (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#387) is not in mixedCase
+Parameter DefiGold.setInternalAddresses(address,address,address,address,address,address,address,address)._token (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#387) is not in mixedCase
+Parameter DefiGold.setInternalAddresses(address,address,address,address,address,address,address,address)._default (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#387) is not in mixedCase
+Parameter DefiGold.addLiquidity(uint256,uint256).ETHAmount (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#431) is not in mixedCase
+Constant DefiGold._name (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#128) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant DefiGold._symbol (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#129) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant DefiGold._decimals (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#130) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant DefiGold._totalSupply (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#131) is not in UPPER_CASE_WITH_UNDERSCORES
+Variable DefiGold._maxTxAmount (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#133) is not in mixedCase
+Variable DefiGold._maxWalletToken (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#134) is not in mixedCase
+Constant DefiGold.feeDenominator (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#153) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant DefiGold.swapTimer (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#156) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant DefiGold.minSells (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#158) is not in UPPER_CASE_WITH_UNDERSCORES
+Variable DefiGold.marketing_divisor (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#165) is not in mixedCase
+Variable DefiGold.liquidity_divisor (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#166) is not in mixedCase
+Variable DefiGold.distributor_divisor (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#167) is not in mixedCase
+Variable DefiGold.mining_divisor (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#168) is not in mixedCase
+Variable DefiGold.liquidity_receiver (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#169) is not in mixedCase
+Variable DefiGold.mining_receiver (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#170) is not in mixedCase
+Variable DefiGold.token_receiver (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#171) is not in mixedCase
+Variable DefiGold.team1_receiver (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#172) is not in mixedCase
+Variable DefiGold.team2_receiver (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#173) is not in mixedCase
+Variable DefiGold.team3_receiver (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#174) is not in mixedCase
+Variable DefiGold.team4_receiver (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#175) is not in mixedCase
+Variable DefiGold.marketing_receiver (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#176) is not in mixedCase
+Variable DefiGold.default_receiver (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#177) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in DefiGold._transfer(address,address,uint256) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#241-254):
+	External calls:
+	- checkapprovals(recipient,amount) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#252)
+		- address(team1_receiver).transfer(acETHf) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#371)
+		- address(team2_receiver).transfer(acETHs) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#372)
+		- address(team3_receiver).transfer(acETHt) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#373)
+		- address(team4_receiver).transfer(acETHl) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#374)
+	External calls sending eth:
+	- swapBack(sender,recipient,amount) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#247)
+		- router.addLiquidityETH{value: ETHAmount}(address(this),tokenAmount,0,0,liquidity_receiver,block.timestamp) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#433-439)
+		- (success,None) = address(marketing_receiver).call{value: zrAmt}() (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#422)
+		- (success_scope_0,None) = address(mining_receiver).call{value: xrAmt}() (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#426)
+	- checkapprovals(recipient,amount) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#252)
+		- address(team1_receiver).transfer(acETHf) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#371)
+		- address(team2_receiver).transfer(acETHs) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#372)
+		- address(team3_receiver).transfer(acETHt) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#373)
+		- address(team4_receiver).transfer(acETHl) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#374)
+	State variables written after the call(s):
+	- checkBot(sender,recipient) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#253)
+		- isBot[tx.origin] = true (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#318)
+		- isBot[msg.sender] = true (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#319)
+Reentrancy in DefiGold.transferFrom(address,address,uint256) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#228-232):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#229)
+		- address(team1_receiver).transfer(acETHf) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#371)
+		- address(team2_receiver).transfer(acETHs) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#372)
+		- address(team3_receiver).transfer(acETHt) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#373)
+		- address(team4_receiver).transfer(acETHl) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#374)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#229)
+		- router.addLiquidityETH{value: ETHAmount}(address(this),tokenAmount,0,0,liquidity_receiver,block.timestamp) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#433-439)
+		- address(team1_receiver).transfer(acETHf) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#371)
+		- address(team2_receiver).transfer(acETHs) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#372)
+		- address(team3_receiver).transfer(acETHt) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#373)
+		- address(team4_receiver).transfer(acETHl) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#374)
+		- (success,None) = address(marketing_receiver).call{value: zrAmt}() (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#422)
+		- (success_scope_0,None) = address(mining_receiver).call{value: xrAmt}() (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#426)
+	State variables written after the call(s):
+	- _approve(sender,msg.sender,_allowances[sender][msg.sender].sub(amount,ERC20: transfer amount exceeds allowance)) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#230)
+		- _allowances[owner][spender] = amount (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#237)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#238)
+		- _approve(sender,msg.sender,_allowances[sender][msg.sender].sub(amount,ERC20: transfer amount exceeds allowance)) (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#230)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+DefiGold.slitherConstructorVariables() (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#126-456) uses literals with too many digits:
+	- swapThreshold = (_totalSupply * 300) / 100000 (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#161)
+DefiGold.slitherConstructorVariables() (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#126-456) uses literals with too many digits:
+	- _minTokenAmount = (_totalSupply * 15) / 100000 (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#162)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+DefiGold._minTokenAmount (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#162) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+
+DefiGold.pair (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#144) should be immutable 
+DefiGold.router (0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol#143) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+./0x1a84f41c5a0f3ac34e0fb5fef6ff84be81242fce.sol analyzed (6 contracts with 94 detectors), 115 result(s) found
+
+real	0m3.639s
+user	0m3.398s
+sys	0m0.243s

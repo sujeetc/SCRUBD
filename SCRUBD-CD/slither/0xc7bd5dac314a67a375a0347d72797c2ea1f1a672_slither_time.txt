@@ -1,0 +1,91 @@
+'solc --version' running
+'solc ./0xc7bd5dac314a67a375a0347d72797c2ea1f1a672.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0xc7bd5dac314a67a375a0347d72797c2ea1f1a672.sol:
+./0xc7bd5dac314a67a375a0347d72797c2ea1f1a672.sol:111:32: Warning: This looks like an address but has an invalid checksum. If this is not used as an address, please prepend '00'.
+	address currentTokenAddress = 0xc97a5cdf41bafd51c8dbe82270097e704d748b92;
+	                              ^----------------------------------------^
+
+
+KlownGasDrop.deposit(uint256) (0xc7bd5dac314a67a375a0347d72797c2ea1f1a672.sol#115-125) ignores return value by IERC20(currentTokenAddress).transferFrom(msg.sender,address(this),tokens) (0xc7bd5dac314a67a375a0347d72797c2ea1f1a672.sol#122)
+KlownGasDrop.claimGasDrop() (0xc7bd5dac314a67a375a0347d72797c2ea1f1a672.sol#138-166) ignores return value by IERC20(currentTokenAddress).transfer(msg.sender,amountToClaim) (0xc7bd5dac314a67a375a0347d72797c2ea1f1a672.sol#152)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+Reentrancy in KlownGasDrop.claimGasDrop() (0xc7bd5dac314a67a375a0347d72797c2ea1f1a672.sol#138-166):
+	External calls:
+	- IERC20(currentTokenAddress).transfer(msg.sender,amountToClaim) (0xc7bd5dac314a67a375a0347d72797c2ea1f1a672.sol#152)
+	State variables written after the call(s):
+	- receivers[msg.sender] = true (0xc7bd5dac314a67a375a0347d72797c2ea1f1a672.sol#154)
+	KlownGasDrop.receivers (0xc7bd5dac314a67a375a0347d72797c2ea1f1a672.sol#81) can be used in cross function reentrancies:
+	- KlownGasDrop.claimGasDrop() (0xc7bd5dac314a67a375a0347d72797c2ea1f1a672.sol#138-166)
+	- KlownGasDrop.receivers (0xc7bd5dac314a67a375a0347d72797c2ea1f1a672.sol#81)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+KlownGasDrop.setGasClaim(uint256) (0xc7bd5dac314a67a375a0347d72797c2ea1f1a672.sol#180-184) should emit an event for: 
+	- amountToClaim = amount (0xc7bd5dac314a67a375a0347d72797c2ea1f1a672.sol#182) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+KlownGasDrop.setCurrentToken(address).currentTokenContract (0xc7bd5dac314a67a375a0347d72797c2ea1f1a672.sol#170) lacks a zero-check on :
+		- currentTokenAddress = currentTokenContract (0xc7bd5dac314a67a375a0347d72797c2ea1f1a672.sol#171)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in KlownGasDrop.claimGasDrop() (0xc7bd5dac314a67a375a0347d72797c2ea1f1a672.sol#138-166):
+	External calls:
+	- IERC20(currentTokenAddress).transfer(msg.sender,amountToClaim) (0xc7bd5dac314a67a375a0347d72797c2ea1f1a672.sol#152)
+	State variables written after the call(s):
+	- totalSent += amountToClaim (0xc7bd5dac314a67a375a0347d72797c2ea1f1a672.sol#155)
+Reentrancy in KlownGasDrop.deposit(uint256) (0xc7bd5dac314a67a375a0347d72797c2ea1f1a672.sol#115-125):
+	External calls:
+	- IERC20(currentTokenAddress).transferFrom(msg.sender,address(this),tokens) (0xc7bd5dac314a67a375a0347d72797c2ea1f1a672.sol#122)
+	State variables written after the call(s):
+	- whoSent = msg.sender (0xc7bd5dac314a67a375a0347d72797c2ea1f1a672.sol#123)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+KlownGasDrop.hasReceived(address) (0xc7bd5dac314a67a375a0347d72797c2ea1f1a672.sol#127-134) compares to a boolean constant:
+	-receivers[received] == true (0xc7bd5dac314a67a375a0347d72797c2ea1f1a672.sol#130)
+KlownGasDrop.claimGasDrop() (0xc7bd5dac314a67a375a0347d72797c2ea1f1a672.sol#138-166) compares to a boolean constant:
+	-receivers[msg.sender] != true (0xc7bd5dac314a67a375a0347d72797c2ea1f1a672.sol#143)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#boolean-equality
+
+KlownGasDrop.hasReceived(address) (0xc7bd5dac314a67a375a0347d72797c2ea1f1a672.sol#127-134) is never used and should be removed
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dead-code
+
+Version constraint ^0.4.17 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ExpExponentCleanup
+	- EventStructWrongData
+	- NestedArrayFunctionCallDecoder
+	- ZeroFunctionSelector.
+It is used by:
+	- ^0.4.17 (0xc7bd5dac314a67a375a0347d72797c2ea1f1a672.sol#1)
+solc-0.4.17 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+KlownGasDrop.slitherConstructorVariables() (0xc7bd5dac314a67a375a0347d72797c2ea1f1a672.sol#77-196) uses literals with too many digits:
+	- amountToClaim = 50000000 (0xc7bd5dac314a67a375a0347d72797c2ea1f1a672.sol#85)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+KlownGasDrop.temp (0xc7bd5dac314a67a375a0347d72797c2ea1f1a672.sol#136) is never used in KlownGasDrop (0xc7bd5dac314a67a375a0347d72797c2ea1f1a672.sol#77-196)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-state-variable
+
+KlownGasDrop.brpt (0xc7bd5dac314a67a375a0347d72797c2ea1f1a672.sol#93) should be constant 
+KlownGasDrop.brpt1 (0xc7bd5dac314a67a375a0347d72797c2ea1f1a672.sol#94) should be constant 
+KlownGasDrop.temp (0xc7bd5dac314a67a375a0347d72797c2ea1f1a672.sol#136) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+./0xc7bd5dac314a67a375a0347d72797c2ea1f1a672.sol analyzed (2 contracts with 94 detectors), 17 result(s) found
+
+real	0m1.559s
+user	0m1.362s
+sys	0m0.199s

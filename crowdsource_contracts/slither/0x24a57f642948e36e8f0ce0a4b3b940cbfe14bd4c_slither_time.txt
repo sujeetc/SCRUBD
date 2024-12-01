@@ -1,0 +1,138 @@
+'solc --version' running
+'solc ./0x24a57f642948e36e8f0ce0a4b3b940cbfe14bd4c.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+ICO.finneyToWei(uint256) (0x24a57f642948e36e8f0ce0a4b3b940cbfe14bd4c.sol#77-79) performs a multiplication on the result of a division:
+	- _finney * (1000000000000000000 / 1000) (0x24a57f642948e36e8f0ce0a4b3b940cbfe14bd4c.sol#78)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+Erc20TokensContract (0x24a57f642948e36e8f0ce0a4b3b940cbfe14bd4c.sol#7-11) has incorrect ERC20 function interface:Erc20TokensContract.transfer(address,uint256) (0x24a57f642948e36e8f0ce0a4b3b940cbfe14bd4c.sol#8)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-erc20-interface
+
+ICO.buyTokens(uint256,uint256) (0x24a57f642948e36e8f0ce0a4b3b940cbfe14bd4c.sol#146-183) uses a dangerous strict equality:
+	- currentBalance == erc20TokensContract.balanceOf(this) (0x24a57f642948e36e8f0ce0a4b3b940cbfe14bd4c.sol#173)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-strict-equalities
+
+ICO.setErc20TokensContract(address)._erc20TokensContractAddress (0x24a57f642948e36e8f0ce0a4b3b940cbfe14bd4c.sol#52) lacks a zero-check on :
+		- erc20TokensContractAddress = _erc20TokensContractAddress (0x24a57f642948e36e8f0ce0a4b3b940cbfe14bd4c.sol#56)
+ICO.changeOwner(address)._newOwner (0x24a57f642948e36e8f0ce0a4b3b940cbfe14bd4c.sol#86) lacks a zero-check on :
+		- owner = _newOwner (0x24a57f642948e36e8f0ce0a4b3b940cbfe14bd4c.sol#88)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in ICO.buyTokens(uint256,uint256) (0x24a57f642948e36e8f0ce0a4b3b940cbfe14bd4c.sol#146-183):
+	External calls:
+	- currentBalance = erc20TokensContract.balanceOf(this) (0x24a57f642948e36e8f0ce0a4b3b940cbfe14bd4c.sol#167)
+	- erc20TokensContract.transfer(msg.sender,_quantity) (0x24a57f642948e36e8f0ce0a4b3b940cbfe14bd4c.sol#171)
+	State variables written after the call(s):
+	- deals[dealsNumber] = (_priceToBuyInFinney,_quantity,block.number,block.timestamp) (0x24a57f642948e36e8f0ce0a4b3b940cbfe14bd4c.sol#178)
+	- dealsNumber = dealsNumber + 1 (0x24a57f642948e36e8f0ce0a4b3b940cbfe14bd4c.sol#177)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in ICO.buyTokens(uint256,uint256) (0x24a57f642948e36e8f0ce0a4b3b940cbfe14bd4c.sol#146-183):
+	External calls:
+	- currentBalance = erc20TokensContract.balanceOf(this) (0x24a57f642948e36e8f0ce0a4b3b940cbfe14bd4c.sol#167)
+	- erc20TokensContract.transfer(msg.sender,_quantity) (0x24a57f642948e36e8f0ce0a4b3b940cbfe14bd4c.sol#171)
+	Event emitted after the call(s):
+	- Deal(msg.sender,_priceToBuyInFinney,_quantity) (0x24a57f642948e36e8f0ce0a4b3b940cbfe14bd4c.sol#180)
+Reentrancy in ICO.transferTokensTo(address,uint256) (0x24a57f642948e36e8f0ce0a4b3b940cbfe14bd4c.sol#189-206):
+	External calls:
+	- erc20TokensContract.transfer(_to,_quantity) (0x24a57f642948e36e8f0ce0a4b3b940cbfe14bd4c.sol#201)
+	Event emitted after the call(s):
+	- TokensTransfer(msg.sender,_to,_quantity) (0x24a57f642948e36e8f0ce0a4b3b940cbfe14bd4c.sol#203)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+ICO.weiToFinney(uint256) (0x24a57f642948e36e8f0ce0a4b3b940cbfe14bd4c.sol#73-75) is never used and should be removed
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dead-code
+
+Deprecated standard detected THROW (0x24a57f642948e36e8f0ce0a4b3b940cbfe14bd4c.sol#53):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x24a57f642948e36e8f0ce0a4b3b940cbfe14bd4c.sol#54):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x24a57f642948e36e8f0ce0a4b3b940cbfe14bd4c.sol#87):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x24a57f642948e36e8f0ce0a4b3b940cbfe14bd4c.sol#103):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x24a57f642948e36e8f0ce0a4b3b940cbfe14bd4c.sol#113):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x24a57f642948e36e8f0ce0a4b3b940cbfe14bd4c.sol#121):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x24a57f642948e36e8f0ce0a4b3b940cbfe14bd4c.sol#148):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x24a57f642948e36e8f0ce0a4b3b940cbfe14bd4c.sol#156):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x24a57f642948e36e8f0ce0a4b3b940cbfe14bd4c.sol#163):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x24a57f642948e36e8f0ce0a4b3b940cbfe14bd4c.sol#168):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x24a57f642948e36e8f0ce0a4b3b940cbfe14bd4c.sol#174):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x24a57f642948e36e8f0ce0a4b3b940cbfe14bd4c.sol#191):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x24a57f642948e36e8f0ce0a4b3b940cbfe14bd4c.sol#192):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x24a57f642948e36e8f0ce0a4b3b940cbfe14bd4c.sol#196):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x24a57f642948e36e8f0ce0a4b3b940cbfe14bd4c.sol#220):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x24a57f642948e36e8f0ce0a4b3b940cbfe14bd4c.sol#221):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x24a57f642948e36e8f0ce0a4b3b940cbfe14bd4c.sol#223):
+	- Usage of "throw" should be replaced with "revert()"
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#deprecated-standards
+
+Version constraint ^0.4.8 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ExpExponentCleanup
+	- NestedArrayFunctionCallDecoder
+	- ZeroFunctionSelector
+	- DelegateCallReturnValue
+	- ECRecoverMalformedInput
+	- SkipEmptyStringLiteral
+	- ConstantOptimizerSubtraction.
+It is used by:
+	- ^0.4.8 (0x24a57f642948e36e8f0ce0a4b3b940cbfe14bd4c.sol#1)
+solc-0.4.11 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Parameter ICO.setErc20TokensContract(address)._erc20TokensContractAddress (0x24a57f642948e36e8f0ce0a4b3b940cbfe14bd4c.sol#52) is not in mixedCase
+Parameter ICO.weiToFinney(uint256)._wei (0x24a57f642948e36e8f0ce0a4b3b940cbfe14bd4c.sol#73) is not in mixedCase
+Parameter ICO.finneyToWei(uint256)._finney (0x24a57f642948e36e8f0ce0a4b3b940cbfe14bd4c.sol#77) is not in mixedCase
+Parameter ICO.changeOwner(address)._newOwner (0x24a57f642948e36e8f0ce0a4b3b940cbfe14bd4c.sol#86) is not in mixedCase
+Parameter ICO.setManager(address)._newManager (0x24a57f642948e36e8f0ce0a4b3b940cbfe14bd4c.sol#97) is not in mixedCase
+Parameter ICO.removeManager(address)._manager (0x24a57f642948e36e8f0ce0a4b3b940cbfe14bd4c.sol#107) is not in mixedCase
+Parameter ICO.setNewPriceInFinney(uint256)._priceToBuyInFinney (0x24a57f642948e36e8f0ce0a4b3b940cbfe14bd4c.sol#119) is not in mixedCase
+Parameter ICO.getPriceChange(uint256)._index (0x24a57f642948e36e8f0ce0a4b3b940cbfe14bd4c.sol#133) is not in mixedCase
+Parameter ICO.buyTokens(uint256,uint256)._quantity (0x24a57f642948e36e8f0ce0a4b3b940cbfe14bd4c.sol#146) is not in mixedCase
+Parameter ICO.buyTokens(uint256,uint256)._priceToBuyInFinney (0x24a57f642948e36e8f0ce0a4b3b940cbfe14bd4c.sol#146) is not in mixedCase
+Parameter ICO.transferTokensTo(address,uint256)._to (0x24a57f642948e36e8f0ce0a4b3b940cbfe14bd4c.sol#189) is not in mixedCase
+Parameter ICO.transferTokensTo(address,uint256)._quantity (0x24a57f642948e36e8f0ce0a4b3b940cbfe14bd4c.sol#189) is not in mixedCase
+Parameter ICO.transferTokensToContractOwner(uint256)._quantity (0x24a57f642948e36e8f0ce0a4b3b940cbfe14bd4c.sol#214) is not in mixedCase
+Parameter ICO.withdraw(uint256)._sumToWithdrawInFinney (0x24a57f642948e36e8f0ce0a4b3b940cbfe14bd4c.sol#219) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in ICO.withdraw(uint256) (0x24a57f642948e36e8f0ce0a4b3b940cbfe14bd4c.sol#219-237):
+	External calls:
+	- ! msg.sender.send(finneyToWei(_sumToWithdrawInFinney)) (0x24a57f642948e36e8f0ce0a4b3b940cbfe14bd4c.sol#228)
+	Event emitted after the call(s):
+	- Withdrawal(msg.sender,_sumToWithdrawInFinney,withdrawal: success) (0x24a57f642948e36e8f0ce0a4b3b940cbfe14bd4c.sol#233)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+ICO.weiToFinney(uint256) (0x24a57f642948e36e8f0ce0a4b3b940cbfe14bd4c.sol#73-75) uses literals with too many digits:
+	- _wei / (1000000000000000000 * 1000) (0x24a57f642948e36e8f0ce0a4b3b940cbfe14bd4c.sol#74)
+ICO.finneyToWei(uint256) (0x24a57f642948e36e8f0ce0a4b3b940cbfe14bd4c.sol#77-79) uses literals with too many digits:
+	- _finney * (1000000000000000000 / 1000) (0x24a57f642948e36e8f0ce0a4b3b940cbfe14bd4c.sol#78)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+./0x24a57f642948e36e8f0ce0a4b3b940cbfe14bd4c.sol analyzed (2 contracts with 94 detectors), 45 result(s) found
+
+real	0m1.666s
+user	0m1.511s
+sys	0m0.157s

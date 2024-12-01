@@ -1,0 +1,114 @@
+'solc --version' running
+'solc ./0xd1a3ace46c98e028229974217201433e7163c4dd.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0xd1a3ace46c98e028229974217201433e7163c4dd.sol:
+./0xd1a3ace46c98e028229974217201433e7163c4dd.sol:101:36: Warning: Unused function parameter. Remove or comment out the variable name to silence this warning.
+    function transfer(address _to, uint256 _value) public returns (bool) {
+                                   ^------------^
+./0xd1a3ace46c98e028229974217201433e7163c4dd.sol:105:55: Warning: Unused function parameter. Remove or comment out the variable name to silence this warning.
+    function transferFrom(address _from, address _to, uint256 _value) public returns (bool) {
+                                                      ^------------^
+./0xd1a3ace46c98e028229974217201433e7163c4dd.sol:109:22: Warning: Unused function parameter. Remove or comment out the variable name to silence this warning.
+    function approve(address _spender, uint256 _value) public returns (bool) {
+                     ^--------------^
+./0xd1a3ace46c98e028229974217201433e7163c4dd.sol:109:40: Warning: Unused function parameter. Remove or comment out the variable name to silence this warning.
+    function approve(address _spender, uint256 _value) public returns (bool) {
+                                       ^------------^
+./0xd1a3ace46c98e028229974217201433e7163c4dd.sol:112:24: Warning: Unused function parameter. Remove or comment out the variable name to silence this warning.
+    function allowance(address _owner, address _spender) public view returns (uint256) {
+                       ^------------^
+./0xd1a3ace46c98e028229974217201433e7163c4dd.sol:112:40: Warning: Unused function parameter. Remove or comment out the variable name to silence this warning.
+    function allowance(address _owner, address _spender) public view returns (uint256) {
+                                       ^--------------^
+./0xd1a3ace46c98e028229974217201433e7163c4dd.sol:109:5: Warning: Function state mutability can be restricted to pure
+    function approve(address _spender, uint256 _value) public returns (bool) {
+    ^ (Relevant source part starts here and spans across multiple lines).
+
+
+HelpMeTokenPart1.fallback() (0xd1a3ace46c98e028229974217201433e7163c4dd.sol#60-72) ignores return value by token.thankYou(msg.sender) (0xd1a3ace46c98e028229974217201433e7163c4dd.sol#70)
+HelpMeTokenPart1.thankYou(address) (0xd1a3ace46c98e028229974217201433e7163c4dd.sol#74-83) ignores return value by token.thankYou(_a) (0xd1a3ace46c98e028229974217201433e7163c4dd.sol#78)
+HelpMeTokenPart1.stopIt() (0xd1a3ace46c98e028229974217201433e7163c4dd.sol#85-92) ignores return value by HelpMeTokenInterface(HelpMeTokens[i]).stopIt() (0xd1a3ace46c98e028229974217201433e7163c4dd.sol#89)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+HelpMeTokenPart1.fallback() (0xd1a3ace46c98e028229974217201433e7163c4dd.sol#60-72) has external calls inside a loop: token.thankYou(msg.sender) (0xd1a3ace46c98e028229974217201433e7163c4dd.sol#70)
+HelpMeTokenPart1.thankYou(address) (0xd1a3ace46c98e028229974217201433e7163c4dd.sol#74-83) has external calls inside a loop: token.thankYou(_a) (0xd1a3ace46c98e028229974217201433e7163c4dd.sol#78)
+HelpMeTokenPart1.stopIt() (0xd1a3ace46c98e028229974217201433e7163c4dd.sol#85-92) has external calls inside a loop: HelpMeTokenInterface(HelpMeTokens[i]).stopIt() (0xd1a3ace46c98e028229974217201433e7163c4dd.sol#89)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation/#calls-inside-a-loop
+
+Reentrancy in HelpMeTokenPart1.thankYou(address) (0xd1a3ace46c98e028229974217201433e7163c4dd.sol#74-83):
+	External calls:
+	- token.thankYou(_a) (0xd1a3ace46c98e028229974217201433e7163c4dd.sol#78)
+	State variables written after the call(s):
+	- thank_you[_a] = true (0xd1a3ace46c98e028229974217201433e7163c4dd.sol#80)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in HelpMeTokenPart1.thankYou(address) (0xd1a3ace46c98e028229974217201433e7163c4dd.sol#74-83):
+	External calls:
+	- token.thankYou(_a) (0xd1a3ace46c98e028229974217201433e7163c4dd.sol#78)
+	Event emitted after the call(s):
+	- Transfer(msg.sender,address(this),1) (0xd1a3ace46c98e028229974217201433e7163c4dd.sol#81)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+HelpMeTokenPart1.balanceOf(address) (0xd1a3ace46c98e028229974217201433e7163c4dd.sol#94-99) compares to a boolean constant:
+	-thank_you[_owner] == true (0xd1a3ace46c98e028229974217201433e7163c4dd.sol#96)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#boolean-equality
+
+Version constraint ^0.4.18 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ExpExponentCleanup
+	- EventStructWrongData
+	- NestedArrayFunctionCallDecoder.
+It is used by:
+	- ^0.4.18 (0xd1a3ace46c98e028229974217201433e7163c4dd.sol#1)
+solc-0.4.21 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+HelpMeTokenPart1 (0xd1a3ace46c98e028229974217201433e7163c4dd.sol#29-117) should inherit from HelpMeTokenInterface (0xd1a3ace46c98e028229974217201433e7163c4dd.sol#23-26)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-inheritance
+
+Parameter HelpMeTokenPart1.setHelpMeTokenParts(address[])._a (0xd1a3ace46c98e028229974217201433e7163c4dd.sol#55) is not in mixedCase
+Parameter HelpMeTokenPart1.thankYou(address)._a (0xd1a3ace46c98e028229974217201433e7163c4dd.sol#74) is not in mixedCase
+Parameter HelpMeTokenPart1.balanceOf(address)._owner (0xd1a3ace46c98e028229974217201433e7163c4dd.sol#94) is not in mixedCase
+Parameter HelpMeTokenPart1.transfer(address,uint256)._to (0xd1a3ace46c98e028229974217201433e7163c4dd.sol#101) is not in mixedCase
+Parameter HelpMeTokenPart1.transferFrom(address,address,uint256)._from (0xd1a3ace46c98e028229974217201433e7163c4dd.sol#105) is not in mixedCase
+Parameter HelpMeTokenPart1.transferFrom(address,address,uint256)._to (0xd1a3ace46c98e028229974217201433e7163c4dd.sol#105) is not in mixedCase
+Variable HelpMeTokenPart1.HelpMeTokens (0xd1a3ace46c98e028229974217201433e7163c4dd.sol#36) is not in mixedCase
+Variable HelpMeTokenPart1.thank_you (0xd1a3ace46c98e028229974217201433e7163c4dd.sol#37) is not in mixedCase
+Variable HelpMeTokenPart1.stop_it (0xd1a3ace46c98e028229974217201433e7163c4dd.sol#38) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in HelpMeTokenPart1.fallback() (0xd1a3ace46c98e028229974217201433e7163c4dd.sol#60-72):
+	External calls:
+	- owner.transfer(msg.value) (0xd1a3ace46c98e028229974217201433e7163c4dd.sol#64)
+	State variables written after the call(s):
+	- thank_you[msg.sender] = true (0xd1a3ace46c98e028229974217201433e7163c4dd.sol#66)
+	Event emitted after the call(s):
+	- Transfer(msg.sender,address(this),num) (0xd1a3ace46c98e028229974217201433e7163c4dd.sol#67)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+HelpMeTokenPart1.name (0xd1a3ace46c98e028229974217201433e7163c4dd.sol#31) should be constant 
+HelpMeTokenPart1.num (0xd1a3ace46c98e028229974217201433e7163c4dd.sol#33) should be constant 
+HelpMeTokenPart1.symbol (0xd1a3ace46c98e028229974217201433e7163c4dd.sol#32) should be constant 
+HelpMeTokenPart1.totalSupply (0xd1a3ace46c98e028229974217201433e7163c4dd.sol#34) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+
+setHelpMeTokenParts(address[]) should be declared external:
+	- HelpMeTokenPart1.setHelpMeTokenParts(address[]) (0xd1a3ace46c98e028229974217201433e7163c4dd.sol#55-58)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#public-function-that-could-be-declared-external
+./0xd1a3ace46c98e028229974217201433e7163c4dd.sol analyzed (3 contracts with 94 detectors), 27 result(s) found
+
+real	0m1.793s
+user	0m1.585s
+sys	0m0.211s

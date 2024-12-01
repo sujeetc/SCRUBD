@@ -1,0 +1,133 @@
+'solc --version' running
+'solc ./0x8c73696a453f67ea5b7e5f2cd58ca0ad72ecaaeb.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+TokenLock.deposit(address,uint256,uint256) (0x8c73696a453f67ea5b7e5f2cd58ca0ad72ecaaeb.sol#195-202) uses arbitrary from in transferFrom: require(bool)(md.transferFrom(_userAddress,this,_amount)) (0x8c73696a453f67ea5b7e5f2cd58ca0ad72ecaaeb.sol#197)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#arbitrary-from-in-transferfrom
+
+TokenLock.kill() (0x8c73696a453f67ea5b7e5f2cd58ca0ad72ecaaeb.sol#250-253) ignores return value by md.transfer(owner,getContractBalance()) (0x8c73696a453f67ea5b7e5f2cd58ca0ad72ecaaeb.sol#251)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+Reentrancy in TokenLock.release(uint256,address,uint256) (0x8c73696a453f67ea5b7e5f2cd58ca0ad72ecaaeb.sol#204-234):
+	External calls:
+	- require(bool)(md.transfer(_merchantAddress,_merchantAmount)) (0x8c73696a453f67ea5b7e5f2cd58ca0ad72ecaaeb.sol#224)
+	- require(bool)(md.transfer(r.userAddress,remainingAmount)) (0x8c73696a453f67ea5b7e5f2cd58ca0ad72ecaaeb.sol#229)
+	State variables written after the call(s):
+	- lockStatus[_index] = true (0x8c73696a453f67ea5b7e5f2cd58ca0ad72ecaaeb.sol#232)
+	TokenLock.lockStatus (0x8c73696a453f67ea5b7e5f2cd58ca0ad72ecaaeb.sol#169) can be used in cross function reentrancies:
+	- TokenLock.release(uint256,address,uint256) (0x8c73696a453f67ea5b7e5f2cd58ca0ad72ecaaeb.sol#204-234)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+MD.changeOwner(address) (0x8c73696a453f67ea5b7e5f2cd58ca0ad72ecaaeb.sol#145-148) should emit an event for: 
+	- owner = _newowner (0x8c73696a453f67ea5b7e5f2cd58ca0ad72ecaaeb.sol#146) 
+TokenLock.changeOwner(address) (0x8c73696a453f67ea5b7e5f2cd58ca0ad72ecaaeb.sol#239-242) should emit an event for: 
+	- owner = _newowner (0x8c73696a453f67ea5b7e5f2cd58ca0ad72ecaaeb.sol#240) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-access-control
+
+MD.constructor(address)._owner (0x8c73696a453f67ea5b7e5f2cd58ca0ad72ecaaeb.sol#99) lacks a zero-check on :
+		- owner = _owner (0x8c73696a453f67ea5b7e5f2cd58ca0ad72ecaaeb.sol#100)
+MD.changeOwner(address)._newowner (0x8c73696a453f67ea5b7e5f2cd58ca0ad72ecaaeb.sol#145) lacks a zero-check on :
+		- owner = _newowner (0x8c73696a453f67ea5b7e5f2cd58ca0ad72ecaaeb.sol#146)
+TokenLock.constructor(address,address)._owner (0x8c73696a453f67ea5b7e5f2cd58ca0ad72ecaaeb.sol#185) lacks a zero-check on :
+		- owner = _owner (0x8c73696a453f67ea5b7e5f2cd58ca0ad72ecaaeb.sol#186)
+TokenLock.constructor(address,address)._md_address (0x8c73696a453f67ea5b7e5f2cd58ca0ad72ecaaeb.sol#185) lacks a zero-check on :
+		- md_address = _md_address (0x8c73696a453f67ea5b7e5f2cd58ca0ad72ecaaeb.sol#187)
+TokenLock.changeOwner(address)._newowner (0x8c73696a453f67ea5b7e5f2cd58ca0ad72ecaaeb.sol#239) lacks a zero-check on :
+		- owner = _newowner (0x8c73696a453f67ea5b7e5f2cd58ca0ad72ecaaeb.sol#240)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in TokenLock.deposit(address,uint256,uint256) (0x8c73696a453f67ea5b7e5f2cd58ca0ad72ecaaeb.sol#195-202):
+	External calls:
+	- require(bool)(md.transferFrom(_userAddress,this,_amount)) (0x8c73696a453f67ea5b7e5f2cd58ca0ad72ecaaeb.sol#197)
+	State variables written after the call(s):
+	- l = lockRecords.push(r) (0x8c73696a453f67ea5b7e5f2cd58ca0ad72ecaaeb.sol#200)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in TokenLock.deposit(address,uint256,uint256) (0x8c73696a453f67ea5b7e5f2cd58ca0ad72ecaaeb.sol#195-202):
+	External calls:
+	- require(bool)(md.transferFrom(_userAddress,this,_amount)) (0x8c73696a453f67ea5b7e5f2cd58ca0ad72ecaaeb.sol#197)
+	Event emitted after the call(s):
+	- Deposit(_userAddress,_amount,releaseTime,l.sub(1)) (0x8c73696a453f67ea5b7e5f2cd58ca0ad72ecaaeb.sol#201)
+Reentrancy in TokenLock.release(uint256,address,uint256) (0x8c73696a453f67ea5b7e5f2cd58ca0ad72ecaaeb.sol#204-234):
+	External calls:
+	- require(bool)(md.transfer(_merchantAddress,_merchantAmount)) (0x8c73696a453f67ea5b7e5f2cd58ca0ad72ecaaeb.sol#224)
+	- require(bool)(md.transfer(r.userAddress,remainingAmount)) (0x8c73696a453f67ea5b7e5f2cd58ca0ad72ecaaeb.sol#229)
+	Event emitted after the call(s):
+	- Release(r.userAddress,_merchantAddress,_merchantAmount,r.releaseTime,_index) (0x8c73696a453f67ea5b7e5f2cd58ca0ad72ecaaeb.sol#233)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+TokenLock.release(uint256,address,uint256) (0x8c73696a453f67ea5b7e5f2cd58ca0ad72ecaaeb.sol#204-234) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(r.releaseTime <= block.timestamp,Release time not reached) (0x8c73696a453f67ea5b7e5f2cd58ca0ad72ecaaeb.sol#212-215)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+TokenLock.release(uint256,address,uint256) (0x8c73696a453f67ea5b7e5f2cd58ca0ad72ecaaeb.sol#204-234) compares to a boolean constant:
+	-require(bool,string)(lockStatus[_index] == false,Already released.) (0x8c73696a453f67ea5b7e5f2cd58ca0ad72ecaaeb.sol#205-208)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#boolean-equality
+
+Version constraint ^0.4.24 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ABIEncoderV2PackedStorage_0.4.x
+	- ExpExponentCleanup
+	- EventStructWrongData.
+It is used by:
+	- ^0.4.24 (0x8c73696a453f67ea5b7e5f2cd58ca0ad72ecaaeb.sol#1)
+solc-0.4.24 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in TokenLock.fallback() (0x8c73696a453f67ea5b7e5f2cd58ca0ad72ecaaeb.sol#245-247):
+	- ! owner.call.value(msg.value)() (0x8c73696a453f67ea5b7e5f2cd58ca0ad72ecaaeb.sol#246)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Parameter SafeMath.mul(uint256,uint256)._a (0x8c73696a453f67ea5b7e5f2cd58ca0ad72ecaaeb.sol#8) is not in mixedCase
+Parameter SafeMath.mul(uint256,uint256)._b (0x8c73696a453f67ea5b7e5f2cd58ca0ad72ecaaeb.sol#8) is not in mixedCase
+Parameter SafeMath.div(uint256,uint256)._a (0x8c73696a453f67ea5b7e5f2cd58ca0ad72ecaaeb.sol#24) is not in mixedCase
+Parameter SafeMath.div(uint256,uint256)._b (0x8c73696a453f67ea5b7e5f2cd58ca0ad72ecaaeb.sol#24) is not in mixedCase
+Parameter SafeMath.sub(uint256,uint256)._a (0x8c73696a453f67ea5b7e5f2cd58ca0ad72ecaaeb.sol#34) is not in mixedCase
+Parameter SafeMath.sub(uint256,uint256)._b (0x8c73696a453f67ea5b7e5f2cd58ca0ad72ecaaeb.sol#34) is not in mixedCase
+Parameter SafeMath.add(uint256,uint256)._a (0x8c73696a453f67ea5b7e5f2cd58ca0ad72ecaaeb.sol#42) is not in mixedCase
+Parameter SafeMath.add(uint256,uint256)._b (0x8c73696a453f67ea5b7e5f2cd58ca0ad72ecaaeb.sol#42) is not in mixedCase
+Parameter MD.balanceOf(address)._owner (0x8c73696a453f67ea5b7e5f2cd58ca0ad72ecaaeb.sol#81) is not in mixedCase
+Parameter MD.approve(address,uint256)._spender (0x8c73696a453f67ea5b7e5f2cd58ca0ad72ecaaeb.sol#85) is not in mixedCase
+Parameter MD.approve(address,uint256)._value (0x8c73696a453f67ea5b7e5f2cd58ca0ad72ecaaeb.sol#85) is not in mixedCase
+Parameter MD.allowance(address,address)._owner (0x8c73696a453f67ea5b7e5f2cd58ca0ad72ecaaeb.sol#91) is not in mixedCase
+Parameter MD.allowance(address,address)._spender (0x8c73696a453f67ea5b7e5f2cd58ca0ad72ecaaeb.sol#91) is not in mixedCase
+Parameter MD.transfer(address,uint256)._to (0x8c73696a453f67ea5b7e5f2cd58ca0ad72ecaaeb.sol#110) is not in mixedCase
+Parameter MD.transfer(address,uint256)._value (0x8c73696a453f67ea5b7e5f2cd58ca0ad72ecaaeb.sol#110) is not in mixedCase
+Parameter MD.transferFrom(address,address,uint256)._from (0x8c73696a453f67ea5b7e5f2cd58ca0ad72ecaaeb.sol#129) is not in mixedCase
+Parameter MD.transferFrom(address,address,uint256)._to (0x8c73696a453f67ea5b7e5f2cd58ca0ad72ecaaeb.sol#129) is not in mixedCase
+Parameter MD.transferFrom(address,address,uint256)._value (0x8c73696a453f67ea5b7e5f2cd58ca0ad72ecaaeb.sol#129) is not in mixedCase
+Parameter MD.changeOwner(address)._newowner (0x8c73696a453f67ea5b7e5f2cd58ca0ad72ecaaeb.sol#145) is not in mixedCase
+Parameter TokenLock.deposit(address,uint256,uint256)._userAddress (0x8c73696a453f67ea5b7e5f2cd58ca0ad72ecaaeb.sol#195) is not in mixedCase
+Parameter TokenLock.deposit(address,uint256,uint256)._amount (0x8c73696a453f67ea5b7e5f2cd58ca0ad72ecaaeb.sol#195) is not in mixedCase
+Parameter TokenLock.deposit(address,uint256,uint256)._days (0x8c73696a453f67ea5b7e5f2cd58ca0ad72ecaaeb.sol#195) is not in mixedCase
+Parameter TokenLock.release(uint256,address,uint256)._index (0x8c73696a453f67ea5b7e5f2cd58ca0ad72ecaaeb.sol#204) is not in mixedCase
+Parameter TokenLock.release(uint256,address,uint256)._merchantAddress (0x8c73696a453f67ea5b7e5f2cd58ca0ad72ecaaeb.sol#204) is not in mixedCase
+Parameter TokenLock.release(uint256,address,uint256)._merchantAmount (0x8c73696a453f67ea5b7e5f2cd58ca0ad72ecaaeb.sol#204) is not in mixedCase
+Parameter TokenLock.changeOwner(address)._newowner (0x8c73696a453f67ea5b7e5f2cd58ca0ad72ecaaeb.sol#239) is not in mixedCase
+Variable TokenLock.md_address (0x8c73696a453f67ea5b7e5f2cd58ca0ad72ecaaeb.sol#160) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+MD.slitherConstructorVariables() (0x8c73696a453f67ea5b7e5f2cd58ca0ad72ecaaeb.sol#53-154) uses literals with too many digits:
+	- _totalSupply = 3500000000 * 10 ** decimals (0x8c73696a453f67ea5b7e5f2cd58ca0ad72ecaaeb.sol#62)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+MD._totalSupply (0x8c73696a453f67ea5b7e5f2cd58ca0ad72ecaaeb.sol#62) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+./0x8c73696a453f67ea5b7e5f2cd58ca0ad72ecaaeb.sol analyzed (3 contracts with 94 detectors), 47 result(s) found
+
+real	0m1.866s
+user	0m1.648s
+sys	0m0.219s

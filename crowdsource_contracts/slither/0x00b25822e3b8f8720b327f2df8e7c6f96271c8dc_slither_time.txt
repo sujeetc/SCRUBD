@@ -1,0 +1,340 @@
+'solc --version' running
+'solc ./0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+Reentrancy in JINJAINU.ContractTransfer(address,address,uint256) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#374-438):
+	External calls:
+	- taxTokenSwap() (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#406)
+		- uniV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#533-540)
+		- uniV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#523-529)
+		- (success,None) = address(marketingAddress).call{value: ethForMarketing}() (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#509)
+		- (success,None) = address(treasuryAddress).call{value: ethForTreasury}() (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#510)
+		- (success,None) = address(devAddress).call{value: address(this).balance}() (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#515)
+	External calls sending eth:
+	- taxTokenSwap() (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#406)
+		- uniV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#533-540)
+		- (success,None) = address(marketingAddress).call{value: ethForMarketing}() (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#509)
+		- (success,None) = address(treasuryAddress).call{value: ethForTreasury}() (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#510)
+		- (success,None) = address(devAddress).call{value: address(this).balance}() (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#515)
+	State variables written after the call(s):
+	- tokenTransfer(from,to,amount) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#437)
+		- _Balance[sender] -= amount (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#555)
+		- _Balance[recipient] += transferTokens (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#556)
+		- _Balance[address(this)] += taxTokens (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#557)
+		- _Balance[sender] -= amount (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#560)
+		- _Balance[recipient] += amount (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#561)
+	JINJAINU._Balance (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#267) can be used in cross function reentrancies:
+	- JINJAINU.balanceOf(address) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#326-328)
+	- JINJAINU.constructor() (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#282-312)
+	- JINJAINU.tokenTransfer(address,address,uint256) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#550-564)
+	- tokenTransfer(from,to,amount) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#437)
+		- liquidityTokens += taxTokens.mul(liquidityTax).div(tDivider) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#548)
+	JINJAINU.liquidityTokens (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#240) can be used in cross function reentrancies:
+	- JINJAINU.ContractTransfer(address,address,uint256) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#374-438)
+	- JINJAINU.splitTaxTokens(uint256) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#545-549)
+	- JINJAINU.taxTokenSwap() (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#495-517)
+	- tokenTransfer(from,to,amount) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#437)
+		- marketingTokens += taxTokens.mul(marketingTax).div(tDivider) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#546)
+	JINJAINU.marketingTokens (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#238) can be used in cross function reentrancies:
+	- JINJAINU.ContractTransfer(address,address,uint256) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#374-438)
+	- JINJAINU.splitTaxTokens(uint256) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#545-549)
+	- JINJAINU.taxTokenSwap() (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#495-517)
+	- tokenTransfer(from,to,amount) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#437)
+		- treasuryTokens += taxTokens.mul(treasuryTax).div(tDivider) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#547)
+	JINJAINU.treasuryTokens (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#239) can be used in cross function reentrancies:
+	- JINJAINU.splitTaxTokens(uint256) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#545-549)
+	- JINJAINU.taxTokenSwap() (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#495-517)
+Reentrancy in JINJAINU.OpenMarket() (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#355-373):
+	External calls:
+	- uniV2Pair = IUniswapV2Factory(_uniV2Router.factory()).createPair(address(this),_uniV2Router.WETH()) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#363)
+	- addLiquidity(balanceOf(address(this)),address(this).balance) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#366)
+		- uniV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#533-540)
+	External calls sending eth:
+	- addLiquidity(balanceOf(address(this)),address(this).balance) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#366)
+		- uniV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#533-540)
+	State variables written after the call(s):
+	- active = true (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#371)
+	JINJAINU.active (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#256) can be used in cross function reentrancies:
+	- JINJAINU.ContractTransfer(address,address,uint256) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#374-438)
+	- JINJAINU.OpenMarket() (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#355-373)
+	- JINJAINU.active (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#256)
+	- setLiquidityAddress(DEAD) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#367)
+		- liquidityAddress = address(LPAddress) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#440)
+	JINJAINU.liquidityAddress (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#259) can be used in cross function reentrancies:
+	- JINJAINU.addLiquidity(uint256,uint256) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#531-541)
+	- JINJAINU.constructor() (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#282-312)
+	- JINJAINU.setLiquidityAddress(address) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#439-442)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+JINJAINU.ContractTransfer(address,address,uint256) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#374-438) uses a dangerous strict equality:
+	- block.number == LiveBlock.add(x) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#388)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-strict-equalities
+
+Reentrancy in JINJAINU.taxTokenSwap() (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#495-517):
+	External calls:
+	- swapTokensForETH(amountToSwapForETH) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#501)
+		- uniV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#523-529)
+	State variables written after the call(s):
+	- liquidityTokens = 0 (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#508)
+	JINJAINU.liquidityTokens (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#240) can be used in cross function reentrancies:
+	- JINJAINU.ContractTransfer(address,address,uint256) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#374-438)
+	- JINJAINU.splitTaxTokens(uint256) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#545-549)
+	- JINJAINU.taxTokenSwap() (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#495-517)
+	- marketingTokens = 0 (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#506)
+	JINJAINU.marketingTokens (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#238) can be used in cross function reentrancies:
+	- JINJAINU.ContractTransfer(address,address,uint256) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#374-438)
+	- JINJAINU.splitTaxTokens(uint256) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#545-549)
+	- JINJAINU.taxTokenSwap() (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#495-517)
+	- treasuryTokens = 0 (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#507)
+	JINJAINU.treasuryTokens (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#239) can be used in cross function reentrancies:
+	- JINJAINU.splitTaxTokens(uint256) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#545-549)
+	- JINJAINU.taxTokenSwap() (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#495-517)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+JINJAINU.addLiquidity(uint256,uint256) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#531-541) ignores return value by uniV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#533-540)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+JINJAINU.taxTokenSwap().success (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#509) is written in both
+	(success,None) = address(marketingAddress).call{value: ethForMarketing}() (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#509)
+	(success,None) = address(treasuryAddress).call{value: ethForTreasury}() (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#510)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#write-after-write
+
+JINJAINU.allowance(address,address).owner (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#329) shadows:
+	- ERC20Ownable.owner() (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#100-102) (function)
+JINJAINU.ContractApprove(address,address,uint256).owner (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#339) shadows:
+	- ERC20Ownable.owner() (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#100-102) (function)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#local-variable-shadowing
+
+JINJAINU.maxWalletAmount(uint256,uint256) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#468-471) should emit an event for: 
+	- _MaxWallet = _Supply.mul(percent).div(divider) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#469) 
+JINJAINU.zChange(uint256,uint256,uint256,uint256,uint256,uint256) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#481-494) should emit an event for: 
+	- taxBuyMarketing = buyMarketingTax (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#488) 
+	- taxBuyTreasury = buyTreasuryTax (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#489) 
+	- taxBuyLiquidity = buyLiquidityTax (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#490) 
+	- taxSellMarketing = sellMarketingTax (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#491) 
+	- taxSellTreasury = sellTreasuryTax (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#492) 
+	- taxSellLiquidity = sellLiquidityTax (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#493) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+Reentrancy in JINJAINU.ContractTransfer(address,address,uint256) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#374-438):
+	External calls:
+	- taxTokenSwap() (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#406)
+		- uniV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#533-540)
+		- uniV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#523-529)
+		- (success,None) = address(marketingAddress).call{value: ethForMarketing}() (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#509)
+		- (success,None) = address(treasuryAddress).call{value: ethForTreasury}() (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#510)
+		- (success,None) = address(devAddress).call{value: address(this).balance}() (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#515)
+	External calls sending eth:
+	- taxTokenSwap() (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#406)
+		- uniV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#533-540)
+		- (success,None) = address(marketingAddress).call{value: ethForMarketing}() (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#509)
+		- (success,None) = address(treasuryAddress).call{value: ethForTreasury}() (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#510)
+		- (success,None) = address(devAddress).call{value: address(this).balance}() (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#515)
+	State variables written after the call(s):
+	- liquidityTax = 0 (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#411)
+	- liquidityTax = taxBuyLiquidity (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#417)
+	- liquidityTax = taxSellLiquidity (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#422)
+	- liquidityTax = 0 (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#427)
+	- liquidityTax = 0 (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#434)
+	- marketingTax = 0 (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#409)
+	- marketingTax = taxBuyMarketing (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#415)
+	- marketingTax = taxSellMarketing (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#420)
+	- marketingTax = 95 (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#425)
+	- marketingTax = 0 (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#432)
+	- tDivider = marketingTax.add(treasuryTax).add(liquidityTax) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#412)
+	- tDivider = taxBuyMarketing.add(taxBuyTreasury).add(taxBuyLiquidity) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#418)
+	- tDivider = taxSellMarketing.add(taxSellTreasury).add(taxSellLiquidity) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#423)
+	- tDivider = marketingTax.add(treasuryTax).add(liquidityTax) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#428)
+	- treasuryTax = 0 (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#410)
+	- treasuryTax = taxBuyTreasury (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#416)
+	- treasuryTax = taxSellTreasury (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#421)
+	- treasuryTax = 0 (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#426)
+	- treasuryTax = 0 (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#433)
+Reentrancy in JINJAINU.OpenMarket() (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#355-373):
+	External calls:
+	- uniV2Pair = IUniswapV2Factory(_uniV2Router.factory()).createPair(address(this),_uniV2Router.WETH()) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#363)
+	State variables written after the call(s):
+	- _MaxExclude[address(uniV2Pair)] = true (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#364)
+Reentrancy in JINJAINU.OpenMarket() (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#355-373):
+	External calls:
+	- uniV2Pair = IUniswapV2Factory(_uniV2Router.factory()).createPair(address(this),_uniV2Router.WETH()) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#363)
+	- addLiquidity(balanceOf(address(this)),address(this).balance) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#366)
+		- uniV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#533-540)
+	External calls sending eth:
+	- addLiquidity(balanceOf(address(this)),address(this).balance) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#366)
+		- uniV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#533-540)
+	State variables written after the call(s):
+	- addLiquidity(balanceOf(address(this)),address(this).balance) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#366)
+		- _Allowances[owner][spender] = amount (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#342)
+	- setLiquidityAddress(DEAD) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#367)
+		- _TaxExclude[liquidityAddress] = true (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#441)
+	- actions = true (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#370)
+	- maxWalletOn = true (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#368)
+	- sals = true (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#369)
+Reentrancy in JINJAINU.taxTokenSwap() (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#495-517):
+	External calls:
+	- swapTokensForETH(amountToSwapForETH) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#501)
+		- uniV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#523-529)
+	- (success,None) = address(marketingAddress).call{value: ethForMarketing}() (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#509)
+	- (success,None) = address(treasuryAddress).call{value: ethForTreasury}() (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#510)
+	- addLiquidity(swapLiquidityTokens,ethForLiquidity) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#512)
+		- uniV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#533-540)
+	External calls sending eth:
+	- (success,None) = address(marketingAddress).call{value: ethForMarketing}() (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#509)
+	- (success,None) = address(treasuryAddress).call{value: ethForTreasury}() (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#510)
+	- addLiquidity(swapLiquidityTokens,ethForLiquidity) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#512)
+		- uniV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#533-540)
+	State variables written after the call(s):
+	- addLiquidity(swapLiquidityTokens,ethForLiquidity) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#512)
+		- _Allowances[owner][spender] = amount (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#342)
+Reentrancy in JINJAINU.transferFrom(address,address,uint256) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#349-354):
+	External calls:
+	- ContractTransfer(sender,recipient,amount) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#350)
+		- uniV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#533-540)
+		- uniV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#523-529)
+		- (success,None) = address(marketingAddress).call{value: ethForMarketing}() (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#509)
+		- (success,None) = address(treasuryAddress).call{value: ethForTreasury}() (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#510)
+		- (success,None) = address(devAddress).call{value: address(this).balance}() (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#515)
+	External calls sending eth:
+	- ContractTransfer(sender,recipient,amount) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#350)
+		- uniV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#533-540)
+		- (success,None) = address(marketingAddress).call{value: ethForMarketing}() (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#509)
+		- (success,None) = address(treasuryAddress).call{value: ethForTreasury}() (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#510)
+		- (success,None) = address(devAddress).call{value: address(this).balance}() (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#515)
+	State variables written after the call(s):
+	- ContractApprove(sender,_msgSender(),_Allowances[sender][_msgSender()].sub(amount,ERC20: Can not transfer. Amount exceeds allowance)) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#351-352)
+		- _Allowances[owner][spender] = amount (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#342)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in JINJAINU.ContractTransfer(address,address,uint256) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#374-438):
+	External calls:
+	- taxTokenSwap() (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#406)
+		- uniV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#533-540)
+		- uniV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#523-529)
+		- (success,None) = address(marketingAddress).call{value: ethForMarketing}() (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#509)
+		- (success,None) = address(treasuryAddress).call{value: ethForTreasury}() (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#510)
+		- (success,None) = address(devAddress).call{value: address(this).balance}() (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#515)
+	External calls sending eth:
+	- taxTokenSwap() (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#406)
+		- uniV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#533-540)
+		- (success,None) = address(marketingAddress).call{value: ethForMarketing}() (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#509)
+		- (success,None) = address(treasuryAddress).call{value: ethForTreasury}() (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#510)
+		- (success,None) = address(devAddress).call{value: address(this).balance}() (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#515)
+	Event emitted after the call(s):
+	- Transfer(sender,recipient,transferTokens) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#558)
+		- tokenTransfer(from,to,amount) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#437)
+	- Transfer(sender,recipient,amount) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#562)
+		- tokenTransfer(from,to,amount) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#437)
+Reentrancy in JINJAINU.OpenMarket() (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#355-373):
+	External calls:
+	- uniV2Pair = IUniswapV2Factory(_uniV2Router.factory()).createPair(address(this),_uniV2Router.WETH()) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#363)
+	- addLiquidity(balanceOf(address(this)),address(this).balance) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#366)
+		- uniV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#533-540)
+	External calls sending eth:
+	- addLiquidity(balanceOf(address(this)),address(this).balance) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#366)
+		- uniV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#533-540)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#343)
+		- addLiquidity(balanceOf(address(this)),address(this).balance) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#366)
+Reentrancy in JINJAINU.taxTokenSwap() (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#495-517):
+	External calls:
+	- swapTokensForETH(amountToSwapForETH) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#501)
+		- uniV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#523-529)
+	- (success,None) = address(marketingAddress).call{value: ethForMarketing}() (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#509)
+	- (success,None) = address(treasuryAddress).call{value: ethForTreasury}() (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#510)
+	- addLiquidity(swapLiquidityTokens,ethForLiquidity) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#512)
+		- uniV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#533-540)
+	External calls sending eth:
+	- (success,None) = address(marketingAddress).call{value: ethForMarketing}() (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#509)
+	- (success,None) = address(treasuryAddress).call{value: ethForTreasury}() (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#510)
+	- addLiquidity(swapLiquidityTokens,ethForLiquidity) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#512)
+		- uniV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#533-540)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#343)
+		- addLiquidity(swapLiquidityTokens,ethForLiquidity) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#512)
+Reentrancy in JINJAINU.transferFrom(address,address,uint256) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#349-354):
+	External calls:
+	- ContractTransfer(sender,recipient,amount) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#350)
+		- uniV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#533-540)
+		- uniV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#523-529)
+		- (success,None) = address(marketingAddress).call{value: ethForMarketing}() (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#509)
+		- (success,None) = address(treasuryAddress).call{value: ethForTreasury}() (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#510)
+		- (success,None) = address(devAddress).call{value: address(this).balance}() (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#515)
+	External calls sending eth:
+	- ContractTransfer(sender,recipient,amount) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#350)
+		- uniV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#533-540)
+		- (success,None) = address(marketingAddress).call{value: ethForMarketing}() (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#509)
+		- (success,None) = address(treasuryAddress).call{value: ethForTreasury}() (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#510)
+		- (success,None) = address(devAddress).call{value: address(this).balance}() (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#515)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#343)
+		- ContractApprove(sender,_msgSender(),_Allowances[sender][_msgSender()].sub(amount,ERC20: Can not transfer. Amount exceeds allowance)) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#351-352)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+JINJAINU.ContractTransfer(address,address,uint256) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#374-438) uses timestamp for comparisons
+	Dangerous comparisons:
+	- _Sniper[from] && EndSniperPen >= block.timestamp (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#424)
+	- require(bool,string)(! _Sniper[from] || EndSniperPen <= block.timestamp,ERC20: Snipers can not transfer till penalty time is over) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#431)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+JINJAINU.ContractTransfer(address,address,uint256) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#374-438) compares to a boolean constant:
+	-maxWalletOn == true && ! _MaxExclude[to] (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#382)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#boolean-equality
+
+JINJAINU.ContractTransfer(address,address,uint256) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#374-438) has a high cyclomatic complexity (12).
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#cyclomatic-complexity
+
+Version constraint ^0.8.9 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- VerbatimInvalidDeduplication
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation.
+It is used by:
+	- ^0.8.9 (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#2)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in JINJAINU.withdrawStuckETH() (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#443-446):
+	- (success,None) = address(owner()).call{value: address(this).balance}() (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#445)
+Low level call in JINJAINU.taxTokenSwap() (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#495-517):
+	- (success,None) = address(marketingAddress).call{value: ethForMarketing}() (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#509)
+	- (success,None) = address(treasuryAddress).call{value: ethForTreasury}() (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#510)
+	- (success,None) = address(devAddress).call{value: address(this).balance}() (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#515)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Function IUniswapV2Router02.WETH() (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#130) is not in mixedCase
+Function JINJAINU.ContractApprove(address,address,uint256) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#339-344) is not in mixedCase
+Function JINJAINU.OpenMarket() (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#355-373) is not in mixedCase
+Function JINJAINU.ContractTransfer(address,address,uint256) (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#374-438) is not in mixedCase
+Parameter JINJAINU.setLiquidityAddress(address).LPAddress (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#439) is not in mixedCase
+Variable JINJAINU._MaxWallet (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#236) is not in mixedCase
+Variable JINJAINU._MinTS (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#237) is not in mixedCase
+Variable JINJAINU.LiveBlock (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#252) is not in mixedCase
+Variable JINJAINU.EndSniperPen (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#253) is not in mixedCase
+Variable JINJAINU.DEAD (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#263) is not in mixedCase
+Variable JINJAINU._Allowances (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#266) is not in mixedCase
+Variable JINJAINU._Balance (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#267) is not in mixedCase
+Variable JINJAINU._MaxExclude (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#268) is not in mixedCase
+Variable JINJAINU._TaxExclude (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#269) is not in mixedCase
+Variable JINJAINU._Sniper (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#270) is not in mixedCase
+Variable JINJAINU._Bot (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#271) is not in mixedCase
+Constant JINJAINU._Name (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#278) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant JINJAINU._Symbol (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#279) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant JINJAINU._Decimal (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#280) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant JINJAINU._Supply (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#281) is not in UPPER_CASE_WITH_UNDERSCORES
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+JINJAINU.DEAD (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#263) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+
+JINJAINU._MinTS (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#237) should be immutable 
+JINJAINU.devAddress (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#262) should be immutable 
+JINJAINU.marketingAddress (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#260) should be immutable 
+JINJAINU.treasuryAddress (0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol#261) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+./0x00b25822e3b8f8720b327f2df8e7c6f96271c8dc.sol analyzed (7 contracts with 94 detectors), 50 result(s) found
+
+real	0m3.842s
+user	0m3.683s
+sys	0m0.162s

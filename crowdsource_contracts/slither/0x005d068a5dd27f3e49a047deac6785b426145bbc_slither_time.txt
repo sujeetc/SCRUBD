@@ -1,0 +1,179 @@
+'solc --version' running
+'solc ./0x005d068a5dd27f3e49a047deac6785b426145bbc.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+Reentrancy in ParasyteInu._transfer(address,address,uint256) (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#217-248):
+	External calls:
+	- swapTokensForEth(contractTokenBalance) (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#239)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#255-261)
+	External calls sending eth:
+	- sendETHToFee(address(this).balance) (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#242)
+		- _feeAddrWallet1.transfer(amount.div(2)) (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#265)
+		- _feeAddrWallet2.transfer(amount.div(2)) (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#266)
+	State variables written after the call(s):
+	- _tokenTransfer(from,to,amount) (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#247)
+		- _rOwned[address(this)] = _rOwned[address(this)].add(rTeam) (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#309)
+		- _rOwned[sender] = _rOwned[sender].sub(rAmount) (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#299)
+		- _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount) (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#300)
+	ParasyteInu._rOwned (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#116) can be used in cross function reentrancies:
+	- ParasyteInu._takeTeam(uint256) (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#306-310)
+	- ParasyteInu._transferStandard(address,address,uint256) (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#297-304)
+	- ParasyteInu.balanceOf(address) (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#176-178)
+	- ParasyteInu.constructor() (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#149-158)
+	- _tokenTransfer(from,to,amount) (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#247)
+		- _rTotal = _rTotal.sub(rFee) (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#313)
+	ParasyteInu._rTotal (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#124) can be used in cross function reentrancies:
+	- ParasyteInu._getCurrentSupply() (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#359-364)
+	- ParasyteInu._reflectFee(uint256,uint256) (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#312-315)
+	- ParasyteInu.constructor() (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#149-158)
+	- ParasyteInu.tokenFromReflection(uint256) (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#204-208)
+Reentrancy in ParasyteInu.openTrading() (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#269-281):
+	External calls:
+	- uniswapV2Pair = IUniswapV2Factory(_uniswapV2Router.factory()).createPair(address(this),_uniswapV2Router.WETH()) (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#274)
+	- uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#275)
+	External calls sending eth:
+	- uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#275)
+	State variables written after the call(s):
+	- tradingOpen = true (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#279)
+	ParasyteInu.tradingOpen (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#138) can be used in cross function reentrancies:
+	- ParasyteInu.openTrading() (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#269-281)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+ParasyteInu.openTrading() (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#269-281) ignores return value by uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#275)
+ParasyteInu.openTrading() (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#269-281) ignores return value by IERC20(uniswapV2Pair).approve(address(uniswapV2Router),type()(uint256).max) (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#280)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+ParasyteInu.allowance(address,address).owner (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#185) shadows:
+	- Ownable.owner() (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#74-76) (function)
+ParasyteInu._approve(address,address,uint256).owner (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#210) shadows:
+	- Ownable.owner() (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#74-76) (function)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#local-variable-shadowing
+
+Reentrancy in ParasyteInu._transfer(address,address,uint256) (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#217-248):
+	External calls:
+	- swapTokensForEth(contractTokenBalance) (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#239)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#255-261)
+	External calls sending eth:
+	- sendETHToFee(address(this).balance) (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#242)
+		- _feeAddrWallet1.transfer(amount.div(2)) (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#265)
+		- _feeAddrWallet2.transfer(amount.div(2)) (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#266)
+	State variables written after the call(s):
+	- _tokenTransfer(from,to,amount) (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#247)
+		- _tFeeTotal = _tFeeTotal.add(tFee) (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#314)
+Reentrancy in ParasyteInu.openTrading() (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#269-281):
+	External calls:
+	- uniswapV2Pair = IUniswapV2Factory(_uniswapV2Router.factory()).createPair(address(this),_uniswapV2Router.WETH()) (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#274)
+	- uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#275)
+	External calls sending eth:
+	- uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#275)
+	State variables written after the call(s):
+	- _maxTxAmount = 50000000000 * 10 ** 9 (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#278)
+	- cooldownEnabled = true (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#277)
+	- swapEnabled = true (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#276)
+Reentrancy in ParasyteInu.transferFrom(address,address,uint256) (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#194-198):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#195)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#255-261)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#195)
+		- _feeAddrWallet1.transfer(amount.div(2)) (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#265)
+		- _feeAddrWallet2.transfer(amount.div(2)) (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#266)
+	State variables written after the call(s):
+	- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#196)
+		- _allowances[owner][spender] = amount (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#213)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in ParasyteInu._transfer(address,address,uint256) (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#217-248):
+	External calls:
+	- swapTokensForEth(contractTokenBalance) (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#239)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#255-261)
+	External calls sending eth:
+	- sendETHToFee(address(this).balance) (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#242)
+		- _feeAddrWallet1.transfer(amount.div(2)) (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#265)
+		- _feeAddrWallet2.transfer(amount.div(2)) (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#266)
+	Event emitted after the call(s):
+	- Transfer(sender,recipient,tTransferAmount) (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#303)
+		- _tokenTransfer(from,to,amount) (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#247)
+Reentrancy in ParasyteInu.transferFrom(address,address,uint256) (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#194-198):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#195)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#255-261)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#195)
+		- _feeAddrWallet1.transfer(amount.div(2)) (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#265)
+		- _feeAddrWallet2.transfer(amount.div(2)) (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#266)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#214)
+		- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#196)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+ParasyteInu._transfer(address,address,uint256) (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#217-248) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(cooldown[to] < block.timestamp) (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#228)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Version constraint ^0.8.4 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- SignedImmutables.
+It is used by:
+	- ^0.8.4 (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#6)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Function IUniswapV2Router02.WETH() (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#103) is not in mixedCase
+Constant ParasyteInu._tTotal (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#123) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant ParasyteInu._name (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#132) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant ParasyteInu._symbol (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#133) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant ParasyteInu._decimals (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#134) is not in UPPER_CASE_WITH_UNDERSCORES
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in ParasyteInu._transfer(address,address,uint256) (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#217-248):
+	External calls:
+	- sendETHToFee(address(this).balance) (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#242)
+		- _feeAddrWallet1.transfer(amount.div(2)) (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#265)
+		- _feeAddrWallet2.transfer(amount.div(2)) (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#266)
+	State variables written after the call(s):
+	- _tokenTransfer(from,to,amount) (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#247)
+		- _rOwned[address(this)] = _rOwned[address(this)].add(rTeam) (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#309)
+		- _rOwned[sender] = _rOwned[sender].sub(rAmount) (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#299)
+		- _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount) (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#300)
+	- _tokenTransfer(from,to,amount) (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#247)
+		- _rTotal = _rTotal.sub(rFee) (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#313)
+	- _tokenTransfer(from,to,amount) (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#247)
+		- _tFeeTotal = _tFeeTotal.add(tFee) (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#314)
+	Event emitted after the call(s):
+	- Transfer(sender,recipient,tTransferAmount) (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#303)
+		- _tokenTransfer(from,to,amount) (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#247)
+Reentrancy in ParasyteInu.transferFrom(address,address,uint256) (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#194-198):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#195)
+		- _feeAddrWallet1.transfer(amount.div(2)) (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#265)
+		- _feeAddrWallet2.transfer(amount.div(2)) (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#266)
+	State variables written after the call(s):
+	- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#196)
+		- _allowances[owner][spender] = amount (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#213)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#214)
+		- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#196)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+ParasyteInu.openTrading() (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#269-281) uses literals with too many digits:
+	- _maxTxAmount = 50000000000 * 10 ** 9 (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#278)
+ParasyteInu.slitherConstructorConstantVariables() (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#114-366) uses literals with too many digits:
+	- _tTotal = 1000000000000 * 10 ** 9 (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#123)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+ParasyteInu._tOwned (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#117) is never used in ParasyteInu (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#114-366)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-state-variable
+
+ParasyteInu._feeAddrWallet1 (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#129) should be immutable 
+ParasyteInu._feeAddrWallet2 (0x005d068a5dd27f3e49a047deac6785b426145bbc.sol#130) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+./0x005d068a5dd27f3e49a047deac6785b426145bbc.sol analyzed (7 contracts with 94 detectors), 25 result(s) found
+
+real	0m2.421s
+user	0m2.217s
+sys	0m0.206s

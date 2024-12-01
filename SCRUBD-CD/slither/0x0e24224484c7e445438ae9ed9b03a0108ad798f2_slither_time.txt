@@ -1,0 +1,280 @@
+'solc --version' running
+'solc ./0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+ChipToken.sendViaCall(address,uint256) (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#754-758) sends eth to arbitrary user
+	Dangerous calls:
+	- (sent,data) = _to.call{value: amount}() (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#755)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+Reentrancy in ChipToken._transfer(address,address,uint256) (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#537-608):
+	External calls:
+	- swap() (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#583)
+		- (sent,data) = _to.call{value: amount}() (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#755)
+		- router.swapExactTokensForETHSupportingFeeOnTransferTokens(amountToSwap,0,sellPath,address(this),block.timestamp) (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#776-782)
+		- router.addLiquidityETH{value: amountETHLiquidity}(address(this),amountTokensToLiquidity,0,0,liquidity_wallet,block.timestamp) (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#798-805)
+	External calls sending eth:
+	- swap() (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#583)
+		- (sent,data) = _to.call{value: amount}() (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#755)
+		- router.addLiquidityETH{value: amountETHLiquidity}(address(this),amountTokensToLiquidity,0,0,liquidity_wallet,block.timestamp) (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#798-805)
+	State variables written after the call(s):
+	- _balances[from] -= feesCollected (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#594)
+	ChipToken._balances (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#252) can be used in cross function reentrancies:
+	- ChipToken._mint(address,uint256) (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#619-629)
+	- ChipToken._transfer(address,address,uint256) (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#537-608)
+	- ChipToken.balanceOf(address) (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#412-414)
+	- _balances[address(this)] += feesCollected (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#595)
+	ChipToken._balances (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#252) can be used in cross function reentrancies:
+	- ChipToken._mint(address,uint256) (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#619-629)
+	- ChipToken._transfer(address,address,uint256) (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#537-608)
+	- ChipToken.balanceOf(address) (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#412-414)
+	- _balances[from] = fromBalance - amount (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#601)
+	ChipToken._balances (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#252) can be used in cross function reentrancies:
+	- ChipToken._mint(address,uint256) (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#619-629)
+	- ChipToken._transfer(address,address,uint256) (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#537-608)
+	- ChipToken.balanceOf(address) (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#412-414)
+	- _balances[to] += amount (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#603)
+	ChipToken._balances (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#252) can be used in cross function reentrancies:
+	- ChipToken._mint(address,uint256) (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#619-629)
+	- ChipToken._transfer(address,address,uint256) (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#537-608)
+	- ChipToken.balanceOf(address) (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#412-414)
+	- feesCollected = calculateFee(2,amount,extra_free) (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#590)
+		- _donationFeeCollected += donationFee (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#828)
+	ChipToken._donationFeeCollected (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#265) can be used in cross function reentrancies:
+	- ChipToken.calculateFee(uint256,uint256,bool) (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#816-831)
+	- ChipToken.swap() (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#760-814)
+	- feesCollected = calculateFee(1,amount,extra_free) (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#590)
+		- _donationFeeCollected += donationFee (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#828)
+	ChipToken._donationFeeCollected (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#265) can be used in cross function reentrancies:
+	- ChipToken.calculateFee(uint256,uint256,bool) (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#816-831)
+	- ChipToken.swap() (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#760-814)
+	- feesCollected = calculateFee(0,amount,extra_free) (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#590)
+		- _donationFeeCollected += donationFee (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#828)
+	ChipToken._donationFeeCollected (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#265) can be used in cross function reentrancies:
+	- ChipToken.calculateFee(uint256,uint256,bool) (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#816-831)
+	- ChipToken.swap() (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#760-814)
+	- feesCollected = calculateFee(2,amount,extra_free) (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#590)
+		- _liquidityFeeCollected += liquidityFee (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#829)
+	ChipToken._liquidityFeeCollected (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#266) can be used in cross function reentrancies:
+	- ChipToken.calculateFee(uint256,uint256,bool) (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#816-831)
+	- ChipToken.swap() (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#760-814)
+	- feesCollected = calculateFee(1,amount,extra_free) (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#590)
+		- _liquidityFeeCollected += liquidityFee (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#829)
+	ChipToken._liquidityFeeCollected (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#266) can be used in cross function reentrancies:
+	- ChipToken.calculateFee(uint256,uint256,bool) (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#816-831)
+	- ChipToken.swap() (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#760-814)
+	- feesCollected = calculateFee(0,amount,extra_free) (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#590)
+		- _liquidityFeeCollected += liquidityFee (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#829)
+	ChipToken._liquidityFeeCollected (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#266) can be used in cross function reentrancies:
+	- ChipToken.calculateFee(uint256,uint256,bool) (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#816-831)
+	- ChipToken.swap() (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#760-814)
+	- feesCollected = calculateFee(2,amount,extra_free) (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#590)
+		- _marketingFeeCollected += extraFee (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#820)
+		- _marketingFeeCollected += marketingFee (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#827)
+	ChipToken._marketingFeeCollected (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#264) can be used in cross function reentrancies:
+	- ChipToken.calculateFee(uint256,uint256,bool) (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#816-831)
+	- ChipToken.swap() (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#760-814)
+	- feesCollected = calculateFee(1,amount,extra_free) (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#590)
+		- _marketingFeeCollected += extraFee (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#820)
+		- _marketingFeeCollected += marketingFee (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#827)
+	ChipToken._marketingFeeCollected (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#264) can be used in cross function reentrancies:
+	- ChipToken.calculateFee(uint256,uint256,bool) (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#816-831)
+	- ChipToken.swap() (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#760-814)
+	- feesCollected = calculateFee(0,amount,extra_free) (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#590)
+		- _marketingFeeCollected += extraFee (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#820)
+		- _marketingFeeCollected += marketingFee (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#827)
+	ChipToken._marketingFeeCollected (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#264) can be used in cross function reentrancies:
+	- ChipToken.calculateFee(uint256,uint256,bool) (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#816-831)
+	- ChipToken.swap() (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#760-814)
+Reentrancy in ChipToken.swap() (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#760-814):
+	External calls:
+	- router.swapExactTokensForETHSupportingFeeOnTransferTokens(amountToSwap,0,sellPath,address(this),block.timestamp) (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#776-782)
+	- sendViaCall(address(marketing_wallet),amountMarketing) (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#788)
+		- (sent,data) = _to.call{value: amount}() (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#755)
+	- sendViaCall(address(donation_wallet),amountDonation) (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#792)
+		- (sent,data) = _to.call{value: amount}() (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#755)
+	- router.addLiquidityETH{value: amountETHLiquidity}(address(this),amountTokensToLiquidity,0,0,liquidity_wallet,block.timestamp) (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#798-805)
+	External calls sending eth:
+	- sendViaCall(address(marketing_wallet),amountMarketing) (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#788)
+		- (sent,data) = _to.call{value: amount}() (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#755)
+	- sendViaCall(address(donation_wallet),amountDonation) (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#792)
+		- (sent,data) = _to.call{value: amount}() (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#755)
+	- router.addLiquidityETH{value: amountETHLiquidity}(address(this),amountTokensToLiquidity,0,0,liquidity_wallet,block.timestamp) (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#798-805)
+	State variables written after the call(s):
+	- _donationFeeCollected = 0 (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#810)
+	ChipToken._donationFeeCollected (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#265) can be used in cross function reentrancies:
+	- ChipToken.calculateFee(uint256,uint256,bool) (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#816-831)
+	- ChipToken.swap() (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#760-814)
+	- _liquidityFeeCollected = 0 (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#811)
+	ChipToken._liquidityFeeCollected (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#266) can be used in cross function reentrancies:
+	- ChipToken.calculateFee(uint256,uint256,bool) (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#816-831)
+	- ChipToken.swap() (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#760-814)
+	- _marketingFeeCollected = 0 (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#809)
+	ChipToken._marketingFeeCollected (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#264) can be used in cross function reentrancies:
+	- ChipToken.calculateFee(uint256,uint256,bool) (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#816-831)
+	- ChipToken.swap() (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#760-814)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+ChipToken._transfer(address,address,uint256).feesCollected (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#586) is a local variable never initialized
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#uninitialized-local-variables
+
+ChipToken.swap() (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#760-814) ignores return value by router.addLiquidityETH{value: amountETHLiquidity}(address(this),amountTokensToLiquidity,0,0,liquidity_wallet,block.timestamp) (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#798-805)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+ChipToken.transfer(address,uint256).owner (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#425) shadows:
+	- Ownable.owner() (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#126-128) (function)
+ChipToken.allowance(address,address).owner (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#433) shadows:
+	- Ownable.owner() (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#126-128) (function)
+ChipToken.approve(address,uint256).owner (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#448) shadows:
+	- Ownable.owner() (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#126-128) (function)
+ChipToken.increaseAllowance(address,uint256).owner (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#493) shadows:
+	- Ownable.owner() (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#126-128) (function)
+ChipToken.decreaseAllowance(address,uint256).owner (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#513) shadows:
+	- Ownable.owner() (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#126-128) (function)
+ChipToken._approve(address,address,uint256).owner (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#673) shadows:
+	- Ownable.owner() (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#126-128) (function)
+ChipToken._spendAllowance(address,address,uint256).owner (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#693) shadows:
+	- Ownable.owner() (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#126-128) (function)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#local-variable-shadowing
+
+ChipToken.setMaxTxPercentage(uint256) (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#833-835) should emit an event for: 
+	- maxTxAmount = (_totalSupply * percentage) / 10000 (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#834) 
+ChipToken.setMaxWalletPercentage(uint256) (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#837-839) should emit an event for: 
+	- maxWalletAmount = (_totalSupply * percentage) / 10000 (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#838) 
+ChipToken.setMinTokensBeforeSwap(uint256) (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#841-843) should emit an event for: 
+	- minTokensBeforeSwap = amount (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#842) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+ChipToken.setMarketingWallet(address).wallet (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#845) lacks a zero-check on :
+		- marketing_wallet = wallet (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#846)
+ChipToken.setDonationWallet(address).wallet (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#849) lacks a zero-check on :
+		- donation_wallet = wallet (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#850)
+ChipToken.setLiquidityWallet(address).wallet (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#853) lacks a zero-check on :
+		- liquidity_wallet = wallet (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#854)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in ChipToken.swap() (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#760-814):
+	External calls:
+	- router.swapExactTokensForETHSupportingFeeOnTransferTokens(amountToSwap,0,sellPath,address(this),block.timestamp) (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#776-782)
+	- sendViaCall(address(marketing_wallet),amountMarketing) (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#788)
+		- (sent,data) = _to.call{value: amount}() (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#755)
+	- sendViaCall(address(donation_wallet),amountDonation) (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#792)
+		- (sent,data) = _to.call{value: amount}() (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#755)
+	External calls sending eth:
+	- sendViaCall(address(marketing_wallet),amountMarketing) (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#788)
+		- (sent,data) = _to.call{value: amount}() (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#755)
+	- sendViaCall(address(donation_wallet),amountDonation) (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#792)
+		- (sent,data) = _to.call{value: amount}() (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#755)
+	State variables written after the call(s):
+	- _approve(address(this),address(router),amountTokensToLiquidity) (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#797)
+		- _allowances[owner][spender] = amount (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#680)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in ChipToken._transfer(address,address,uint256) (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#537-608):
+	External calls:
+	- swap() (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#583)
+		- (sent,data) = _to.call{value: amount}() (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#755)
+		- router.swapExactTokensForETHSupportingFeeOnTransferTokens(amountToSwap,0,sellPath,address(this),block.timestamp) (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#776-782)
+		- router.addLiquidityETH{value: amountETHLiquidity}(address(this),amountTokensToLiquidity,0,0,liquidity_wallet,block.timestamp) (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#798-805)
+	External calls sending eth:
+	- swap() (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#583)
+		- (sent,data) = _to.call{value: amount}() (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#755)
+		- router.addLiquidityETH{value: amountETHLiquidity}(address(this),amountTokensToLiquidity,0,0,liquidity_wallet,block.timestamp) (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#798-805)
+	Event emitted after the call(s):
+	- Transfer(from,to,amount) (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#605)
+Reentrancy in ChipToken.swap() (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#760-814):
+	External calls:
+	- router.swapExactTokensForETHSupportingFeeOnTransferTokens(amountToSwap,0,sellPath,address(this),block.timestamp) (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#776-782)
+	- sendViaCall(address(marketing_wallet),amountMarketing) (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#788)
+		- (sent,data) = _to.call{value: amount}() (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#755)
+	- sendViaCall(address(donation_wallet),amountDonation) (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#792)
+		- (sent,data) = _to.call{value: amount}() (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#755)
+	External calls sending eth:
+	- sendViaCall(address(marketing_wallet),amountMarketing) (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#788)
+		- (sent,data) = _to.call{value: amount}() (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#755)
+	- sendViaCall(address(donation_wallet),amountDonation) (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#792)
+		- (sent,data) = _to.call{value: amount}() (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#755)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#681)
+		- _approve(address(this),address(router),amountTokensToLiquidity) (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#797)
+Reentrancy in ChipToken.swap() (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#760-814):
+	External calls:
+	- router.swapExactTokensForETHSupportingFeeOnTransferTokens(amountToSwap,0,sellPath,address(this),block.timestamp) (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#776-782)
+	- sendViaCall(address(marketing_wallet),amountMarketing) (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#788)
+		- (sent,data) = _to.call{value: amount}() (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#755)
+	- sendViaCall(address(donation_wallet),amountDonation) (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#792)
+		- (sent,data) = _to.call{value: amount}() (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#755)
+	- router.addLiquidityETH{value: amountETHLiquidity}(address(this),amountTokensToLiquidity,0,0,liquidity_wallet,block.timestamp) (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#798-805)
+	External calls sending eth:
+	- sendViaCall(address(marketing_wallet),amountMarketing) (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#788)
+		- (sent,data) = _to.call{value: amount}() (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#755)
+	- sendViaCall(address(donation_wallet),amountDonation) (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#792)
+		- (sent,data) = _to.call{value: amount}() (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#755)
+	- router.addLiquidityETH{value: amountETHLiquidity}(address(this),amountTokensToLiquidity,0,0,liquidity_wallet,block.timestamp) (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#798-805)
+	Event emitted after the call(s):
+	- AutoLiquify(amountETHLiquidity,amountTokensToLiquidity) (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#806)
+	- Swap(totalCollected,amountMarketing,amountDonation) (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#813)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+ChipToken._transfer(address,address,uint256) (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#537-608) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)((is_buy && (isMaxTxExempt[to] || lastTx[to] + cooldown_period <= block.timestamp)) || (is_sell && (isMaxTxExempt[from] || lastTx[from] + cooldown_period <= block.timestamp)) || (! is_buy && ! is_sell && lastTx[from] + cooldown_period <= block.timestamp),Must wait cooldown period) (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#557-561)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+ChipToken._burn(address,uint256) (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#642-657) is never used and should be removed
+Context._msgData() (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#14-16) is never used and should be removed
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dead-code
+
+Version constraint 0.8.13 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- VerbatimInvalidDeduplication
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- StorageWriteRemovalBeforeConditionalTermination
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- InlineAssemblyMemorySideEffects
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation.
+It is used by:
+	- 0.8.13 (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#7)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in ChipToken.sendViaCall(address,uint256) (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#754-758):
+	- (sent,data) = _to.call{value: amount}() (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#755)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Function IUniswapV2Router01.WETH() (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#180) is not in mixedCase
+Parameter ChipToken.sendViaCall(address,uint256)._to (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#754) is not in mixedCase
+Parameter ChipToken.calculateFee(uint256,uint256,bool).extra_fee (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#816) is not in mixedCase
+Parameter ChipToken.setTrading(bool)._status (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#916) is not in mixedCase
+Variable ChipToken.marketing_wallet (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#270) is not in mixedCase
+Variable ChipToken.donation_wallet (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#271) is not in mixedCase
+Variable ChipToken.liquidity_wallet (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#272) is not in mixedCase
+Variable ChipToken._feeDecimal (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#277) is not in mixedCase
+Variable ChipToken._marketingFee (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#279) is not in mixedCase
+Variable ChipToken._donationFee (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#280) is not in mixedCase
+Variable ChipToken._liquidityFee (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#281) is not in mixedCase
+Variable ChipToken.blocks_autoblacklist_active (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#290) is not in mixedCase
+Variable ChipToken.extra_fee_percent (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#299) is not in mixedCase
+Variable ChipToken.cooldown_period (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#301) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Redundant expression "data (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#756)" inChipToken (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#250-925)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#redundant-statements
+
+ChipToken.blocks_autoblacklist_active (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#290) is never used in ChipToken (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#250-925)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-state-variable
+
+ChipToken._feeDecimal (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#277) should be constant 
+ChipToken.blocks_autoblacklist_active (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#290) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+
+ChipToken.cooldown_period (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#301) should be immutable 
+ChipToken.extra_fee_percent (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#299) should be immutable 
+ChipToken.pair (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#275) should be immutable 
+ChipToken.router (0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol#274) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+./0x0e24224484c7e445438ae9ed9b03a0108ad798f2.sol analyzed (9 contracts with 94 detectors), 49 result(s) found
+
+real	0m3.138s
+user	0m2.865s
+sys	0m0.276s

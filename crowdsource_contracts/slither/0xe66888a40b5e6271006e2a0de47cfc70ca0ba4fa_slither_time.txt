@@ -1,0 +1,90 @@
+'solc --version' running
+'solc ./0xe66888a40b5e6271006e2a0de47cfc70ca0ba4fa.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+Reentrancy in AirdropController.airdrop(address[],uint256[]) (0xe66888a40b5e6271006e2a0de47cfc70ca0ba4fa.sol#133-141):
+	External calls:
+	- require(bool)(token.transfer(_recipients[i],_amounts[i])) (0xe66888a40b5e6271006e2a0de47cfc70ca0ba4fa.sol#137)
+	State variables written after the call(s):
+	- tokenReceived[_recipients[i]] = true (0xe66888a40b5e6271006e2a0de47cfc70ca0ba4fa.sol#138)
+	AirdropController.tokenReceived (0xe66888a40b5e6271006e2a0de47cfc70ca0ba4fa.sol#122) can be used in cross function reentrancies:
+	- AirdropController.airdrop(address[],uint256[]) (0xe66888a40b5e6271006e2a0de47cfc70ca0ba4fa.sol#133-141)
+	- AirdropController.airdropManually(address,uint256) (0xe66888a40b5e6271006e2a0de47cfc70ca0ba4fa.sol#143-149)
+	- AirdropController.tokenReceived (0xe66888a40b5e6271006e2a0de47cfc70ca0ba4fa.sol#122)
+	- totalClaimed = totalClaimed.add(_amounts[i]) (0xe66888a40b5e6271006e2a0de47cfc70ca0ba4fa.sol#139)
+	AirdropController.totalClaimed (0xe66888a40b5e6271006e2a0de47cfc70ca0ba4fa.sol#116) can be used in cross function reentrancies:
+	- AirdropController.airdrop(address[],uint256[]) (0xe66888a40b5e6271006e2a0de47cfc70ca0ba4fa.sol#133-141)
+	- AirdropController.airdropManually(address,uint256) (0xe66888a40b5e6271006e2a0de47cfc70ca0ba4fa.sol#143-149)
+	- AirdropController.totalClaimed (0xe66888a40b5e6271006e2a0de47cfc70ca0ba4fa.sol#116)
+Reentrancy in AirdropController.airdropManually(address,uint256) (0xe66888a40b5e6271006e2a0de47cfc70ca0ba4fa.sol#143-149):
+	External calls:
+	- ! token.transfer(_holder,_amount) (0xe66888a40b5e6271006e2a0de47cfc70ca0ba4fa.sol#146)
+	State variables written after the call(s):
+	- tokenReceived[_holder] = true (0xe66888a40b5e6271006e2a0de47cfc70ca0ba4fa.sol#147)
+	AirdropController.tokenReceived (0xe66888a40b5e6271006e2a0de47cfc70ca0ba4fa.sol#122) can be used in cross function reentrancies:
+	- AirdropController.airdrop(address[],uint256[]) (0xe66888a40b5e6271006e2a0de47cfc70ca0ba4fa.sol#133-141)
+	- AirdropController.airdropManually(address,uint256) (0xe66888a40b5e6271006e2a0de47cfc70ca0ba4fa.sol#143-149)
+	- AirdropController.tokenReceived (0xe66888a40b5e6271006e2a0de47cfc70ca0ba4fa.sol#122)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+AirdropController.airdrop(address[],uint256[]) (0xe66888a40b5e6271006e2a0de47cfc70ca0ba4fa.sol#133-141) has external calls inside a loop: require(bool)(token.transfer(_recipients[i],_amounts[i])) (0xe66888a40b5e6271006e2a0de47cfc70ca0ba4fa.sol#137)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation/#calls-inside-a-loop
+
+Reentrancy in AirdropController.airdropManually(address,uint256) (0xe66888a40b5e6271006e2a0de47cfc70ca0ba4fa.sol#143-149):
+	External calls:
+	- ! token.transfer(_holder,_amount) (0xe66888a40b5e6271006e2a0de47cfc70ca0ba4fa.sol#146)
+	State variables written after the call(s):
+	- totalClaimed = totalClaimed.add(_amount) (0xe66888a40b5e6271006e2a0de47cfc70ca0ba4fa.sol#148)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+AirdropController.airdrop(address[],uint256[]) (0xe66888a40b5e6271006e2a0de47cfc70ca0ba4fa.sol#133-141) compares to a boolean constant:
+	-require(bool)(tokenReceived[_recipients[i]] == false) (0xe66888a40b5e6271006e2a0de47cfc70ca0ba4fa.sol#136)
+AirdropController.airdropManually(address,uint256) (0xe66888a40b5e6271006e2a0de47cfc70ca0ba4fa.sol#143-149) compares to a boolean constant:
+	-require(bool)(tokenReceived[_holder] == false) (0xe66888a40b5e6271006e2a0de47cfc70ca0ba4fa.sol#145)
+AirdropController.isAllowed() (0xe66888a40b5e6271006e2a0de47cfc70ca0ba4fa.sol#124-127) compares to a boolean constant:
+	-require(bool)(airdropAllowed == true) (0xe66888a40b5e6271006e2a0de47cfc70ca0ba4fa.sol#125)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#boolean-equality
+
+AirdropController.airdrop(address[],uint256[]) (0xe66888a40b5e6271006e2a0de47cfc70ca0ba4fa.sol#133-141) has costly operations inside a loop:
+	- totalClaimed = totalClaimed.add(_amounts[i]) (0xe66888a40b5e6271006e2a0de47cfc70ca0ba4fa.sol#139)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#costly-operations-inside-a-loop
+
+Version constraint ^0.4.21 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ABIEncoderV2PackedStorage_0.4.x
+	- ExpExponentCleanup
+	- EventStructWrongData
+	- NestedArrayFunctionCallDecoder.
+It is used by:
+	- ^0.4.21 (0xe66888a40b5e6271006e2a0de47cfc70ca0ba4fa.sol#1)
+solc-0.4.21 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Parameter AirdropController.airdrop(address[],uint256[])._recipients (0xe66888a40b5e6271006e2a0de47cfc70ca0ba4fa.sol#133) is not in mixedCase
+Parameter AirdropController.airdrop(address[],uint256[])._amounts (0xe66888a40b5e6271006e2a0de47cfc70ca0ba4fa.sol#133) is not in mixedCase
+Parameter AirdropController.airdropManually(address,uint256)._holder (0xe66888a40b5e6271006e2a0de47cfc70ca0ba4fa.sol#143) is not in mixedCase
+Parameter AirdropController.airdropManually(address,uint256)._amount (0xe66888a40b5e6271006e2a0de47cfc70ca0ba4fa.sol#143) is not in mixedCase
+Parameter AirdropController.setTokenAddress(address)._token (0xe66888a40b5e6271006e2a0de47cfc70ca0ba4fa.sol#151) is not in mixedCase
+Parameter AirdropController.setAirdropEnabled(bool)._allowed (0xe66888a40b5e6271006e2a0de47cfc70ca0ba4fa.sol#160) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+airdrop(address[],uint256[]) should be declared external:
+	- AirdropController.airdrop(address[],uint256[]) (0xe66888a40b5e6271006e2a0de47cfc70ca0ba4fa.sol#133-141)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#public-function-that-could-be-declared-external
+./0xe66888a40b5e6271006e2a0de47cfc70ca0ba4fa.sol analyzed (5 contracts with 94 detectors), 17 result(s) found
+
+real	0m1.769s
+user	0m1.531s
+sys	0m0.240s

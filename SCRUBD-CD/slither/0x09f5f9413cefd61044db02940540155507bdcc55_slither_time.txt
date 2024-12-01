@@ -1,0 +1,167 @@
+'solc --version' running
+'solc ./0x09f5f9413cefd61044db02940540155507bdcc55.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x09f5f9413cefd61044db02940540155507bdcc55.sol:
+./0x09f5f9413cefd61044db02940540155507bdcc55.sol:47:24: Warning: This looks like an address but has an invalid checksum. If this is not used as an address, please prepend '00'. Correct checksummed address: '0xfD4e7B9F4F97330356F7d1b5DDB9843F2C3e9d87'. For more information please see https://solidity.readthedocs.io/en/develop/types.html#address-literals
+        feeCollector = 0xfd4e7b9f4f97330356f7d1b5ddb9843f2c3e9d87;
+                       ^----------------------------------------^
+./0x09f5f9413cefd61044db02940540155507bdcc55.sol:48:39: Warning: This looks like an address but has an invalid checksum. If this is not used as an address, please prepend '00'. Correct checksummed address: '0x40430713e9fa954cf33562B8469Ad94AB3E14C10'. For more information please see https://solidity.readthedocs.io/en/develop/types.html#address-literals
+        discountToken = DiscountToken(0x40430713e9fa954cf33562b8469ad94ab3e14c10);
+                                      ^----------------------------------------^
+./0x09f5f9413cefd61044db02940540155507bdcc55.sol:88:13: Warning: Return value of low-level calls not used.
+            feeCollector.call.value(fee)();
+            ^----------------------------^
+
+
+TwoCoinsOneMoonGame (0x09f5f9413cefd61044db02940540155507bdcc55.sol#5-150) contract sets array length with a user-controlled value:
+	- history.push(Event({winner:winner,newMoonLevel:moonLevel,block:block.number,blueCap:marketCapBlue,redCap:marketCapRed})) (0x09f5f9413cefd61044db02940540155507bdcc55.sol#113)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#array-length-assignment
+
+Reentrancy in TwoCoinsOneMoonGame.withdraw() (0x09f5f9413cefd61044db02940540155507bdcc55.sol#84-94):
+	External calls:
+	- feeCollector.call.value(fee)() (0x09f5f9413cefd61044db02940540155507bdcc55.sol#88)
+	State variables written after the call(s):
+	- balance[msg.sender] = 0 (0x09f5f9413cefd61044db02940540155507bdcc55.sol#92)
+	TwoCoinsOneMoonGame.balance (0x09f5f9413cefd61044db02940540155507bdcc55.sol#34) can be used in cross function reentrancies:
+	- TwoCoinsOneMoonGame.balance (0x09f5f9413cefd61044db02940540155507bdcc55.sol#34)
+	- TwoCoinsOneMoonGame.depositBalance(uint256) (0x09f5f9413cefd61044db02940540155507bdcc55.sol#96-110)
+	- TwoCoinsOneMoonGame.getBetAmount() (0x09f5f9413cefd61044db02940540155507bdcc55.sol#53-64)
+	- TwoCoinsOneMoonGame.withdraw() (0x09f5f9413cefd61044db02940540155507bdcc55.sol#84-94)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+TwoCoinsOneMoonGame.depositBalance(uint256) (0x09f5f9413cefd61044db02940540155507bdcc55.sol#96-110) performs a multiplication on the result of a division:
+	- balance[bettorsRed[i].account] += 10 ** 18 * bettorsRed[i].amount / marketCapRed * marketCapBlue / 10 ** 18 (0x09f5f9413cefd61044db02940540155507bdcc55.sol#107)
+TwoCoinsOneMoonGame.depositBalance(uint256) (0x09f5f9413cefd61044db02940540155507bdcc55.sol#96-110) performs a multiplication on the result of a division:
+	- balance[bettorsBlue[i].account] += 10 ** 18 * bettorsBlue[i].amount / marketCapBlue * marketCapRed / 10 ** 18 (0x09f5f9413cefd61044db02940540155507bdcc55.sol#101)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+TwoCoinsOneMoonGame.depositBalance(uint256) (0x09f5f9413cefd61044db02940540155507bdcc55.sol#96-110) uses a dangerous strict equality:
+	- winner == 0 (0x09f5f9413cefd61044db02940540155507bdcc55.sol#98)
+TwoCoinsOneMoonGame.getBetAmount() (0x09f5f9413cefd61044db02940540155507bdcc55.sol#53-64) uses a dangerous strict equality:
+	- discountToken.balanceOf(msg.sender) == 0 (0x09f5f9413cefd61044db02940540155507bdcc55.sol#57)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-strict-equalities
+
+Reentrancy in TwoCoinsOneMoonGame.betBlueCoin() (0x09f5f9413cefd61044db02940540155507bdcc55.sol#66-73):
+	External calls:
+	- betAmount = getBetAmount() (0x09f5f9413cefd61044db02940540155507bdcc55.sol#67)
+		- discountToken.balanceOf(msg.sender) == 0 (0x09f5f9413cefd61044db02940540155507bdcc55.sol#57)
+	State variables written after the call(s):
+	- checkMoon() (0x09f5f9413cefd61044db02940540155507bdcc55.sol#72)
+		- balance[bettorsBlue[i].account] += bettorsBlue[i].amount (0x09f5f9413cefd61044db02940540155507bdcc55.sol#100)
+		- balance[bettorsBlue[i].account] += 10 ** 18 * bettorsBlue[i].amount / marketCapBlue * marketCapRed / 10 ** 18 (0x09f5f9413cefd61044db02940540155507bdcc55.sol#101)
+		- balance[bettorsRed[i].account] += bettorsRed[i].amount (0x09f5f9413cefd61044db02940540155507bdcc55.sol#106)
+		- balance[bettorsRed[i].account] += 10 ** 18 * bettorsRed[i].amount / marketCapRed * marketCapBlue / 10 ** 18 (0x09f5f9413cefd61044db02940540155507bdcc55.sol#107)
+	TwoCoinsOneMoonGame.balance (0x09f5f9413cefd61044db02940540155507bdcc55.sol#34) can be used in cross function reentrancies:
+	- TwoCoinsOneMoonGame.balance (0x09f5f9413cefd61044db02940540155507bdcc55.sol#34)
+	- TwoCoinsOneMoonGame.depositBalance(uint256) (0x09f5f9413cefd61044db02940540155507bdcc55.sol#96-110)
+	- TwoCoinsOneMoonGame.getBetAmount() (0x09f5f9413cefd61044db02940540155507bdcc55.sol#53-64)
+	- TwoCoinsOneMoonGame.withdraw() (0x09f5f9413cefd61044db02940540155507bdcc55.sol#84-94)
+Reentrancy in TwoCoinsOneMoonGame.betRedCoin() (0x09f5f9413cefd61044db02940540155507bdcc55.sol#75-82):
+	External calls:
+	- betAmount = getBetAmount() (0x09f5f9413cefd61044db02940540155507bdcc55.sol#76)
+		- discountToken.balanceOf(msg.sender) == 0 (0x09f5f9413cefd61044db02940540155507bdcc55.sol#57)
+	State variables written after the call(s):
+	- checkMoon() (0x09f5f9413cefd61044db02940540155507bdcc55.sol#81)
+		- balance[bettorsBlue[i].account] += bettorsBlue[i].amount (0x09f5f9413cefd61044db02940540155507bdcc55.sol#100)
+		- balance[bettorsBlue[i].account] += 10 ** 18 * bettorsBlue[i].amount / marketCapBlue * marketCapRed / 10 ** 18 (0x09f5f9413cefd61044db02940540155507bdcc55.sol#101)
+		- balance[bettorsRed[i].account] += bettorsRed[i].amount (0x09f5f9413cefd61044db02940540155507bdcc55.sol#106)
+		- balance[bettorsRed[i].account] += 10 ** 18 * bettorsRed[i].amount / marketCapRed * marketCapBlue / 10 ** 18 (0x09f5f9413cefd61044db02940540155507bdcc55.sol#107)
+	TwoCoinsOneMoonGame.balance (0x09f5f9413cefd61044db02940540155507bdcc55.sol#34) can be used in cross function reentrancies:
+	- TwoCoinsOneMoonGame.balance (0x09f5f9413cefd61044db02940540155507bdcc55.sol#34)
+	- TwoCoinsOneMoonGame.depositBalance(uint256) (0x09f5f9413cefd61044db02940540155507bdcc55.sol#96-110)
+	- TwoCoinsOneMoonGame.getBetAmount() (0x09f5f9413cefd61044db02940540155507bdcc55.sol#53-64)
+	- TwoCoinsOneMoonGame.withdraw() (0x09f5f9413cefd61044db02940540155507bdcc55.sol#84-94)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+TwoCoinsOneMoonGame.withdraw() (0x09f5f9413cefd61044db02940540155507bdcc55.sol#84-94) ignores return value by feeCollector.call.value(fee)() (0x09f5f9413cefd61044db02940540155507bdcc55.sol#88)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-low-level-calls
+
+Reentrancy in TwoCoinsOneMoonGame.betBlueCoin() (0x09f5f9413cefd61044db02940540155507bdcc55.sol#66-73):
+	External calls:
+	- betAmount = getBetAmount() (0x09f5f9413cefd61044db02940540155507bdcc55.sol#67)
+		- discountToken.balanceOf(msg.sender) == 0 (0x09f5f9413cefd61044db02940540155507bdcc55.sol#57)
+	State variables written after the call(s):
+	- bettorsBlue.push(Bettor({account:msg.sender,amount:betAmount})) (0x09f5f9413cefd61044db02940540155507bdcc55.sol#70)
+	- checkMoon() (0x09f5f9413cefd61044db02940540155507bdcc55.sol#72)
+		- history.push(Event({winner:winner,newMoonLevel:moonLevel,block:block.number,blueCap:marketCapBlue,redCap:marketCapRed})) (0x09f5f9413cefd61044db02940540155507bdcc55.sol#113)
+	- checkMoon() (0x09f5f9413cefd61044db02940540155507bdcc55.sol#72)
+		- lastEventId = history.length - 1 (0x09f5f9413cefd61044db02940540155507bdcc55.sol#114)
+	- checkMoon() (0x09f5f9413cefd61044db02940540155507bdcc55.sol#72)
+		- lastLevelChangeBlock = block.number (0x09f5f9413cefd61044db02940540155507bdcc55.sol#115)
+	- marketCapBlue += betAmount (0x09f5f9413cefd61044db02940540155507bdcc55.sol#69)
+	- checkMoon() (0x09f5f9413cefd61044db02940540155507bdcc55.sol#72)
+		- marketCapBlue = 0 (0x09f5f9413cefd61044db02940540155507bdcc55.sol#133)
+	- checkMoon() (0x09f5f9413cefd61044db02940540155507bdcc55.sol#72)
+		- marketCapRed = 0 (0x09f5f9413cefd61044db02940540155507bdcc55.sol#134)
+	- checkMoon() (0x09f5f9413cefd61044db02940540155507bdcc55.sol#72)
+		- moonLevel = moonLevel / 2 (0x09f5f9413cefd61044db02940540155507bdcc55.sol#142)
+		- moonLevel = moonLevel * 2 (0x09f5f9413cefd61044db02940540155507bdcc55.sol#130)
+	- checkMoon() (0x09f5f9413cefd61044db02940540155507bdcc55.sol#72)
+		- startBetBlue = bettorsBlue.length (0x09f5f9413cefd61044db02940540155507bdcc55.sol#136)
+	- checkMoon() (0x09f5f9413cefd61044db02940540155507bdcc55.sol#72)
+		- startBetRed = bettorsRed.length (0x09f5f9413cefd61044db02940540155507bdcc55.sol#137)
+Reentrancy in TwoCoinsOneMoonGame.betRedCoin() (0x09f5f9413cefd61044db02940540155507bdcc55.sol#75-82):
+	External calls:
+	- betAmount = getBetAmount() (0x09f5f9413cefd61044db02940540155507bdcc55.sol#76)
+		- discountToken.balanceOf(msg.sender) == 0 (0x09f5f9413cefd61044db02940540155507bdcc55.sol#57)
+	State variables written after the call(s):
+	- bettorsRed.push(Bettor({account:msg.sender,amount:betAmount})) (0x09f5f9413cefd61044db02940540155507bdcc55.sol#79)
+	- checkMoon() (0x09f5f9413cefd61044db02940540155507bdcc55.sol#81)
+		- history.push(Event({winner:winner,newMoonLevel:moonLevel,block:block.number,blueCap:marketCapBlue,redCap:marketCapRed})) (0x09f5f9413cefd61044db02940540155507bdcc55.sol#113)
+	- checkMoon() (0x09f5f9413cefd61044db02940540155507bdcc55.sol#81)
+		- lastEventId = history.length - 1 (0x09f5f9413cefd61044db02940540155507bdcc55.sol#114)
+	- checkMoon() (0x09f5f9413cefd61044db02940540155507bdcc55.sol#81)
+		- lastLevelChangeBlock = block.number (0x09f5f9413cefd61044db02940540155507bdcc55.sol#115)
+	- checkMoon() (0x09f5f9413cefd61044db02940540155507bdcc55.sol#81)
+		- marketCapBlue = 0 (0x09f5f9413cefd61044db02940540155507bdcc55.sol#133)
+	- marketCapRed += betAmount (0x09f5f9413cefd61044db02940540155507bdcc55.sol#78)
+	- checkMoon() (0x09f5f9413cefd61044db02940540155507bdcc55.sol#81)
+		- marketCapRed = 0 (0x09f5f9413cefd61044db02940540155507bdcc55.sol#134)
+	- checkMoon() (0x09f5f9413cefd61044db02940540155507bdcc55.sol#81)
+		- moonLevel = moonLevel / 2 (0x09f5f9413cefd61044db02940540155507bdcc55.sol#142)
+		- moonLevel = moonLevel * 2 (0x09f5f9413cefd61044db02940540155507bdcc55.sol#130)
+	- checkMoon() (0x09f5f9413cefd61044db02940540155507bdcc55.sol#81)
+		- startBetBlue = bettorsBlue.length (0x09f5f9413cefd61044db02940540155507bdcc55.sol#136)
+	- checkMoon() (0x09f5f9413cefd61044db02940540155507bdcc55.sol#81)
+		- startBetRed = bettorsRed.length (0x09f5f9413cefd61044db02940540155507bdcc55.sol#137)
+Reentrancy in TwoCoinsOneMoonGame.getBetAmount() (0x09f5f9413cefd61044db02940540155507bdcc55.sol#53-64):
+	External calls:
+	- discountToken.balanceOf(msg.sender) == 0 (0x09f5f9413cefd61044db02940540155507bdcc55.sol#57)
+	State variables written after the call(s):
+	- balance[feeCollector] += comission (0x09f5f9413cefd61044db02940540155507bdcc55.sol#60)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Version constraint ^0.4.24 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ABIEncoderV2PackedStorage_0.4.x
+	- ExpExponentCleanup
+	- EventStructWrongData.
+It is used by:
+	- ^0.4.24 (0x09f5f9413cefd61044db02940540155507bdcc55.sol#1)
+solc-0.4.24 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in TwoCoinsOneMoonGame.withdraw() (0x09f5f9413cefd61044db02940540155507bdcc55.sol#84-94):
+	- feeCollector.call.value(fee)() (0x09f5f9413cefd61044db02940540155507bdcc55.sol#88)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Loop condition i < bettorsBlue.length (0x09f5f9413cefd61044db02940540155507bdcc55.sol#99) should use cached array length instead of referencing `length` member of the storage array.
+ Loop condition i < bettorsRed.length (0x09f5f9413cefd61044db02940540155507bdcc55.sol#105) should use cached array length instead of referencing `length` member of the storage array.
+ Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#cache-array-length
+./0x09f5f9413cefd61044db02940540155507bdcc55.sol analyzed (2 contracts with 94 detectors), 17 result(s) found
+
+real	0m2.029s
+user	0m1.830s
+sys	0m0.201s

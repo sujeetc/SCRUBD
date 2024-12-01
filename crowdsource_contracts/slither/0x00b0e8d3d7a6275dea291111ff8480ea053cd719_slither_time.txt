@@ -1,0 +1,184 @@
+'solc --version' running
+'solc ./0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol:
+Warning: SPDX license identifier not provided in source file. Before publishing, consider adding a comment containing "SPDX-License-Identifier: <SPDX-License>" to each source file. Use "SPDX-License-Identifier: UNLICENSED" for non-open-source code. Please see https://spdx.org for more information.
+--> ./0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol
+
+
+
+Reentrancy in RickAndMorty._transfer(address,address,uint256) (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#212-243):
+	External calls:
+	- swapTokensForEth(contractTokenBalance) (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#234)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#250-256)
+	External calls sending eth:
+	- sendETHToFee(address(this).balance) (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#237)
+		- _feeAddrWallet1.transfer(amount.div(2)) (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#260)
+		- _feeAddrWallet2.transfer(amount.div(2)) (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#261)
+	State variables written after the call(s):
+	- _tokenTransfer(from,to,amount) (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#242)
+		- _rOwned[address(this)] = _rOwned[address(this)].add(rTeam) (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#304)
+		- _rOwned[sender] = _rOwned[sender].sub(rAmount) (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#294)
+		- _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount) (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#295)
+	RickAndMorty._rOwned (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#111) can be used in cross function reentrancies:
+	- RickAndMorty._takeTeam(uint256) (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#301-305)
+	- RickAndMorty._transferStandard(address,address,uint256) (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#292-299)
+	- RickAndMorty.balanceOf(address) (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#171-173)
+	- RickAndMorty.constructor() (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#144-153)
+	- _tokenTransfer(from,to,amount) (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#242)
+		- _rTotal = _rTotal.sub(rFee) (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#308)
+	RickAndMorty._rTotal (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#119) can be used in cross function reentrancies:
+	- RickAndMorty._getCurrentSupply() (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#354-359)
+	- RickAndMorty._reflectFee(uint256,uint256) (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#307-310)
+	- RickAndMorty.constructor() (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#144-153)
+	- RickAndMorty.tokenFromReflection(uint256) (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#199-203)
+Reentrancy in RickAndMorty.openTrading() (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#264-276):
+	External calls:
+	- uniswapV2Pair = IUniswapV2Factory(_uniswapV2Router.factory()).createPair(address(this),_uniswapV2Router.WETH()) (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#269)
+	- uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#270)
+	External calls sending eth:
+	- uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#270)
+	State variables written after the call(s):
+	- tradingOpen = true (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#274)
+	RickAndMorty.tradingOpen (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#133) can be used in cross function reentrancies:
+	- RickAndMorty.openTrading() (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#264-276)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+RickAndMorty.openTrading() (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#264-276) ignores return value by uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#270)
+RickAndMorty.openTrading() (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#264-276) ignores return value by IERC20(uniswapV2Pair).approve(address(uniswapV2Router),type()(uint256).max) (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#275)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+RickAndMorty.allowance(address,address).owner (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#180) shadows:
+	- Ownable.owner() (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#69-71) (function)
+RickAndMorty._approve(address,address,uint256).owner (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#205) shadows:
+	- Ownable.owner() (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#69-71) (function)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#local-variable-shadowing
+
+Reentrancy in RickAndMorty._transfer(address,address,uint256) (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#212-243):
+	External calls:
+	- swapTokensForEth(contractTokenBalance) (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#234)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#250-256)
+	External calls sending eth:
+	- sendETHToFee(address(this).balance) (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#237)
+		- _feeAddrWallet1.transfer(amount.div(2)) (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#260)
+		- _feeAddrWallet2.transfer(amount.div(2)) (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#261)
+	State variables written after the call(s):
+	- _tokenTransfer(from,to,amount) (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#242)
+		- _tFeeTotal = _tFeeTotal.add(tFee) (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#309)
+Reentrancy in RickAndMorty.openTrading() (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#264-276):
+	External calls:
+	- uniswapV2Pair = IUniswapV2Factory(_uniswapV2Router.factory()).createPair(address(this),_uniswapV2Router.WETH()) (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#269)
+	- uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#270)
+	External calls sending eth:
+	- uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#270)
+	State variables written after the call(s):
+	- _maxTxAmount = 50000000000000000 * 10 ** 9 (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#273)
+	- cooldownEnabled = true (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#272)
+	- swapEnabled = true (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#271)
+Reentrancy in RickAndMorty.transferFrom(address,address,uint256) (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#189-193):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#190)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#250-256)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#190)
+		- _feeAddrWallet1.transfer(amount.div(2)) (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#260)
+		- _feeAddrWallet2.transfer(amount.div(2)) (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#261)
+	State variables written after the call(s):
+	- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#191)
+		- _allowances[owner][spender] = amount (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#208)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in RickAndMorty._transfer(address,address,uint256) (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#212-243):
+	External calls:
+	- swapTokensForEth(contractTokenBalance) (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#234)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#250-256)
+	External calls sending eth:
+	- sendETHToFee(address(this).balance) (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#237)
+		- _feeAddrWallet1.transfer(amount.div(2)) (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#260)
+		- _feeAddrWallet2.transfer(amount.div(2)) (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#261)
+	Event emitted after the call(s):
+	- Transfer(sender,recipient,tTransferAmount) (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#298)
+		- _tokenTransfer(from,to,amount) (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#242)
+Reentrancy in RickAndMorty.transferFrom(address,address,uint256) (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#189-193):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#190)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#250-256)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#190)
+		- _feeAddrWallet1.transfer(amount.div(2)) (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#260)
+		- _feeAddrWallet2.transfer(amount.div(2)) (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#261)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#209)
+		- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#191)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+RickAndMorty._transfer(address,address,uint256) (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#212-243) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(cooldown[to] < block.timestamp) (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#223)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Version constraint ^0.8.4 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- SignedImmutables.
+It is used by:
+	- ^0.8.4 (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#1)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Function IUniswapV2Router02.WETH() (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#98) is not in mixedCase
+Constant RickAndMorty._tTotal (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#118) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant RickAndMorty._name (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#127) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant RickAndMorty._symbol (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#128) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant RickAndMorty._decimals (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#129) is not in UPPER_CASE_WITH_UNDERSCORES
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in RickAndMorty._transfer(address,address,uint256) (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#212-243):
+	External calls:
+	- sendETHToFee(address(this).balance) (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#237)
+		- _feeAddrWallet1.transfer(amount.div(2)) (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#260)
+		- _feeAddrWallet2.transfer(amount.div(2)) (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#261)
+	State variables written after the call(s):
+	- _tokenTransfer(from,to,amount) (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#242)
+		- _rOwned[address(this)] = _rOwned[address(this)].add(rTeam) (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#304)
+		- _rOwned[sender] = _rOwned[sender].sub(rAmount) (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#294)
+		- _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount) (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#295)
+	- _tokenTransfer(from,to,amount) (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#242)
+		- _rTotal = _rTotal.sub(rFee) (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#308)
+	- _tokenTransfer(from,to,amount) (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#242)
+		- _tFeeTotal = _tFeeTotal.add(tFee) (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#309)
+	Event emitted after the call(s):
+	- Transfer(sender,recipient,tTransferAmount) (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#298)
+		- _tokenTransfer(from,to,amount) (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#242)
+Reentrancy in RickAndMorty.transferFrom(address,address,uint256) (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#189-193):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#190)
+		- _feeAddrWallet1.transfer(amount.div(2)) (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#260)
+		- _feeAddrWallet2.transfer(amount.div(2)) (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#261)
+	State variables written after the call(s):
+	- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#191)
+		- _allowances[owner][spender] = amount (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#208)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#209)
+		- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#191)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+RickAndMorty.openTrading() (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#264-276) uses literals with too many digits:
+	- _maxTxAmount = 50000000000000000 * 10 ** 9 (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#273)
+RickAndMorty.slitherConstructorConstantVariables() (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#109-361) uses literals with too many digits:
+	- _tTotal = 1000000000000000000 * 10 ** 9 (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#118)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+RickAndMorty._tOwned (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#112) is never used in RickAndMorty (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#109-361)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-state-variable
+
+RickAndMorty._feeAddrWallet1 (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#124) should be immutable 
+RickAndMorty._feeAddrWallet2 (0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol#125) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+./0x00b0e8d3d7a6275dea291111ff8480ea053cd719.sol analyzed (7 contracts with 94 detectors), 25 result(s) found
+
+real	0m2.227s
+user	0m2.071s
+sys	0m0.158s

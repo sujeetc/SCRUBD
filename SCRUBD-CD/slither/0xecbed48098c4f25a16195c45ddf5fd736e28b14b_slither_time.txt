@@ -1,0 +1,92 @@
+'solc --version' running
+'solc ./0xecbed48098c4f25a16195c45ddf5fd736e28b14b.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0xecbed48098c4f25a16195c45ddf5fd736e28b14b.sol:
+./0xecbed48098c4f25a16195c45ddf5fd736e28b14b.sol:125:7: Warning: Failure condition of 'send' ignored. Consider using 'transfer' instead.
+      recipients[i].send(amount);
+      ^------------------------^
+./0xecbed48098c4f25a16195c45ddf5fd736e28b14b.sol:133:7: Warning: Failure condition of 'send' ignored. Consider using 'transfer' instead.
+      address(recipients[i]).send(amount);
+      ^---------------------------------^
+
+
+UserfeedsClaimWithValueMultiSendUnsafe.send(address[]) (0xecbed48098c4f25a16195c45ddf5fd736e28b14b.sol#122-128) sends eth to arbitrary user
+	Dangerous calls:
+	- msg.sender.transfer(address(this).balance) (0xecbed48098c4f25a16195c45ddf5fd736e28b14b.sol#127)
+UserfeedsClaimWithValueMultiSendUnsafe.send(bytes20[]) (0xecbed48098c4f25a16195c45ddf5fd736e28b14b.sol#130-136) sends eth to arbitrary user
+	Dangerous calls:
+	- msg.sender.transfer(address(this).balance) (0xecbed48098c4f25a16195c45ddf5fd736e28b14b.sol#135)
+UserfeedsClaimWithConfigurableValueMultiTransfer.transfer(address[],uint256[]) (0xecbed48098c4f25a16195c45ddf5fd736e28b14b.sol#151-156) sends eth to arbitrary user
+	Dangerous calls:
+	- recipients[i].transfer(values[i]) (0xecbed48098c4f25a16195c45ddf5fd736e28b14b.sol#153)
+	- msg.sender.transfer(address(this).balance) (0xecbed48098c4f25a16195c45ddf5fd736e28b14b.sol#155)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+ERC721 (0xecbed48098c4f25a16195c45ddf5fd736e28b14b.sol#20-23) has incorrect ERC20 function interface:ERC721.transferFrom(address,address,uint256) (0xecbed48098c4f25a16195c45ddf5fd736e28b14b.sol#22)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-erc20-interface
+
+UserfeedsClaimWithValueMultiSendUnsafe.send(address[]) (0xecbed48098c4f25a16195c45ddf5fd736e28b14b.sol#122-128) ignores return value by recipients[i].send(amount) (0xecbed48098c4f25a16195c45ddf5fd736e28b14b.sol#125)
+UserfeedsClaimWithValueMultiSendUnsafe.send(bytes20[]) (0xecbed48098c4f25a16195c45ddf5fd736e28b14b.sol#130-136) ignores return value by address(recipients[i]).send(amount) (0xecbed48098c4f25a16195c45ddf5fd736e28b14b.sol#133)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-send
+
+Ownable.transferOwnership(address) (0xecbed48098c4f25a16195c45ddf5fd736e28b14b.sol#44-46) should emit an event for: 
+	- pendingOwner = newOwner (0xecbed48098c4f25a16195c45ddf5fd736e28b14b.sol#45) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-access-control
+
+Ownable.transferOwnership(address).newOwner (0xecbed48098c4f25a16195c45ddf5fd736e28b14b.sol#44) lacks a zero-check on :
+		- pendingOwner = newOwner (0xecbed48098c4f25a16195c45ddf5fd736e28b14b.sol#45)
+UserfeedsClaimWithValueTransfer.post(address,string).userfeed (0xecbed48098c4f25a16195c45ddf5fd736e28b14b.sol#86) lacks a zero-check on :
+		- userfeed.transfer(msg.value) (0xecbed48098c4f25a16195c45ddf5fd736e28b14b.sol#88)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+UserfeedsClaimWithValueMultiSendUnsafe.send(address[]) (0xecbed48098c4f25a16195c45ddf5fd736e28b14b.sol#122-128) has external calls inside a loop: recipients[i].send(amount) (0xecbed48098c4f25a16195c45ddf5fd736e28b14b.sol#125)
+UserfeedsClaimWithValueMultiSendUnsafe.send(bytes20[]) (0xecbed48098c4f25a16195c45ddf5fd736e28b14b.sol#130-136) has external calls inside a loop: address(recipients[i]).send(amount) (0xecbed48098c4f25a16195c45ddf5fd736e28b14b.sol#133)
+UserfeedsClaimWithConfigurableValueMultiTransfer.transfer(address[],uint256[]) (0xecbed48098c4f25a16195c45ddf5fd736e28b14b.sol#151-156) has external calls inside a loop: recipients[i].transfer(values[i]) (0xecbed48098c4f25a16195c45ddf5fd736e28b14b.sol#153)
+UserfeedsClaimWithConfigurableTokenMultiTransfer.transfer(address[],ERC20,uint256[]) (0xecbed48098c4f25a16195c45ddf5fd736e28b14b.sol#171-175) has external calls inside a loop: require(bool)(token.transferFrom(msg.sender,recipients[i],values[i])) (0xecbed48098c4f25a16195c45ddf5fd736e28b14b.sol#173)
+UserfeedsClaimWithConfigurableTokenMultiTransferNoCheck.transfer(address[],ERC721,uint256[]) (0xecbed48098c4f25a16195c45ddf5fd736e28b14b.sol#189-193) has external calls inside a loop: token.transferFrom(msg.sender,recipients[i],values[i]) (0xecbed48098c4f25a16195c45ddf5fd736e28b14b.sol#191)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation/#calls-inside-a-loop
+
+Version constraint ^0.4.23 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ABIEncoderV2PackedStorage_0.4.x
+	- ExpExponentCleanup
+	- EventStructWrongData.
+It is used by:
+	- ^0.4.23 (0xecbed48098c4f25a16195c45ddf5fd736e28b14b.sol#13)
+solc-0.4.23 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+post(string) should be declared external:
+	- UserfeedsClaimWithoutValueTransfer.post(string) (0xecbed48098c4f25a16195c45ddf5fd736e28b14b.sol#73-75)
+post(address,string) should be declared external:
+	- UserfeedsClaimWithValueTransfer.post(address,string) (0xecbed48098c4f25a16195c45ddf5fd736e28b14b.sol#86-89)
+post(address,ERC20,uint256,string) should be declared external:
+	- UserfeedsClaimWithTokenTransfer.post(address,ERC20,uint256,string) (0xecbed48098c4f25a16195c45ddf5fd736e28b14b.sol#100-103)
+post(string,address[]) should be declared external:
+	- UserfeedsClaimWithValueMultiSendUnsafe.post(string,address[]) (0xecbed48098c4f25a16195c45ddf5fd736e28b14b.sol#112-115)
+post(string,bytes20[]) should be declared external:
+	- UserfeedsClaimWithValueMultiSendUnsafe.post(string,bytes20[]) (0xecbed48098c4f25a16195c45ddf5fd736e28b14b.sol#117-120)
+post(string,address[],uint256[]) should be declared external:
+	- UserfeedsClaimWithConfigurableValueMultiTransfer.post(string,address[],uint256[]) (0xecbed48098c4f25a16195c45ddf5fd736e28b14b.sol#146-149)
+post(string,address[],ERC20,uint256[]) should be declared external:
+	- UserfeedsClaimWithConfigurableTokenMultiTransfer.post(string,address[],ERC20,uint256[]) (0xecbed48098c4f25a16195c45ddf5fd736e28b14b.sol#166-169)
+post(string,address[],ERC721,uint256[]) should be declared external:
+	- UserfeedsClaimWithConfigurableTokenMultiTransferNoCheck.post(string,address[],ERC721,uint256[]) (0xecbed48098c4f25a16195c45ddf5fd736e28b14b.sol#184-187)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#public-function-that-could-be-declared-external
+./0xecbed48098c4f25a16195c45ddf5fd736e28b14b.sol analyzed (12 contracts with 94 detectors), 24 result(s) found
+
+real	0m1.770s
+user	0m1.578s
+sys	0m0.194s

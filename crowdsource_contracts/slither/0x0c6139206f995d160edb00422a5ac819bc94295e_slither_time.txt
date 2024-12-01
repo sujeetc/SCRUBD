@@ -1,0 +1,120 @@
+'solc --version' running
+'solc ./0x0c6139206f995d160edb00422a5ac819bc94295e.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+Reentrancy in ChainBot3000.depositDai(bytes32,uint256) (0x0c6139206f995d160edb00422a5ac819bc94295e.sol#221-225):
+	External calls:
+	- assert(bool)(DaiContract.transferFrom(msg.sender,address(this),_amount)) (0x0c6139206f995d160edb00422a5ac819bc94295e.sol#222)
+	State variables written after the call(s):
+	- deposits[_steamid] = deposits[_steamid].add(_amount) (0x0c6139206f995d160edb00422a5ac819bc94295e.sol#223)
+Reentrancy in ChainBot3000.depositInput(bytes32,uint256,uint256) (0x0c6139206f995d160edb00422a5ac819bc94295e.sol#215-219):
+	External calls:
+	- tokens_bought = UniswapContract.ethToTokenTransferInput.value(msg.value)(_min_tokens,_deadline,address(this)) (0x0c6139206f995d160edb00422a5ac819bc94295e.sol#216)
+	State variables written after the call(s):
+	- deposits[_steamid] = deposits[_steamid].add(tokens_bought) (0x0c6139206f995d160edb00422a5ac819bc94295e.sol#217)
+Reentrancy in ChainBot3000.depositOutput(bytes32,uint256,uint256) (0x0c6139206f995d160edb00422a5ac819bc94295e.sol#205-213):
+	External calls:
+	- eth_sold = UniswapContract.ethToTokenTransferOutput.value(msg.value)(_tokens_bought,_deadline,address(this)) (0x0c6139206f995d160edb00422a5ac819bc94295e.sol#206)
+	External calls sending eth:
+	- eth_sold = UniswapContract.ethToTokenTransferOutput.value(msg.value)(_tokens_bought,_deadline,address(this)) (0x0c6139206f995d160edb00422a5ac819bc94295e.sol#206)
+	- msg.sender.transfer(refund) (0x0c6139206f995d160edb00422a5ac819bc94295e.sol#209)
+	State variables written after the call(s):
+	- deposits[_steamid] = deposits[_steamid].add(_tokens_bought) (0x0c6139206f995d160edb00422a5ac819bc94295e.sol#211)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in ChainBot3000.depositDai(bytes32,uint256) (0x0c6139206f995d160edb00422a5ac819bc94295e.sol#221-225):
+	External calls:
+	- assert(bool)(DaiContract.transferFrom(msg.sender,address(this),_amount)) (0x0c6139206f995d160edb00422a5ac819bc94295e.sol#222)
+	Event emitted after the call(s):
+	- Deposit(msg.sender,_steamid,_amount) (0x0c6139206f995d160edb00422a5ac819bc94295e.sol#224)
+Reentrancy in ChainBot3000.depositInput(bytes32,uint256,uint256) (0x0c6139206f995d160edb00422a5ac819bc94295e.sol#215-219):
+	External calls:
+	- tokens_bought = UniswapContract.ethToTokenTransferInput.value(msg.value)(_min_tokens,_deadline,address(this)) (0x0c6139206f995d160edb00422a5ac819bc94295e.sol#216)
+	Event emitted after the call(s):
+	- Deposit(msg.sender,_steamid,tokens_bought,msg.value) (0x0c6139206f995d160edb00422a5ac819bc94295e.sol#218)
+Reentrancy in ChainBot3000.depositOutput(bytes32,uint256,uint256) (0x0c6139206f995d160edb00422a5ac819bc94295e.sol#205-213):
+	External calls:
+	- eth_sold = UniswapContract.ethToTokenTransferOutput.value(msg.value)(_tokens_bought,_deadline,address(this)) (0x0c6139206f995d160edb00422a5ac819bc94295e.sol#206)
+	External calls sending eth:
+	- eth_sold = UniswapContract.ethToTokenTransferOutput.value(msg.value)(_tokens_bought,_deadline,address(this)) (0x0c6139206f995d160edb00422a5ac819bc94295e.sol#206)
+	- msg.sender.transfer(refund) (0x0c6139206f995d160edb00422a5ac819bc94295e.sol#209)
+	Event emitted after the call(s):
+	- Deposit(msg.sender,_steamid,_tokens_bought,eth_sold) (0x0c6139206f995d160edb00422a5ac819bc94295e.sol#212)
+Reentrancy in ChainBot3000.sendDai(address,uint256,bytes32,bytes32) (0x0c6139206f995d160edb00422a5ac819bc94295e.sol#232-235):
+	External calls:
+	- assert(bool)(DaiContract.transfer(_address,_amount)) (0x0c6139206f995d160edb00422a5ac819bc94295e.sol#233)
+	Event emitted after the call(s):
+	- Purchase(_address,_steamid,_offerid,_amount) (0x0c6139206f995d160edb00422a5ac819bc94295e.sol#234)
+Reentrancy in ChainBot3000.sendEth(uint256,uint256,uint256,address,bytes32,bytes32) (0x0c6139206f995d160edb00422a5ac819bc94295e.sol#227-230):
+	External calls:
+	- eth_bought = UniswapContract.tokenToEthTransferInput(_tokens_sold,_min_eth,_deadline,_recipient) (0x0c6139206f995d160edb00422a5ac819bc94295e.sol#228)
+	Event emitted after the call(s):
+	- Purchase(_recipient,_steamid,_offerid,_tokens_sold,eth_bought) (0x0c6139206f995d160edb00422a5ac819bc94295e.sol#229)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+Version constraint ^0.5.1 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor
+	- IncorrectEventSignatureInLibraries
+	- ABIEncoderV2PackedStorage.
+It is used by:
+	- ^0.5.1 (0x0c6139206f995d160edb00422a5ac819bc94295e.sol#1)
+solc-0.5.1 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Parameter UniswapInterface.tokenToEthTransferInput(uint256,uint256,uint256,address).tokens_sold (0x0c6139206f995d160edb00422a5ac819bc94295e.sol#168) is not in mixedCase
+Parameter UniswapInterface.tokenToEthTransferInput(uint256,uint256,uint256,address).min_eth (0x0c6139206f995d160edb00422a5ac819bc94295e.sol#168) is not in mixedCase
+Parameter UniswapInterface.ethToTokenTransferOutput(uint256,uint256,address).tokens_bought (0x0c6139206f995d160edb00422a5ac819bc94295e.sol#169) is not in mixedCase
+Parameter UniswapInterface.ethToTokenTransferInput(uint256,uint256,address).min_tokens (0x0c6139206f995d160edb00422a5ac819bc94295e.sol#170) is not in mixedCase
+Parameter ChainBot3000.initDai(address)._address (0x0c6139206f995d160edb00422a5ac819bc94295e.sol#193) is not in mixedCase
+Parameter ChainBot3000.initUniswap(address)._address (0x0c6139206f995d160edb00422a5ac819bc94295e.sol#197) is not in mixedCase
+Parameter ChainBot3000.setAllowance(address,uint256)._address (0x0c6139206f995d160edb00422a5ac819bc94295e.sol#201) is not in mixedCase
+Parameter ChainBot3000.setAllowance(address,uint256)._amount (0x0c6139206f995d160edb00422a5ac819bc94295e.sol#201) is not in mixedCase
+Parameter ChainBot3000.depositOutput(bytes32,uint256,uint256)._steamid (0x0c6139206f995d160edb00422a5ac819bc94295e.sol#205) is not in mixedCase
+Parameter ChainBot3000.depositOutput(bytes32,uint256,uint256)._tokens_bought (0x0c6139206f995d160edb00422a5ac819bc94295e.sol#205) is not in mixedCase
+Parameter ChainBot3000.depositOutput(bytes32,uint256,uint256)._deadline (0x0c6139206f995d160edb00422a5ac819bc94295e.sol#205) is not in mixedCase
+Parameter ChainBot3000.depositInput(bytes32,uint256,uint256)._steamid (0x0c6139206f995d160edb00422a5ac819bc94295e.sol#215) is not in mixedCase
+Parameter ChainBot3000.depositInput(bytes32,uint256,uint256)._min_tokens (0x0c6139206f995d160edb00422a5ac819bc94295e.sol#215) is not in mixedCase
+Parameter ChainBot3000.depositInput(bytes32,uint256,uint256)._deadline (0x0c6139206f995d160edb00422a5ac819bc94295e.sol#215) is not in mixedCase
+Parameter ChainBot3000.depositDai(bytes32,uint256)._steamid (0x0c6139206f995d160edb00422a5ac819bc94295e.sol#221) is not in mixedCase
+Parameter ChainBot3000.depositDai(bytes32,uint256)._amount (0x0c6139206f995d160edb00422a5ac819bc94295e.sol#221) is not in mixedCase
+Parameter ChainBot3000.sendEth(uint256,uint256,uint256,address,bytes32,bytes32)._tokens_sold (0x0c6139206f995d160edb00422a5ac819bc94295e.sol#227) is not in mixedCase
+Parameter ChainBot3000.sendEth(uint256,uint256,uint256,address,bytes32,bytes32)._min_eth (0x0c6139206f995d160edb00422a5ac819bc94295e.sol#227) is not in mixedCase
+Parameter ChainBot3000.sendEth(uint256,uint256,uint256,address,bytes32,bytes32)._deadline (0x0c6139206f995d160edb00422a5ac819bc94295e.sol#227) is not in mixedCase
+Parameter ChainBot3000.sendEth(uint256,uint256,uint256,address,bytes32,bytes32)._recipient (0x0c6139206f995d160edb00422a5ac819bc94295e.sol#227) is not in mixedCase
+Parameter ChainBot3000.sendEth(uint256,uint256,uint256,address,bytes32,bytes32)._steamid (0x0c6139206f995d160edb00422a5ac819bc94295e.sol#227) is not in mixedCase
+Parameter ChainBot3000.sendEth(uint256,uint256,uint256,address,bytes32,bytes32)._offerid (0x0c6139206f995d160edb00422a5ac819bc94295e.sol#227) is not in mixedCase
+Parameter ChainBot3000.sendDai(address,uint256,bytes32,bytes32)._address (0x0c6139206f995d160edb00422a5ac819bc94295e.sol#232) is not in mixedCase
+Parameter ChainBot3000.sendDai(address,uint256,bytes32,bytes32)._amount (0x0c6139206f995d160edb00422a5ac819bc94295e.sol#232) is not in mixedCase
+Parameter ChainBot3000.sendDai(address,uint256,bytes32,bytes32)._steamid (0x0c6139206f995d160edb00422a5ac819bc94295e.sol#232) is not in mixedCase
+Parameter ChainBot3000.sendDai(address,uint256,bytes32,bytes32)._offerid (0x0c6139206f995d160edb00422a5ac819bc94295e.sol#232) is not in mixedCase
+Variable ChainBot3000.DaiContract (0x0c6139206f995d160edb00422a5ac819bc94295e.sol#177) is not in mixedCase
+Variable ChainBot3000.UniswapContract (0x0c6139206f995d160edb00422a5ac819bc94295e.sol#178) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in ChainBot3000.depositOutput(bytes32,uint256,uint256) (0x0c6139206f995d160edb00422a5ac819bc94295e.sol#205-213):
+	External calls:
+	- msg.sender.transfer(refund) (0x0c6139206f995d160edb00422a5ac819bc94295e.sol#209)
+	External calls sending eth:
+	- eth_sold = UniswapContract.ethToTokenTransferOutput.value(msg.value)(_tokens_bought,_deadline,address(this)) (0x0c6139206f995d160edb00422a5ac819bc94295e.sol#206)
+	- msg.sender.transfer(refund) (0x0c6139206f995d160edb00422a5ac819bc94295e.sol#209)
+	State variables written after the call(s):
+	- deposits[_steamid] = deposits[_steamid].add(_tokens_bought) (0x0c6139206f995d160edb00422a5ac819bc94295e.sol#211)
+	Event emitted after the call(s):
+	- Deposit(msg.sender,_steamid,_tokens_bought,eth_sold) (0x0c6139206f995d160edb00422a5ac819bc94295e.sol#212)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+./0x0c6139206f995d160edb00422a5ac819bc94295e.sol analyzed (5 contracts with 94 detectors), 39 result(s) found
+
+real	0m1.486s
+user	0m1.327s
+sys	0m0.161s

@@ -1,0 +1,77 @@
+'solc --version' running
+'solc ./0x092e038af43a42e0332810db3f50b923fb256ff0.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+Reentrancy in Free3.claim(uint256) (0x092e038af43a42e0332810db3f50b923fb256ff0.sol#125-145):
+	External calls:
+	- require(bool,string)(free.ownerOf(free0TokenId) == msg.sender,You must be the owner of this Free0) (0x092e038af43a42e0332810db3f50b923fb256ff0.sol#134)
+	- require(bool,string)(free.tokenIdToCollectionId(free0TokenId) == 0,Invalid Free0) (0x092e038af43a42e0332810db3f50b923fb256ff0.sol#135)
+	- free.appendAttributeToToken(free0TokenId,Used For Free3 Mint,true) (0x092e038af43a42e0332810db3f50b923fb256ff0.sol#137)
+	- free.mint(3,msg.sender) (0x092e038af43a42e0332810db3f50b923fb256ff0.sol#142)
+	External calls sending eth:
+	- address(msg.sender).transfer(stake.totalStaked) (0x092e038af43a42e0332810db3f50b923fb256ff0.sol#143)
+	State variables written after the call(s):
+	- stake.totalStaked = 0 (0x092e038af43a42e0332810db3f50b923fb256ff0.sol#144)
+	Free3.addressToStakes (0x092e038af43a42e0332810db3f50b923fb256ff0.sol#62) can be used in cross function reentrancies:
+	- Free3.addressToStakes (0x092e038af43a42e0332810db3f50b923fb256ff0.sol#62)
+	- Free3.claim(uint256) (0x092e038af43a42e0332810db3f50b923fb256ff0.sol#125-145)
+	- Free3.firstStake() (0x092e038af43a42e0332810db3f50b923fb256ff0.sol#85-92)
+	- Free3.secondStake() (0x092e038af43a42e0332810db3f50b923fb256ff0.sol#94-107)
+	- Free3.withdraw(address) (0x092e038af43a42e0332810db3f50b923fb256ff0.sol#109-123)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+Reentrancy in Free3.claim(uint256) (0x092e038af43a42e0332810db3f50b923fb256ff0.sol#125-145):
+	External calls:
+	- require(bool,string)(free.ownerOf(free0TokenId) == msg.sender,You must be the owner of this Free0) (0x092e038af43a42e0332810db3f50b923fb256ff0.sol#134)
+	- require(bool,string)(free.tokenIdToCollectionId(free0TokenId) == 0,Invalid Free0) (0x092e038af43a42e0332810db3f50b923fb256ff0.sol#135)
+	- free.appendAttributeToToken(free0TokenId,Used For Free3 Mint,true) (0x092e038af43a42e0332810db3f50b923fb256ff0.sol#137)
+	State variables written after the call(s):
+	- stake.mintBlockNumber = block.number (0x092e038af43a42e0332810db3f50b923fb256ff0.sol#140)
+	Free3.addressToStakes (0x092e038af43a42e0332810db3f50b923fb256ff0.sol#62) can be used in cross function reentrancies:
+	- Free3.addressToStakes (0x092e038af43a42e0332810db3f50b923fb256ff0.sol#62)
+	- Free3.claim(uint256) (0x092e038af43a42e0332810db3f50b923fb256ff0.sol#125-145)
+	- Free3.firstStake() (0x092e038af43a42e0332810db3f50b923fb256ff0.sol#85-92)
+	- Free3.secondStake() (0x092e038af43a42e0332810db3f50b923fb256ff0.sol#94-107)
+	- Free3.withdraw(address) (0x092e038af43a42e0332810db3f50b923fb256ff0.sol#109-123)
+	- free0TokenIdUsed[free0TokenId] = true (0x092e038af43a42e0332810db3f50b923fb256ff0.sol#139)
+	Free3.free0TokenIdUsed (0x092e038af43a42e0332810db3f50b923fb256ff0.sol#63) can be used in cross function reentrancies:
+	- Free3.claim(uint256) (0x092e038af43a42e0332810db3f50b923fb256ff0.sol#125-145)
+	- Free3.free0TokenIdUsed (0x092e038af43a42e0332810db3f50b923fb256ff0.sol#63)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+Free3.transferAdministratorship(address) (0x092e038af43a42e0332810db3f50b923fb256ff0.sol#81-83) should emit an event for: 
+	- administrator = newAdministrator (0x092e038af43a42e0332810db3f50b923fb256ff0.sol#82) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-access-control
+
+Free3.transferAdministratorship(address).newAdministrator (0x092e038af43a42e0332810db3f50b923fb256ff0.sol#81) lacks a zero-check on :
+		- administrator = newAdministrator (0x092e038af43a42e0332810db3f50b923fb256ff0.sol#82)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Version constraint ^0.8.11 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- VerbatimInvalidDeduplication
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- AbiEncodeCallLiteralAsFixedBytesBug.
+It is used by:
+	- ^0.8.11 (0x092e038af43a42e0332810db3f50b923fb256ff0.sol#41)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Reentrancy in Free3.claim(uint256) (0x092e038af43a42e0332810db3f50b923fb256ff0.sol#125-145):
+	External calls:
+	- address(msg.sender).transfer(stake.totalStaked) (0x092e038af43a42e0332810db3f50b923fb256ff0.sol#143)
+	State variables written after the call(s):
+	- stake.totalStaked = 0 (0x092e038af43a42e0332810db3f50b923fb256ff0.sol#144)
+Reentrancy in Free3.withdraw(address) (0x092e038af43a42e0332810db3f50b923fb256ff0.sol#109-123):
+	External calls:
+	- address(administrator).transfer(stake.totalStaked) (0x092e038af43a42e0332810db3f50b923fb256ff0.sol#121)
+	State variables written after the call(s):
+	- stake.totalStaked = 0 (0x092e038af43a42e0332810db3f50b923fb256ff0.sol#122)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+./0x092e038af43a42e0332810db3f50b923fb256ff0.sol analyzed (2 contracts with 94 detectors), 7 result(s) found
+
+real	0m1.470s
+user	0m1.322s
+sys	0m0.151s

@@ -1,0 +1,734 @@
+'solc --version' running
+'solc ./0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+Brave3d.overStage(uint8) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#301-360) uses a weak PRNG: "deadIndex = uint8(blockhash(uint256)(finishStage.blocknumber)) % MAX_PLAYERS (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#323)" 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#weak-PRNG
+
+Reentrancy in Brave3d.buyByAddress(address) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#78-108):
+	External calls:
+	- overStage(rate) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#97)
+		- dividends = p3dContract.myDividends(true) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#340)
+		- p3dContract.withdraw() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#342)
+		- p3dContract.buy.value(P3D_VALUE * rate)(address(OFFICIAL_P3D)) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#346)
+	External calls sending eth:
+	- overStage(rate) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#97)
+		- p3dContract.buy.value(P3D_VALUE * rate)(address(OFFICIAL_P3D)) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#346)
+	State variables written after the call(s):
+	- _addressMap[msg.sender] = referee (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#101)
+	Brave3d._addressMap (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#27) can be used in cross function reentrancies:
+	- Brave3d.buyByAddress(address) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#78-108)
+	- Brave3d.buyByName(string) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#132-173)
+	- Brave3d.buyFromValue(uint8) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#176-191)
+	- Brave3d.getRefereeAddress(address) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#251-257)
+	- Brave3d.overStage(uint8) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#301-360)
+	- _addressMap[msg.sender] = OFFICIAL (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#103)
+	Brave3d._addressMap (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#27) can be used in cross function reentrancies:
+	- Brave3d.buyByAddress(address) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#78-108)
+	- Brave3d.buyByName(string) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#132-173)
+	- Brave3d.buyFromValue(uint8) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#176-191)
+	- Brave3d.getRefereeAddress(address) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#251-257)
+	- Brave3d.overStage(uint8) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#301-360)
+Reentrancy in Brave3d.buyByName(string) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#132-173):
+	External calls:
+	- overStage(rate) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#151)
+		- dividends = p3dContract.myDividends(true) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#340)
+		- p3dContract.withdraw() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#342)
+		- p3dContract.buy.value(P3D_VALUE * rate)(address(OFFICIAL_P3D)) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#346)
+	External calls sending eth:
+	- overStage(rate) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#151)
+		- p3dContract.buy.value(P3D_VALUE * rate)(address(OFFICIAL_P3D)) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#346)
+	State variables written after the call(s):
+	- _addressMap[msg.sender] = OFFICIAL (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#157)
+	Brave3d._addressMap (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#27) can be used in cross function reentrancies:
+	- Brave3d.buyByAddress(address) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#78-108)
+	- Brave3d.buyByName(string) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#132-173)
+	- Brave3d.buyFromValue(uint8) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#176-191)
+	- Brave3d.getRefereeAddress(address) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#251-257)
+	- Brave3d.overStage(uint8) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#301-360)
+	- _addressMap[msg.sender] = referee (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#164)
+	Brave3d._addressMap (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#27) can be used in cross function reentrancies:
+	- Brave3d.buyByAddress(address) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#78-108)
+	- Brave3d.buyByName(string) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#132-173)
+	- Brave3d.buyFromValue(uint8) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#176-191)
+	- Brave3d.getRefereeAddress(address) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#251-257)
+	- Brave3d.overStage(uint8) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#301-360)
+	- _addressMap[msg.sender] = OFFICIAL (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#167)
+	Brave3d._addressMap (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#27) can be used in cross function reentrancies:
+	- Brave3d.buyByAddress(address) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#78-108)
+	- Brave3d.buyByName(string) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#132-173)
+	- Brave3d.buyFromValue(uint8) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#176-191)
+	- Brave3d.getRefereeAddress(address) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#251-257)
+	- Brave3d.overStage(uint8) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#301-360)
+Reentrancy in Brave3d.forceOverStage() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#210-216):
+	External calls:
+	- overStage(1) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#213)
+		- dividends = p3dContract.myDividends(true) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#340)
+		- p3dContract.withdraw() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#342)
+		- p3dContract.buy.value(P3D_VALUE * rate)(address(OFFICIAL_P3D)) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#346)
+	- overStage(5) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#214)
+		- dividends = p3dContract.myDividends(true) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#340)
+		- p3dContract.withdraw() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#342)
+		- p3dContract.buy.value(P3D_VALUE * rate)(address(OFFICIAL_P3D)) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#346)
+	External calls sending eth:
+	- overStage(1) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#213)
+		- p3dContract.buy.value(P3D_VALUE * rate)(address(OFFICIAL_P3D)) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#346)
+	- overStage(5) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#214)
+		- p3dContract.buy.value(P3D_VALUE * rate)(address(OFFICIAL_P3D)) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#346)
+	State variables written after the call(s):
+	- overStage(5) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#214)
+		- _finishMap[rate] = finishStageIndex (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#359)
+	Brave3d._finishMap (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#32) can be used in cross function reentrancies:
+	- Brave3d.constructor() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#58-74)
+	- Brave3d.getStageData(uint8,uint256) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#269-280)
+	- Brave3d.overStage(uint8) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#301-360)
+	- overStage(5) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#214)
+		- _referredMap[referee] += REFEREE_VALUE * rate (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#336)
+	Brave3d._referredMap (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#26) can be used in cross function reentrancies:
+	- Brave3d.getReferee(address) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#243-249)
+	- Brave3d.myReferee() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#235-241)
+	- Brave3d.overStage(uint8) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#301-360)
+	- overStage(5) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#214)
+		- finishStage.deadIndex = deadIndex (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#326)
+		- finishStage.isFinish = true (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#357)
+	Brave3d._stageMap (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#31) can be used in cross function reentrancies:
+	- Brave3d.buy(uint8) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#282-299)
+	- Brave3d.constructor() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#58-74)
+	- Brave3d.currentStageData(uint8) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#259-267)
+	- Brave3d.getStageData(uint8,uint256) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#269-280)
+	- Brave3d.overStage(uint8) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#301-360)
+	- Brave3d.resetStage(uint8) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#362-371)
+	- overStage(5) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#214)
+		- _valueMap[player] += WIN_VALUE * rate (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#331)
+		- _valueMap[referee] += REFEREE_VALUE * rate (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#335)
+		- _valueMap[deadPlayer] += dividends (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#343)
+		- _valueMap[finishStage.playerMap[j]] += PRICE * rate (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#351)
+	Brave3d._valueMap (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#25) can be used in cross function reentrancies:
+	- Brave3d.buyByAddress(address) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#78-108)
+	- Brave3d.buyByName(string) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#132-173)
+	- Brave3d.buyFromValue(uint8) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#176-191)
+	- Brave3d.getEarnings(address) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#227-233)
+	- Brave3d.hasEarnings() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#42-46)
+	- Brave3d.myEarnings() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#218-225)
+	- Brave3d.overStage(uint8) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#301-360)
+	- Brave3d.withdraw() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#193-208)
+Reentrancy in Brave3d.forceOverStage() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#210-216):
+	External calls:
+	- overStage(1) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#213)
+		- dividends = p3dContract.myDividends(true) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#340)
+		- p3dContract.withdraw() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#342)
+		- p3dContract.buy.value(P3D_VALUE * rate)(address(OFFICIAL_P3D)) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#346)
+	- overStage(5) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#214)
+		- dividends = p3dContract.myDividends(true) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#340)
+		- p3dContract.withdraw() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#342)
+		- p3dContract.buy.value(P3D_VALUE * rate)(address(OFFICIAL_P3D)) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#346)
+	- overStage(10) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#215)
+		- dividends = p3dContract.myDividends(true) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#340)
+		- p3dContract.withdraw() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#342)
+		- p3dContract.buy.value(P3D_VALUE * rate)(address(OFFICIAL_P3D)) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#346)
+	External calls sending eth:
+	- overStage(1) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#213)
+		- p3dContract.buy.value(P3D_VALUE * rate)(address(OFFICIAL_P3D)) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#346)
+	- overStage(5) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#214)
+		- p3dContract.buy.value(P3D_VALUE * rate)(address(OFFICIAL_P3D)) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#346)
+	- overStage(10) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#215)
+		- p3dContract.buy.value(P3D_VALUE * rate)(address(OFFICIAL_P3D)) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#346)
+	State variables written after the call(s):
+	- overStage(10) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#215)
+		- _finishMap[rate] = finishStageIndex (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#359)
+	Brave3d._finishMap (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#32) can be used in cross function reentrancies:
+	- Brave3d.constructor() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#58-74)
+	- Brave3d.getStageData(uint8,uint256) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#269-280)
+	- Brave3d.overStage(uint8) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#301-360)
+	- overStage(10) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#215)
+		- _referredMap[referee] += REFEREE_VALUE * rate (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#336)
+	Brave3d._referredMap (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#26) can be used in cross function reentrancies:
+	- Brave3d.getReferee(address) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#243-249)
+	- Brave3d.myReferee() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#235-241)
+	- Brave3d.overStage(uint8) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#301-360)
+	- overStage(10) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#215)
+		- finishStage.deadIndex = deadIndex (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#326)
+		- finishStage.isFinish = true (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#357)
+	Brave3d._stageMap (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#31) can be used in cross function reentrancies:
+	- Brave3d.buy(uint8) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#282-299)
+	- Brave3d.constructor() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#58-74)
+	- Brave3d.currentStageData(uint8) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#259-267)
+	- Brave3d.getStageData(uint8,uint256) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#269-280)
+	- Brave3d.overStage(uint8) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#301-360)
+	- Brave3d.resetStage(uint8) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#362-371)
+	- overStage(10) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#215)
+		- _valueMap[player] += WIN_VALUE * rate (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#331)
+		- _valueMap[referee] += REFEREE_VALUE * rate (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#335)
+		- _valueMap[deadPlayer] += dividends (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#343)
+		- _valueMap[finishStage.playerMap[j]] += PRICE * rate (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#351)
+	Brave3d._valueMap (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#25) can be used in cross function reentrancies:
+	- Brave3d.buyByAddress(address) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#78-108)
+	- Brave3d.buyByName(string) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#132-173)
+	- Brave3d.buyFromValue(uint8) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#176-191)
+	- Brave3d.getEarnings(address) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#227-233)
+	- Brave3d.hasEarnings() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#42-46)
+	- Brave3d.myEarnings() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#218-225)
+	- Brave3d.overStage(uint8) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#301-360)
+	- Brave3d.withdraw() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#193-208)
+Reentrancy in Brave3d.overStage(uint8) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#301-360):
+	External calls:
+	- dividends = p3dContract.myDividends(true) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#340)
+	- p3dContract.withdraw() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#342)
+	- p3dContract.buy.value(P3D_VALUE * rate)(address(OFFICIAL_P3D)) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#346)
+	External calls sending eth:
+	- p3dContract.buy.value(P3D_VALUE * rate)(address(OFFICIAL_P3D)) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#346)
+	State variables written after the call(s):
+	- _finishMap[rate] = finishStageIndex (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#359)
+	Brave3d._finishMap (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#32) can be used in cross function reentrancies:
+	- Brave3d.constructor() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#58-74)
+	- Brave3d.getStageData(uint8,uint256) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#269-280)
+	- Brave3d.overStage(uint8) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#301-360)
+	- finishStage.isFinish = true (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#357)
+	Brave3d._stageMap (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#31) can be used in cross function reentrancies:
+	- Brave3d.buy(uint8) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#282-299)
+	- Brave3d.constructor() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#58-74)
+	- Brave3d.currentStageData(uint8) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#259-267)
+	- Brave3d.getStageData(uint8,uint256) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#269-280)
+	- Brave3d.overStage(uint8) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#301-360)
+	- Brave3d.resetStage(uint8) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#362-371)
+Reentrancy in Brave3d.setName(string) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#110-121):
+	External calls:
+	- overStage(1) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#118)
+		- dividends = p3dContract.myDividends(true) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#340)
+		- p3dContract.withdraw() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#342)
+		- p3dContract.buy.value(P3D_VALUE * rate)(address(OFFICIAL_P3D)) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#346)
+	- overStage(5) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#119)
+		- dividends = p3dContract.myDividends(true) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#340)
+		- p3dContract.withdraw() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#342)
+		- p3dContract.buy.value(P3D_VALUE * rate)(address(OFFICIAL_P3D)) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#346)
+	External calls sending eth:
+	- overStage(1) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#118)
+		- p3dContract.buy.value(P3D_VALUE * rate)(address(OFFICIAL_P3D)) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#346)
+	- overStage(5) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#119)
+		- p3dContract.buy.value(P3D_VALUE * rate)(address(OFFICIAL_P3D)) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#346)
+	State variables written after the call(s):
+	- overStage(5) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#119)
+		- _finishMap[rate] = finishStageIndex (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#359)
+	Brave3d._finishMap (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#32) can be used in cross function reentrancies:
+	- Brave3d.constructor() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#58-74)
+	- Brave3d.getStageData(uint8,uint256) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#269-280)
+	- Brave3d.overStage(uint8) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#301-360)
+	- overStage(5) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#119)
+		- _referredMap[referee] += REFEREE_VALUE * rate (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#336)
+	Brave3d._referredMap (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#26) can be used in cross function reentrancies:
+	- Brave3d.getReferee(address) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#243-249)
+	- Brave3d.myReferee() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#235-241)
+	- Brave3d.overStage(uint8) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#301-360)
+	- overStage(5) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#119)
+		- finishStage.deadIndex = deadIndex (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#326)
+		- finishStage.isFinish = true (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#357)
+	Brave3d._stageMap (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#31) can be used in cross function reentrancies:
+	- Brave3d.buy(uint8) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#282-299)
+	- Brave3d.constructor() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#58-74)
+	- Brave3d.currentStageData(uint8) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#259-267)
+	- Brave3d.getStageData(uint8,uint256) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#269-280)
+	- Brave3d.overStage(uint8) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#301-360)
+	- Brave3d.resetStage(uint8) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#362-371)
+	- overStage(5) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#119)
+		- _valueMap[player] += WIN_VALUE * rate (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#331)
+		- _valueMap[referee] += REFEREE_VALUE * rate (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#335)
+		- _valueMap[deadPlayer] += dividends (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#343)
+		- _valueMap[finishStage.playerMap[j]] += PRICE * rate (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#351)
+	Brave3d._valueMap (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#25) can be used in cross function reentrancies:
+	- Brave3d.buyByAddress(address) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#78-108)
+	- Brave3d.buyByName(string) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#132-173)
+	- Brave3d.buyFromValue(uint8) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#176-191)
+	- Brave3d.getEarnings(address) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#227-233)
+	- Brave3d.hasEarnings() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#42-46)
+	- Brave3d.myEarnings() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#218-225)
+	- Brave3d.overStage(uint8) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#301-360)
+	- Brave3d.withdraw() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#193-208)
+Reentrancy in Brave3d.setName(string) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#110-121):
+	External calls:
+	- overStage(1) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#118)
+		- dividends = p3dContract.myDividends(true) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#340)
+		- p3dContract.withdraw() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#342)
+		- p3dContract.buy.value(P3D_VALUE * rate)(address(OFFICIAL_P3D)) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#346)
+	- overStage(5) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#119)
+		- dividends = p3dContract.myDividends(true) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#340)
+		- p3dContract.withdraw() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#342)
+		- p3dContract.buy.value(P3D_VALUE * rate)(address(OFFICIAL_P3D)) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#346)
+	- overStage(10) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#120)
+		- dividends = p3dContract.myDividends(true) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#340)
+		- p3dContract.withdraw() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#342)
+		- p3dContract.buy.value(P3D_VALUE * rate)(address(OFFICIAL_P3D)) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#346)
+	External calls sending eth:
+	- overStage(1) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#118)
+		- p3dContract.buy.value(P3D_VALUE * rate)(address(OFFICIAL_P3D)) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#346)
+	- overStage(5) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#119)
+		- p3dContract.buy.value(P3D_VALUE * rate)(address(OFFICIAL_P3D)) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#346)
+	- overStage(10) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#120)
+		- p3dContract.buy.value(P3D_VALUE * rate)(address(OFFICIAL_P3D)) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#346)
+	State variables written after the call(s):
+	- overStage(10) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#120)
+		- _finishMap[rate] = finishStageIndex (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#359)
+	Brave3d._finishMap (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#32) can be used in cross function reentrancies:
+	- Brave3d.constructor() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#58-74)
+	- Brave3d.getStageData(uint8,uint256) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#269-280)
+	- Brave3d.overStage(uint8) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#301-360)
+	- overStage(10) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#120)
+		- _referredMap[referee] += REFEREE_VALUE * rate (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#336)
+	Brave3d._referredMap (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#26) can be used in cross function reentrancies:
+	- Brave3d.getReferee(address) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#243-249)
+	- Brave3d.myReferee() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#235-241)
+	- Brave3d.overStage(uint8) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#301-360)
+	- overStage(10) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#120)
+		- finishStage.deadIndex = deadIndex (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#326)
+		- finishStage.isFinish = true (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#357)
+	Brave3d._stageMap (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#31) can be used in cross function reentrancies:
+	- Brave3d.buy(uint8) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#282-299)
+	- Brave3d.constructor() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#58-74)
+	- Brave3d.currentStageData(uint8) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#259-267)
+	- Brave3d.getStageData(uint8,uint256) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#269-280)
+	- Brave3d.overStage(uint8) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#301-360)
+	- Brave3d.resetStage(uint8) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#362-371)
+	- overStage(10) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#120)
+		- _valueMap[player] += WIN_VALUE * rate (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#331)
+		- _valueMap[referee] += REFEREE_VALUE * rate (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#335)
+		- _valueMap[deadPlayer] += dividends (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#343)
+		- _valueMap[finishStage.playerMap[j]] += PRICE * rate (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#351)
+	Brave3d._valueMap (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#25) can be used in cross function reentrancies:
+	- Brave3d.buyByAddress(address) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#78-108)
+	- Brave3d.buyByName(string) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#132-173)
+	- Brave3d.buyFromValue(uint8) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#176-191)
+	- Brave3d.getEarnings(address) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#227-233)
+	- Brave3d.hasEarnings() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#42-46)
+	- Brave3d.myEarnings() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#218-225)
+	- Brave3d.overStage(uint8) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#301-360)
+	- Brave3d.withdraw() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#193-208)
+Reentrancy in Brave3d.withdraw() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#193-208):
+	External calls:
+	- overStage(1) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#205)
+		- dividends = p3dContract.myDividends(true) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#340)
+		- p3dContract.withdraw() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#342)
+		- p3dContract.buy.value(P3D_VALUE * rate)(address(OFFICIAL_P3D)) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#346)
+	- overStage(5) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#206)
+		- dividends = p3dContract.myDividends(true) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#340)
+		- p3dContract.withdraw() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#342)
+		- p3dContract.buy.value(P3D_VALUE * rate)(address(OFFICIAL_P3D)) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#346)
+	External calls sending eth:
+	- msg.sender.transfer(amount) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#203)
+	- overStage(1) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#205)
+		- p3dContract.buy.value(P3D_VALUE * rate)(address(OFFICIAL_P3D)) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#346)
+	- overStage(5) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#206)
+		- p3dContract.buy.value(P3D_VALUE * rate)(address(OFFICIAL_P3D)) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#346)
+	State variables written after the call(s):
+	- overStage(5) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#206)
+		- _finishMap[rate] = finishStageIndex (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#359)
+	Brave3d._finishMap (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#32) can be used in cross function reentrancies:
+	- Brave3d.constructor() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#58-74)
+	- Brave3d.getStageData(uint8,uint256) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#269-280)
+	- Brave3d.overStage(uint8) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#301-360)
+	- overStage(5) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#206)
+		- _referredMap[referee] += REFEREE_VALUE * rate (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#336)
+	Brave3d._referredMap (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#26) can be used in cross function reentrancies:
+	- Brave3d.getReferee(address) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#243-249)
+	- Brave3d.myReferee() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#235-241)
+	- Brave3d.overStage(uint8) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#301-360)
+	- overStage(5) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#206)
+		- finishStage.deadIndex = deadIndex (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#326)
+		- finishStage.isFinish = true (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#357)
+	Brave3d._stageMap (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#31) can be used in cross function reentrancies:
+	- Brave3d.buy(uint8) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#282-299)
+	- Brave3d.constructor() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#58-74)
+	- Brave3d.currentStageData(uint8) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#259-267)
+	- Brave3d.getStageData(uint8,uint256) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#269-280)
+	- Brave3d.overStage(uint8) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#301-360)
+	- Brave3d.resetStage(uint8) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#362-371)
+	- overStage(5) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#206)
+		- _valueMap[player] += WIN_VALUE * rate (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#331)
+		- _valueMap[referee] += REFEREE_VALUE * rate (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#335)
+		- _valueMap[deadPlayer] += dividends (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#343)
+		- _valueMap[finishStage.playerMap[j]] += PRICE * rate (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#351)
+	Brave3d._valueMap (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#25) can be used in cross function reentrancies:
+	- Brave3d.buyByAddress(address) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#78-108)
+	- Brave3d.buyByName(string) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#132-173)
+	- Brave3d.buyFromValue(uint8) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#176-191)
+	- Brave3d.getEarnings(address) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#227-233)
+	- Brave3d.hasEarnings() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#42-46)
+	- Brave3d.myEarnings() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#218-225)
+	- Brave3d.overStage(uint8) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#301-360)
+	- Brave3d.withdraw() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#193-208)
+Reentrancy in Brave3d.withdraw() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#193-208):
+	External calls:
+	- overStage(1) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#205)
+		- dividends = p3dContract.myDividends(true) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#340)
+		- p3dContract.withdraw() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#342)
+		- p3dContract.buy.value(P3D_VALUE * rate)(address(OFFICIAL_P3D)) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#346)
+	- overStage(5) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#206)
+		- dividends = p3dContract.myDividends(true) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#340)
+		- p3dContract.withdraw() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#342)
+		- p3dContract.buy.value(P3D_VALUE * rate)(address(OFFICIAL_P3D)) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#346)
+	- overStage(10) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#207)
+		- dividends = p3dContract.myDividends(true) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#340)
+		- p3dContract.withdraw() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#342)
+		- p3dContract.buy.value(P3D_VALUE * rate)(address(OFFICIAL_P3D)) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#346)
+	External calls sending eth:
+	- msg.sender.transfer(amount) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#203)
+	- overStage(1) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#205)
+		- p3dContract.buy.value(P3D_VALUE * rate)(address(OFFICIAL_P3D)) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#346)
+	- overStage(5) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#206)
+		- p3dContract.buy.value(P3D_VALUE * rate)(address(OFFICIAL_P3D)) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#346)
+	- overStage(10) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#207)
+		- p3dContract.buy.value(P3D_VALUE * rate)(address(OFFICIAL_P3D)) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#346)
+	State variables written after the call(s):
+	- overStage(10) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#207)
+		- _finishMap[rate] = finishStageIndex (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#359)
+	Brave3d._finishMap (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#32) can be used in cross function reentrancies:
+	- Brave3d.constructor() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#58-74)
+	- Brave3d.getStageData(uint8,uint256) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#269-280)
+	- Brave3d.overStage(uint8) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#301-360)
+	- overStage(10) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#207)
+		- _referredMap[referee] += REFEREE_VALUE * rate (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#336)
+	Brave3d._referredMap (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#26) can be used in cross function reentrancies:
+	- Brave3d.getReferee(address) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#243-249)
+	- Brave3d.myReferee() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#235-241)
+	- Brave3d.overStage(uint8) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#301-360)
+	- overStage(10) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#207)
+		- finishStage.deadIndex = deadIndex (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#326)
+		- finishStage.isFinish = true (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#357)
+	Brave3d._stageMap (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#31) can be used in cross function reentrancies:
+	- Brave3d.buy(uint8) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#282-299)
+	- Brave3d.constructor() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#58-74)
+	- Brave3d.currentStageData(uint8) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#259-267)
+	- Brave3d.getStageData(uint8,uint256) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#269-280)
+	- Brave3d.overStage(uint8) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#301-360)
+	- Brave3d.resetStage(uint8) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#362-371)
+	- overStage(10) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#207)
+		- _valueMap[player] += WIN_VALUE * rate (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#331)
+		- _valueMap[referee] += REFEREE_VALUE * rate (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#335)
+		- _valueMap[deadPlayer] += dividends (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#343)
+		- _valueMap[finishStage.playerMap[j]] += PRICE * rate (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#351)
+	Brave3d._valueMap (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#25) can be used in cross function reentrancies:
+	- Brave3d.buyByAddress(address) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#78-108)
+	- Brave3d.buyByName(string) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#132-173)
+	- Brave3d.buyFromValue(uint8) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#176-191)
+	- Brave3d.getEarnings(address) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#227-233)
+	- Brave3d.hasEarnings() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#42-46)
+	- Brave3d.myEarnings() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#218-225)
+	- Brave3d.overStage(uint8) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#301-360)
+	- Brave3d.withdraw() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#193-208)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+Brave3d.overStage(uint8) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#301-360) uses a dangerous strict equality:
+	- block.number == finishStage.blocknumber (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#321)
+Brave3d.resetStage(uint8) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#362-371) uses a dangerous strict equality:
+	- _stageMap[rate][curStageIndex - 1].cnt == MAX_PLAYERS (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#366)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-strict-equalities
+
+Reentrancy in Brave3d.overStage(uint8) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#301-360):
+	External calls:
+	- dividends = p3dContract.myDividends(true) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#340)
+	- p3dContract.withdraw() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#342)
+	State variables written after the call(s):
+	- _valueMap[deadPlayer] += dividends (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#343)
+	Brave3d._valueMap (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#25) can be used in cross function reentrancies:
+	- Brave3d.buyByAddress(address) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#78-108)
+	- Brave3d.buyByName(string) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#132-173)
+	- Brave3d.buyFromValue(uint8) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#176-191)
+	- Brave3d.getEarnings(address) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#227-233)
+	- Brave3d.hasEarnings() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#42-46)
+	- Brave3d.myEarnings() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#218-225)
+	- Brave3d.overStage(uint8) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#301-360)
+	- Brave3d.withdraw() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#193-208)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+Brave3d.buyByAddress(address) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#78-108) contains a tautology or contradiction:
+	- referee != 0x0000000000000000000000000000000000000000 && referee != msg.sender && _valueMap[referee] >= 0 (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#100)
+Brave3d.buyByName(string) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#132-173) contains a tautology or contradiction:
+	- referee != 0x0000000000000000000000000000000000000000 && referee != msg.sender && _valueMap[referee] >= 0 (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#162)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#tautology-or-contradiction
+
+Brave3d.overStage(uint8) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#301-360) ignores return value by p3dContract.buy.value(P3D_VALUE * rate)(address(OFFICIAL_P3D)) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#346)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+Reentrancy in Brave3d.buyByAddress(address) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#78-108):
+	External calls:
+	- overStage(rate) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#97)
+		- dividends = p3dContract.myDividends(true) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#340)
+		- p3dContract.withdraw() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#342)
+		- p3dContract.buy.value(P3D_VALUE * rate)(address(OFFICIAL_P3D)) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#346)
+	External calls sending eth:
+	- overStage(rate) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#97)
+		- p3dContract.buy.value(P3D_VALUE * rate)(address(OFFICIAL_P3D)) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#346)
+	Event emitted after the call(s):
+	- BraveReferrer(_addressMap[msg.sender],msg.sender,rate) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#107)
+Reentrancy in Brave3d.buyByName(string) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#132-173):
+	External calls:
+	- overStage(rate) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#151)
+		- dividends = p3dContract.myDividends(true) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#340)
+		- p3dContract.withdraw() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#342)
+		- p3dContract.buy.value(P3D_VALUE * rate)(address(OFFICIAL_P3D)) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#346)
+	External calls sending eth:
+	- overStage(rate) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#151)
+		- p3dContract.buy.value(P3D_VALUE * rate)(address(OFFICIAL_P3D)) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#346)
+	Event emitted after the call(s):
+	- BraveReferrer(_addressMap[msg.sender],msg.sender,rate) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#172)
+Reentrancy in Brave3d.buyFromValue(uint8) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#176-191):
+	External calls:
+	- overStage(rate) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#188)
+		- dividends = p3dContract.myDividends(true) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#340)
+		- p3dContract.withdraw() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#342)
+		- p3dContract.buy.value(P3D_VALUE * rate)(address(OFFICIAL_P3D)) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#346)
+	External calls sending eth:
+	- overStage(rate) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#188)
+		- p3dContract.buy.value(P3D_VALUE * rate)(address(OFFICIAL_P3D)) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#346)
+	Event emitted after the call(s):
+	- BraveReferrer(_addressMap[msg.sender],msg.sender,rate) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#190)
+Reentrancy in Brave3d.forceOverStage() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#210-216):
+	External calls:
+	- overStage(1) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#213)
+		- dividends = p3dContract.myDividends(true) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#340)
+		- p3dContract.withdraw() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#342)
+		- p3dContract.buy.value(P3D_VALUE * rate)(address(OFFICIAL_P3D)) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#346)
+	- overStage(5) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#214)
+		- dividends = p3dContract.myDividends(true) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#340)
+		- p3dContract.withdraw() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#342)
+		- p3dContract.buy.value(P3D_VALUE * rate)(address(OFFICIAL_P3D)) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#346)
+	External calls sending eth:
+	- overStage(1) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#213)
+		- p3dContract.buy.value(P3D_VALUE * rate)(address(OFFICIAL_P3D)) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#346)
+	- overStage(5) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#214)
+		- p3dContract.buy.value(P3D_VALUE * rate)(address(OFFICIAL_P3D)) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#346)
+	Event emitted after the call(s):
+	- BraveDeadPlayer(deadPlayer,finishStageIndex,deadIndex,rate) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#325)
+		- overStage(5) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#214)
+	- BraveInvalidateStage(finishStageIndex,rate) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#354)
+		- overStage(5) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#214)
+Reentrancy in Brave3d.forceOverStage() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#210-216):
+	External calls:
+	- overStage(1) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#213)
+		- dividends = p3dContract.myDividends(true) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#340)
+		- p3dContract.withdraw() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#342)
+		- p3dContract.buy.value(P3D_VALUE * rate)(address(OFFICIAL_P3D)) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#346)
+	- overStage(5) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#214)
+		- dividends = p3dContract.myDividends(true) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#340)
+		- p3dContract.withdraw() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#342)
+		- p3dContract.buy.value(P3D_VALUE * rate)(address(OFFICIAL_P3D)) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#346)
+	- overStage(10) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#215)
+		- dividends = p3dContract.myDividends(true) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#340)
+		- p3dContract.withdraw() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#342)
+		- p3dContract.buy.value(P3D_VALUE * rate)(address(OFFICIAL_P3D)) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#346)
+	External calls sending eth:
+	- overStage(1) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#213)
+		- p3dContract.buy.value(P3D_VALUE * rate)(address(OFFICIAL_P3D)) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#346)
+	- overStage(5) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#214)
+		- p3dContract.buy.value(P3D_VALUE * rate)(address(OFFICIAL_P3D)) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#346)
+	- overStage(10) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#215)
+		- p3dContract.buy.value(P3D_VALUE * rate)(address(OFFICIAL_P3D)) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#346)
+	Event emitted after the call(s):
+	- BraveDeadPlayer(deadPlayer,finishStageIndex,deadIndex,rate) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#325)
+		- overStage(10) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#215)
+	- BraveInvalidateStage(finishStageIndex,rate) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#354)
+		- overStage(10) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#215)
+Reentrancy in Brave3d.setName(string) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#110-121):
+	External calls:
+	- overStage(1) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#118)
+		- dividends = p3dContract.myDividends(true) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#340)
+		- p3dContract.withdraw() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#342)
+		- p3dContract.buy.value(P3D_VALUE * rate)(address(OFFICIAL_P3D)) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#346)
+	- overStage(5) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#119)
+		- dividends = p3dContract.myDividends(true) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#340)
+		- p3dContract.withdraw() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#342)
+		- p3dContract.buy.value(P3D_VALUE * rate)(address(OFFICIAL_P3D)) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#346)
+	External calls sending eth:
+	- overStage(1) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#118)
+		- p3dContract.buy.value(P3D_VALUE * rate)(address(OFFICIAL_P3D)) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#346)
+	- overStage(5) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#119)
+		- p3dContract.buy.value(P3D_VALUE * rate)(address(OFFICIAL_P3D)) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#346)
+	Event emitted after the call(s):
+	- BraveDeadPlayer(deadPlayer,finishStageIndex,deadIndex,rate) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#325)
+		- overStage(5) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#119)
+	- BraveInvalidateStage(finishStageIndex,rate) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#354)
+		- overStage(5) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#119)
+Reentrancy in Brave3d.setName(string) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#110-121):
+	External calls:
+	- overStage(1) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#118)
+		- dividends = p3dContract.myDividends(true) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#340)
+		- p3dContract.withdraw() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#342)
+		- p3dContract.buy.value(P3D_VALUE * rate)(address(OFFICIAL_P3D)) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#346)
+	- overStage(5) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#119)
+		- dividends = p3dContract.myDividends(true) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#340)
+		- p3dContract.withdraw() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#342)
+		- p3dContract.buy.value(P3D_VALUE * rate)(address(OFFICIAL_P3D)) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#346)
+	- overStage(10) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#120)
+		- dividends = p3dContract.myDividends(true) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#340)
+		- p3dContract.withdraw() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#342)
+		- p3dContract.buy.value(P3D_VALUE * rate)(address(OFFICIAL_P3D)) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#346)
+	External calls sending eth:
+	- overStage(1) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#118)
+		- p3dContract.buy.value(P3D_VALUE * rate)(address(OFFICIAL_P3D)) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#346)
+	- overStage(5) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#119)
+		- p3dContract.buy.value(P3D_VALUE * rate)(address(OFFICIAL_P3D)) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#346)
+	- overStage(10) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#120)
+		- p3dContract.buy.value(P3D_VALUE * rate)(address(OFFICIAL_P3D)) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#346)
+	Event emitted after the call(s):
+	- BraveDeadPlayer(deadPlayer,finishStageIndex,deadIndex,rate) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#325)
+		- overStage(10) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#120)
+	- BraveInvalidateStage(finishStageIndex,rate) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#354)
+		- overStage(10) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#120)
+Reentrancy in Brave3d.withdraw() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#193-208):
+	External calls:
+	- overStage(1) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#205)
+		- dividends = p3dContract.myDividends(true) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#340)
+		- p3dContract.withdraw() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#342)
+		- p3dContract.buy.value(P3D_VALUE * rate)(address(OFFICIAL_P3D)) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#346)
+	- overStage(5) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#206)
+		- dividends = p3dContract.myDividends(true) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#340)
+		- p3dContract.withdraw() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#342)
+		- p3dContract.buy.value(P3D_VALUE * rate)(address(OFFICIAL_P3D)) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#346)
+	External calls sending eth:
+	- msg.sender.transfer(amount) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#203)
+	- overStage(1) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#205)
+		- p3dContract.buy.value(P3D_VALUE * rate)(address(OFFICIAL_P3D)) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#346)
+	- overStage(5) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#206)
+		- p3dContract.buy.value(P3D_VALUE * rate)(address(OFFICIAL_P3D)) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#346)
+	Event emitted after the call(s):
+	- BraveDeadPlayer(deadPlayer,finishStageIndex,deadIndex,rate) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#325)
+		- overStage(5) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#206)
+	- BraveInvalidateStage(finishStageIndex,rate) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#354)
+		- overStage(5) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#206)
+Reentrancy in Brave3d.withdraw() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#193-208):
+	External calls:
+	- overStage(1) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#205)
+		- dividends = p3dContract.myDividends(true) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#340)
+		- p3dContract.withdraw() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#342)
+		- p3dContract.buy.value(P3D_VALUE * rate)(address(OFFICIAL_P3D)) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#346)
+	- overStage(5) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#206)
+		- dividends = p3dContract.myDividends(true) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#340)
+		- p3dContract.withdraw() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#342)
+		- p3dContract.buy.value(P3D_VALUE * rate)(address(OFFICIAL_P3D)) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#346)
+	- overStage(10) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#207)
+		- dividends = p3dContract.myDividends(true) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#340)
+		- p3dContract.withdraw() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#342)
+		- p3dContract.buy.value(P3D_VALUE * rate)(address(OFFICIAL_P3D)) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#346)
+	External calls sending eth:
+	- msg.sender.transfer(amount) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#203)
+	- overStage(1) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#205)
+		- p3dContract.buy.value(P3D_VALUE * rate)(address(OFFICIAL_P3D)) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#346)
+	- overStage(5) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#206)
+		- p3dContract.buy.value(P3D_VALUE * rate)(address(OFFICIAL_P3D)) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#346)
+	- overStage(10) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#207)
+		- p3dContract.buy.value(P3D_VALUE * rate)(address(OFFICIAL_P3D)) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#346)
+	Event emitted after the call(s):
+	- BraveDeadPlayer(deadPlayer,finishStageIndex,deadIndex,rate) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#325)
+		- overStage(10) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#207)
+	- BraveInvalidateStage(finishStageIndex,rate) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#354)
+		- overStage(10) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#207)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+Version constraint ^0.4.25 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ABIEncoderV2PackedStorage_0.4.x.
+It is used by:
+	- ^0.4.25 (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#1)
+solc-0.4.25 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Constant Brave3d.p3dContract (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#14) is not in UPPER_CASE_WITH_UNDERSCORES
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in Brave3d.withdraw() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#193-208):
+	External calls:
+	- msg.sender.transfer(amount) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#203)
+	External calls sending eth:
+	- msg.sender.transfer(amount) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#203)
+	- overStage(1) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#205)
+		- p3dContract.buy.value(P3D_VALUE * rate)(address(OFFICIAL_P3D)) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#346)
+	State variables written after the call(s):
+	- overStage(1) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#205)
+		- _finishMap[rate] = finishStageIndex (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#359)
+	- overStage(1) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#205)
+		- _referredMap[referee] += REFEREE_VALUE * rate (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#336)
+	- overStage(1) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#205)
+		- finishStage.deadIndex = deadIndex (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#326)
+		- finishStage.isFinish = true (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#357)
+	- overStage(1) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#205)
+		- _valueMap[player] += WIN_VALUE * rate (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#331)
+		- _valueMap[referee] += REFEREE_VALUE * rate (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#335)
+		- _valueMap[deadPlayer] += dividends (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#343)
+		- _valueMap[finishStage.playerMap[j]] += PRICE * rate (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#351)
+	Event emitted after the call(s):
+	- BraveDeadPlayer(deadPlayer,finishStageIndex,deadIndex,rate) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#325)
+		- overStage(1) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#205)
+	- BraveInvalidateStage(finishStageIndex,rate) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#354)
+		- overStage(1) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#205)
+Reentrancy in Brave3d.withdraw() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#193-208):
+	External calls:
+	- msg.sender.transfer(amount) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#203)
+	External calls sending eth:
+	- msg.sender.transfer(amount) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#203)
+	- overStage(1) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#205)
+		- p3dContract.buy.value(P3D_VALUE * rate)(address(OFFICIAL_P3D)) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#346)
+	- overStage(5) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#206)
+		- p3dContract.buy.value(P3D_VALUE * rate)(address(OFFICIAL_P3D)) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#346)
+	State variables written after the call(s):
+	- overStage(5) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#206)
+		- _finishMap[rate] = finishStageIndex (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#359)
+	- overStage(5) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#206)
+		- _referredMap[referee] += REFEREE_VALUE * rate (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#336)
+	- overStage(5) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#206)
+		- finishStage.deadIndex = deadIndex (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#326)
+		- finishStage.isFinish = true (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#357)
+	- overStage(5) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#206)
+		- _valueMap[player] += WIN_VALUE * rate (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#331)
+		- _valueMap[referee] += REFEREE_VALUE * rate (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#335)
+		- _valueMap[deadPlayer] += dividends (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#343)
+		- _valueMap[finishStage.playerMap[j]] += PRICE * rate (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#351)
+	Event emitted after the call(s):
+	- BraveDeadPlayer(deadPlayer,finishStageIndex,deadIndex,rate) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#325)
+		- overStage(5) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#206)
+	- BraveInvalidateStage(finishStageIndex,rate) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#354)
+		- overStage(5) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#206)
+Reentrancy in Brave3d.withdraw() (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#193-208):
+	External calls:
+	- msg.sender.transfer(amount) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#203)
+	External calls sending eth:
+	- msg.sender.transfer(amount) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#203)
+	- overStage(1) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#205)
+		- p3dContract.buy.value(P3D_VALUE * rate)(address(OFFICIAL_P3D)) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#346)
+	- overStage(5) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#206)
+		- p3dContract.buy.value(P3D_VALUE * rate)(address(OFFICIAL_P3D)) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#346)
+	- overStage(10) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#207)
+		- p3dContract.buy.value(P3D_VALUE * rate)(address(OFFICIAL_P3D)) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#346)
+	State variables written after the call(s):
+	- overStage(10) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#207)
+		- _finishMap[rate] = finishStageIndex (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#359)
+	- overStage(10) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#207)
+		- _referredMap[referee] += REFEREE_VALUE * rate (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#336)
+	- overStage(10) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#207)
+		- finishStage.deadIndex = deadIndex (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#326)
+		- finishStage.isFinish = true (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#357)
+	- overStage(10) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#207)
+		- _valueMap[player] += WIN_VALUE * rate (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#331)
+		- _valueMap[referee] += REFEREE_VALUE * rate (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#335)
+		- _valueMap[deadPlayer] += dividends (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#343)
+		- _valueMap[finishStage.playerMap[j]] += PRICE * rate (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#351)
+	Event emitted after the call(s):
+	- BraveDeadPlayer(deadPlayer,finishStageIndex,deadIndex,rate) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#325)
+		- overStage(10) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#207)
+	- BraveInvalidateStage(finishStageIndex,rate) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#354)
+		- overStage(10) (0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol#207)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+./0x132e2b67e91bf0294536b16d772e8dee099fc40c.sol analyzed (2 contracts with 94 detectors), 31 result(s) found
+
+real	0m3.474s
+user	0m3.292s
+sys	0m0.185s

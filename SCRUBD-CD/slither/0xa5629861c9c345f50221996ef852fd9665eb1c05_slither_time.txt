@@ -1,0 +1,158 @@
+'solc --version' running
+'solc ./0xa5629861c9c345f50221996ef852fd9665eb1c05.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+Reentrancy in IronHands.payout() (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#201-253):
+	External calls:
+	- tokens = weak_hands.buy.value(investment).gas(1000000)(msg.sender) (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#213)
+	- participants[payoutOrder].etherAddress.call.value(payoutToSend).gas(1000000)() (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#231)
+	State variables written after the call(s):
+	- backlog -= payoutToSend (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#225)
+	IronHands.backlog (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#142) can be used in cross function reentrancies:
+	- IronHands.backlog (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#142)
+	- IronHands.backlogAmount() (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#298-300)
+	- IronHands.deposit() (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#175-195)
+	- IronHands.payout() (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#201-253)
+	- creditRemaining[participants[payoutOrder].etherAddress] -= payoutToSend (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#227)
+	IronHands.creditRemaining (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#146) can be used in cross function reentrancies:
+	- IronHands.amountOwed(address) (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#319-321)
+	- IronHands.creditRemaining (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#146)
+	- IronHands.deposit() (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#175-195)
+	- IronHands.payout() (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#201-253)
+	- participants[payoutOrder].payout -= payoutToSend (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#229)
+	IronHands.participants (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#144) can be used in cross function reentrancies:
+	- IronHands.backlogLength() (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#291-293)
+	- IronHands.deposit() (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#175-195)
+	- IronHands.participants (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#144)
+	- IronHands.payout() (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#201-253)
+	- IronHands.totalParticipants() (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#305-307)
+	- payoutOrder += 1 (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#246)
+	IronHands.payoutOrder (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#140) can be used in cross function reentrancies:
+	- IronHands.backlogLength() (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#291-293)
+	- IronHands.payout() (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#201-253)
+	- IronHands.payoutOrder (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#140)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+Owned.changeOwner(address)._newOwner (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#76) lacks a zero-check on :
+		- ownerCandidate = _newOwner (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#77)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+IronHands.payout() (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#201-253) has external calls inside a loop: participants[payoutOrder].etherAddress.call.value(payoutToSend).gas(1000000)() (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#231)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation/#calls-inside-a-loop
+
+Reentrancy in IronHands.payout() (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#201-253):
+	External calls:
+	- tokens = weak_hands.buy.value(investment).gas(1000000)(msg.sender) (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#213)
+	State variables written after the call(s):
+	- backlog += payoutToSend (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#237)
+	- creditRemaining[participants[payoutOrder].etherAddress] += payoutToSend (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#238)
+	- participants[payoutOrder].payout += payoutToSend (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#239)
+Reentrancy in IronHands.withdraw() (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#280-286):
+	External calls:
+	- weak_hands.withdraw.gas(1000000)() (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#282)
+	State variables written after the call(s):
+	- dividends += dividendsPaid (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#284)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in IronHands.deposit() (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#175-195):
+	External calls:
+	- myDividends() > 0 (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#189)
+		- weak_hands.myDividends(true) (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#266)
+	- withdraw() (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#191)
+		- weak_hands.withdraw.gas(1000000)() (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#282)
+	Event emitted after the call(s):
+	- Dividends(dividendsPaid) (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#285)
+		- withdraw() (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#191)
+Reentrancy in IronHands.deposit() (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#175-195):
+	External calls:
+	- myDividends() > 0 (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#189)
+		- weak_hands.myDividends(true) (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#266)
+	- withdraw() (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#191)
+		- weak_hands.withdraw.gas(1000000)() (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#282)
+	- payout() (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#194)
+		- tokens = weak_hands.buy.value(investment).gas(1000000)(msg.sender) (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#213)
+		- participants[payoutOrder].etherAddress.call.value(payoutToSend).gas(1000000)() (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#231)
+	External calls sending eth:
+	- payout() (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#194)
+		- tokens = weak_hands.buy.value(investment).gas(1000000)(msg.sender) (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#213)
+		- participants[payoutOrder].etherAddress.call.value(payoutToSend).gas(1000000)() (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#231)
+	Event emitted after the call(s):
+	- Payout(payoutToSend,participants[payoutOrder].etherAddress) (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#233)
+		- payout() (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#194)
+	- Purchase(investment,tokens) (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#215)
+		- payout() (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#194)
+Reentrancy in IronHands.payout() (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#201-253):
+	External calls:
+	- tokens = weak_hands.buy.value(investment).gas(1000000)(msg.sender) (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#213)
+	Event emitted after the call(s):
+	- Purchase(investment,tokens) (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#215)
+Reentrancy in IronHands.payout() (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#201-253):
+	External calls:
+	- tokens = weak_hands.buy.value(investment).gas(1000000)(msg.sender) (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#213)
+	- participants[payoutOrder].etherAddress.call.value(payoutToSend).gas(1000000)() (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#231)
+	Event emitted after the call(s):
+	- Payout(payoutToSend,participants[payoutOrder].etherAddress) (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#233)
+Reentrancy in IronHands.withdraw() (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#280-286):
+	External calls:
+	- weak_hands.withdraw.gas(1000000)() (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#282)
+	Event emitted after the call(s):
+	- Dividends(dividendsPaid) (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#285)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+IronHands.payout() (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#201-253) tries to limit the gas of an external call that controls implicit decoding
+	participants[payoutOrder].etherAddress.call.value(payoutToSend).gas(1000000)() (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#231)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#return-bomb
+
+IronHands.payout() (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#201-253) has costly operations inside a loop:
+	- backlog -= payoutToSend (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#225)
+IronHands.payout() (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#201-253) has costly operations inside a loop:
+	- payoutOrder += 1 (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#246)
+IronHands.payout() (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#201-253) has costly operations inside a loop:
+	- backlog += payoutToSend (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#237)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#costly-operations-inside-a-loop
+
+Version constraint ^0.4.21 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ABIEncoderV2PackedStorage_0.4.x
+	- ExpExponentCleanup
+	- EventStructWrongData
+	- NestedArrayFunctionCallDecoder.
+It is used by:
+	- ^0.4.21 (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#1)
+solc-0.4.23 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in IronHands.payout() (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#201-253):
+	- participants[payoutOrder].etherAddress.call.value(payoutToSend).gas(1000000)() (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#231)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Parameter Owned.changeOwner(address)._newOwner (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#76) is not in mixedCase
+Variable IronHands.weak_hands (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#148) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+IronHands.deposit() (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#175-195) uses literals with too many digits:
+	- require(bool)(msg.value > 1000000) (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#177)
+IronHands.payout() (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#201-253) uses literals with too many digits:
+	- tokens = weak_hands.buy.value(investment).gas(1000000)(msg.sender) (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#213)
+IronHands.payout() (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#201-253) uses literals with too many digits:
+	- participants[payoutOrder].etherAddress.call.value(payoutToSend).gas(1000000)() (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#231)
+IronHands.withdraw() (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#280-286) uses literals with too many digits:
+	- weak_hands.withdraw.gas(1000000)() (0xa5629861c9c345f50221996ef852fd9665eb1c05.sol#282)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+./0xa5629861c9c345f50221996ef852fd9665eb1c05.sol analyzed (4 contracts with 94 detectors), 23 result(s) found
+
+real	0m1.986s
+user	0m1.740s
+sys	0m0.249s

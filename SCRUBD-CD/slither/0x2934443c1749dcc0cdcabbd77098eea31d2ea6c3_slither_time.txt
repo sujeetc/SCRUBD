@@ -1,0 +1,370 @@
+'solc --version' running
+'solc ./0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+Reentrancy in xSNXCore.mint(uint256) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2278-2305):
+	External calls:
+	- tradeAccounting.swapEtherToToken.value(ethContribution)(snxAddress,minRate) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2290-2293)
+	State variables written after the call(s):
+	- super._mint(msg.sender,mintAmount) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2304)
+		- _totalSupply = _totalSupply.add(amount) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#523)
+	ERC20._totalSupply (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#386) can be used in cross function reentrancies:
+	- ERC20._burn(address,uint256) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#539-545)
+	- ERC20._mint(address,uint256) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#520-526)
+	- ERC20.totalSupply() (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#391-393)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+TradeAccounting.swapEtherToToken(address,uint256) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#1170-1183) ignores return value by IERC20(toToken).transfer(xSNXInstance,IERC20(toToken).balanceOf(address(this))) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#1179-1182)
+TradeAccounting.swapTokenToToken(address,uint256,address,uint256,uint256) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#1185-1214) ignores return value by IERC20(toToken).transfer(xSNXInstance,IERC20(toToken).balanceOf(address(this))) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#1210-1213)
+xSNXCore.mintWithSnx(uint256) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2314-2327) ignores return value by IERC20(snxAddress).transferFrom(msg.sender,address(this),snxAmount) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2317)
+xSNXCore._swapTokenToEther(address,uint256,uint256,uint256) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2451-2466) ignores return value by IERC20(_fromToken).transfer(address(tradeAccounting),_amount) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2458)
+xSNXCore._swapTokenToToken(address,uint256,address,uint256,uint256) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2468-2483) ignores return value by IERC20(_fromToken).transfer(address(tradeAccounting),_amount) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2475)
+xSNXCore.withdrawFees() (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2748-2765) ignores return value by IERC20(susdAddress).transfer(msg.sender,susdFeesToWithdraw) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2762)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+TradeAccounting.getWeiPerOneSnxOnRedeem() (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#1378-1390) performs a multiplication on the result of a division:
+	- weiPerOneSnx = snxUsdPrice.mul(DEC_18).div(ethUsdPrice).mul(SLIPPAGE_RATE).div(PERCENT) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#1385-1389)
+TradeAccounting.calculateTokensToMintWithSnx(uint256,uint256,uint256) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#1436-1458) performs a multiplication on the result of a division:
+	- proxyEthContribution = weiPerOneSnx.mul(snxAddedToBalance).div(DEC_18) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#1447-1449)
+	- proxyEthContribution.mul(DEC_18).div(pricePerToken) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#1457)
+TradeAccounting.calculateSetQuantity(uint256) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#1502-1522) performs a multiplication on the result of a division:
+	- rebalancingSetQuantity = baseSetIssuable.mul(rebalancingSetNaturalUnit).div(unitShares).mul(99).div(100).div(rebalancingSetNaturalUnit).mul(rebalancingSetNaturalUnit) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#1515-1521)
+TradeAccounting.calculateSetRedemptionQuantity(uint256) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#1533-1560) performs a multiplication on the result of a division:
+	- setAssetCollateralToSell = expectedSetAssetRate.mul(totalSusdToBurn).div(DEC_18).mul(103).div(PERCENT) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#1546-1550)
+TradeAccounting.calculateSetRedemptionQuantity(uint256) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#1533-1560) performs a multiplication on the result of a division:
+	- setAssetCollateralToSell = expectedSetAssetRate.mul(totalSusdToBurn).div(DEC_18).mul(103).div(PERCENT) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#1546-1550)
+	- setAssetCollateralToSell = setAssetCollateralToSell.mul(decimals).div(DEC_18) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#1553-1555)
+TradeAccounting.calculateEthValueOfOneSetUnit() (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#1562-1588) performs a multiplication on the result of a division:
+	- baseSetRequired = DEC_18.mul(unitShares).div(rebalancingSetNaturalUnit) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#1569-1571)
+	- componentRequired = baseSetRequired.mul(unitsOfUnderlying).div(baseSetNaturalUnit) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#1575-1577)
+TradeAccounting.calculateEthValueOfOneSetUnit() (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#1562-1588) performs a multiplication on the result of a division:
+	- componentRequired = baseSetRequired.mul(unitsOfUnderlying).div(baseSetNaturalUnit) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#1575-1577)
+	- componentRequired = componentRequired.mul(DEC_18).div(decimals) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#1581)
+TradeAccounting.calculateEthValueOfOneSetUnit() (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#1562-1588) performs a multiplication on the result of a division:
+	- componentRequired = componentRequired.mul(DEC_18).div(decimals) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#1581)
+	- ethValue = componentRequired.mul(synthUsd).div(ethUsd) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#1587)
+TradeAccounting.getSetHoldingsValueInWei() (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#1590-1605) performs a multiplication on the result of a division:
+	- setCollateralTokens = setCollateralTokens.mul(DEC_18).div(decimals) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#1603)
+	- setValInWei = setCollateralTokens.mul(synthUsd).div(ethUsd) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#1604)
+TradeAccounting.calculateAssetChangesForRebalanceToSnx() (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#1839-1855) performs a multiplication on the result of a division:
+	- setToSell = setToSell.div(naturalUnit).mul(naturalUnit) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#1854)
+TradeAccounting.calculateHedgeAssetsValueInUsd() (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#1881-1901) performs a multiplication on the result of a division:
+	- setCollateralTokens = setCollateralTokens.mul(DEC_18).div(decimals) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#1889)
+	- setValueUsd = setCollateralTokens.mul(synthUsd).div(DEC_18) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#1894)
+TradeAccounting.getEthAllocationOnHedge(uint256) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#1959-1984) performs a multiplication on the result of a division:
+	- ethBalInUsd = getEthBalance().mul(ethUsd).div(DEC_18) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#1969)
+	- ethBalInUsd.mul(ETH_TARGET) >= hedgeAssets.add(susdBal) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#1972)
+TradeAccounting.calculateSetToSellForRebalanceSetToEth() (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#1987-2008) performs a multiplication on the result of a division:
+	- setQuantityToSell = setQuantityToSell.div(naturalUnit).mul(naturalUnit) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2007)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+TradeAccounting.calculateSusdToBurnToEclipseEscrowed(uint256) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#1769-1778) uses a dangerous strict equality:
+	- escrowedSnxValue == 0 (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#1775)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-strict-equalities
+
+TradeAccounting.swapEtherToToken(address,uint256) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#1170-1183) ignores return value by kyberNetworkProxy.swapEtherToToken.value(msg.value)(ERC20(toToken),minConversionRate) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#1175-1178)
+TradeAccounting._swapTokenToToken(address,uint256,address,uint256) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#1216-1228) ignores return value by kyberNetworkProxy.swapTokenToToken(ERC20(_fromToken),_amount,ERC20(_toToken),_minKyberRate) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#1222-1227)
+TradeAccounting._swapTokenToEther(address,uint256,uint256) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#1250-1260) ignores return value by kyberNetworkProxy.swapTokenToEther(ERC20(_fromToken),_amount,_minKyberRate) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#1255-1259)
+TradeAccounting.approveKyber(address) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2060-2062) ignores return value by IERC20(tokenAddress).approve(address(kyberNetworkProxy),MAX_UINT) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2061)
+TradeAccounting.approveCurve(address) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2065-2067) ignores return value by IERC20(tokenAddress).approve(address(curveFi),MAX_UINT) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2066)
+xSNXCore.claim(uint256,uint256[],uint256[],bool) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2415-2445) ignores return value by IFeePool(addressResolver.getAddress(feePoolName)).claimFees() (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2435)
+xSNXCore.approveSetTransferProxy(address) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2768-2770) ignores return value by IERC20(tokenAddress).approve(setTransferProxy,MAX_UINT) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2769)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+ERC20Detailed.constructor(string,string,uint8).name (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#598) shadows:
+	- ERC20Detailed.name() (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#607-609) (function)
+ERC20Detailed.constructor(string,string,uint8).symbol (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#598) shadows:
+	- ERC20Detailed.symbol() (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#615-617) (function)
+ERC20Detailed.constructor(string,string,uint8).decimals (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#598) shadows:
+	- ERC20Detailed.decimals() (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#631-633) (function)
+xSNXCore.mint(uint256).totalSupply (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2285) shadows:
+	- ERC20.totalSupply() (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#391-393) (function)
+	- IERC20.totalSupply() (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#281) (function)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#local-variable-shadowing
+
+TradeAccounting.setInstanceAddress(address) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2032-2036) should emit an event for: 
+	- xSNXInstance = _xSNXInstance (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2034) 
+xSNXCore.setManagerAddress(address) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2718-2720) should emit an event for: 
+	- manager = _manager (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2719) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-access-control
+
+TradeAccounting.constructor(address,address,address,address,address,address,bytes32[2],address[2])._setAddress (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#1142) lacks a zero-check on :
+		- setAddress = _setAddress (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#1151)
+TradeAccounting.constructor(address,address,address,address,address,address,bytes32[2],address[2])._susdAddress (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#1145) lacks a zero-check on :
+		- susdAddress = _susdAddress (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#1154)
+TradeAccounting.constructor(address,address,address,address,address,address,bytes32[2],address[2])._usdcAddress (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#1146) lacks a zero-check on :
+		- usdcAddress = _usdcAddress (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#1155)
+TradeAccounting.constructor(address,address,address,address,address,address,bytes32[2],address[2])._addressValidator (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#1147) lacks a zero-check on :
+		- addressValidator = _addressValidator (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#1156)
+TradeAccounting.setInstanceAddress(address)._xSNXInstance (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2032) lacks a zero-check on :
+		- xSNXInstance = _xSNXInstance (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2034)
+TradeAccounting.setCurve(address,int128,int128).curvePoolAddress (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2039) lacks a zero-check on :
+		- nextCurveAddress = curvePoolAddress (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2049)
+xSNXCore.constructor(address,address,address,address,address,address,address)._setAddress (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2250) lacks a zero-check on :
+		- setAddress = _setAddress (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2258)
+xSNXCore.constructor(address,address,address,address,address,address,address)._snxAddress (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2251) lacks a zero-check on :
+		- snxAddress = _snxAddress (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2259)
+xSNXCore.constructor(address,address,address,address,address,address,address)._susdAddress (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2252) lacks a zero-check on :
+		- susdAddress = _susdAddress (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2260)
+xSNXCore.constructor(address,address,address,address,address,address,address)._setTransferProxy (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2253) lacks a zero-check on :
+		- setTransferProxy = _setTransferProxy (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2261)
+xSNXCore.setManagerAddress(address)._manager (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2718) lacks a zero-check on :
+		- manager = _manager (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2719)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in xSNXCore.claim(uint256,uint256[],uint256[],bool) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2415-2445):
+	External calls:
+	- _redeemSet(susdToBurnToFixCollat) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2424)
+		- rebalancingModule.redeemRebalancingSet(setAddress,_redemptionQuantity,false) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2680-2684)
+	- _swapTokenToToken(getAssetCurrentlyActiveInSet(),getActiveSetAssetBalance(),susdAddress,minKyberRates[0],minCurveReturns[0]) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2425-2431)
+		- IERC20(_fromToken).transfer(address(tradeAccounting),_amount) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2475)
+		- tradeAccounting.swapTokenToToken(_fromToken,_amount,_toToken,_minKyberRate,_minCurveReturn) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2476-2482)
+	- _burnSynths(getSusdBalance()) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2432)
+		- synthetix.burnSynths(_amount) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2448)
+	- IFeePool(addressResolver.getAddress(feePoolName)).claimFees() (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2435)
+	State variables written after the call(s):
+	- withdrawableSusdFees = withdrawableSusdFees.add(getSusdBalance().div(feeDivisors.claimFee)) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2436-2438)
+Reentrancy in xSNXCore.mint(uint256) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2278-2305):
+	External calls:
+	- tradeAccounting.swapEtherToToken.value(ethContribution)(snxAddress,minRate) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2290-2293)
+	State variables written after the call(s):
+	- super._mint(msg.sender,mintAmount) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2304)
+		- _balances[account] = _balances[account].add(amount) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#524)
+Reentrancy in xSNXCore.mintWithSnx(uint256) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2314-2327):
+	External calls:
+	- IERC20(snxAddress).transferFrom(msg.sender,address(this),snxAmount) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2317)
+	State variables written after the call(s):
+	- super._mint(msg.sender,mintAmount) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2326)
+		- _balances[account] = _balances[account].add(amount) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#524)
+	- super._mint(msg.sender,mintAmount) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2326)
+		- _totalSupply = _totalSupply.add(amount) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#523)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in xSNXCore.mint(uint256) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2278-2305):
+	External calls:
+	- tradeAccounting.swapEtherToToken.value(ethContribution)(snxAddress,minRate) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2290-2293)
+	Event emitted after the call(s):
+	- Mint(msg.sender,block.timestamp,msg.value,mintAmount,true) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2303)
+	- Transfer(address(0),account,amount) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#525)
+		- super._mint(msg.sender,mintAmount) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2304)
+Reentrancy in xSNXCore.mintWithSnx(uint256) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2314-2327):
+	External calls:
+	- IERC20(snxAddress).transferFrom(msg.sender,address(this),snxAmount) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2317)
+	Event emitted after the call(s):
+	- Mint(msg.sender,block.timestamp,snxAmount,mintAmount,false) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2325)
+	- Transfer(address(0),account,amount) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#525)
+		- super._mint(msg.sender,mintAmount) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2326)
+Reentrancy in xSNXCore.rebalanceTowardsHedge(uint256,uint256[],uint256[],uint256) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2524-2544):
+	External calls:
+	- _unwindStakedPosition(totalSusdToBurn,activeAsset,minKyberRates,minCurveReturns,snxToSell) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2536-2542)
+		- rebalancingModule.redeemRebalancingSet(setAddress,_redemptionQuantity,false) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2680-2684)
+		- synthetix.burnSynths(_amount) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2448)
+		- IERC20(_fromToken).transfer(address(tradeAccounting),_amount) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2475)
+		- tradeAccounting.swapTokenToToken(_fromToken,_amount,_toToken,_minKyberRate,_minCurveReturn) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2476-2482)
+		- IERC20(_fromToken).transfer(address(tradeAccounting),_amount) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2458)
+		- tradeAccounting.swapTokenToEther(_fromToken,_amount,_minKyberRate,_minCurveReturn) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2459-2464)
+	Event emitted after the call(s):
+	- RebalanceToHedge(block.timestamp,snxToSell) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2543)
+Reentrancy in xSNXCore.rebalanceTowardsSnx(uint256) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2494-2513):
+	External calls:
+	- _redeemRebalancingSet(setToSell) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2502)
+		- rebalancingModule.redeemRebalancingSet(setAddress,_redemptionQuantity,false) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2680-2684)
+	- _swapTokenToToken(activeAsset,getActiveSetAssetBalance(),snxAddress,minRate,0) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2504-2510)
+		- IERC20(_fromToken).transfer(address(tradeAccounting),_amount) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2475)
+		- tradeAccounting.swapTokenToToken(_fromToken,_amount,_toToken,_minKyberRate,_minCurveReturn) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2476-2482)
+	Event emitted after the call(s):
+	- RebalanceToSnx(block.timestamp,setToSell) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2512)
+Reentrancy in xSNXCore.withdrawFees() (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2748-2765):
+	External calls:
+	- (success,None) = msg.sender.call.value(ethFeesToWithdraw)() (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2759)
+	- IERC20(susdAddress).transfer(msg.sender,susdFeesToWithdraw) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2762)
+	External calls sending eth:
+	- (success,None) = msg.sender.call.value(ethFeesToWithdraw)() (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2759)
+	Event emitted after the call(s):
+	- WithdrawFees(ethFeesToWithdraw,susdFeesToWithdraw) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2764)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+TradeAccounting.getSnxPrice() (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#1692-1699) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(time.add(RATE_STALE_TIME) > block.timestamp,Rate stale) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#1697)
+TradeAccounting.getSynthPrice(bytes32) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#1701-1710) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(time.add(RATE_STALE_TIME) > block.timestamp,Rate stale) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#1707)
+xSNXCore.liquidationUnwind(uint256,uint256[],uint256[],uint256) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2611-2633) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(lastClaimedTimestamp.add(LIQUIDATION_WAIT_PERIOD) < block.timestamp,Liquidation not available) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2617-2620)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+4 different versions of Solidity are used:
+	- Version constraint ^0.5.0 is used by:
+		-^0.5.0 (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#3)
+		-^0.5.0 (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#162)
+		-^0.5.0 (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#192)
+		-^0.5.0 (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#271)
+		-^0.5.0 (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#350)
+		-^0.5.0 (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#582)
+	- Version constraint >=0.4.24 is used by:
+		->=0.4.24 (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#638)
+		->=0.4.24 (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#677)
+		->=0.4.24 (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#703)
+		->=0.4.24 (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#791)
+		->=0.4.24 (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#812)
+		->=0.4.24 (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#898)
+		->=0.4.24 (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#929)
+	- Version constraint 0.5.15 is used by:
+		-0.5.15 (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#942)
+		-0.5.15 (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#951)
+		-0.5.15 (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#959)
+		-0.5.15 (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#999)
+		-0.5.15 (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#1010)
+		-0.5.15 (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#1022)
+		-0.5.15 (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#1032)
+		-0.5.15 (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2157)
+		-0.5.15 (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2184)
+	- Version constraint ^0.5.15 is used by:
+		-^0.5.15 (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2084)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#different-pragma-directives-are-used
+
+Context._msgData() (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#184-187) is never used and should be removed
+ERC20._burnFrom(address,uint256) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#574-577) is never used and should be removed
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dead-code
+
+Version constraint ^0.5.0 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor
+	- IncorrectEventSignatureInLibraries
+	- ABIEncoderV2PackedStorage.
+It is used by:
+	- ^0.5.0 (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#3)
+	- ^0.5.0 (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#162)
+	- ^0.5.0 (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#192)
+	- ^0.5.0 (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#271)
+	- ^0.5.0 (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#350)
+	- ^0.5.0 (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#582)
+Version constraint >=0.4.24 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ABIEncoderV2PackedStorage_0.4.x
+	- ExpExponentCleanup
+	- EventStructWrongData.
+It is used by:
+	- >=0.4.24 (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#638)
+	- >=0.4.24 (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#677)
+	- >=0.4.24 (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#703)
+	- >=0.4.24 (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#791)
+	- >=0.4.24 (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#812)
+	- >=0.4.24 (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#898)
+	- >=0.4.24 (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#929)
+Version constraint 0.5.15 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- MissingEscapingInFormatting
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- YulOptimizerRedundantAssignmentBreakContinue0.5.
+It is used by:
+	- 0.5.15 (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#942)
+	- 0.5.15 (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#951)
+	- 0.5.15 (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#959)
+	- 0.5.15 (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#999)
+	- 0.5.15 (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#1010)
+	- 0.5.15 (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#1022)
+	- 0.5.15 (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#1032)
+	- 0.5.15 (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2157)
+	- 0.5.15 (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2184)
+Version constraint ^0.5.15 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- MissingEscapingInFormatting
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- YulOptimizerRedundantAssignmentBreakContinue0.5.
+It is used by:
+	- ^0.5.15 (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2084)
+solc-0.5.15 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in TradeAccounting.swapTokenToEther(address,uint256,uint256,uint256) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#1230-1248):
+	- (success,None) = msg.sender.call.value(ethBal)() (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#1246)
+Low level call in xSNXCore.burn(uint256) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2335-2356):
+	- (success,None) = msg.sender.call.value(valueToSend)() (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2354)
+Low level call in xSNXCore.withdrawFees() (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2748-2765):
+	- (success,None) = msg.sender.call.value(ethFeesToWithdraw)() (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2759)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Function IFeePool.FEE_ADDRESS() (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#646) is not in mixedCase
+Parameter ICurveFi.exchange(int128,int128,uint256,uint256).min_dy (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#966) is not in mixedCase
+Function ICurveFi.exchange_underlying(int128,int128,uint256,uint256) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#968-973) is not in mixedCase
+Parameter ICurveFi.exchange_underlying(int128,int128,uint256,uint256).min_dy (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#972) is not in mixedCase
+Function ICurveFi.get_dx_underlying(int128,int128,uint256) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#974-978) is not in mixedCase
+Function ICurveFi.get_dy_underlying(int128,int128,uint256) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#979-983) is not in mixedCase
+Function ICurveFi.get_dx(int128,int128,uint256) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#984-988) is not in mixedCase
+Function ICurveFi.get_dy(int128,int128,uint256) (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#989-993) is not in mixedCase
+Function ICurveFi.get_virtual_price() (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#994) is not in mixedCase
+Parameter TradeAccounting.setInstanceAddress(address)._xSNXInstance (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2032) is not in mixedCase
+Parameter TradeAccounting.setCurve(address,int128,int128)._usdcIndex (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2040) is not in mixedCase
+Parameter TradeAccounting.setCurve(address,int128,int128)._susdIndex (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2041) is not in mixedCase
+Parameter TradeAccounting.confirmCurveAddress(address)._nextCurveAddress (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2069) is not in mixedCase
+Constant TradeAccounting.snx (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#1131) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant TradeAccounting.susd (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#1132) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant TradeAccounting.seth (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#1133) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant TradeAccounting.rewardEscrowName (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2014) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant TradeAccounting.synthetixStateName (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2015) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant TradeAccounting.exchangeRatesName (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2016) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant TradeAccounting.synthetixName (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2017) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant TradeAccounting.systemSettingsName (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2018) is not in UPPER_CASE_WITH_UNDERSCORES
+Contract xSNXCore (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2194-2776) is not in CapWords
+Parameter xSNXCore.setManagerAddress(address)._manager (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2718) is not in mixedCase
+Constant xSNXCore.susd (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2204) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant xSNXCore.feePoolName (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2206) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant xSNXCore.synthetixName (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2207) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant xSNXCore.rewardEscrowName (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2208) is not in UPPER_CASE_WITH_UNDERSCORES
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Redundant expression "this (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#185)" inContext (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#174-188)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#redundant-statements
+
+xSNXCore.ETH_ADDRESS (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2195-2196) is never used in xSNXCore (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2194-2776)
+xSNXCore.susd (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2204) is never used in xSNXCore (0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol#2194-2776)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-state-variable
+./0x2934443c1749dcc0cdcabbd77098eea31d2ea6c3.sol analyzed (23 contracts with 94 detectors), 97 result(s) found
+
+real	0m5.763s
+user	0m5.434s
+sys	0m0.328s

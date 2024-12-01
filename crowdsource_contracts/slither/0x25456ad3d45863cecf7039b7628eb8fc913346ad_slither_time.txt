@@ -1,0 +1,287 @@
+'solc --version' running
+'solc ./0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+LUNRR.addLiquidity(uint256,uint256) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1645-1658) sends eth to arbitrary user
+	Dangerous calls:
+	- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,deadAddress,block.timestamp) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1650-1657)
+LUNRR.swapAndSendToWallets(uint256) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1697-1705) sends eth to arbitrary user
+	Dangerous calls:
+	- _marketingWallet.transfer(marketingShare) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1702)
+	- _treasuryWallet.transfer(newBalance - marketingShare) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1703)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+Reentrancy in LUNRR._transfer(address,address,uint256) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1558-1641):
+	External calls:
+	- swapAndLiquify(swapTokens) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1591)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,deadAddress,block.timestamp) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1650-1657)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1688-1694)
+	- swapAndSendToWallets(walletTokens) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1593)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1688-1694)
+	External calls sending eth:
+	- swapAndLiquify(swapTokens) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1591)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,deadAddress,block.timestamp) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1650-1657)
+	- swapAndSendToWallets(walletTokens) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1593)
+		- _marketingWallet.transfer(marketingShare) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1702)
+		- _treasuryWallet.transfer(newBalance - marketingShare) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1703)
+	State variables written after the call(s):
+	- super._transfer(from,address(this),feeAmount) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1634)
+		- _balances[sender] = senderBalance - amount (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1162)
+		- _balances[recipient] += amount (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1164)
+	ERC20._balances (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#964) can be used in cross function reentrancies:
+	- ERC20._mint(address,uint256) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1182-1192)
+	- ERC20._transfer(address,address,uint256) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1149-1171)
+	- ERC20.balanceOf(address) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1029-1031)
+	- super._transfer(from,to,amount) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1639)
+		- _balances[sender] = senderBalance - amount (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1162)
+		- _balances[recipient] += amount (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1164)
+	ERC20._balances (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#964) can be used in cross function reentrancies:
+	- ERC20._mint(address,uint256) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1182-1192)
+	- ERC20._transfer(address,address,uint256) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1149-1171)
+	- ERC20.balanceOf(address) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1029-1031)
+	- _isBlackListed[to] = true (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1620)
+	LUNRR._isBlackListed (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1346) can be used in cross function reentrancies:
+	- LUNRR._isBlackListed (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1346)
+	- LUNRR._transfer(address,address,uint256) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1558-1641)
+	- LUNRR.setBlackList(address,bool) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1463-1465)
+	- swapAndSendToWallets(walletTokens) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1593)
+		- swapping = true (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1375)
+		- swapping = false (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1377)
+	LUNRR.swapping (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1316) can be used in cross function reentrancies:
+	- LUNRR._transfer(address,address,uint256) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1558-1641)
+	- LUNRR.lockTheSwap() (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1374-1378)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+LUNRR.claimStuckTokens(address) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1445-1454) ignores return value by erc20token.transfer(owner(),balance) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1453)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+LUNRR._transfer(address,address,uint256).fees (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1604) is a local variable never initialized
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#uninitialized-local-variables
+
+LUNRR.addLiquidity(uint256,uint256) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1645-1658) ignores return value by uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,deadAddress,block.timestamp) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1650-1657)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+LUNRR.setBuyFee(uint16,uint16) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1494-1505) should emit an event for: 
+	- totalBuyFee = marketing + liquidity (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1502) 
+LUNRR.setSellFee(uint16) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1508-1515) should emit an event for: 
+	- totalSellFee = treasury (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1513) 
+LUNRR.setMaxWallet(uint256) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1538-1540) should emit an event for: 
+	- maxWalletAmount = amount * 10 ** 18 (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1539) 
+LUNRR.setMaxBuyAmount(uint256) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1542-1545) should emit an event for: 
+	- maxBuyAmount = amount * 10 ** 18 (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1544) 
+LUNRR.setMaxSellAmount(uint256) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1547-1550) should emit an event for: 
+	- maxSellAmount = amount * 10 ** 18 (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1549) 
+LUNRR.setSwapTokensAtAmount(uint256) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1552-1554) should emit an event for: 
+	- swapTokensAtAmount = amount * 10 ** 18 (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1553) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+Reentrancy in LUNRR._transfer(address,address,uint256) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1558-1641):
+	External calls:
+	- swapAndLiquify(swapTokens) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1591)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,deadAddress,block.timestamp) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1650-1657)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1688-1694)
+	- swapAndSendToWallets(walletTokens) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1593)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1688-1694)
+	External calls sending eth:
+	- swapAndLiquify(swapTokens) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1591)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,deadAddress,block.timestamp) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1650-1657)
+	- swapAndSendToWallets(walletTokens) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1593)
+		- _marketingWallet.transfer(marketingShare) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1702)
+		- _treasuryWallet.transfer(newBalance - marketingShare) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1703)
+	State variables written after the call(s):
+	- swapAndSendToWallets(walletTokens) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1593)
+		- _allowances[owner][spender] = amount (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1243)
+Reentrancy in LUNRR.swapAndLiquify(uint256) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1660-1677):
+	External calls:
+	- swapTokensForEth(half) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1668)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1688-1694)
+	- addLiquidity(otherHalf,newBalance) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1674)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,deadAddress,block.timestamp) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1650-1657)
+	External calls sending eth:
+	- addLiquidity(otherHalf,newBalance) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1674)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,deadAddress,block.timestamp) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1650-1657)
+	State variables written after the call(s):
+	- addLiquidity(otherHalf,newBalance) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1674)
+		- _allowances[owner][spender] = amount (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1243)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in LUNRR._transfer(address,address,uint256) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1558-1641):
+	External calls:
+	- swapAndLiquify(swapTokens) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1591)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,deadAddress,block.timestamp) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1650-1657)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1688-1694)
+	- swapAndSendToWallets(walletTokens) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1593)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1688-1694)
+	External calls sending eth:
+	- swapAndLiquify(swapTokens) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1591)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,deadAddress,block.timestamp) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1650-1657)
+	- swapAndSendToWallets(walletTokens) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1593)
+		- _marketingWallet.transfer(marketingShare) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1702)
+		- _treasuryWallet.transfer(newBalance - marketingShare) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1703)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1244)
+		- swapAndSendToWallets(walletTokens) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1593)
+	- Transfer(sender,recipient,amount) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1168)
+		- super._transfer(from,to,amount) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1639)
+	- Transfer(sender,recipient,amount) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1168)
+		- super._transfer(from,address(this),feeAmount) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1634)
+Reentrancy in LUNRR.swapAndLiquify(uint256) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1660-1677):
+	External calls:
+	- swapTokensForEth(half) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1668)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1688-1694)
+	- addLiquidity(otherHalf,newBalance) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1674)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,deadAddress,block.timestamp) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1650-1657)
+	External calls sending eth:
+	- addLiquidity(otherHalf,newBalance) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1674)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,deadAddress,block.timestamp) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1650-1657)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1244)
+		- addLiquidity(otherHalf,newBalance) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1674)
+	- SwapAndLiquify(half,newBalance,otherHalf) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1676)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+5 different versions of Solidity are used:
+	- Version constraint >=0.5.0 is used by:
+		->=0.5.0 (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#5)
+		->=0.5.0 (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#60)
+	- Version constraint >=0.6.2 is used by:
+		->=0.6.2 (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#80)
+		->=0.6.2 (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#178)
+	- Version constraint ^0.8.6 is used by:
+		-^0.8.6 (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#225)
+		-^0.8.6 (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#292)
+		-^0.8.6 (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#320)
+		-^0.8.6 (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#384)
+		-^0.8.6 (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#454)
+	- Version constraint ^0.8.0 is used by:
+		-^0.8.0 (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#473)
+		-^0.8.0 (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#703)
+		-^0.8.0 (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#740)
+		-^0.8.0 (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#818)
+		-^0.8.0 (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#903)
+		-^0.8.0 (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#933)
+	- Version constraint ^0.8.10 is used by:
+		-^0.8.10 (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1292)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#different-pragma-directives-are-used
+
+Context._msgData() (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#720-722) is never used and should be removed
+ERC20._burn(address,uint256) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1205-1220) is never used and should be removed
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dead-code
+
+Version constraint >=0.5.0 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor
+	- IncorrectEventSignatureInLibraries
+	- ABIEncoderV2PackedStorage.
+It is used by:
+	- >=0.5.0 (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#5)
+	- >=0.5.0 (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#60)
+Version constraint >=0.6.2 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- MissingEscapingInFormatting
+	- ArraySliceDynamicallyEncodedBaseType
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow.
+It is used by:
+	- >=0.6.2 (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#80)
+	- >=0.6.2 (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#178)
+Version constraint ^0.8.6 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- VerbatimInvalidDeduplication
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- SignedImmutables.
+It is used by:
+	- ^0.8.6 (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#225)
+	- ^0.8.6 (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#292)
+	- ^0.8.6 (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#320)
+	- ^0.8.6 (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#384)
+	- ^0.8.6 (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#454)
+Version constraint ^0.8.0 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- SignedImmutables
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching.
+It is used by:
+	- ^0.8.0 (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#473)
+	- ^0.8.0 (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#703)
+	- ^0.8.0 (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#740)
+	- ^0.8.0 (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#818)
+	- ^0.8.0 (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#903)
+	- ^0.8.0 (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#933)
+Version constraint ^0.8.10 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- VerbatimInvalidDeduplication
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation.
+It is used by:
+	- ^0.8.10 (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1292)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Function IUniswapV2Pair.DOMAIN_SEPARATOR() (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#22) is not in mixedCase
+Function IUniswapV2Pair.PERMIT_TYPEHASH() (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#23) is not in mixedCase
+Function IUniswapV2Pair.MINIMUM_LIQUIDITY() (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#40) is not in mixedCase
+Function IUniswapV2Router01.WETH() (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#84) is not in mixedCase
+Parameter LUNRR.claimStuckTokens(address)._token (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1445) is not in mixedCase
+Variable LUNRR._isBlackListed (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1346) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in LUNRR._transfer(address,address,uint256) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1558-1641):
+	External calls:
+	- swapAndSendToWallets(walletTokens) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1593)
+		- _marketingWallet.transfer(marketingShare) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1702)
+		- _treasuryWallet.transfer(newBalance - marketingShare) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1703)
+	External calls sending eth:
+	- swapAndLiquify(swapTokens) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1591)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,deadAddress,block.timestamp) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1650-1657)
+	- swapAndSendToWallets(walletTokens) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1593)
+		- _marketingWallet.transfer(marketingShare) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1702)
+		- _treasuryWallet.transfer(newBalance - marketingShare) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1703)
+	State variables written after the call(s):
+	- super._transfer(from,address(this),feeAmount) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1634)
+		- _balances[sender] = senderBalance - amount (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1162)
+		- _balances[recipient] += amount (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1164)
+	- super._transfer(from,to,amount) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1639)
+		- _balances[sender] = senderBalance - amount (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1162)
+		- _balances[recipient] += amount (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1164)
+	- _isBlackListed[to] = true (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1620)
+	Event emitted after the call(s):
+	- Transfer(sender,recipient,amount) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1168)
+		- super._transfer(from,to,amount) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1639)
+	- Transfer(sender,recipient,amount) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1168)
+		- super._transfer(from,address(this),feeAmount) (0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol#1634)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+./0x25456ad3d45863cecf7039b7628eb8fc913346ad.sol analyzed (16 contracts with 94 detectors), 31 result(s) found
+
+real	0m3.376s
+user	0m3.065s
+sys	0m0.312s

@@ -1,0 +1,99 @@
+'solc --version' running
+'solc ./0x0453aa2dafff030614d9afef6c724ec2bee60876.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x0453aa2dafff030614d9afef6c724ec2bee60876.sol:
+Warning: SPDX license identifier not provided in source file. Before publishing, consider adding a comment containing "SPDX-License-Identifier: <SPDX-License>" to each source file. Use "SPDX-License-Identifier: UNLICENSED" for non-open-source code. Please see https://spdx.org for more information.
+--> ./0x0453aa2dafff030614d9afef6c724ec2bee60876.sol
+
+
+
+SwifyStaking.withdrawSwify() (0x0453aa2dafff030614d9afef6c724ec2bee60876.sol#249-251) ignores return value by IERC20(swifyCoinAddress).transfer(owner,swifyContract.balanceOf(address(this))) (0x0453aa2dafff030614d9afef6c724ec2bee60876.sol#250)
+SwifyStaking.stakeTokens(string,uint256) (0x0453aa2dafff030614d9afef6c724ec2bee60876.sol#272-301) ignores return value by IERC20(tokens[symbol].tokenAddress).transferFrom(msg.sender,address(this),tokenQuantity) (0x0453aa2dafff030614d9afef6c724ec2bee60876.sol#277)
+SwifyStaking.closePosition(uint256) (0x0453aa2dafff030614d9afef6c724ec2bee60876.sol#303-313) ignores return value by IERC20(tokens[positions[positionId].symbol].tokenAddress).transfer(msg.sender,positions[positionId].tokenQuantity) (0x0453aa2dafff030614d9afef6c724ec2bee60876.sol#308)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+SwifyStaking.receiveWeekProfits(uint256) (0x0453aa2dafff030614d9afef6c724ec2bee60876.sol#315-331) performs a multiplication on the result of a division:
+	- amountToPay = (positions[positionId].profitsPerWeek / amountOfTokenPerEth) * 1000000000 (0x0453aa2dafff030614d9afef6c724ec2bee60876.sol#328)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+Reentrancy in SwifyStaking.closePosition(uint256) (0x0453aa2dafff030614d9afef6c724ec2bee60876.sol#303-313):
+	External calls:
+	- IERC20(tokens[positions[positionId].symbol].tokenAddress).transfer(msg.sender,positions[positionId].tokenQuantity) (0x0453aa2dafff030614d9afef6c724ec2bee60876.sol#308)
+	State variables written after the call(s):
+	- positions[positionId].open = false (0x0453aa2dafff030614d9afef6c724ec2bee60876.sol#310)
+	SwifyStaking.positions (0x0453aa2dafff030614d9afef6c724ec2bee60876.sol#208) can be used in cross function reentrancies:
+	- SwifyStaking.positions (0x0453aa2dafff030614d9afef6c724ec2bee60876.sol#208)
+	- positions[positionId].tokenQuantity = 0 (0x0453aa2dafff030614d9afef6c724ec2bee60876.sol#311)
+	SwifyStaking.positions (0x0453aa2dafff030614d9afef6c724ec2bee60876.sol#208) can be used in cross function reentrancies:
+	- SwifyStaking.positions (0x0453aa2dafff030614d9afef6c724ec2bee60876.sol#208)
+	- positions[positionId].profitsPerWeek = 0 (0x0453aa2dafff030614d9afef6c724ec2bee60876.sol#312)
+	SwifyStaking.positions (0x0453aa2dafff030614d9afef6c724ec2bee60876.sol#208) can be used in cross function reentrancies:
+	- SwifyStaking.positions (0x0453aa2dafff030614d9afef6c724ec2bee60876.sol#208)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+Reentrancy in SwifyStaking.stakeTokens(string,uint256) (0x0453aa2dafff030614d9afef6c724ec2bee60876.sol#272-301):
+	External calls:
+	- IERC20(tokens[symbol].tokenAddress).transferFrom(msg.sender,address(this),tokenQuantity) (0x0453aa2dafff030614d9afef6c724ec2bee60876.sol#277)
+	State variables written after the call(s):
+	- currentPositionId += 1 (0x0453aa2dafff030614d9afef6c724ec2bee60876.sol#300)
+	- positions[currentPositionId] = Position(currentPositionId,msg.sender,symbol,actualTokensThatWentIn,block.timestamp,perWeekPayment,block.timestamp + (7 * 86400),0,apr,true,true) (0x0453aa2dafff030614d9afef6c724ec2bee60876.sol#285-297)
+	- positionsIdsByAddress[msg.sender].push(currentPositionId) (0x0453aa2dafff030614d9afef6c724ec2bee60876.sol#299)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+SwifyStaking.closePosition(uint256) (0x0453aa2dafff030614d9afef6c724ec2bee60876.sol#303-313) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(positions[positionId].walletAddress == msg.sender,Not the owner of this position) (0x0453aa2dafff030614d9afef6c724ec2bee60876.sol#305)
+	- require(bool,string)(positions[positionId].open == true,Position already closed) (0x0453aa2dafff030614d9afef6c724ec2bee60876.sol#306)
+SwifyStaking.receiveWeekProfits(uint256) (0x0453aa2dafff030614d9afef6c724ec2bee60876.sol#315-331) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(positions[positionId].open == true,Position already closed) (0x0453aa2dafff030614d9afef6c724ec2bee60876.sol#318)
+	- require(bool,string)(positions[positionId].walletAddress == msg.sender,Not the owner of this position.) (0x0453aa2dafff030614d9afef6c724ec2bee60876.sol#319)
+	- require(bool,string)(block.timestamp > positions[positionId].nextWeekUnlockDate,Weekly profit withdrawal date in a couple days.) (0x0453aa2dafff030614d9afef6c724ec2bee60876.sol#320)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+SwifyStaking.stakeTokens(string,uint256) (0x0453aa2dafff030614d9afef6c724ec2bee60876.sol#272-301) compares to a boolean constant:
+	-require(bool,string)(stakingOn == true,Staking Off) (0x0453aa2dafff030614d9afef6c724ec2bee60876.sol#275)
+SwifyStaking.closePosition(uint256) (0x0453aa2dafff030614d9afef6c724ec2bee60876.sol#303-313) compares to a boolean constant:
+	-require(bool,string)(positions[positionId].open == true,Position already closed) (0x0453aa2dafff030614d9afef6c724ec2bee60876.sol#306)
+SwifyStaking.receiveWeekProfits(uint256) (0x0453aa2dafff030614d9afef6c724ec2bee60876.sol#315-331) compares to a boolean constant:
+	-require(bool,string)(stakingOn == true,Staking Off) (0x0453aa2dafff030614d9afef6c724ec2bee60876.sol#317)
+SwifyStaking.receiveWeekProfits(uint256) (0x0453aa2dafff030614d9afef6c724ec2bee60876.sol#315-331) compares to a boolean constant:
+	-require(bool,string)(positions[positionId].open == true,Position already closed) (0x0453aa2dafff030614d9afef6c724ec2bee60876.sol#318)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#boolean-equality
+
+Version constraint ^0.8.0 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- SignedImmutables
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching.
+It is used by:
+	- ^0.8.0 (0x0453aa2dafff030614d9afef6c724ec2bee60876.sol#6)
+	- ^0.8.0 (0x0453aa2dafff030614d9afef6c724ec2bee60876.sol#78)
+	- ^0.8.0 (0x0453aa2dafff030614d9afef6c724ec2bee60876.sol#162)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in SwifyStaking.withdrawEth() (0x0453aa2dafff030614d9afef6c724ec2bee60876.sol#244-247):
+	- (os,None) = address(owner).call{value: address(this).balance}() (0x0453aa2dafff030614d9afef6c724ec2bee60876.sol#245)
+Low level call in SwifyStaking.receiveWeekProfits(uint256) (0x0453aa2dafff030614d9afef6c724ec2bee60876.sol#315-331):
+	- (os,None) = address(msg.sender).call{value: amountToPay}() (0x0453aa2dafff030614d9afef6c724ec2bee60876.sol#329)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+SwifyStaking.receiveWeekProfits(uint256) (0x0453aa2dafff030614d9afef6c724ec2bee60876.sol#315-331) uses literals with too many digits:
+	- amountToPay = (positions[positionId].profitsPerWeek / amountOfTokenPerEth) * 1000000000 (0x0453aa2dafff030614d9afef6c724ec2bee60876.sol#328)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+SwifyStaking.swifyCoinAddress (0x0453aa2dafff030614d9afef6c724ec2bee60876.sol#180) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+
+SwifyStaking.owner (0x0453aa2dafff030614d9afef6c724ec2bee60876.sol#174) should be immutable 
+SwifyStaking.swifyContract (0x0453aa2dafff030614d9afef6c724ec2bee60876.sol#181) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+./0x0453aa2dafff030614d9afef6c724ec2bee60876.sol analyzed (4 contracts with 94 detectors), 19 result(s) found
+
+real	0m2.779s
+user	0m2.560s
+sys	0m0.222s

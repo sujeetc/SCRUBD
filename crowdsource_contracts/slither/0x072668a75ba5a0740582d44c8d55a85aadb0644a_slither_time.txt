@@ -1,0 +1,238 @@
+'solc --version' running
+'solc ./0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+AAI.recoverEthInContract() (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#491-494) sends eth to arbitrary user
+	Dangerous calls:
+	- address(deployer).transfer(ethBalance) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#493)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+Reentrancy in AAI._transfer(address,address,uint256) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#385-419):
+	External calls:
+	- catchBalances() (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#396)
+		- CatchthemMap.remove(holder) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#430)
+	- CatchthemMap.set(to,block.timestamp) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#397)
+	- swapTokensForEth(tokenAmount) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#408)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#464-470)
+	External calls sending eth:
+	- swapTokensForEth(tokenAmount) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#408)
+		- address(feeOne).transfer(halfShare) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#474)
+		- address(feeTwo).transfer(halfShare) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#475)
+	State variables written after the call(s):
+	- _balances[from] = _balances[from].sub(amount) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#415)
+	AAI._balances (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#236) can be used in cross function reentrancies:
+	- AAI._transfer(address,address,uint256) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#385-419)
+	- AAI.balanceOf(address) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#303-305)
+	- AAI.catchBalances() (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#421-433)
+	- AAI.constructor() (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#253-281)
+	- _balances[to] = _balances[to].add(transferAmount) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#416)
+	AAI._balances (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#236) can be used in cross function reentrancies:
+	- AAI._transfer(address,address,uint256) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#385-419)
+	- AAI.balanceOf(address) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#303-305)
+	- AAI.catchBalances() (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#421-433)
+	- AAI.constructor() (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#253-281)
+	- _balances[address(this)] = _balances[address(this)].add(taxAmount) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#417)
+	AAI._balances (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#236) can be used in cross function reentrancies:
+	- AAI._transfer(address,address,uint256) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#385-419)
+	- AAI.balanceOf(address) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#303-305)
+	- AAI.catchBalances() (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#421-433)
+	- AAI.constructor() (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#253-281)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+AAI.recoverERC20Tokens(address) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#496-500) ignores return value by erc20Token.transfer(deployer,balance) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#499)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+Reentrancy in AAI.catchBalances() (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#421-433):
+	External calls:
+	- CatchthemMap.remove(holder) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#430)
+	State variables written after the call(s):
+	- _balances[holder] = _balances[holder].sub(amount) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#427)
+	AAI._balances (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#236) can be used in cross function reentrancies:
+	- AAI._transfer(address,address,uint256) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#385-419)
+	- AAI.balanceOf(address) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#303-305)
+	- AAI.catchBalances() (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#421-433)
+	- AAI.constructor() (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#253-281)
+	- _balances[address(this)] = _balances[address(this)].add(amount) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#428)
+	AAI._balances (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#236) can be used in cross function reentrancies:
+	- AAI._transfer(address,address,uint256) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#385-419)
+	- AAI.balanceOf(address) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#303-305)
+	- AAI.catchBalances() (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#421-433)
+	- AAI.constructor() (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#253-281)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+AAI.openTrading() (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#358-371) ignores return value by uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#362-368)
+AAI.openTrading() (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#358-371) ignores return value by IERC20(marketPair).approve(address(uniswapV2Router),type()(uint256).max) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#369)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+AAI.allowance(address,address).owner (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#312) shadows:
+	- Ownable.owner() (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#157-159) (function)
+AAI._approve(address,address,uint256).owner (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#377) shadows:
+	- Ownable.owner() (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#157-159) (function)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#local-variable-shadowing
+
+AAI.setTaxFees(uint256,uint256) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#337-340) should emit an event for: 
+	- buyFee = buy (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#338) 
+	- sellFee = sell (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#339) 
+AAI.setEthPriceToSwap(uint256) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#485-487) should emit an event for: 
+	- ethPriceToSwap = ethPriceToSwap_ (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#486) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+AAI.numberOfCaughtBot() (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#435-444) has external calls inside a loop: i < CatchthemMap.size() (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#437)
+AAI.numberOfCaughtBot() (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#435-444) has external calls inside a loop: holder = CatchthemMap.getKeyAtIndex(i) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#438)
+AAI.numberOfCaughtBot() (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#435-444) has external calls inside a loop: timestamp = CatchthemMap.get(holder) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#439)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation/#calls-inside-a-loop
+
+Reentrancy in AAI._transfer(address,address,uint256) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#385-419):
+	External calls:
+	- catchBalances() (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#396)
+		- CatchthemMap.remove(holder) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#430)
+	- CatchthemMap.set(to,block.timestamp) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#397)
+	- swapTokensForEth(tokenAmount) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#408)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#464-470)
+	External calls sending eth:
+	- swapTokensForEth(tokenAmount) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#408)
+		- address(feeOne).transfer(halfShare) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#474)
+		- address(feeTwo).transfer(halfShare) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#475)
+	State variables written after the call(s):
+	- swapTokensForEth(tokenAmount) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#408)
+		- _allowances[owner][spender] = amount (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#381)
+Reentrancy in AAI.openTrading() (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#358-371):
+	External calls:
+	- marketPair = IUniswapV2Factory(uniswapV2Router.factory()).createPair(address(this),uniswapV2Router.WETH()) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#361)
+	- uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#362-368)
+	- IERC20(marketPair).approve(address(uniswapV2Router),type()(uint256).max) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#369)
+	External calls sending eth:
+	- uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#362-368)
+	State variables written after the call(s):
+	- isBotProtectionEnabled = true (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#370)
+Reentrancy in AAI.transferFrom(address,address,uint256) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#321-325):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#322)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#464-470)
+		- CatchthemMap.remove(holder) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#430)
+		- CatchthemMap.set(to,block.timestamp) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#397)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#322)
+		- address(feeOne).transfer(halfShare) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#474)
+		- address(feeTwo).transfer(halfShare) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#475)
+	State variables written after the call(s):
+	- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#323)
+		- _allowances[owner][spender] = amount (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#381)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in AAI._transfer(address,address,uint256) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#385-419):
+	External calls:
+	- catchBalances() (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#396)
+		- CatchthemMap.remove(holder) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#430)
+	- CatchthemMap.set(to,block.timestamp) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#397)
+	- swapTokensForEth(tokenAmount) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#408)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#464-470)
+	External calls sending eth:
+	- swapTokensForEth(tokenAmount) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#408)
+		- address(feeOne).transfer(halfShare) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#474)
+		- address(feeTwo).transfer(halfShare) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#475)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#382)
+		- swapTokensForEth(tokenAmount) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#408)
+	- Transfer(from,to,txnAmount) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#418)
+Reentrancy in AAI.transferFrom(address,address,uint256) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#321-325):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#322)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#464-470)
+		- CatchthemMap.remove(holder) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#430)
+		- CatchthemMap.set(to,block.timestamp) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#397)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#322)
+		- address(feeOne).transfer(halfShare) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#474)
+		- address(feeTwo).transfer(halfShare) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#475)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#382)
+		- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#323)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+AAI.numberOfCaughtBot() (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#435-444) uses timestamp for comparisons
+	Dangerous comparisons:
+	- block.timestamp >= timestamp (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#440)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Address.isContract(address) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#89-98) uses assembly
+	- INLINE ASM (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#96)
+Address._functionCallWithValue(address,bytes,uint256,string) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#125-143) uses assembly
+	- INLINE ASM (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#135-138)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#assembly-usage
+
+Context._msgData() (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#80-84) is never used and should be removed
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dead-code
+
+AAI._tTotal (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#242) is set pre-construction with a non-constant function or state variable:
+	- 10_000_000 * 10 ** _decimals
+AAI._maxWalletAmount (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#243) is set pre-construction with a non-constant function or state variable:
+	- 150_000 * 10 ** _decimals
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#function-initializing-state
+
+Version constraint ^0.8.17 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- VerbatimInvalidDeduplication
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess.
+It is used by:
+	- ^0.8.17 (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#1)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in Address.sendValue(address,uint256) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#100-106):
+	- (success,None) = recipient.call{value: amount}() (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#104)
+Low level call in Address._functionCallWithValue(address,bytes,uint256,string) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#125-143):
+	- (success,returndata) = target.call{value: weiValue}(data) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#129)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Function IUniswapV2Router02.WETH() (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#219) is not in mixedCase
+Variable AAI.CatchthemMap (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#231) is not in mixedCase
+Variable AAI._maxWalletAmount (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#243) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Redundant expression "this (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#81)" inContext (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#74-85)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#redundant-statements
+
+Reentrancy in AAI._transfer(address,address,uint256) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#385-419):
+	External calls:
+	- swapTokensForEth(tokenAmount) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#408)
+		- address(feeOne).transfer(halfShare) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#474)
+		- address(feeTwo).transfer(halfShare) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#475)
+	State variables written after the call(s):
+	- _balances[from] = _balances[from].sub(amount) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#415)
+	- _balances[to] = _balances[to].add(transferAmount) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#416)
+	- _balances[address(this)] = _balances[address(this)].add(taxAmount) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#417)
+	Event emitted after the call(s):
+	- Transfer(from,to,txnAmount) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#418)
+Reentrancy in AAI.transferFrom(address,address,uint256) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#321-325):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#322)
+		- address(feeOne).transfer(halfShare) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#474)
+		- address(feeTwo).transfer(halfShare) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#475)
+	State variables written after the call(s):
+	- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#323)
+		- _allowances[owner][spender] = amount (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#381)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#382)
+		- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#323)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+AAI.slitherConstructorVariables() (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#222-501) uses literals with too many digits:
+	- ethPriceToSwap = 100000000000000000 (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#245)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+AAI._decimals (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#241) should be constant 
+AAI._name (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#239) should be constant 
+AAI._symbol (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#240) should be constant 
+AAI.feeOne (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#234) should be constant 
+AAI.feeTwo (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#235) should be constant 
+AAI.uniswapV2Router (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#232) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+
+AAI.CatchthemMap (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#231) should be immutable 
+AAI._tTotal (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#242) should be immutable 
+AAI.deployer (0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol#249) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+./0x072668a75ba5a0740582d44c8d55a85aadb0644a.sol analyzed (9 contracts with 94 detectors), 43 result(s) found
+
+real	0m2.447s
+user	0m2.214s
+sys	0m0.235s

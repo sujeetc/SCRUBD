@@ -1,0 +1,374 @@
+'solc --version' running
+'solc ./0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+SafeERC20.safeTransferFrom(IERC20,address,address,uint256) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#335-344) uses arbitrary from in transferFrom: require(bool)(token.transferFrom(from,to,value)) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#343)
+Bank.getWinners() (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#697-783) uses arbitrary from in transferFrom: GameWaveContract.transferFrom(address(BullsContract),address(this),GameWaveContract.balanceOf(address(BullsContract))) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#725-729)
+Bank.getWinners() (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#697-783) uses arbitrary from in transferFrom: GameWaveContract.transferFrom(address(BearsContract),address(this),GameWaveContract.balanceOf(address(BearsContract))) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#732-736)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#arbitrary-from-in-transferfrom
+
+GameWave.startPayments() (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#963-969) sends eth to arbitrary user
+	Dangerous calls:
+	- owner.transfer(totalPaymentAmount.sub(lastTotalPaymentAmount)) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#965)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+Bank.getWinners() (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#697-783) uses a weak PRNG: "winningNumber = randomNumber % 10000 (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#714)" 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#weak-PRNG
+
+Reentrancy in Bank.fallback() (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#788-822):
+	External calls:
+	- GameWaveContract.transfer(msg.sender,payoutGW) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#812)
+	External calls sending eth:
+	- msg.sender.transfer(payout) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#806)
+	State variables written after the call(s):
+	- withdrawn = withdrawn.add(lastJackPot) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#818)
+	Bank.withdrawn (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#478) can be used in cross function reentrancies:
+	- Bank.fallback() (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#788-822)
+	- Bank.getWinners() (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#697-783)
+	- Bank.withdrawn (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#478)
+Reentrancy in Bank.getWinners() (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#697-783):
+	External calls:
+	- GameWaveContract.transferFrom(address(BullsContract),address(this),GameWaveContract.balanceOf(address(BullsContract))) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#725-729)
+	- GameWaveContract.transferFrom(address(BearsContract),address(this),GameWaveContract.balanceOf(address(BearsContract))) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#732-736)
+	- GameWaveContract.transfer(crowdSale,tokenReturn) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#760)
+	External calls sending eth:
+	- address(GameWaveContract).transfer(remainder) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#752)
+	State variables written after the call(s):
+	- countOfBears = 0 (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#776)
+	Bank.countOfBears (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#466) can be used in cross function reentrancies:
+	- Bank.countOfBears (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#466)
+	- Bank.getWinners() (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#697-783)
+	- Bank.setInfo(address,uint256) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#607-637)
+	- countOfBulls = 0 (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#777)
+	Bank.countOfBulls (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#467) can be used in cross function reentrancies:
+	- Bank.countOfBulls (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#467)
+	- Bank.getWinners() (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#697-783)
+	- Bank.setInfo(address,uint256) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#607-637)
+	- _setRoundTime(defaultCurrentDeadlineInHours,defaultLastDeadlineInHours) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#781)
+		- currentDeadline = block.timestamp + 60 * 60 * _currentDeadlineInHours (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#544)
+	Bank.currentDeadline (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#461) can be used in cross function reentrancies:
+	- Bank._setRoundTime(uint256,uint256) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#541-546)
+	- Bank.currentDeadline (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#461)
+	- Bank.getState() (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#595-600)
+	- Bank.setInfo(address,uint256) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#607-637)
+	- jackPot = 0 (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#771)
+	Bank.jackPot (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#476) can be used in cross function reentrancies:
+	- Bank.getWinners() (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#697-783)
+	- Bank.jackPot (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#476)
+	- Bank.setInfo(address,uint256) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#607-637)
+	- lastBalanceGW = GameWaveContract.balanceOf(address(this)) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#763)
+	Bank.lastBalanceGW (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#497) can be used in cross function reentrancies:
+	- Bank.getWinners() (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#697-783)
+	- Bank.lastBalanceGW (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#497)
+	- probabilityOfBears = 0 (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#779)
+	Bank.probabilityOfBears (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#473) can be used in cross function reentrancies:
+	- Bank.calculateProbability() (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#650-692)
+	- Bank.getWinners() (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#697-783)
+	- Bank.probabilityOfBears (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#473)
+	- remainder = 0 (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#769)
+	Bank.remainder (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#480) can be used in cross function reentrancies:
+	- Bank.getWinners() (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#697-783)
+	- Bank.remainder (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#480)
+	- remainderGW = 0 (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#770)
+	Bank.remainderGW (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#481) can be used in cross function reentrancies:
+	- Bank.getWinners() (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#697-783)
+	- Bank.remainderGW (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#481)
+	- totalGWSupplyOfBears = 0 (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#768)
+	Bank.totalGWSupplyOfBears (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#471) can be used in cross function reentrancies:
+	- Bank.calculateGWPrize(address) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#848-862)
+	- Bank.calculateProbability() (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#650-692)
+	- Bank.getWinners() (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#697-783)
+	- Bank.totalGWSupplyOfBears (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#471)
+	- totalGWSupplyOfBulls = 0 (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#767)
+	Bank.totalGWSupplyOfBulls (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#470) can be used in cross function reentrancies:
+	- Bank.calculateGWPrize(address) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#848-862)
+	- Bank.calculateProbability() (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#650-692)
+	- Bank.getWinners() (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#697-783)
+	- Bank.totalGWSupplyOfBulls (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#470)
+	- totalSupplyOfBears = 0 (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#766)
+	Bank.totalSupplyOfBears (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#469) can be used in cross function reentrancies:
+	- Bank.calculateETHPrize(address) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#828-842)
+	- Bank.calculateGWPrize(address) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#848-862)
+	- Bank.calculateProbability() (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#650-692)
+	- Bank.getWinners() (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#697-783)
+	- Bank.setInfo(address,uint256) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#607-637)
+	- Bank.totalSupplyOfBears (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#469)
+	- totalSupplyOfBulls = 0 (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#765)
+	Bank.totalSupplyOfBulls (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#468) can be used in cross function reentrancies:
+	- Bank.calculateETHPrize(address) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#828-842)
+	- Bank.calculateGWPrize(address) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#848-862)
+	- Bank.calculateProbability() (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#650-692)
+	- Bank.getWinners() (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#697-783)
+	- Bank.setInfo(address,uint256) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#607-637)
+	- Bank.totalSupplyOfBulls (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#468)
+	- winner = 0 (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#774)
+	Bank.winner (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#477) can be used in cross function reentrancies:
+	- Bank.calculateProbability() (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#650-692)
+	- Bank.getWinners() (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#697-783)
+	- Bank.winner (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#477)
+	- withdrawn = 0 (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#773)
+	Bank.withdrawn (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#478) can be used in cross function reentrancies:
+	- Bank.fallback() (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#788-822)
+	- Bank.getWinners() (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#697-783)
+	- Bank.withdrawn (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#478)
+	- withdrawnGW = 0 (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#775)
+	Bank.withdrawnGW (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#479) can be used in cross function reentrancies:
+	- Bank.fallback() (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#788-822)
+	- Bank.getWinners() (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#697-783)
+	- Bank.withdrawnGW (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#479)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+Bank.getWinners() (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#697-783) ignores return value by GameWaveContract.transferFrom(address(BullsContract),address(this),GameWaveContract.balanceOf(address(BullsContract))) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#725-729)
+Bank.getWinners() (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#697-783) ignores return value by GameWaveContract.transferFrom(address(BearsContract),address(this),GameWaveContract.balanceOf(address(BearsContract))) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#732-736)
+Bank.getWinners() (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#697-783) ignores return value by GameWaveContract.transfer(crowdSale,tokenReturn) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#760)
+Bank.fallback() (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#788-822) ignores return value by GameWaveContract.transfer(msg.sender,payoutGW) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#812)
+Sale.fallback() (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#1063-1068) ignores return value by GWContract.transfer(msg.sender,balance) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#1066)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+Bank.calculateGWPrize(address) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#848-862) performs a multiplication on the result of a division:
+	- totalSupply = (totalGWSupplyOfBears.add(totalGWSupplyOfBulls)).mul(80).div(100) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#851)
+	- payout = totalSupply.mul(depositBulls[currentRound][participant]).div(totalSupplyOfBulls) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#858)
+Bank.calculateGWPrize(address) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#848-862) performs a multiplication on the result of a division:
+	- totalSupply = (totalGWSupplyOfBears.add(totalGWSupplyOfBulls)).mul(80).div(100) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#851)
+	- payout = totalSupply.mul(depositBears[currentRound][participant]).div(totalSupplyOfBears) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#854)
+Bank.calculateLastGWPrize(address) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#888-902) performs a multiplication on the result of a division:
+	- totalSupply = (lastTotalGWSupplyOfBears.add(lastTotalGWSupplyOfBulls)).mul(80).div(100) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#891)
+	- payout = totalSupply.mul(depositBulls[currentRound - 1][_lastParticipant]).div(lastTotalSupplyOfBulls) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#898)
+Bank.calculateLastGWPrize(address) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#888-902) performs a multiplication on the result of a division:
+	- totalSupply = (lastTotalGWSupplyOfBears.add(lastTotalGWSupplyOfBulls)).mul(80).div(100) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#891)
+	- payout = totalSupply.mul(depositBears[currentRound - 1][_lastParticipant]).div(lastTotalSupplyOfBears) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#894)
+Sale.fallback() (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#1063-1068) performs a multiplication on the result of a division:
+	- balance = (amount / buyPrice) * 10 ** 18 (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#1065)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+Bank.getWinners() (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#697-783) uses a dangerous strict equality:
+	- randomNumber == 0 (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#710)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-strict-equalities
+
+Bears.constructor(address,address) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#1007-1012) ignores return value by GameWaveContract.approve(_bankAddress,9999999999999999999000000000000000000) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#1011)
+Bulls.constructor(address,address) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#1019-1024) ignores return value by GameWaveContract.approve(_bankAddress,9999999999999999999000000000000000000) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#1023)
+Sale.constructor(address) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#1039-1045) ignores return value by GWContract.approve(owner,9999999999999999999000000000000000000) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#1044)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+ERC20Detailed.constructor(string,string,uint8).name (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#394) shadows:
+	- ERC20Detailed.name() (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#403-405) (function)
+ERC20Detailed.constructor(string,string,uint8).symbol (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#394) shadows:
+	- ERC20Detailed.symbol() (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#410-412) (function)
+ERC20Detailed.constructor(string,string,uint8).decimals (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#394) shadows:
+	- ERC20Detailed.decimals() (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#417-419) (function)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#local-variable-shadowing
+
+Ownable.transferOwnership(address) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#438-441) should emit an event for: 
+	- owner = newOwner (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#440) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-access-control
+
+Bank.setRateToken(uint256,uint256) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#523-526) should emit an event for: 
+	- rate = _rate (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#524) 
+	- rateModifier = _rateModifier (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#525) 
+Bank.setInfo(address,uint256) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#607-637) should emit an event for: 
+	- totalSupplyOfBears = totalSupplyOfBears.add(_deposit.mul(90).div(100)) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#614) 
+	- totalSupplyOfBulls = totalSupplyOfBulls.add(_deposit.mul(90).div(100)) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#622) 
+	- jackPot += _deposit.mul(10).div(100) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#634) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+Bank.constructor(address)._crowdSale (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#513) lacks a zero-check on :
+		- crowdSale = _crowdSale (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#515)
+Bank.setCrowdSale(address)._crowdSale (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#532) lacks a zero-check on :
+		- crowdSale = _crowdSale (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#533)
+GameWave.withdrawDividends(address)._holder (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#951) lacks a zero-check on :
+		- _holder.transfer(dividends) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#955)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in Bank.fallback() (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#788-822):
+	External calls:
+	- GameWaveContract.transfer(msg.sender,payoutGW) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#812)
+	External calls sending eth:
+	- msg.sender.transfer(payout) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#806)
+	State variables written after the call(s):
+	- lastHeroHistory = lastRoundHero (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#816)
+	- lastRoundHero = address(0x0) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#817)
+Reentrancy in Bank.getWinners() (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#697-783):
+	External calls:
+	- GameWaveContract.transferFrom(address(BullsContract),address(this),GameWaveContract.balanceOf(address(BullsContract))) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#725-729)
+	- GameWaveContract.transferFrom(address(BearsContract),address(this),GameWaveContract.balanceOf(address(BearsContract))) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#732-736)
+	State variables written after the call(s):
+	- lastCountOfBears = countOfBears (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#745)
+	- lastCountOfBulls = countOfBulls (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#746)
+	- lastJackPot = jackPot (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#743)
+	- lastRoundHero = lastHero (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#742)
+	- lastTotalGWSupplyOfBears = totalGWSupplyOfBears (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#740)
+	- lastTotalGWSupplyOfBulls = totalGWSupplyOfBulls (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#741)
+	- lastTotalSupplyOfBears = totalSupplyOfBears (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#739)
+	- lastTotalSupplyOfBulls = totalSupplyOfBulls (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#738)
+	- lastWinner = winner (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#744)
+	- lastWithdrawn = withdrawn (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#747)
+	- lastWithdrawnGW = withdrawnGW (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#748)
+	- remainder = lastBalance.sub(lastWithdrawn) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#751)
+Reentrancy in Bank.getWinners() (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#697-783):
+	External calls:
+	- GameWaveContract.transferFrom(address(BullsContract),address(this),GameWaveContract.balanceOf(address(BullsContract))) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#725-729)
+	- GameWaveContract.transferFrom(address(BearsContract),address(this),GameWaveContract.balanceOf(address(BearsContract))) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#732-736)
+	External calls sending eth:
+	- address(GameWaveContract).transfer(remainder) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#752)
+	State variables written after the call(s):
+	- lastBalance = lastTotalSupplyOfBears.add(lastTotalSupplyOfBulls).add(lastJackPot) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#755)
+	- remainderGW = lastBalanceGW.sub(lastWithdrawnGW) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#758)
+	- tokenReturn = (totalGWSupplyOfBears.add(totalGWSupplyOfBulls)).mul(20).div(100).add(remainderGW) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#759)
+Reentrancy in Bank.getWinners() (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#697-783):
+	External calls:
+	- GameWaveContract.transferFrom(address(BullsContract),address(this),GameWaveContract.balanceOf(address(BullsContract))) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#725-729)
+	- GameWaveContract.transferFrom(address(BearsContract),address(this),GameWaveContract.balanceOf(address(BearsContract))) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#732-736)
+	- GameWaveContract.transfer(crowdSale,tokenReturn) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#760)
+	External calls sending eth:
+	- address(GameWaveContract).transfer(remainder) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#752)
+	State variables written after the call(s):
+	- currentRound ++ (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#782)
+	- _setRoundTime(defaultCurrentDeadlineInHours,defaultLastDeadlineInHours) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#781)
+		- defaultCurrentDeadlineInHours = _currentDeadlineInHours (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#542)
+	- _setRoundTime(defaultCurrentDeadlineInHours,defaultLastDeadlineInHours) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#781)
+		- defaultLastDeadlineInHours = _lastDeadlineInHours (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#543)
+	- _setRoundTime(defaultCurrentDeadlineInHours,defaultLastDeadlineInHours) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#781)
+		- lastDeadline = block.timestamp + 60 * 60 * _lastDeadlineInHours (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#545)
+	- probabilityOfBulls = 0 (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#778)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Bank.getState() (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#595-600) uses timestamp for comparisons
+	Dangerous comparisons:
+	- block.timestamp > currentDeadline (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#596)
+Bank.setInfo(address,uint256) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#607-637) uses timestamp for comparisons
+	Dangerous comparisons:
+	- currentDeadline.add(120) <= lastDeadline (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#628)
+Bank.getWinners() (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#697-783) uses timestamp for comparisons
+	Dangerous comparisons:
+	- randomNumber == 0 (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#710)
+	- 1 <= winningNumber && winningNumber <= probabilityOfBears (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#716)
+	- probabilityOfBears < winningNumber && winningNumber <= 10000 (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#720)
+GameWave.getDividends(address) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#938-944) uses timestamp for comparisons
+	Dangerous comparisons:
+	- paymentsTime >= lastWithdrawTime[_holder] (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#939)
+GameWave.startPayments() (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#963-969) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(block.timestamp >= paymentsTime + 2592000) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#964)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+ERC20._burn(address,uint256) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#290-297) is never used and should be removed
+ERC20._burnFrom(address,uint256) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#306-312) is never used and should be removed
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dead-code
+
+Version constraint 0.5.6 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- ABIEncoderV2CalldataStructsWithStaticallySizedAndDynamicallyEncodedMembers
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor
+	- IncorrectEventSignatureInLibraries
+	- ABIEncoderV2PackedStorage
+	- IncorrectByteInstructionOptimization.
+It is used by:
+	- 0.5.6 (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#1)
+solc-0.5.6 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Parameter Bank.setRateToken(uint256,uint256)._rate (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#523) is not in mixedCase
+Parameter Bank.setRateToken(uint256,uint256)._rateModifier (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#523) is not in mixedCase
+Parameter Bank.setCrowdSale(address)._crowdSale (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#532) is not in mixedCase
+Parameter Bank.setRoundTime(uint256,uint256)._currentDeadlineInHours (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#553) is not in mixedCase
+Parameter Bank.setRoundTime(uint256,uint256)._lastDeadlineInHours (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#553) is not in mixedCase
+Parameter Bank.setGameWaveAddress(address)._GameWaveAddress (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#562) is not in mixedCase
+Parameter Bank.setBearsAddress(address)._bearsAddress (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#571) is not in mixedCase
+Parameter Bank.setBullsAddress(address)._bullsAddress (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#580) is not in mixedCase
+Parameter Bank.setInfo(address,uint256)._lastHero (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#607) is not in mixedCase
+Parameter Bank.setInfo(address,uint256)._deposit (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#607) is not in mixedCase
+Parameter Bank.estimateTokenPercent(uint256)._difference (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#639) is not in mixedCase
+Parameter Bank.calculateLastETHPrize(address)._lastParticipant (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#868) is not in mixedCase
+Parameter Bank.calculateLastGWPrize(address)._lastParticipant (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#888) is not in mixedCase
+Variable Bank.BearsContract (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#506) is not in mixedCase
+Variable Bank.BullsContract (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#507) is not in mixedCase
+Variable Bank.GameWaveContract (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#508) is not in mixedCase
+Parameter GameWave.getDividends(address)._holder (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#938) is not in mixedCase
+Parameter GameWave.withdrawDividends(address)._holder (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#951) is not in mixedCase
+Variable CryptoTeam.BankContract (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#981) is not in mixedCase
+Variable CryptoTeam.GameWaveContract (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#982) is not in mixedCase
+Variable Sale.GWContract (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#1032) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in Bank.fallback() (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#788-822):
+	External calls:
+	- msg.sender.transfer(payout) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#806)
+	State variables written after the call(s):
+	- lastHeroHistory = lastRoundHero (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#816)
+	- lastRoundHero = address(0x0) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#817)
+	- withdrawn = withdrawn.add(lastJackPot) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#818)
+	- withdrawnGW = withdrawnGW.add(payoutGW) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#811)
+Reentrancy in Bank.getWinners() (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#697-783):
+	External calls:
+	- address(GameWaveContract).transfer(remainder) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#752)
+	State variables written after the call(s):
+	- countOfBears = 0 (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#776)
+	- countOfBulls = 0 (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#777)
+	- _setRoundTime(defaultCurrentDeadlineInHours,defaultLastDeadlineInHours) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#781)
+		- currentDeadline = block.timestamp + 60 * 60 * _currentDeadlineInHours (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#544)
+	- currentRound ++ (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#782)
+	- _setRoundTime(defaultCurrentDeadlineInHours,defaultLastDeadlineInHours) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#781)
+		- defaultCurrentDeadlineInHours = _currentDeadlineInHours (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#542)
+	- _setRoundTime(defaultCurrentDeadlineInHours,defaultLastDeadlineInHours) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#781)
+		- defaultLastDeadlineInHours = _lastDeadlineInHours (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#543)
+	- jackPot = 0 (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#771)
+	- lastBalance = lastTotalSupplyOfBears.add(lastTotalSupplyOfBulls).add(lastJackPot) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#755)
+	- lastBalanceGW = GameWaveContract.balanceOf(address(this)) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#763)
+	- _setRoundTime(defaultCurrentDeadlineInHours,defaultLastDeadlineInHours) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#781)
+		- lastDeadline = block.timestamp + 60 * 60 * _lastDeadlineInHours (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#545)
+	- probabilityOfBears = 0 (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#779)
+	- probabilityOfBulls = 0 (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#778)
+	- remainder = 0 (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#769)
+	- remainderGW = lastBalanceGW.sub(lastWithdrawnGW) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#758)
+	- remainderGW = 0 (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#770)
+	- tokenReturn = (totalGWSupplyOfBears.add(totalGWSupplyOfBulls)).mul(20).div(100).add(remainderGW) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#759)
+	- totalGWSupplyOfBears = 0 (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#768)
+	- totalGWSupplyOfBulls = 0 (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#767)
+	- totalSupplyOfBears = 0 (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#766)
+	- totalSupplyOfBulls = 0 (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#765)
+	- winner = 0 (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#774)
+	- withdrawn = 0 (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#773)
+	- withdrawnGW = 0 (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#775)
+Reentrancy in GameWave.startPayments() (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#963-969):
+	External calls:
+	- owner.transfer(totalPaymentAmount.sub(lastTotalPaymentAmount)) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#965)
+	State variables written after the call(s):
+	- lastTotalPaymentAmount = 0 (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#968)
+	- paymentsTime = block.timestamp (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#967)
+	- totalPaymentAmount = address(this).balance (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#966)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+GameWave.slitherConstructorVariables() (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#905-970) uses literals with too many digits:
+	- minted = 20000000 (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#910)
+Bears.constructor(address,address) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#1007-1012) uses literals with too many digits:
+	- GameWaveContract.approve(_bankAddress,9999999999999999999000000000000000000) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#1011)
+Bulls.constructor(address,address) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#1019-1024) uses literals with too many digits:
+	- GameWaveContract.approve(_bankAddress,9999999999999999999000000000000000000) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#1023)
+Sale.constructor(address) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#1039-1045) uses literals with too many digits:
+	- GWContract.approve(owner,9999999999999999999000000000000000000) (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#1044)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+Sale.crowdSaleClosed (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#1037) is never used in Sale (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#1030-1070)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-state-variable
+
+Bank.finished (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#504) should be constant 
+Bank.lastProbabilityOfBears (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#492) should be constant 
+Bank.lastProbabilityOfBulls (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#491) should be constant 
+GameWave.minted (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#910) should be constant 
+Sale.crowdSaleClosed (0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol#1037) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+./0x1f42f986f9ef31d6ef787565b211bce0eb877bcc.sol analyzed (12 contracts with 94 detectors), 77 result(s) found
+
+real	0m4.410s
+user	0m4.161s
+sys	0m0.250s

@@ -1,0 +1,998 @@
+'solc --version' running
+'solc ./0x119995a900c86c6aaf68b917341b844c3786913c.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x119995a900c86c6aaf68b917341b844c3786913c.sol:
+Warning: Contract code size exceeds 24576 bytes (a limit introduced in Spurious Dragon). This contract may not be deployable on mainnet. Consider enabling the optimizer (with a low "runs" value!), turning off revert strings, or using libraries.
+   --> ./0x119995a900c86c6aaf68b917341b844c3786913c.sol:594:1:
+    |
+594 | contract GLITCH is Context, IERC20, Ownable {
+    | ^ (Relevant source part starts here and spans across multiple lines).
+
+
+
+Balancer.swapEthForTokens(uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#544-556) sends eth to arbitrary user
+	Dangerous calls:
+	- _uniswapV2Router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: EthAmount}(0,uniswapPairPath,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#549-555)
+GLITCH.addLiquidityForEth(uint256,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#900-913) sends eth to arbitrary user
+	Dangerous calls:
+	- _uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#905-912)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+Reentrancy in GLITCH._transfer(address,address,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#813-850):
+	External calls:
+	- swapAndLiquifyForEth(lockedBalanceForPool) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#833)
+		- _uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#905-912)
+		- IERC20(pairTokenAddress).approve(address(_uniswapV2Router),pairTokenAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#943)
+		- _uniswapV2Router.addLiquidity(address(this),pairTokenAddress,tokenAmount,pairTokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#946-955)
+		- _uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#891-897)
+		- swaper.swapTokens(pairTokenAddress,half) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#926)
+		- IUniswapV2Pair(currentPoolAddress).sync() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1008)
+	- swapAndLiquifyForTokens(currentPairTokenAddress,lockedBalanceForPool) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#835)
+		- _uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#905-912)
+		- IERC20(pairTokenAddress).approve(address(_uniswapV2Router),pairTokenAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#943)
+		- _uniswapV2Router.addLiquidity(address(this),pairTokenAddress,tokenAmount,pairTokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#946-955)
+		- _uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#891-897)
+		- swaper.swapTokens(pairTokenAddress,half) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#926)
+		- IUniswapV2Pair(currentPoolAddress).sync() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1008)
+	External calls sending eth:
+	- swapAndLiquifyForEth(lockedBalanceForPool) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#833)
+		- _uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#905-912)
+	- swapAndLiquifyForTokens(currentPairTokenAddress,lockedBalanceForPool) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#835)
+		- _uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#905-912)
+	State variables written after the call(s):
+	- _transferFromExcluded(sender,recipient,amount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#840)
+		- _rOwned[sender] = _rOwned[sender].sub(rAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1053)
+		- _rOwned[recipient] = _rOwned[recipient].add(rAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1055)
+		- _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1058)
+		- _rOwned[address(this)] = _rOwned[address(this)].add(rLock) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1059)
+	GLITCH._rOwned (0x119995a900c86c6aaf68b917341b844c3786913c.sol#600) can be used in cross function reentrancies:
+	- GLITCH._getCurrentSupply() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1119-1129)
+	- GLITCH._sendRewardInterestToPool() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1001-1010)
+	- GLITCH._transferBothExcluded(address,address,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1066-1085)
+	- GLITCH._transferFromExcluded(address,address,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1048-1064)
+	- GLITCH._transferStandard(address,address,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1012-1027)
+	- GLITCH._transferToExcluded(address,address,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1029-1046)
+	- GLITCH.alchemy() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#958-986)
+	- GLITCH.balanceOf(address) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#713-716)
+	- GLITCH.constructor(IUniswapV2Router02,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#673-695)
+	- GLITCH.excludeAccount(address) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#779-790)
+	- GLITCH.reflect(uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#753-760)
+	- _transferToExcluded(sender,recipient,amount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#842)
+		- _rOwned[sender] = _rOwned[sender].sub(rAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1033)
+		- _rOwned[recipient] = _rOwned[recipient].add(rAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1036)
+		- _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1040)
+		- _rOwned[address(this)] = _rOwned[address(this)].add(rLock) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1041)
+	GLITCH._rOwned (0x119995a900c86c6aaf68b917341b844c3786913c.sol#600) can be used in cross function reentrancies:
+	- GLITCH._getCurrentSupply() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1119-1129)
+	- GLITCH._sendRewardInterestToPool() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1001-1010)
+	- GLITCH._transferBothExcluded(address,address,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1066-1085)
+	- GLITCH._transferFromExcluded(address,address,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1048-1064)
+	- GLITCH._transferStandard(address,address,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1012-1027)
+	- GLITCH._transferToExcluded(address,address,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1029-1046)
+	- GLITCH.alchemy() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#958-986)
+	- GLITCH.balanceOf(address) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#713-716)
+	- GLITCH.constructor(IUniswapV2Router02,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#673-695)
+	- GLITCH.excludeAccount(address) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#779-790)
+	- GLITCH.reflect(uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#753-760)
+	- _transferStandard(sender,recipient,amount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#844)
+		- _rOwned[sender] = _rOwned[sender].sub(rAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1016)
+		- _rOwned[recipient] = _rOwned[recipient].add(rAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1018)
+		- _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1021)
+		- _rOwned[address(this)] = _rOwned[address(this)].add(rLock) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1022)
+	GLITCH._rOwned (0x119995a900c86c6aaf68b917341b844c3786913c.sol#600) can be used in cross function reentrancies:
+	- GLITCH._getCurrentSupply() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1119-1129)
+	- GLITCH._sendRewardInterestToPool() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1001-1010)
+	- GLITCH._transferBothExcluded(address,address,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1066-1085)
+	- GLITCH._transferFromExcluded(address,address,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1048-1064)
+	- GLITCH._transferStandard(address,address,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1012-1027)
+	- GLITCH._transferToExcluded(address,address,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1029-1046)
+	- GLITCH.alchemy() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#958-986)
+	- GLITCH.balanceOf(address) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#713-716)
+	- GLITCH.constructor(IUniswapV2Router02,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#673-695)
+	- GLITCH.excludeAccount(address) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#779-790)
+	- GLITCH.reflect(uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#753-760)
+	- _transferBothExcluded(sender,recipient,amount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#846)
+		- _rOwned[sender] = _rOwned[sender].sub(rAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1071)
+		- _rOwned[recipient] = _rOwned[recipient].add(rAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1074)
+		- _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1079)
+		- _rOwned[address(this)] = _rOwned[address(this)].add(rLock) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1080)
+	GLITCH._rOwned (0x119995a900c86c6aaf68b917341b844c3786913c.sol#600) can be used in cross function reentrancies:
+	- GLITCH._getCurrentSupply() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1119-1129)
+	- GLITCH._sendRewardInterestToPool() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1001-1010)
+	- GLITCH._transferBothExcluded(address,address,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1066-1085)
+	- GLITCH._transferFromExcluded(address,address,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1048-1064)
+	- GLITCH._transferStandard(address,address,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1012-1027)
+	- GLITCH._transferToExcluded(address,address,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1029-1046)
+	- GLITCH.alchemy() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#958-986)
+	- GLITCH.balanceOf(address) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#713-716)
+	- GLITCH.constructor(IUniswapV2Router02,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#673-695)
+	- GLITCH.excludeAccount(address) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#779-790)
+	- GLITCH.reflect(uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#753-760)
+	- _transferStandard(sender,recipient,amount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#848)
+		- _rOwned[sender] = _rOwned[sender].sub(rAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1016)
+		- _rOwned[recipient] = _rOwned[recipient].add(rAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1018)
+		- _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1021)
+		- _rOwned[address(this)] = _rOwned[address(this)].add(rLock) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1022)
+	GLITCH._rOwned (0x119995a900c86c6aaf68b917341b844c3786913c.sol#600) can be used in cross function reentrancies:
+	- GLITCH._getCurrentSupply() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1119-1129)
+	- GLITCH._sendRewardInterestToPool() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1001-1010)
+	- GLITCH._transferBothExcluded(address,address,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1066-1085)
+	- GLITCH._transferFromExcluded(address,address,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1048-1064)
+	- GLITCH._transferStandard(address,address,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1012-1027)
+	- GLITCH._transferToExcluded(address,address,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1029-1046)
+	- GLITCH.alchemy() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#958-986)
+	- GLITCH.balanceOf(address) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#713-716)
+	- GLITCH.constructor(IUniswapV2Router02,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#673-695)
+	- GLITCH.excludeAccount(address) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#779-790)
+	- GLITCH.reflect(uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#753-760)
+	- _transferFromExcluded(sender,recipient,amount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#840)
+		- _rTotal = _rTotal.sub(rFee) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1088)
+	GLITCH._rTotal (0x119995a900c86c6aaf68b917341b844c3786913c.sol#612) can be used in cross function reentrancies:
+	- GLITCH._getCurrentSupply() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1119-1129)
+	- GLITCH._reflectFee(uint256,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1087-1090)
+	- GLITCH.alchemy() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#958-986)
+	- GLITCH.reflect(uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#753-760)
+	- GLITCH.tokenFromReflection(uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#773-777)
+	- _transferToExcluded(sender,recipient,amount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#842)
+		- _rTotal = _rTotal.sub(rFee) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1088)
+	GLITCH._rTotal (0x119995a900c86c6aaf68b917341b844c3786913c.sol#612) can be used in cross function reentrancies:
+	- GLITCH._getCurrentSupply() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1119-1129)
+	- GLITCH._reflectFee(uint256,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1087-1090)
+	- GLITCH.alchemy() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#958-986)
+	- GLITCH.reflect(uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#753-760)
+	- GLITCH.tokenFromReflection(uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#773-777)
+	- _transferStandard(sender,recipient,amount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#844)
+		- _rTotal = _rTotal.sub(rFee) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1088)
+	GLITCH._rTotal (0x119995a900c86c6aaf68b917341b844c3786913c.sol#612) can be used in cross function reentrancies:
+	- GLITCH._getCurrentSupply() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1119-1129)
+	- GLITCH._reflectFee(uint256,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1087-1090)
+	- GLITCH.alchemy() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#958-986)
+	- GLITCH.reflect(uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#753-760)
+	- GLITCH.tokenFromReflection(uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#773-777)
+	- _transferBothExcluded(sender,recipient,amount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#846)
+		- _rTotal = _rTotal.sub(rFee) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1088)
+	GLITCH._rTotal (0x119995a900c86c6aaf68b917341b844c3786913c.sol#612) can be used in cross function reentrancies:
+	- GLITCH._getCurrentSupply() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1119-1129)
+	- GLITCH._reflectFee(uint256,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1087-1090)
+	- GLITCH.alchemy() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#958-986)
+	- GLITCH.reflect(uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#753-760)
+	- GLITCH.tokenFromReflection(uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#773-777)
+	- _transferStandard(sender,recipient,amount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#848)
+		- _rTotal = _rTotal.sub(rFee) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1088)
+	GLITCH._rTotal (0x119995a900c86c6aaf68b917341b844c3786913c.sol#612) can be used in cross function reentrancies:
+	- GLITCH._getCurrentSupply() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1119-1129)
+	- GLITCH._reflectFee(uint256,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1087-1090)
+	- GLITCH.alchemy() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#958-986)
+	- GLITCH.reflect(uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#753-760)
+	- GLITCH.tokenFromReflection(uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#773-777)
+	- _transferFromExcluded(sender,recipient,amount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#840)
+		- _tFeeTotal = _tFeeTotal.add(tFee) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1089)
+	GLITCH._tFeeTotal (0x119995a900c86c6aaf68b917341b844c3786913c.sol#613) can be used in cross function reentrancies:
+	- GLITCH._reflectFee(uint256,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1087-1090)
+	- GLITCH._tFeeTotal (0x119995a900c86c6aaf68b917341b844c3786913c.sol#613)
+	- GLITCH.reflect(uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#753-760)
+	- _transferToExcluded(sender,recipient,amount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#842)
+		- _tFeeTotal = _tFeeTotal.add(tFee) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1089)
+	GLITCH._tFeeTotal (0x119995a900c86c6aaf68b917341b844c3786913c.sol#613) can be used in cross function reentrancies:
+	- GLITCH._reflectFee(uint256,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1087-1090)
+	- GLITCH._tFeeTotal (0x119995a900c86c6aaf68b917341b844c3786913c.sol#613)
+	- GLITCH.reflect(uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#753-760)
+	- _transferStandard(sender,recipient,amount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#844)
+		- _tFeeTotal = _tFeeTotal.add(tFee) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1089)
+	GLITCH._tFeeTotal (0x119995a900c86c6aaf68b917341b844c3786913c.sol#613) can be used in cross function reentrancies:
+	- GLITCH._reflectFee(uint256,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1087-1090)
+	- GLITCH._tFeeTotal (0x119995a900c86c6aaf68b917341b844c3786913c.sol#613)
+	- GLITCH.reflect(uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#753-760)
+	- _transferBothExcluded(sender,recipient,amount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#846)
+		- _tFeeTotal = _tFeeTotal.add(tFee) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1089)
+	GLITCH._tFeeTotal (0x119995a900c86c6aaf68b917341b844c3786913c.sol#613) can be used in cross function reentrancies:
+	- GLITCH._reflectFee(uint256,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1087-1090)
+	- GLITCH._tFeeTotal (0x119995a900c86c6aaf68b917341b844c3786913c.sol#613)
+	- GLITCH.reflect(uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#753-760)
+	- _transferStandard(sender,recipient,amount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#848)
+		- _tFeeTotal = _tFeeTotal.add(tFee) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1089)
+	GLITCH._tFeeTotal (0x119995a900c86c6aaf68b917341b844c3786913c.sol#613) can be used in cross function reentrancies:
+	- GLITCH._reflectFee(uint256,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1087-1090)
+	- GLITCH._tFeeTotal (0x119995a900c86c6aaf68b917341b844c3786913c.sol#613)
+	- GLITCH.reflect(uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#753-760)
+	- _transferFromExcluded(sender,recipient,amount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#840)
+		- _tOwned[sender] = _tOwned[sender].sub(tAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1052)
+	GLITCH._tOwned (0x119995a900c86c6aaf68b917341b844c3786913c.sol#601) can be used in cross function reentrancies:
+	- GLITCH._getCurrentSupply() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1119-1129)
+	- GLITCH._transferBothExcluded(address,address,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1066-1085)
+	- GLITCH._transferFromExcluded(address,address,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1048-1064)
+	- GLITCH._transferToExcluded(address,address,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1029-1046)
+	- GLITCH.balanceOf(address) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#713-716)
+	- GLITCH.excludeAccount(address) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#779-790)
+	- GLITCH.includeAccount(address) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#792-803)
+	- _transferToExcluded(sender,recipient,amount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#842)
+		- _tOwned[recipient] = _tOwned[recipient].add(tAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1035)
+		- _tOwned[recipient] = _tOwned[recipient].add(tTransferAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1039)
+	GLITCH._tOwned (0x119995a900c86c6aaf68b917341b844c3786913c.sol#601) can be used in cross function reentrancies:
+	- GLITCH._getCurrentSupply() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1119-1129)
+	- GLITCH._transferBothExcluded(address,address,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1066-1085)
+	- GLITCH._transferFromExcluded(address,address,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1048-1064)
+	- GLITCH._transferToExcluded(address,address,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1029-1046)
+	- GLITCH.balanceOf(address) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#713-716)
+	- GLITCH.excludeAccount(address) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#779-790)
+	- GLITCH.includeAccount(address) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#792-803)
+	- _transferBothExcluded(sender,recipient,amount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#846)
+		- _tOwned[sender] = _tOwned[sender].sub(tAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1070)
+		- _tOwned[recipient] = _tOwned[recipient].add(tAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1073)
+		- _tOwned[recipient] = _tOwned[recipient].add(tTransferAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1078)
+	GLITCH._tOwned (0x119995a900c86c6aaf68b917341b844c3786913c.sol#601) can be used in cross function reentrancies:
+	- GLITCH._getCurrentSupply() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1119-1129)
+	- GLITCH._transferBothExcluded(address,address,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1066-1085)
+	- GLITCH._transferFromExcluded(address,address,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1048-1064)
+	- GLITCH._transferToExcluded(address,address,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1029-1046)
+	- GLITCH.balanceOf(address) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#713-716)
+	- GLITCH.excludeAccount(address) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#779-790)
+	- GLITCH.includeAccount(address) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#792-803)
+Reentrancy in GLITCH.swapAndLiquifyForEth(uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#854-880):
+	External calls:
+	- swapTokensForEth(half) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#867)
+		- _uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#891-897)
+	- addLiquidityForEth(otherHalf,newBalance) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#873)
+		- _uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#905-912)
+	- _transfer(address(this),tx.origin,_autoSwapCallerFee) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#877)
+		- _uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#905-912)
+		- IERC20(pairTokenAddress).approve(address(_uniswapV2Router),pairTokenAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#943)
+		- _uniswapV2Router.addLiquidity(address(this),pairTokenAddress,tokenAmount,pairTokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#946-955)
+		- _uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#891-897)
+		- swaper.swapTokens(pairTokenAddress,half) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#926)
+		- IUniswapV2Pair(currentPoolAddress).sync() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1008)
+	- _sendRewardInterestToPool() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#879)
+		- IUniswapV2Pair(currentPoolAddress).sync() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1008)
+	External calls sending eth:
+	- addLiquidityForEth(otherHalf,newBalance) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#873)
+		- _uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#905-912)
+	- _transfer(address(this),tx.origin,_autoSwapCallerFee) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#877)
+		- _uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#905-912)
+	State variables written after the call(s):
+	- _sendRewardInterestToPool() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#879)
+		- _rOwned[currentPoolAddress] = _rOwned[currentPoolAddress].add(rRewardInterest) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1005)
+		- _rOwned[_rewardWallet] = _rOwned[_rewardWallet].sub(rRewardInterest) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1006)
+	GLITCH._rOwned (0x119995a900c86c6aaf68b917341b844c3786913c.sol#600) can be used in cross function reentrancies:
+	- GLITCH._getCurrentSupply() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1119-1129)
+	- GLITCH._sendRewardInterestToPool() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1001-1010)
+	- GLITCH._transferBothExcluded(address,address,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1066-1085)
+	- GLITCH._transferFromExcluded(address,address,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1048-1064)
+	- GLITCH._transferStandard(address,address,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1012-1027)
+	- GLITCH._transferToExcluded(address,address,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1029-1046)
+	- GLITCH.alchemy() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#958-986)
+	- GLITCH.balanceOf(address) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#713-716)
+	- GLITCH.constructor(IUniswapV2Router02,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#673-695)
+	- GLITCH.excludeAccount(address) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#779-790)
+	- GLITCH.reflect(uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#753-760)
+Reentrancy in GLITCH.swapAndLiquifyForTokens(address,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#915-938):
+	External calls:
+	- _transfer(address(this),address(swaper),half) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#921)
+		- _uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#905-912)
+		- IERC20(pairTokenAddress).approve(address(_uniswapV2Router),pairTokenAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#943)
+		- _uniswapV2Router.addLiquidity(address(this),pairTokenAddress,tokenAmount,pairTokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#946-955)
+		- _uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#891-897)
+		- swaper.swapTokens(pairTokenAddress,half) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#926)
+		- IUniswapV2Pair(currentPoolAddress).sync() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1008)
+	- swaper.swapTokens(pairTokenAddress,half) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#926)
+	- addLiquidityForTokens(pairTokenAddress,otherHalf,newPairTokenBalance) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#931)
+		- IERC20(pairTokenAddress).approve(address(_uniswapV2Router),pairTokenAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#943)
+		- _uniswapV2Router.addLiquidity(address(this),pairTokenAddress,tokenAmount,pairTokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#946-955)
+	- _transfer(address(this),tx.origin,_autoSwapCallerFee) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#935)
+		- _uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#905-912)
+		- IERC20(pairTokenAddress).approve(address(_uniswapV2Router),pairTokenAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#943)
+		- _uniswapV2Router.addLiquidity(address(this),pairTokenAddress,tokenAmount,pairTokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#946-955)
+		- _uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#891-897)
+		- swaper.swapTokens(pairTokenAddress,half) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#926)
+		- IUniswapV2Pair(currentPoolAddress).sync() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1008)
+	External calls sending eth:
+	- _transfer(address(this),address(swaper),half) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#921)
+		- _uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#905-912)
+	- _transfer(address(this),tx.origin,_autoSwapCallerFee) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#935)
+		- _uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#905-912)
+	State variables written after the call(s):
+	- _transfer(address(this),tx.origin,_autoSwapCallerFee) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#935)
+		- _rOwned[currentPoolAddress] = _rOwned[currentPoolAddress].add(rRewardInterest) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1005)
+		- _rOwned[_rewardWallet] = _rOwned[_rewardWallet].sub(rRewardInterest) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1006)
+		- _rOwned[sender] = _rOwned[sender].sub(rAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1016)
+		- _rOwned[sender] = _rOwned[sender].sub(rAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1033)
+		- _rOwned[sender] = _rOwned[sender].sub(rAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1053)
+		- _rOwned[sender] = _rOwned[sender].sub(rAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1071)
+		- _rOwned[recipient] = _rOwned[recipient].add(rAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1018)
+		- _rOwned[recipient] = _rOwned[recipient].add(rAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1055)
+		- _rOwned[recipient] = _rOwned[recipient].add(rAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1036)
+		- _rOwned[recipient] = _rOwned[recipient].add(rAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1074)
+		- _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1021)
+		- _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1058)
+		- _rOwned[address(this)] = _rOwned[address(this)].add(rLock) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1022)
+		- _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1040)
+		- _rOwned[address(this)] = _rOwned[address(this)].add(rLock) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1059)
+		- _rOwned[address(this)] = _rOwned[address(this)].add(rLock) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1041)
+		- _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1079)
+		- _rOwned[address(this)] = _rOwned[address(this)].add(rLock) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1080)
+	GLITCH._rOwned (0x119995a900c86c6aaf68b917341b844c3786913c.sol#600) can be used in cross function reentrancies:
+	- GLITCH._getCurrentSupply() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1119-1129)
+	- GLITCH._sendRewardInterestToPool() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1001-1010)
+	- GLITCH._transferBothExcluded(address,address,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1066-1085)
+	- GLITCH._transferFromExcluded(address,address,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1048-1064)
+	- GLITCH._transferStandard(address,address,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1012-1027)
+	- GLITCH._transferToExcluded(address,address,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1029-1046)
+	- GLITCH.alchemy() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#958-986)
+	- GLITCH.balanceOf(address) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#713-716)
+	- GLITCH.constructor(IUniswapV2Router02,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#673-695)
+	- GLITCH.excludeAccount(address) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#779-790)
+	- GLITCH.reflect(uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#753-760)
+	- _transfer(address(this),tx.origin,_autoSwapCallerFee) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#935)
+		- _rTotal = _rTotal.sub(rFee) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1088)
+	GLITCH._rTotal (0x119995a900c86c6aaf68b917341b844c3786913c.sol#612) can be used in cross function reentrancies:
+	- GLITCH._getCurrentSupply() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1119-1129)
+	- GLITCH._reflectFee(uint256,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1087-1090)
+	- GLITCH.alchemy() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#958-986)
+	- GLITCH.reflect(uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#753-760)
+	- GLITCH.tokenFromReflection(uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#773-777)
+	- _transfer(address(this),tx.origin,_autoSwapCallerFee) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#935)
+		- _tFeeTotal = _tFeeTotal.add(tFee) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1089)
+	GLITCH._tFeeTotal (0x119995a900c86c6aaf68b917341b844c3786913c.sol#613) can be used in cross function reentrancies:
+	- GLITCH._reflectFee(uint256,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1087-1090)
+	- GLITCH._tFeeTotal (0x119995a900c86c6aaf68b917341b844c3786913c.sol#613)
+	- GLITCH.reflect(uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#753-760)
+	- _transfer(address(this),tx.origin,_autoSwapCallerFee) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#935)
+		- _tOwned[sender] = _tOwned[sender].sub(tAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1070)
+		- _tOwned[sender] = _tOwned[sender].sub(tAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1052)
+		- _tOwned[recipient] = _tOwned[recipient].add(tAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1035)
+		- _tOwned[recipient] = _tOwned[recipient].add(tAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1073)
+		- _tOwned[recipient] = _tOwned[recipient].add(tTransferAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1039)
+		- _tOwned[recipient] = _tOwned[recipient].add(tTransferAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1078)
+	GLITCH._tOwned (0x119995a900c86c6aaf68b917341b844c3786913c.sol#601) can be used in cross function reentrancies:
+	- GLITCH._getCurrentSupply() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1119-1129)
+	- GLITCH._transferBothExcluded(address,address,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1066-1085)
+	- GLITCH._transferFromExcluded(address,address,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1048-1064)
+	- GLITCH._transferToExcluded(address,address,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1029-1046)
+	- GLITCH.balanceOf(address) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#713-716)
+	- GLITCH.excludeAccount(address) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#779-790)
+	- GLITCH.includeAccount(address) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#792-803)
+	- _transfer(address(this),tx.origin,_autoSwapCallerFee) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#935)
+		- inSwapAndLiquify = true (0x119995a900c86c6aaf68b917341b844c3786913c.sol#665)
+		- inSwapAndLiquify = false (0x119995a900c86c6aaf68b917341b844c3786913c.sol#667)
+	GLITCH.inSwapAndLiquify (0x119995a900c86c6aaf68b917341b844c3786913c.sol#628) can be used in cross function reentrancies:
+	- GLITCH._transfer(address,address,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#813-850)
+	- GLITCH._transferBothExcluded(address,address,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1066-1085)
+	- GLITCH._transferFromExcluded(address,address,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1048-1064)
+	- GLITCH._transferStandard(address,address,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1012-1027)
+	- GLITCH._transferToExcluded(address,address,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1029-1046)
+	- GLITCH.lockTheSwap() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#664-668)
+Reentrancy in GLITCH.swapAndLiquifyForTokens(address,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#915-938):
+	External calls:
+	- _transfer(address(this),address(swaper),half) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#921)
+		- _uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#905-912)
+		- IERC20(pairTokenAddress).approve(address(_uniswapV2Router),pairTokenAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#943)
+		- _uniswapV2Router.addLiquidity(address(this),pairTokenAddress,tokenAmount,pairTokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#946-955)
+		- _uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#891-897)
+		- swaper.swapTokens(pairTokenAddress,half) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#926)
+		- IUniswapV2Pair(currentPoolAddress).sync() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1008)
+	- swaper.swapTokens(pairTokenAddress,half) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#926)
+	- addLiquidityForTokens(pairTokenAddress,otherHalf,newPairTokenBalance) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#931)
+		- IERC20(pairTokenAddress).approve(address(_uniswapV2Router),pairTokenAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#943)
+		- _uniswapV2Router.addLiquidity(address(this),pairTokenAddress,tokenAmount,pairTokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#946-955)
+	- _transfer(address(this),tx.origin,_autoSwapCallerFee) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#935)
+		- _uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#905-912)
+		- IERC20(pairTokenAddress).approve(address(_uniswapV2Router),pairTokenAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#943)
+		- _uniswapV2Router.addLiquidity(address(this),pairTokenAddress,tokenAmount,pairTokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#946-955)
+		- _uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#891-897)
+		- swaper.swapTokens(pairTokenAddress,half) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#926)
+		- IUniswapV2Pair(currentPoolAddress).sync() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1008)
+	- _sendRewardInterestToPool() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#937)
+		- IUniswapV2Pair(currentPoolAddress).sync() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1008)
+	External calls sending eth:
+	- _transfer(address(this),address(swaper),half) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#921)
+		- _uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#905-912)
+	- _transfer(address(this),tx.origin,_autoSwapCallerFee) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#935)
+		- _uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#905-912)
+	State variables written after the call(s):
+	- _sendRewardInterestToPool() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#937)
+		- _rOwned[currentPoolAddress] = _rOwned[currentPoolAddress].add(rRewardInterest) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1005)
+		- _rOwned[_rewardWallet] = _rOwned[_rewardWallet].sub(rRewardInterest) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1006)
+	GLITCH._rOwned (0x119995a900c86c6aaf68b917341b844c3786913c.sol#600) can be used in cross function reentrancies:
+	- GLITCH._getCurrentSupply() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1119-1129)
+	- GLITCH._sendRewardInterestToPool() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1001-1010)
+	- GLITCH._transferBothExcluded(address,address,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1066-1085)
+	- GLITCH._transferFromExcluded(address,address,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1048-1064)
+	- GLITCH._transferStandard(address,address,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1012-1027)
+	- GLITCH._transferToExcluded(address,address,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1029-1046)
+	- GLITCH.alchemy() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#958-986)
+	- GLITCH.balanceOf(address) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#713-716)
+	- GLITCH.constructor(IUniswapV2Router02,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#673-695)
+	- GLITCH.excludeAccount(address) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#779-790)
+	- GLITCH.reflect(uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#753-760)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+Swaper.swapTokens(address,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#569-574) ignores return value by IERC20(pairTokenAddress).transfer(address(_tokenContract),newPairTokenBalance) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#573)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+GLITCH.alchemy() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#958-986) performs a multiplication on the result of a division:
+	- tRewardForCaller = tNewTokenBalance.mul(_alchemyCallerFee).div(100) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#970)
+	- _rOwned[_msgSender()] = _rOwned[_msgSender()].add(tRewardForCaller.mul(currentRate)) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#976)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+Reentrancy in GLITCH.alchemy() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#958-986):
+	External calls:
+	- removeLiquidityETH(amountToRemove) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#966)
+		- IERC20(_uniswapETHPool).approve(address(_uniswapV2Router),lpAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#989)
+		- (ETHAmount) = _uniswapV2Router.removeLiquidityETHSupportingFeeOnTransferTokens(address(this),lpAmount,0,0,address(balancer),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#990-998)
+	- balancer.rebalance() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#967)
+	State variables written after the call(s):
+	- _rOwned[_msgSender()] = _rOwned[_msgSender()].add(tRewardForCaller.mul(currentRate)) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#976)
+	GLITCH._rOwned (0x119995a900c86c6aaf68b917341b844c3786913c.sol#600) can be used in cross function reentrancies:
+	- GLITCH._getCurrentSupply() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1119-1129)
+	- GLITCH._sendRewardInterestToPool() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1001-1010)
+	- GLITCH._transferBothExcluded(address,address,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1066-1085)
+	- GLITCH._transferFromExcluded(address,address,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1048-1064)
+	- GLITCH._transferStandard(address,address,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1012-1027)
+	- GLITCH._transferToExcluded(address,address,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1029-1046)
+	- GLITCH.alchemy() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#958-986)
+	- GLITCH.balanceOf(address) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#713-716)
+	- GLITCH.constructor(IUniswapV2Router02,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#673-695)
+	- GLITCH.excludeAccount(address) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#779-790)
+	- GLITCH.reflect(uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#753-760)
+	- _rOwned[address(balancer)] = 0 (0x119995a900c86c6aaf68b917341b844c3786913c.sol#977)
+	GLITCH._rOwned (0x119995a900c86c6aaf68b917341b844c3786913c.sol#600) can be used in cross function reentrancies:
+	- GLITCH._getCurrentSupply() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1119-1129)
+	- GLITCH._sendRewardInterestToPool() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1001-1010)
+	- GLITCH._transferBothExcluded(address,address,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1066-1085)
+	- GLITCH._transferFromExcluded(address,address,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1048-1064)
+	- GLITCH._transferStandard(address,address,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1012-1027)
+	- GLITCH._transferToExcluded(address,address,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1029-1046)
+	- GLITCH.alchemy() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#958-986)
+	- GLITCH.balanceOf(address) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#713-716)
+	- GLITCH.constructor(IUniswapV2Router02,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#673-695)
+	- GLITCH.excludeAccount(address) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#779-790)
+	- GLITCH.reflect(uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#753-760)
+	- _rTotal = _rTotal.sub(rBurn) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#981)
+	GLITCH._rTotal (0x119995a900c86c6aaf68b917341b844c3786913c.sol#612) can be used in cross function reentrancies:
+	- GLITCH._getCurrentSupply() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1119-1129)
+	- GLITCH._reflectFee(uint256,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1087-1090)
+	- GLITCH.alchemy() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#958-986)
+	- GLITCH.reflect(uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#753-760)
+	- GLITCH.tokenFromReflection(uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#773-777)
+	- _tTotal = _tTotal.sub(tBurn) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#980)
+	GLITCH._tTotal (0x119995a900c86c6aaf68b917341b844c3786913c.sol#611) can be used in cross function reentrancies:
+	- GLITCH._getCurrentSupply() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1119-1129)
+	- GLITCH.alchemy() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#958-986)
+	- GLITCH.constructor(IUniswapV2Router02,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#673-695)
+	- GLITCH.reflectionFromToken(uint256,bool) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#762-771)
+	- GLITCH.totalSupply() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#709-711)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+GLITCH._setFeeDecimals(uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1159-1163) contains a tautology or contradiction:
+	- require(bool,string)(feeDecimals >= 0 && feeDecimals <= 2,Glitch: fee decimals should be in 0 - 2) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1160)
+GLITCH._setTaxFee(uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1165-1169) contains a tautology or contradiction:
+	- require(bool,string)(taxFee >= 0 && taxFee <= 5 * 10 ** _feeDecimals,Glitch: taxFee should be in 0 - 5) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1166)
+GLITCH._setLockFee(uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1171-1175) contains a tautology or contradiction:
+	- require(bool,string)(lockFee >= 0 && lockFee <= 5 * 10 ** _feeDecimals,Glitch: lockFee should be in 0 - 5) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1172)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#tautology-or-contradiction
+
+Swaper.swapTokensForTokens(address,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#576-591) ignores return value by _tokenContract.approve(address(_uniswapV2Router),tokenAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#581)
+GLITCH.addLiquidityForEth(uint256,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#900-913) ignores return value by _uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#905-912)
+GLITCH.addLiquidityForTokens(address,uint256,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#940-956) ignores return value by IERC20(pairTokenAddress).approve(address(_uniswapV2Router),pairTokenAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#943)
+GLITCH.addLiquidityForTokens(address,uint256,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#940-956) ignores return value by _uniswapV2Router.addLiquidity(address(this),pairTokenAddress,tokenAmount,pairTokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#946-955)
+GLITCH.alchemy() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#958-986) ignores return value by balancer.rebalance() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#967)
+GLITCH.removeLiquidityETH(uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#988-999) ignores return value by IERC20(_uniswapETHPool).approve(address(_uniswapV2Router),lpAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#989)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+GLITCH.allowance(address,address).owner (0x119995a900c86c6aaf68b917341b844c3786913c.sol#723) shadows:
+	- Ownable.owner() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#423-425) (function)
+GLITCH._approve(address,address,uint256).owner (0x119995a900c86c6aaf68b917341b844c3786913c.sol#805) shadows:
+	- Ownable.owner() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#423-425) (function)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#local-variable-shadowing
+
+Reentrancy in GLITCH.alchemy() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#958-986):
+	External calls:
+	- removeLiquidityETH(amountToRemove) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#966)
+		- IERC20(_uniswapETHPool).approve(address(_uniswapV2Router),lpAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#989)
+		- (ETHAmount) = _uniswapV2Router.removeLiquidityETHSupportingFeeOnTransferTokens(address(this),lpAmount,0,0,address(balancer),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#990-998)
+	- balancer.rebalance() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#967)
+	State variables written after the call(s):
+	- _tBurnTotal = _tBurnTotal.add(tBurn) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#979)
+Reentrancy in GLITCH.swapAndLiquifyForEth(uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#854-880):
+	External calls:
+	- swapTokensForEth(half) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#867)
+		- _uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#891-897)
+	- addLiquidityForEth(otherHalf,newBalance) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#873)
+		- _uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#905-912)
+	External calls sending eth:
+	- addLiquidityForEth(otherHalf,newBalance) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#873)
+		- _uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#905-912)
+	State variables written after the call(s):
+	- addLiquidityForEth(otherHalf,newBalance) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#873)
+		- _allowances[owner][spender] = amount (0x119995a900c86c6aaf68b917341b844c3786913c.sol#809)
+Reentrancy in GLITCH.swapAndLiquifyForEth(uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#854-880):
+	External calls:
+	- swapTokensForEth(half) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#867)
+		- _uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#891-897)
+	- addLiquidityForEth(otherHalf,newBalance) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#873)
+		- _uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#905-912)
+	- _transfer(address(this),tx.origin,_autoSwapCallerFee) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#877)
+		- _uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#905-912)
+		- IERC20(pairTokenAddress).approve(address(_uniswapV2Router),pairTokenAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#943)
+		- _uniswapV2Router.addLiquidity(address(this),pairTokenAddress,tokenAmount,pairTokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#946-955)
+		- _uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#891-897)
+		- swaper.swapTokens(pairTokenAddress,half) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#926)
+		- IUniswapV2Pair(currentPoolAddress).sync() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1008)
+	External calls sending eth:
+	- addLiquidityForEth(otherHalf,newBalance) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#873)
+		- _uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#905-912)
+	- _transfer(address(this),tx.origin,_autoSwapCallerFee) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#877)
+		- _uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#905-912)
+	State variables written after the call(s):
+	- _transfer(address(this),tx.origin,_autoSwapCallerFee) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#877)
+		- _allowances[owner][spender] = amount (0x119995a900c86c6aaf68b917341b844c3786913c.sol#809)
+Reentrancy in GLITCH.swapAndLiquifyForTokens(address,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#915-938):
+	External calls:
+	- _transfer(address(this),address(swaper),half) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#921)
+		- _uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#905-912)
+		- IERC20(pairTokenAddress).approve(address(_uniswapV2Router),pairTokenAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#943)
+		- _uniswapV2Router.addLiquidity(address(this),pairTokenAddress,tokenAmount,pairTokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#946-955)
+		- _uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#891-897)
+		- swaper.swapTokens(pairTokenAddress,half) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#926)
+		- IUniswapV2Pair(currentPoolAddress).sync() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1008)
+	- swaper.swapTokens(pairTokenAddress,half) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#926)
+	- addLiquidityForTokens(pairTokenAddress,otherHalf,newPairTokenBalance) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#931)
+		- IERC20(pairTokenAddress).approve(address(_uniswapV2Router),pairTokenAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#943)
+		- _uniswapV2Router.addLiquidity(address(this),pairTokenAddress,tokenAmount,pairTokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#946-955)
+	External calls sending eth:
+	- _transfer(address(this),address(swaper),half) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#921)
+		- _uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#905-912)
+	State variables written after the call(s):
+	- addLiquidityForTokens(pairTokenAddress,otherHalf,newPairTokenBalance) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#931)
+		- _allowances[owner][spender] = amount (0x119995a900c86c6aaf68b917341b844c3786913c.sol#809)
+Reentrancy in GLITCH.swapAndLiquifyForTokens(address,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#915-938):
+	External calls:
+	- _transfer(address(this),address(swaper),half) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#921)
+		- _uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#905-912)
+		- IERC20(pairTokenAddress).approve(address(_uniswapV2Router),pairTokenAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#943)
+		- _uniswapV2Router.addLiquidity(address(this),pairTokenAddress,tokenAmount,pairTokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#946-955)
+		- _uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#891-897)
+		- swaper.swapTokens(pairTokenAddress,half) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#926)
+		- IUniswapV2Pair(currentPoolAddress).sync() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1008)
+	- swaper.swapTokens(pairTokenAddress,half) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#926)
+	- addLiquidityForTokens(pairTokenAddress,otherHalf,newPairTokenBalance) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#931)
+		- IERC20(pairTokenAddress).approve(address(_uniswapV2Router),pairTokenAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#943)
+		- _uniswapV2Router.addLiquidity(address(this),pairTokenAddress,tokenAmount,pairTokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#946-955)
+	- _transfer(address(this),tx.origin,_autoSwapCallerFee) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#935)
+		- _uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#905-912)
+		- IERC20(pairTokenAddress).approve(address(_uniswapV2Router),pairTokenAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#943)
+		- _uniswapV2Router.addLiquidity(address(this),pairTokenAddress,tokenAmount,pairTokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#946-955)
+		- _uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#891-897)
+		- swaper.swapTokens(pairTokenAddress,half) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#926)
+		- IUniswapV2Pair(currentPoolAddress).sync() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1008)
+	External calls sending eth:
+	- _transfer(address(this),address(swaper),half) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#921)
+		- _uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#905-912)
+	- _transfer(address(this),tx.origin,_autoSwapCallerFee) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#935)
+		- _uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#905-912)
+	State variables written after the call(s):
+	- _transfer(address(this),tx.origin,_autoSwapCallerFee) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#935)
+		- _allowances[owner][spender] = amount (0x119995a900c86c6aaf68b917341b844c3786913c.sol#809)
+Reentrancy in GLITCH.transferFrom(address,address,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#732-736):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#733)
+		- _uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#905-912)
+		- IERC20(pairTokenAddress).approve(address(_uniswapV2Router),pairTokenAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#943)
+		- _uniswapV2Router.addLiquidity(address(this),pairTokenAddress,tokenAmount,pairTokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#946-955)
+		- _uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#891-897)
+		- swaper.swapTokens(pairTokenAddress,half) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#926)
+		- IUniswapV2Pair(currentPoolAddress).sync() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1008)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#733)
+		- _uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#905-912)
+	State variables written after the call(s):
+	- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#734)
+		- _allowances[owner][spender] = amount (0x119995a900c86c6aaf68b917341b844c3786913c.sol#809)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in GLITCH._transfer(address,address,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#813-850):
+	External calls:
+	- swapAndLiquifyForEth(lockedBalanceForPool) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#833)
+		- _uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#905-912)
+		- IERC20(pairTokenAddress).approve(address(_uniswapV2Router),pairTokenAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#943)
+		- _uniswapV2Router.addLiquidity(address(this),pairTokenAddress,tokenAmount,pairTokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#946-955)
+		- _uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#891-897)
+		- swaper.swapTokens(pairTokenAddress,half) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#926)
+		- IUniswapV2Pair(currentPoolAddress).sync() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1008)
+	- swapAndLiquifyForTokens(currentPairTokenAddress,lockedBalanceForPool) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#835)
+		- _uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#905-912)
+		- IERC20(pairTokenAddress).approve(address(_uniswapV2Router),pairTokenAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#943)
+		- _uniswapV2Router.addLiquidity(address(this),pairTokenAddress,tokenAmount,pairTokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#946-955)
+		- _uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#891-897)
+		- swaper.swapTokens(pairTokenAddress,half) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#926)
+		- IUniswapV2Pair(currentPoolAddress).sync() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1008)
+	External calls sending eth:
+	- swapAndLiquifyForEth(lockedBalanceForPool) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#833)
+		- _uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#905-912)
+	- swapAndLiquifyForTokens(currentPairTokenAddress,lockedBalanceForPool) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#835)
+		- _uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#905-912)
+	Event emitted after the call(s):
+	- Transfer(sender,recipient,tAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1019)
+		- _transferStandard(sender,recipient,amount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#844)
+	- Transfer(sender,recipient,tAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1019)
+		- _transferStandard(sender,recipient,amount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#848)
+	- Transfer(sender,recipient,tAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1037)
+		- _transferToExcluded(sender,recipient,amount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#842)
+	- Transfer(sender,recipient,tAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1056)
+		- _transferFromExcluded(sender,recipient,amount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#840)
+	- Transfer(sender,recipient,tAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1075)
+		- _transferBothExcluded(sender,recipient,amount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#846)
+	- Transfer(sender,address(this),tLock) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1024)
+		- _transferStandard(sender,recipient,amount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#848)
+	- Transfer(sender,address(this),tLock) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1024)
+		- _transferStandard(sender,recipient,amount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#844)
+	- Transfer(sender,recipient,tTransferAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1025)
+		- _transferStandard(sender,recipient,amount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#848)
+	- Transfer(sender,address(this),tLock) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1061)
+		- _transferFromExcluded(sender,recipient,amount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#840)
+	- Transfer(sender,recipient,tTransferAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1025)
+		- _transferStandard(sender,recipient,amount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#844)
+	- Transfer(sender,address(this),tLock) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1043)
+		- _transferToExcluded(sender,recipient,amount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#842)
+	- Transfer(sender,recipient,tTransferAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1062)
+		- _transferFromExcluded(sender,recipient,amount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#840)
+	- Transfer(sender,address(this),tLock) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1082)
+		- _transferBothExcluded(sender,recipient,amount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#846)
+	- Transfer(sender,recipient,tTransferAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1044)
+		- _transferToExcluded(sender,recipient,amount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#842)
+	- Transfer(sender,recipient,tTransferAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1083)
+		- _transferBothExcluded(sender,recipient,amount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#846)
+Reentrancy in GLITCH.alchemy() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#958-986):
+	External calls:
+	- removeLiquidityETH(amountToRemove) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#966)
+		- IERC20(_uniswapETHPool).approve(address(_uniswapV2Router),lpAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#989)
+		- (ETHAmount) = _uniswapV2Router.removeLiquidityETHSupportingFeeOnTransferTokens(address(this),lpAmount,0,0,address(balancer),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#990-998)
+	- balancer.rebalance() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#967)
+	Event emitted after the call(s):
+	- Rebalance(tBurn) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#985)
+	- Transfer(address(balancer),_msgSender(),tRewardForCaller) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#983)
+	- Transfer(address(balancer),address(0),tBurn) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#984)
+Reentrancy in GLITCH.swapAndLiquifyForEth(uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#854-880):
+	External calls:
+	- swapTokensForEth(half) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#867)
+		- _uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#891-897)
+	- addLiquidityForEth(otherHalf,newBalance) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#873)
+		- _uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#905-912)
+	External calls sending eth:
+	- addLiquidityForEth(otherHalf,newBalance) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#873)
+		- _uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#905-912)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#810)
+		- addLiquidityForEth(otherHalf,newBalance) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#873)
+	- SwapAndLiquify(_uniswapV2Router.WETH(),half,newBalance,otherHalf) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#875)
+Reentrancy in GLITCH.swapAndLiquifyForEth(uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#854-880):
+	External calls:
+	- swapTokensForEth(half) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#867)
+		- _uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#891-897)
+	- addLiquidityForEth(otherHalf,newBalance) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#873)
+		- _uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#905-912)
+	- _transfer(address(this),tx.origin,_autoSwapCallerFee) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#877)
+		- _uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#905-912)
+		- IERC20(pairTokenAddress).approve(address(_uniswapV2Router),pairTokenAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#943)
+		- _uniswapV2Router.addLiquidity(address(this),pairTokenAddress,tokenAmount,pairTokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#946-955)
+		- _uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#891-897)
+		- swaper.swapTokens(pairTokenAddress,half) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#926)
+		- IUniswapV2Pair(currentPoolAddress).sync() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1008)
+	External calls sending eth:
+	- addLiquidityForEth(otherHalf,newBalance) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#873)
+		- _uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#905-912)
+	- _transfer(address(this),tx.origin,_autoSwapCallerFee) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#877)
+		- _uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#905-912)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#810)
+		- _transfer(address(this),tx.origin,_autoSwapCallerFee) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#877)
+	- SwapAndLiquify(_uniswapV2Router.WETH(),half,newBalance,otherHalf) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#875)
+		- _transfer(address(this),tx.origin,_autoSwapCallerFee) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#877)
+	- SwapAndLiquify(pairTokenAddress,half,newPairTokenBalance,otherHalf) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#933)
+		- _transfer(address(this),tx.origin,_autoSwapCallerFee) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#877)
+	- Transfer(_rewardWallet,currentPoolAddress,tRewardInterest) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1007)
+		- _transfer(address(this),tx.origin,_autoSwapCallerFee) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#877)
+	- Transfer(sender,recipient,tAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1019)
+		- _transfer(address(this),tx.origin,_autoSwapCallerFee) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#877)
+	- Transfer(sender,recipient,tAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1056)
+		- _transfer(address(this),tx.origin,_autoSwapCallerFee) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#877)
+	- Transfer(sender,recipient,tAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1037)
+		- _transfer(address(this),tx.origin,_autoSwapCallerFee) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#877)
+	- Transfer(sender,recipient,tAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1075)
+		- _transfer(address(this),tx.origin,_autoSwapCallerFee) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#877)
+	- Transfer(sender,address(this),tLock) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1024)
+		- _transfer(address(this),tx.origin,_autoSwapCallerFee) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#877)
+	- Transfer(sender,recipient,tTransferAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1025)
+		- _transfer(address(this),tx.origin,_autoSwapCallerFee) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#877)
+	- Transfer(sender,address(this),tLock) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1061)
+		- _transfer(address(this),tx.origin,_autoSwapCallerFee) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#877)
+	- Transfer(sender,address(this),tLock) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1043)
+		- _transfer(address(this),tx.origin,_autoSwapCallerFee) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#877)
+	- Transfer(sender,recipient,tTransferAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1062)
+		- _transfer(address(this),tx.origin,_autoSwapCallerFee) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#877)
+	- Transfer(sender,address(this),tLock) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1082)
+		- _transfer(address(this),tx.origin,_autoSwapCallerFee) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#877)
+	- Transfer(sender,recipient,tTransferAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1044)
+		- _transfer(address(this),tx.origin,_autoSwapCallerFee) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#877)
+	- Transfer(sender,recipient,tTransferAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1083)
+		- _transfer(address(this),tx.origin,_autoSwapCallerFee) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#877)
+Reentrancy in GLITCH.swapAndLiquifyForEth(uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#854-880):
+	External calls:
+	- swapTokensForEth(half) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#867)
+		- _uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#891-897)
+	- addLiquidityForEth(otherHalf,newBalance) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#873)
+		- _uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#905-912)
+	- _transfer(address(this),tx.origin,_autoSwapCallerFee) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#877)
+		- _uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#905-912)
+		- IERC20(pairTokenAddress).approve(address(_uniswapV2Router),pairTokenAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#943)
+		- _uniswapV2Router.addLiquidity(address(this),pairTokenAddress,tokenAmount,pairTokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#946-955)
+		- _uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#891-897)
+		- swaper.swapTokens(pairTokenAddress,half) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#926)
+		- IUniswapV2Pair(currentPoolAddress).sync() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1008)
+	- _sendRewardInterestToPool() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#879)
+		- IUniswapV2Pair(currentPoolAddress).sync() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1008)
+	External calls sending eth:
+	- addLiquidityForEth(otherHalf,newBalance) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#873)
+		- _uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#905-912)
+	- _transfer(address(this),tx.origin,_autoSwapCallerFee) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#877)
+		- _uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#905-912)
+	Event emitted after the call(s):
+	- Transfer(_rewardWallet,currentPoolAddress,tRewardInterest) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1007)
+		- _sendRewardInterestToPool() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#879)
+Reentrancy in GLITCH.swapAndLiquifyForTokens(address,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#915-938):
+	External calls:
+	- _transfer(address(this),address(swaper),half) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#921)
+		- _uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#905-912)
+		- IERC20(pairTokenAddress).approve(address(_uniswapV2Router),pairTokenAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#943)
+		- _uniswapV2Router.addLiquidity(address(this),pairTokenAddress,tokenAmount,pairTokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#946-955)
+		- _uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#891-897)
+		- swaper.swapTokens(pairTokenAddress,half) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#926)
+		- IUniswapV2Pair(currentPoolAddress).sync() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1008)
+	- swaper.swapTokens(pairTokenAddress,half) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#926)
+	- addLiquidityForTokens(pairTokenAddress,otherHalf,newPairTokenBalance) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#931)
+		- IERC20(pairTokenAddress).approve(address(_uniswapV2Router),pairTokenAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#943)
+		- _uniswapV2Router.addLiquidity(address(this),pairTokenAddress,tokenAmount,pairTokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#946-955)
+	External calls sending eth:
+	- _transfer(address(this),address(swaper),half) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#921)
+		- _uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#905-912)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#810)
+		- addLiquidityForTokens(pairTokenAddress,otherHalf,newPairTokenBalance) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#931)
+	- SwapAndLiquify(pairTokenAddress,half,newPairTokenBalance,otherHalf) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#933)
+Reentrancy in GLITCH.swapAndLiquifyForTokens(address,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#915-938):
+	External calls:
+	- _transfer(address(this),address(swaper),half) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#921)
+		- _uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#905-912)
+		- IERC20(pairTokenAddress).approve(address(_uniswapV2Router),pairTokenAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#943)
+		- _uniswapV2Router.addLiquidity(address(this),pairTokenAddress,tokenAmount,pairTokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#946-955)
+		- _uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#891-897)
+		- swaper.swapTokens(pairTokenAddress,half) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#926)
+		- IUniswapV2Pair(currentPoolAddress).sync() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1008)
+	- swaper.swapTokens(pairTokenAddress,half) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#926)
+	- addLiquidityForTokens(pairTokenAddress,otherHalf,newPairTokenBalance) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#931)
+		- IERC20(pairTokenAddress).approve(address(_uniswapV2Router),pairTokenAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#943)
+		- _uniswapV2Router.addLiquidity(address(this),pairTokenAddress,tokenAmount,pairTokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#946-955)
+	- _transfer(address(this),tx.origin,_autoSwapCallerFee) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#935)
+		- _uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#905-912)
+		- IERC20(pairTokenAddress).approve(address(_uniswapV2Router),pairTokenAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#943)
+		- _uniswapV2Router.addLiquidity(address(this),pairTokenAddress,tokenAmount,pairTokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#946-955)
+		- _uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#891-897)
+		- swaper.swapTokens(pairTokenAddress,half) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#926)
+		- IUniswapV2Pair(currentPoolAddress).sync() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1008)
+	External calls sending eth:
+	- _transfer(address(this),address(swaper),half) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#921)
+		- _uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#905-912)
+	- _transfer(address(this),tx.origin,_autoSwapCallerFee) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#935)
+		- _uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#905-912)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#810)
+		- _transfer(address(this),tx.origin,_autoSwapCallerFee) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#935)
+	- SwapAndLiquify(_uniswapV2Router.WETH(),half,newBalance,otherHalf) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#875)
+		- _transfer(address(this),tx.origin,_autoSwapCallerFee) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#935)
+	- SwapAndLiquify(pairTokenAddress,half,newPairTokenBalance,otherHalf) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#933)
+		- _transfer(address(this),tx.origin,_autoSwapCallerFee) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#935)
+	- Transfer(_rewardWallet,currentPoolAddress,tRewardInterest) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1007)
+		- _transfer(address(this),tx.origin,_autoSwapCallerFee) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#935)
+	- Transfer(sender,recipient,tAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1019)
+		- _transfer(address(this),tx.origin,_autoSwapCallerFee) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#935)
+	- Transfer(sender,recipient,tAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1056)
+		- _transfer(address(this),tx.origin,_autoSwapCallerFee) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#935)
+	- Transfer(sender,recipient,tAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1037)
+		- _transfer(address(this),tx.origin,_autoSwapCallerFee) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#935)
+	- Transfer(sender,recipient,tAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1075)
+		- _transfer(address(this),tx.origin,_autoSwapCallerFee) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#935)
+	- Transfer(sender,address(this),tLock) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1024)
+		- _transfer(address(this),tx.origin,_autoSwapCallerFee) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#935)
+	- Transfer(sender,address(this),tLock) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1061)
+		- _transfer(address(this),tx.origin,_autoSwapCallerFee) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#935)
+	- Transfer(sender,recipient,tTransferAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1025)
+		- _transfer(address(this),tx.origin,_autoSwapCallerFee) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#935)
+	- Transfer(sender,recipient,tTransferAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1062)
+		- _transfer(address(this),tx.origin,_autoSwapCallerFee) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#935)
+	- Transfer(sender,address(this),tLock) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1043)
+		- _transfer(address(this),tx.origin,_autoSwapCallerFee) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#935)
+	- Transfer(sender,recipient,tTransferAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1044)
+		- _transfer(address(this),tx.origin,_autoSwapCallerFee) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#935)
+	- Transfer(sender,address(this),tLock) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1082)
+		- _transfer(address(this),tx.origin,_autoSwapCallerFee) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#935)
+	- Transfer(sender,recipient,tTransferAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1083)
+		- _transfer(address(this),tx.origin,_autoSwapCallerFee) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#935)
+Reentrancy in GLITCH.swapAndLiquifyForTokens(address,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#915-938):
+	External calls:
+	- _transfer(address(this),address(swaper),half) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#921)
+		- _uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#905-912)
+		- IERC20(pairTokenAddress).approve(address(_uniswapV2Router),pairTokenAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#943)
+		- _uniswapV2Router.addLiquidity(address(this),pairTokenAddress,tokenAmount,pairTokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#946-955)
+		- _uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#891-897)
+		- swaper.swapTokens(pairTokenAddress,half) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#926)
+		- IUniswapV2Pair(currentPoolAddress).sync() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1008)
+	- swaper.swapTokens(pairTokenAddress,half) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#926)
+	- addLiquidityForTokens(pairTokenAddress,otherHalf,newPairTokenBalance) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#931)
+		- IERC20(pairTokenAddress).approve(address(_uniswapV2Router),pairTokenAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#943)
+		- _uniswapV2Router.addLiquidity(address(this),pairTokenAddress,tokenAmount,pairTokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#946-955)
+	- _transfer(address(this),tx.origin,_autoSwapCallerFee) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#935)
+		- _uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#905-912)
+		- IERC20(pairTokenAddress).approve(address(_uniswapV2Router),pairTokenAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#943)
+		- _uniswapV2Router.addLiquidity(address(this),pairTokenAddress,tokenAmount,pairTokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#946-955)
+		- _uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#891-897)
+		- swaper.swapTokens(pairTokenAddress,half) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#926)
+		- IUniswapV2Pair(currentPoolAddress).sync() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1008)
+	- _sendRewardInterestToPool() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#937)
+		- IUniswapV2Pair(currentPoolAddress).sync() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1008)
+	External calls sending eth:
+	- _transfer(address(this),address(swaper),half) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#921)
+		- _uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#905-912)
+	- _transfer(address(this),tx.origin,_autoSwapCallerFee) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#935)
+		- _uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#905-912)
+	Event emitted after the call(s):
+	- Transfer(_rewardWallet,currentPoolAddress,tRewardInterest) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1007)
+		- _sendRewardInterestToPool() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#937)
+Reentrancy in GLITCH.transferFrom(address,address,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#732-736):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#733)
+		- _uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#905-912)
+		- IERC20(pairTokenAddress).approve(address(_uniswapV2Router),pairTokenAmount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#943)
+		- _uniswapV2Router.addLiquidity(address(this),pairTokenAddress,tokenAmount,pairTokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#946-955)
+		- _uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#891-897)
+		- swaper.swapTokens(pairTokenAddress,half) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#926)
+		- IUniswapV2Pair(currentPoolAddress).sync() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1008)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#733)
+		- _uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#905-912)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#810)
+		- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#734)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+GLITCH.alchemy() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#958-986) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(now > _lastAlchemy + _alchemyInterval,Glitch: Too Soon.) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#960)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Address.isContract(address) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#277-286) uses assembly
+	- INLINE ASM (0x119995a900c86c6aaf68b917341b844c3786913c.sol#284)
+Address._functionCallWithValue(address,bytes,uint256,string) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#370-391) uses assembly
+	- INLINE ASM (0x119995a900c86c6aaf68b917341b844c3786913c.sol#383-386)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#assembly-usage
+
+2 different versions of Solidity are used:
+	- Version constraint ^0.6.0 is used by:
+		-^0.6.0 (0x119995a900c86c6aaf68b917341b844c3786913c.sol#3)
+	- Version constraint ^0.6.12 is used by:
+		-^0.6.12 (0x119995a900c86c6aaf68b917341b844c3786913c.sol#521)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#different-pragma-directives-are-used
+
+GLITCH.includeAccount(address) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#792-803) has costly operations inside a loop:
+	- _excluded.pop() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#799)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#costly-operations-inside-a-loop
+
+Context._msgData() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#20-23) is never used and should be removed
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dead-code
+
+GLITCH._rTotal (0x119995a900c86c6aaf68b917341b844c3786913c.sol#612) is set pre-construction with a non-constant function or state variable:
+	- (MAX - (MAX % _tTotal))
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#function-initializing-state
+
+Version constraint ^0.6.0 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- MissingEscapingInFormatting
+	- ArraySliceDynamicallyEncodedBaseType
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- YulOptimizerRedundantAssignmentBreakContinue.
+It is used by:
+	- ^0.6.0 (0x119995a900c86c6aaf68b917341b844c3786913c.sol#3)
+Version constraint ^0.6.12 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- SignedImmutables
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup.
+It is used by:
+	- ^0.6.12 (0x119995a900c86c6aaf68b917341b844c3786913c.sol#521)
+solc-0.6.12 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in Address.sendValue(address,uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#304-310):
+	- (success,None) = recipient.call{value: amount}() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#308)
+Low level call in Address._functionCallWithValue(address,bytes,uint256,string) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#370-391):
+	- (success,returndata) = target.call{value: weiValue}(data) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#374)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Function IUniswapV2Router01.WETH() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#469) is not in mixedCase
+Parameter Balancer.swapEthForTokens(uint256).EthAmount (0x119995a900c86c6aaf68b917341b844c3786913c.sol#544) is not in mixedCase
+Variable Balancer._uniswapV2Router (0x119995a900c86c6aaf68b917341b844c3786913c.sol#530) is not in mixedCase
+Variable Swaper._uniswapV2Router (0x119995a900c86c6aaf68b917341b844c3786913c.sol#561) is not in mixedCase
+Function GLITCH._getRate() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1114-1117) is not in mixedCase
+Function GLITCH._getCurrentSupply() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1119-1129) is not in mixedCase
+Function GLITCH._setFeeDecimals(uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1159-1163) is not in mixedCase
+Function GLITCH._setTaxFee(uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1165-1169) is not in mixedCase
+Function GLITCH._setLockFee(uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1171-1175) is not in mixedCase
+Function GLITCH._setMaxTxAmount(uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1177-1181) is not in mixedCase
+Function GLITCH._setMinTokensBeforeSwap(uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1183-1188) is not in mixedCase
+Function GLITCH._setAutoSwapCallerFee(uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1190-1194) is not in mixedCase
+Function GLITCH._setMinInterestForReward(uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1196-1199) is not in mixedCase
+Function GLITCH._setLiquidityRemoveFee(uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1201-1205) is not in mixedCase
+Function GLITCH._setAlchemyCallerFee(uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1207-1211) is not in mixedCase
+Function GLITCH._setMinTokenForAlchemy(uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1213-1216) is not in mixedCase
+Function GLITCH._setAlchemyInterval(uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1218-1221) is not in mixedCase
+Parameter GLITCH.updateSwapAndLiquifyEnabled(bool)._enabled (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1223) is not in mixedCase
+Function GLITCH._updateWhitelist(address,address) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1228-1238) is not in mixedCase
+Function GLITCH._enableTrading() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1240-1243) is not in mixedCase
+Variable GLITCH._uniswapV2Router (0x119995a900c86c6aaf68b917341b844c3786913c.sol#598) is not in mixedCase
+Variable GLITCH._rewardWallet (0x119995a900c86c6aaf68b917341b844c3786913c.sol#606) is not in mixedCase
+Variable GLITCH._initialRewardLockAmount (0x119995a900c86c6aaf68b917341b844c3786913c.sol#607) is not in mixedCase
+Variable GLITCH._uniswapETHPool (0x119995a900c86c6aaf68b917341b844c3786913c.sol#608) is not in mixedCase
+Variable GLITCH._tFeeTotal (0x119995a900c86c6aaf68b917341b844c3786913c.sol#613) is not in mixedCase
+Variable GLITCH._tBurnTotal (0x119995a900c86c6aaf68b917341b844c3786913c.sol#614) is not in mixedCase
+Variable GLITCH._feeDecimals (0x119995a900c86c6aaf68b917341b844c3786913c.sol#620) is not in mixedCase
+Variable GLITCH._taxFee (0x119995a900c86c6aaf68b917341b844c3786913c.sol#621) is not in mixedCase
+Variable GLITCH._lockFee (0x119995a900c86c6aaf68b917341b844c3786913c.sol#622) is not in mixedCase
+Variable GLITCH._maxTxAmount (0x119995a900c86c6aaf68b917341b844c3786913c.sol#623) is not in mixedCase
+Variable GLITCH._minTokensBeforeSwap (0x119995a900c86c6aaf68b917341b844c3786913c.sol#624) is not in mixedCase
+Variable GLITCH._minInterestForReward (0x119995a900c86c6aaf68b917341b844c3786913c.sol#625) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Redundant expression "this (0x119995a900c86c6aaf68b917341b844c3786913c.sol#21)" inContext (0x119995a900c86c6aaf68b917341b844c3786913c.sol#15-24)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#redundant-statements
+
+GLITCH._setMaxTxAmount(uint256) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1177-1181) uses literals with too many digits:
+	- require(bool,string)(maxTxAmount >= 500000e9,Glitch: maxTxAmount should be greater than 500000e9) (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1178)
+GLITCH.slitherConstructorVariables() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#594-1245) uses literals with too many digits:
+	- _tTotal = 1000000e9 (0x119995a900c86c6aaf68b917341b844c3786913c.sol#611)
+GLITCH.slitherConstructorVariables() (0x119995a900c86c6aaf68b917341b844c3786913c.sol#594-1245) uses literals with too many digits:
+	- _maxTxAmount = 200000e9 (0x119995a900c86c6aaf68b917341b844c3786913c.sol#623)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+Loop condition i < _excluded.length (0x119995a900c86c6aaf68b917341b844c3786913c.sol#1122) should use cached array length instead of referencing `length` member of the storage array.
+ Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#cache-array-length
+
+GLITCH._decimals (0x119995a900c86c6aaf68b917341b844c3786913c.sol#618) should be constant 
+GLITCH._name (0x119995a900c86c6aaf68b917341b844c3786913c.sol#616) should be constant 
+GLITCH._symbol (0x119995a900c86c6aaf68b917341b844c3786913c.sol#617) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+
+Balancer._tokenContract (0x119995a900c86c6aaf68b917341b844c3786913c.sol#531) should be immutable 
+GLITCH._initialRewardLockAmount (0x119995a900c86c6aaf68b917341b844c3786913c.sol#607) should be immutable 
+GLITCH._rewardWallet (0x119995a900c86c6aaf68b917341b844c3786913c.sol#606) should be immutable 
+GLITCH._uniswapETHPool (0x119995a900c86c6aaf68b917341b844c3786913c.sol#608) should be immutable 
+GLITCH.balancer (0x119995a900c86c6aaf68b917341b844c3786913c.sol#670) should be immutable 
+GLITCH.swaper (0x119995a900c86c6aaf68b917341b844c3786913c.sol#671) should be immutable 
+Swaper._tokenContract (0x119995a900c86c6aaf68b917341b844c3786913c.sol#562) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+./0x119995a900c86c6aaf68b917341b844c3786913c.sol analyzed (13 contracts with 94 detectors), 94 result(s) found
+
+real	0m9.519s
+user	0m9.207s
+sys	0m0.308s

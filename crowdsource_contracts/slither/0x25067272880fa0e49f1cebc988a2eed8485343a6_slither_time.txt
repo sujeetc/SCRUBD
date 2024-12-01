@@ -1,0 +1,63 @@
+'solc --version' running
+'solc ./0x25067272880fa0e49f1cebc988a2eed8485343a6.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+Wallet.changeOwner(address) (0x25067272880fa0e49f1cebc988a2eed8485343a6.sol#27-31) should emit an event for: 
+	- owner = newOwner (0x25067272880fa0e49f1cebc988a2eed8485343a6.sol#29) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-access-control
+
+Reentrancy in Wallet.sendTo(address,uint256,address) (0x25067272880fa0e49f1cebc988a2eed8485343a6.sol#38-49):
+	External calls:
+	- require(bool)(addressOk(dest) && sendable(token,amount)) (0x25067272880fa0e49f1cebc988a2eed8485343a6.sol#39)
+		- bal = ERC20(token).balanceOf(address(this)) (0x25067272880fa0e49f1cebc988a2eed8485343a6.sol#23)
+	- ! dest.call.gas(250000).value(amount)() (0x25067272880fa0e49f1cebc988a2eed8485343a6.sol#41)
+	- ! ERC20(token).transfer(dest,amount) (0x25067272880fa0e49f1cebc988a2eed8485343a6.sol#44)
+	External calls sending eth:
+	- ! dest.call.gas(250000).value(amount)() (0x25067272880fa0e49f1cebc988a2eed8485343a6.sol#41)
+	- dest.transfer(amount) (0x25067272880fa0e49f1cebc988a2eed8485343a6.sol#42)
+	Event emitted after the call(s):
+	- Sent(dest,token,amount) (0x25067272880fa0e49f1cebc988a2eed8485343a6.sol#47)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+Wallet.sendTo(address,uint256,address) (0x25067272880fa0e49f1cebc988a2eed8485343a6.sol#38-49) tries to limit the gas of an external call that controls implicit decoding
+	! dest.call.gas(250000).value(amount)() (0x25067272880fa0e49f1cebc988a2eed8485343a6.sol#41)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#return-bomb
+
+Version constraint ^0.4.25 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ABIEncoderV2PackedStorage_0.4.x.
+It is used by:
+	- ^0.4.25 (0x25067272880fa0e49f1cebc988a2eed8485343a6.sol#1)
+solc-0.4.25 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in Wallet.sendTo(address,uint256,address) (0x25067272880fa0e49f1cebc988a2eed8485343a6.sol#38-49):
+	- ! dest.call.gas(250000).value(amount)() (0x25067272880fa0e49f1cebc988a2eed8485343a6.sol#41)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Reentrancy in Wallet.sendTo(address,uint256,address) (0x25067272880fa0e49f1cebc988a2eed8485343a6.sol#38-49):
+	External calls:
+	- dest.transfer(amount) (0x25067272880fa0e49f1cebc988a2eed8485343a6.sol#42)
+	External calls sending eth:
+	- ! dest.call.gas(250000).value(amount)() (0x25067272880fa0e49f1cebc988a2eed8485343a6.sol#41)
+	- dest.transfer(amount) (0x25067272880fa0e49f1cebc988a2eed8485343a6.sol#42)
+	Event emitted after the call(s):
+	- Sent(dest,token,amount) (0x25067272880fa0e49f1cebc988a2eed8485343a6.sol#47)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+./0x25067272880fa0e49f1cebc988a2eed8485343a6.sol analyzed (2 contracts with 94 detectors), 7 result(s) found
+
+real	0m1.565s
+user	0m1.329s
+sys	0m0.238s

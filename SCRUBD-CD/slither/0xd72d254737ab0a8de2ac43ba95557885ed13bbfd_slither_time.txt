@@ -1,0 +1,70 @@
+'solc --version' running
+'solc ./0xd72d254737ab0a8de2ac43ba95557885ed13bbfd.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+SafeERC20.safeTransferFrom(ERC20,address,address,uint256) (0xd72d254737ab0a8de2ac43ba95557885ed13bbfd.sol#93-102) uses arbitrary from in transferFrom: require(bool)(_token.transferFrom(_from,_to,_value)) (0xd72d254737ab0a8de2ac43ba95557885ed13bbfd.sol#101)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#arbitrary-from-in-transferfrom
+
+MenloTokenTimelock.release() (0xd72d254737ab0a8de2ac43ba95557885ed13bbfd.sol#139-149) ignores return value by token.transfer(msg.sender,balance[msg.sender]) (0xd72d254737ab0a8de2ac43ba95557885ed13bbfd.sol#147)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+Reentrancy in MenloTokenTimelock.release() (0xd72d254737ab0a8de2ac43ba95557885ed13bbfd.sol#139-149):
+	External calls:
+	- _amount = token.balanceOf(this) (0xd72d254737ab0a8de2ac43ba95557885ed13bbfd.sol#142)
+	- token.transfer(msg.sender,balance[msg.sender]) (0xd72d254737ab0a8de2ac43ba95557885ed13bbfd.sol#147)
+	State variables written after the call(s):
+	- balance[msg.sender] = 0 (0xd72d254737ab0a8de2ac43ba95557885ed13bbfd.sol#148)
+	MenloTokenTimelock.balance (0xd72d254737ab0a8de2ac43ba95557885ed13bbfd.sol#121) can be used in cross function reentrancies:
+	- MenloTokenTimelock.balance (0xd72d254737ab0a8de2ac43ba95557885ed13bbfd.sol#121)
+	- MenloTokenTimelock.deposit(address,uint256) (0xd72d254737ab0a8de2ac43ba95557885ed13bbfd.sol#132-134)
+	- MenloTokenTimelock.release() (0xd72d254737ab0a8de2ac43ba95557885ed13bbfd.sol#139-149)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+MenloTokenTimelock.constructor(ERC20Basic,uint256) (0xd72d254737ab0a8de2ac43ba95557885ed13bbfd.sol#126-130) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(_releaseTime > now,Release time should be in the future) (0xd72d254737ab0a8de2ac43ba95557885ed13bbfd.sol#127)
+MenloTokenTimelock.release() (0xd72d254737ab0a8de2ac43ba95557885ed13bbfd.sol#139-149) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(getBlockTimestamp() >= releaseTime,Release time should be now or in the past) (0xd72d254737ab0a8de2ac43ba95557885ed13bbfd.sol#140)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Version constraint ^0.4.13 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ExpExponentCleanup
+	- NestedArrayFunctionCallDecoder
+	- ZeroFunctionSelector
+	- DelegateCallReturnValue
+	- ECRecoverMalformedInput.
+It is used by:
+	- ^0.4.13 (0xd72d254737ab0a8de2ac43ba95557885ed13bbfd.sol#1)
+solc-0.4.22 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Parameter Ownable.transferOwnership(address)._newOwner (0xd72d254737ab0a8de2ac43ba95557885ed13bbfd.sol#45) is not in mixedCase
+Parameter SafeERC20.safeTransfer(ERC20Basic,address,uint256)._token (0xd72d254737ab0a8de2ac43ba95557885ed13bbfd.sol#84) is not in mixedCase
+Parameter SafeERC20.safeTransfer(ERC20Basic,address,uint256)._to (0xd72d254737ab0a8de2ac43ba95557885ed13bbfd.sol#85) is not in mixedCase
+Parameter SafeERC20.safeTransfer(ERC20Basic,address,uint256)._value (0xd72d254737ab0a8de2ac43ba95557885ed13bbfd.sol#86) is not in mixedCase
+Parameter SafeERC20.safeTransferFrom(ERC20,address,address,uint256)._token (0xd72d254737ab0a8de2ac43ba95557885ed13bbfd.sol#94) is not in mixedCase
+Parameter SafeERC20.safeTransferFrom(ERC20,address,address,uint256)._from (0xd72d254737ab0a8de2ac43ba95557885ed13bbfd.sol#95) is not in mixedCase
+Parameter SafeERC20.safeTransferFrom(ERC20,address,address,uint256)._to (0xd72d254737ab0a8de2ac43ba95557885ed13bbfd.sol#96) is not in mixedCase
+Parameter SafeERC20.safeTransferFrom(ERC20,address,address,uint256)._value (0xd72d254737ab0a8de2ac43ba95557885ed13bbfd.sol#97) is not in mixedCase
+Parameter SafeERC20.safeApprove(ERC20,address,uint256)._token (0xd72d254737ab0a8de2ac43ba95557885ed13bbfd.sol#105) is not in mixedCase
+Parameter SafeERC20.safeApprove(ERC20,address,uint256)._spender (0xd72d254737ab0a8de2ac43ba95557885ed13bbfd.sol#106) is not in mixedCase
+Parameter SafeERC20.safeApprove(ERC20,address,uint256)._value (0xd72d254737ab0a8de2ac43ba95557885ed13bbfd.sol#107) is not in mixedCase
+Parameter MenloTokenTimelock.deposit(address,uint256)._beneficiary (0xd72d254737ab0a8de2ac43ba95557885ed13bbfd.sol#132) is not in mixedCase
+Parameter MenloTokenTimelock.deposit(address,uint256)._amount (0xd72d254737ab0a8de2ac43ba95557885ed13bbfd.sol#132) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+./0xd72d254737ab0a8de2ac43ba95557885ed13bbfd.sol analyzed (5 contracts with 94 detectors), 20 result(s) found
+
+real	0m1.457s
+user	0m1.262s
+sys	0m0.198s

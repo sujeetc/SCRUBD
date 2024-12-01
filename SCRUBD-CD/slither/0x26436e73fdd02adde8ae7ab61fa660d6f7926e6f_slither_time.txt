@@ -1,0 +1,147 @@
+'solc --version' running
+'solc ./0x26436e73fdd02adde8ae7ab61fa660d6f7926e6f.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+Reentrancy in Crowdsale.buyTokens(address) (0x26436e73fdd02adde8ae7ab61fa660d6f7926e6f.sol#154-175):
+	External calls:
+	- token.transfer(beneficiary,tokens) (0x26436e73fdd02adde8ae7ab61fa660d6f7926e6f.sol#168)
+	External calls sending eth:
+	- forwardFunds() (0x26436e73fdd02adde8ae7ab61fa660d6f7926e6f.sol#171)
+		- wallet.transfer(msg.value) (0x26436e73fdd02adde8ae7ab61fa660d6f7926e6f.sol#203)
+	State variables written after the call(s):
+	- rateUpgrade(tierTotal) (0x26436e73fdd02adde8ae7ab61fa660d6f7926e6f.sol#174)
+		- rate = fundingRate[tierNum] (0x26436e73fdd02adde8ae7ab61fa660d6f7926e6f.sol#191)
+	Crowdsale.rate (0x26436e73fdd02adde8ae7ab61fa660d6f7926e6f.sol#93) can be used in cross function reentrancies:
+	- Crowdsale.Crowdsale(uint256,uint256,uint256,address) (0x26436e73fdd02adde8ae7ab61fa660d6f7926e6f.sol#128-146)
+	- Crowdsale.getRate() (0x26436e73fdd02adde8ae7ab61fa660d6f7926e6f.sol#219-221)
+	- Crowdsale.getTokenAmount(uint256) (0x26436e73fdd02adde8ae7ab61fa660d6f7926e6f.sol#196-198)
+	- Crowdsale.rate (0x26436e73fdd02adde8ae7ab61fa660d6f7926e6f.sol#93)
+	- Crowdsale.rateUpgrade(uint256) (0x26436e73fdd02adde8ae7ab61fa660d6f7926e6f.sol#186-194)
+	- rateUpgrade(tierTotal) (0x26436e73fdd02adde8ae7ab61fa660d6f7926e6f.sol#174)
+		- tierTotal = 0 (0x26436e73fdd02adde8ae7ab61fa660d6f7926e6f.sol#192)
+	Crowdsale.tierTotal (0x26436e73fdd02adde8ae7ab61fa660d6f7926e6f.sol#100) can be used in cross function reentrancies:
+	- Crowdsale.buyTokens(address) (0x26436e73fdd02adde8ae7ab61fa660d6f7926e6f.sol#154-175)
+	- Crowdsale.rateUpgrade(uint256) (0x26436e73fdd02adde8ae7ab61fa660d6f7926e6f.sol#186-194)
+	- Crowdsale.tierTotal (0x26436e73fdd02adde8ae7ab61fa660d6f7926e6f.sol#100)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+Crowdsale.buyTokens(address) (0x26436e73fdd02adde8ae7ab61fa660d6f7926e6f.sol#154-175) ignores return value by token.transfer(beneficiary,tokens) (0x26436e73fdd02adde8ae7ab61fa660d6f7926e6f.sol#168)
+Crowdsale.destroy() (0x26436e73fdd02adde8ae7ab61fa660d6f7926e6f.sol#227-233) ignores return value by token.transfer(owner,balance) (0x26436e73fdd02adde8ae7ab61fa660d6f7926e6f.sol#230)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+Crowdsale.rateUpgrade(uint256) (0x26436e73fdd02adde8ae7ab61fa660d6f7926e6f.sol#186-194) performs a multiplication on the result of a division:
+	- tierEthLimit = fundingLimit[tierNum].div(fundingRate[tierNum]) (0x26436e73fdd02adde8ae7ab61fa660d6f7926e6f.sol#187)
+	- tierWeiLimit = tierEthLimit.mul(1000000000000000000) (0x26436e73fdd02adde8ae7ab61fa660d6f7926e6f.sol#188)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+Reentrancy in Crowdsale.buyTokens(address) (0x26436e73fdd02adde8ae7ab61fa660d6f7926e6f.sol#154-175):
+	External calls:
+	- token.transfer(beneficiary,tokens) (0x26436e73fdd02adde8ae7ab61fa660d6f7926e6f.sol#168)
+	External calls sending eth:
+	- forwardFunds() (0x26436e73fdd02adde8ae7ab61fa660d6f7926e6f.sol#171)
+		- wallet.transfer(msg.value) (0x26436e73fdd02adde8ae7ab61fa660d6f7926e6f.sol#203)
+	State variables written after the call(s):
+	- rateUpgrade(tierTotal) (0x26436e73fdd02adde8ae7ab61fa660d6f7926e6f.sol#174)
+		- tierNum = tierNum.add(1) (0x26436e73fdd02adde8ae7ab61fa660d6f7926e6f.sol#190)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in Crowdsale.buyTokens(address) (0x26436e73fdd02adde8ae7ab61fa660d6f7926e6f.sol#154-175):
+	External calls:
+	- token.transfer(beneficiary,tokens) (0x26436e73fdd02adde8ae7ab61fa660d6f7926e6f.sol#168)
+	Event emitted after the call(s):
+	- TokenPurchase(msg.sender,beneficiary,weiAmount,tokens) (0x26436e73fdd02adde8ae7ab61fa660d6f7926e6f.sol#169)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+Crowdsale.Crowdsale(uint256,uint256,uint256,address) (0x26436e73fdd02adde8ae7ab61fa660d6f7926e6f.sol#128-146) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(_startTime >= now) (0x26436e73fdd02adde8ae7ab61fa660d6f7926e6f.sol#129)
+Crowdsale.hasEnded() (0x26436e73fdd02adde8ae7ab61fa660d6f7926e6f.sol#178-182) uses timestamp for comparisons
+	Dangerous comparisons:
+	- timeLimit = now > endTime (0x26436e73fdd02adde8ae7ab61fa660d6f7926e6f.sol#180)
+	- capReached || timeLimit (0x26436e73fdd02adde8ae7ab61fa660d6f7926e6f.sol#181)
+Crowdsale.validPurchase() (0x26436e73fdd02adde8ae7ab61fa660d6f7926e6f.sol#207-212) uses timestamp for comparisons
+	Dangerous comparisons:
+	- withinPeriod = now >= startTime && now <= endTime (0x26436e73fdd02adde8ae7ab61fa660d6f7926e6f.sol#209)
+	- withinPeriod && withinCap && nonZeroPurchase (0x26436e73fdd02adde8ae7ab61fa660d6f7926e6f.sol#211)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+2 different versions of Solidity are used:
+	- Version constraint ^0.4.18 is used by:
+		-^0.4.18 (0x26436e73fdd02adde8ae7ab61fa660d6f7926e6f.sol#1)
+		-^0.4.18 (0x26436e73fdd02adde8ae7ab61fa660d6f7926e6f.sol#14)
+	- Version constraint ^0.4.11 is used by:
+		-^0.4.11 (0x26436e73fdd02adde8ae7ab61fa660d6f7926e6f.sol#3)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#different-pragma-directives-are-used
+
+Version constraint ^0.4.18 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ExpExponentCleanup
+	- EventStructWrongData
+	- NestedArrayFunctionCallDecoder.
+It is used by:
+	- ^0.4.18 (0x26436e73fdd02adde8ae7ab61fa660d6f7926e6f.sol#1)
+	- ^0.4.18 (0x26436e73fdd02adde8ae7ab61fa660d6f7926e6f.sol#14)
+Version constraint ^0.4.11 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ExpExponentCleanup
+	- NestedArrayFunctionCallDecoder
+	- ZeroFunctionSelector
+	- DelegateCallReturnValue
+	- ECRecoverMalformedInput
+	- SkipEmptyStringLiteral.
+It is used by:
+	- ^0.4.11 (0x26436e73fdd02adde8ae7ab61fa660d6f7926e6f.sol#3)
+solc-0.4.18 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Function Token.SetupToken(string,string,uint256) (0x26436e73fdd02adde8ae7ab61fa660d6f7926e6f.sol#7) is not in mixedCase
+Event Crowdsale.initialCrowdsale(uint256,uint256,uint256,uint256,uint256,uint256,address) (0x26436e73fdd02adde8ae7ab61fa660d6f7926e6f.sol#126) is not in CapWords
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in Crowdsale.buyTokens(address) (0x26436e73fdd02adde8ae7ab61fa660d6f7926e6f.sol#154-175):
+	External calls:
+	- forwardFunds() (0x26436e73fdd02adde8ae7ab61fa660d6f7926e6f.sol#171)
+		- wallet.transfer(msg.value) (0x26436e73fdd02adde8ae7ab61fa660d6f7926e6f.sol#203)
+	State variables written after the call(s):
+	- rateUpgrade(tierTotal) (0x26436e73fdd02adde8ae7ab61fa660d6f7926e6f.sol#174)
+		- rate = fundingRate[tierNum] (0x26436e73fdd02adde8ae7ab61fa660d6f7926e6f.sol#191)
+	- rateUpgrade(tierTotal) (0x26436e73fdd02adde8ae7ab61fa660d6f7926e6f.sol#174)
+		- tierNum = tierNum.add(1) (0x26436e73fdd02adde8ae7ab61fa660d6f7926e6f.sol#190)
+	- rateUpgrade(tierTotal) (0x26436e73fdd02adde8ae7ab61fa660d6f7926e6f.sol#174)
+		- tierTotal = 0 (0x26436e73fdd02adde8ae7ab61fa660d6f7926e6f.sol#192)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+Crowdsale.slitherConstructorVariables() (0x26436e73fdd02adde8ae7ab61fa660d6f7926e6f.sol#76-241) uses literals with too many digits:
+	- fundingLimit = (2000000,5000000,9000000,14000000,20000000) (0x26436e73fdd02adde8ae7ab61fa660d6f7926e6f.sol#115)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+SetupToken(string,string,uint256) should be declared external:
+	- Token.SetupToken(string,string,uint256) (0x26436e73fdd02adde8ae7ab61fa660d6f7926e6f.sol#7)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#public-function-that-could-be-declared-external
+./0x26436e73fdd02adde8ae7ab61fa660d6f7926e6f.sol analyzed (3 contracts with 94 detectors), 18 result(s) found
+
+real	0m1.771s
+user	0m1.582s
+sys	0m0.192s

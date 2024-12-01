@@ -1,0 +1,220 @@
+'solc --version' running
+'solc ./0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+Reentrancy in ProductionUnitToken.exit() (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#269-277):
+	External calls:
+	- sell(_tokens) (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#273)
+		- moonIncContract.handleProductionDecrease.value(_dividends)(_customerAddress,_tokens * cookieProductionMultiplier) (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#321)
+	External calls sending eth:
+	- sell(_tokens) (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#273)
+		- moonIncContract.handleProductionDecrease.value(_dividends)(_customerAddress,_tokens * cookieProductionMultiplier) (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#321)
+	- withdraw() (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#276)
+		- _customerAddress.transfer(_dividends) (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#293)
+	State variables written after the call(s):
+	- withdraw() (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#276)
+		- payoutsTo_[_customerAddress] += int256(_dividends * magnitude) (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#286)
+	ProductionUnitToken.payoutsTo_ (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#177) can be used in cross function reentrancies:
+	- ProductionUnitToken.dividendsOf(address) (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#413-415)
+	- ProductionUnitToken.reinvest() (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#249-266)
+	- ProductionUnitToken.sell(uint256) (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#300-325)
+	- ProductionUnitToken.withdraw() (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#280-297)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+ProductionUnitToken.purchaseTokens(uint256,address) (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#469-533) performs a multiplication on the result of a division:
+	- _undividedDividends = SafeMath.div(SafeMath.mul(_incomingEthereum,entryFee_),100) (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#488)
+	- _referralBonus = SafeMath.div(SafeMath.mul(_undividedDividends,refferalFee_),100) (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#489)
+ProductionUnitToken.tokensToEthereum_(uint256) (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#570-588) performs a multiplication on the result of a division:
+	- _etherReceived = (SafeMath.sub((((tokenPriceInitial_ + (tokenPriceIncremental_ * (_tokenSupply / 1e18))) - tokenPriceIncremental_) * (tokens_ - 1e18)),(tokenPriceIncremental_ * ((tokens_ ** 2 - tokens_) / 1e18)) / 2) / 1e18) (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#573-585)
+MoonInc.computeSellPrice() (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#810-836) performs a multiplication on the result of a division:
+	- 1000000000000000000 * totalEtherCookieResearchPool / supply * multiplier / 10000 (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#835)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+MoonInc.computeSellPrice() (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#810-836) uses a dangerous strict equality:
+	- supply == 0 (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#813)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-strict-equalities
+
+MoonInc.computeSellPrice().index (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#817) is a local variable never initialized
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#uninitialized-local-variables
+
+ProductionUnitToken.withdraw()._customerAddress (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#282) lacks a zero-check on :
+		- _customerAddress.transfer(_dividends) (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#293)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in ProductionUnitToken.exit() (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#269-277):
+	External calls:
+	- sell(_tokens) (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#273)
+		- moonIncContract.handleProductionDecrease.value(_dividends)(_customerAddress,_tokens * cookieProductionMultiplier) (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#321)
+	External calls sending eth:
+	- sell(_tokens) (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#273)
+		- moonIncContract.handleProductionDecrease.value(_dividends)(_customerAddress,_tokens * cookieProductionMultiplier) (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#321)
+	- withdraw() (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#276)
+		- _customerAddress.transfer(_dividends) (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#293)
+	State variables written after the call(s):
+	- withdraw() (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#276)
+		- referralBalance_[_customerAddress] = 0 (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#290)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in ProductionUnitToken.exit() (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#269-277):
+	External calls:
+	- sell(_tokens) (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#273)
+		- moonIncContract.handleProductionDecrease.value(_dividends)(_customerAddress,_tokens * cookieProductionMultiplier) (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#321)
+	External calls sending eth:
+	- sell(_tokens) (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#273)
+		- moonIncContract.handleProductionDecrease.value(_dividends)(_customerAddress,_tokens * cookieProductionMultiplier) (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#321)
+	- withdraw() (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#276)
+		- _customerAddress.transfer(_dividends) (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#293)
+	Event emitted after the call(s):
+	- onWithdraw(_customerAddress,_dividends) (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#296)
+		- withdraw() (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#276)
+Reentrancy in ProductionUnitToken.purchaseTokens(uint256,address) (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#469-533):
+	External calls:
+	- moonIncContract.handleProductionIncrease.value(_dividends)(_customerAddress,_amountOfTokens * cookieProductionMultiplier) (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#527)
+	Event emitted after the call(s):
+	- onTokenPurchase(_customerAddress,_incomingEthereum,_amountOfTokens,_referredBy,now,buyPrice()) (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#530)
+Reentrancy in ProductionUnitToken.reinvest() (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#249-266):
+	External calls:
+	- _tokens = purchaseTokens(_dividends,0x0) (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#262)
+		- moonIncContract.handleProductionIncrease.value(_dividends)(_customerAddress,_amountOfTokens * cookieProductionMultiplier) (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#527)
+	Event emitted after the call(s):
+	- onReinvestment(_customerAddress,_dividends,_tokens) (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#265)
+Reentrancy in ProductionUnitToken.sell(uint256) (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#300-325):
+	External calls:
+	- moonIncContract.handleProductionDecrease.value(_dividends)(_customerAddress,_tokens * cookieProductionMultiplier) (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#321)
+	Event emitted after the call(s):
+	- onTokenSell(_customerAddress,_tokens,_taxedEthereum,now,buyPrice()) (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#324)
+Reentrancy in ProductionUnitToken.transfer(address,uint256) (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#331-365):
+	External calls:
+	- moonIncContract.handleProductionDecrease.value(_dividends)(_customerAddress,_amountOfTokens * cookieProductionMultiplier) (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#357)
+	- moonIncContract.handleProductionIncrease(_toAddress,_taxedTokens * cookieProductionMultiplier) (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#358)
+	External calls sending eth:
+	- withdraw() (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#340)
+		- _customerAddress.transfer(_dividends) (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#293)
+	- moonIncContract.handleProductionDecrease.value(_dividends)(_customerAddress,_amountOfTokens * cookieProductionMultiplier) (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#357)
+	Event emitted after the call(s):
+	- Transfer(_customerAddress,_toAddress,_taxedTokens) (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#361)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+ProductionUnitToken.sell(uint256) (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#300-325) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(now >= startTime) (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#301)
+ProductionUnitToken.purchaseTokens(uint256,address) (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#469-533) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(now >= startTime || (now >= startTime - 3600 && ! ambassadorsPremined[msg.sender] && ambassadorsPremined[ambassadorsPrerequisite[msg.sender]] && _incomingEthereum <= ambassadorsMaxPremine[msg.sender]) || (now >= startTime - 600 && ! ambassadorsPremined[msg.sender] && _incomingEthereum <= ambassadorsMaxPremine[msg.sender])) (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#473-480)
+	- now < startTime (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#482)
+MoonInc.balanceOfTotalUnclaimedCookie() (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#730-736) uses timestamp for comparisons
+	Dangerous comparisons:
+	- lastTotalCookieSaveTime > 0 && lastTotalCookieSaveTime < block.timestamp (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#731)
+MoonInc.balanceOfUnclaimedCookie(address) (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#738-746) uses timestamp for comparisons
+	Dangerous comparisons:
+	- lastSave > 0 && lastSave < block.timestamp (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#741)
+MoonInc.transfer(address,uint256) (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#748-758) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(amount <= cookieBalance[msg.sender]) (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#750)
+MoonInc.transferFrom(address,address,uint256) (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#760-771) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(amount <= allowed[player][msg.sender] && amount <= cookieBalance[player]) (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#762)
+MoonInc.sellAllCookies() (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#793-806) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(sellPrice > 0) (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#798)
+MoonInc.computeSellPrice() (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#810-836) uses timestamp for comparisons
+	Dangerous comparisons:
+	- supply == 0 (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#813)
+	- index < tokenContractStartTime.length && tokenContractStartTime[index] < now (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#820)
+	- now < lastTokenContractStartTime + 3600 (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#825)
+	- secondsPassed <= timeToMaxValue (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#832)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Version constraint 0.4.20 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ABIEncoderV2PackedStorage_0.4.x
+	- ExpExponentCleanup
+	- EventStructWrongData
+	- NestedArrayFunctionCallDecoder.
+It is used by:
+	- 0.4.20 (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#1)
+solc-0.4.20 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Event ProductionUnitToken.onTokenPurchase(address,uint256,uint256,address,uint256,uint256) (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#87-94) is not in CapWords
+Event ProductionUnitToken.onTokenSell(address,uint256,uint256,uint256,uint256) (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#96-102) is not in CapWords
+Event ProductionUnitToken.onReinvestment(address,uint256,uint256) (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#104-108) is not in CapWords
+Event ProductionUnitToken.onWithdraw(address,uint256) (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#110-113) is not in CapWords
+Parameter ProductionUnitToken.buy(address)._referredBy (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#236) is not in mixedCase
+Parameter ProductionUnitToken.sell(uint256)._amountOfTokens (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#300) is not in mixedCase
+Parameter ProductionUnitToken.transfer(address,uint256)._toAddress (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#331) is not in mixedCase
+Parameter ProductionUnitToken.transfer(address,uint256)._amountOfTokens (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#331) is not in mixedCase
+Parameter ProductionUnitToken.myDividends(bool)._includeReferralBonus (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#402) is not in mixedCase
+Parameter ProductionUnitToken.balanceOf(address)._customerAddress (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#408) is not in mixedCase
+Parameter ProductionUnitToken.dividendsOf(address)._customerAddress (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#413) is not in mixedCase
+Parameter ProductionUnitToken.calculateTokensReceived(uint256)._ethereumToSpend (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#446) is not in mixedCase
+Parameter ProductionUnitToken.calculateEthereumReceived(uint256)._tokensToSell (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#455) is not in mixedCase
+Parameter ProductionUnitToken.purchaseTokens(uint256,address)._incomingEthereum (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#469) is not in mixedCase
+Parameter ProductionUnitToken.purchaseTokens(uint256,address)._referredBy (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#469) is not in mixedCase
+Parameter ProductionUnitToken.ethereumToTokens_(uint256)._ethereum (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#540) is not in mixedCase
+Parameter ProductionUnitToken.tokensToEthereum_(uint256)._tokens (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#570) is not in mixedCase
+Constant ProductionUnitToken.refferalFee_ (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#149) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant ProductionUnitToken.magnitude (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#153) is not in UPPER_CASE_WITH_UNDERSCORES
+Parameter MoonInc.createProductionUnitTokenContract(uint8,uint8,uint8,uint256,uint256,uint256,uint256)._entryFee (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#676) is not in mixedCase
+Parameter MoonInc.createProductionUnitTokenContract(uint8,uint8,uint8,uint256,uint256,uint256,uint256)._transferFee (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#676) is not in mixedCase
+Parameter MoonInc.createProductionUnitTokenContract(uint8,uint8,uint8,uint256,uint256,uint256,uint256)._exitFee (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#676) is not in mixedCase
+Parameter MoonInc.createProductionUnitTokenContract(uint8,uint8,uint8,uint256,uint256,uint256,uint256)._tokenPriceInitial (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#676) is not in mixedCase
+Parameter MoonInc.createProductionUnitTokenContract(uint8,uint8,uint8,uint256,uint256,uint256,uint256)._tokenPriceIncremental (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#677) is not in mixedCase
+Parameter MoonInc.createProductionUnitTokenContract(uint8,uint8,uint8,uint256,uint256,uint256,uint256)._cookieProductionMultiplier (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#677) is not in mixedCase
+Parameter MoonInc.createProductionUnitTokenContract(uint8,uint8,uint8,uint256,uint256,uint256,uint256)._startTime (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#677) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in ProductionUnitToken.transfer(address,uint256) (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#331-365):
+	External calls:
+	- withdraw() (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#340)
+		- _customerAddress.transfer(_dividends) (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#293)
+	State variables written after the call(s):
+	- tokenBalanceLedger_[_customerAddress] = SafeMath.sub(tokenBalanceLedger_[_customerAddress],_amountOfTokens) (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#353)
+	- tokenBalanceLedger_[_toAddress] = SafeMath.add(tokenBalanceLedger_[_toAddress],_taxedTokens) (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#354)
+	- tokenSupply_ = SafeMath.sub(tokenSupply_,_tokenFee) (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#350)
+Reentrancy in ProductionUnitToken.transfer(address,uint256) (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#331-365):
+	External calls:
+	- withdraw() (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#340)
+		- _customerAddress.transfer(_dividends) (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#293)
+	External calls sending eth:
+	- withdraw() (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#340)
+		- _customerAddress.transfer(_dividends) (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#293)
+	- moonIncContract.handleProductionDecrease.value(_dividends)(_customerAddress,_amountOfTokens * cookieProductionMultiplier) (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#357)
+	Event emitted after the call(s):
+	- Transfer(_customerAddress,_toAddress,_taxedTokens) (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#361)
+Reentrancy in ProductionUnitToken.withdraw() (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#280-297):
+	External calls:
+	- _customerAddress.transfer(_dividends) (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#293)
+	Event emitted after the call(s):
+	- onWithdraw(_customerAddress,_dividends) (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#296)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+MoonInc.createProductionUnit1Beta() (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#657-661) uses literals with too many digits:
+	- createProductionUnitTokenContract(10,10,10,100000000000 / 1000,10000000000 / 1000,1,firstUnitStartTime) (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#660)
+MoonInc.createProductionUnit2Beta() (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#663-667) uses literals with too many digits:
+	- createProductionUnitTokenContract(15,15,15,100000000000 / 1000,10000000000 / 1000,3,firstUnitStartTime + 86400) (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#666)
+MoonInc.createProductionUnit3Beta() (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#669-673) uses literals with too many digits:
+	- createProductionUnitTokenContract(20,20,20,100000000000 / 1000,10000000000 / 1000,9,firstUnitStartTime + 172800) (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#672)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+ProductionUnitToken.name (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#135) should be constant 
+ProductionUnitToken.stakingRequirement (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#156) should be constant 
+ProductionUnitToken.symbol (0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol#136) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+./0x025cd28d7ef83e1c2ffe511d5f9290d54ba5dcf0.sol analyzed (3 contracts with 94 detectors), 58 result(s) found
+
+real	0m3.206s
+user	0m2.998s
+sys	0m0.211s

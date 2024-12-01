@@ -1,0 +1,128 @@
+'solc --version' running
+'solc ./0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+Reentrancy in BullDogeAIToken._transfer(address,address,uint256) (0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol#657-718):
+	External calls:
+	- swapAndLiquify(contractTokenBalance) (0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol#685)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(half,0,path,address(this),block.timestamp) (0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol#760-766)
+		- uniswapV2Router.addLiquidityETH{value: newBalance}(address(this),otherHalf,0,0,owner(),block.timestamp) (0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol#770)
+	- treasury.swap() (0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol#687)
+	External calls sending eth:
+	- swapAndLiquify(contractTokenBalance) (0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol#685)
+		- uniswapV2Router.addLiquidityETH{value: newBalance}(address(this),otherHalf,0,0,owner(),block.timestamp) (0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol#770)
+	State variables written after the call(s):
+	- super._transfer(from,address(this),fees) (0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol#711)
+		- _balances[sender] = senderBalance - amount (0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol#178)
+		- _balances[recipient] += amount (0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol#180)
+	ERC20._balances (0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol#84) can be used in cross function reentrancies:
+	- ERC20._mint(address,uint256) (0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol#187-197)
+	- ERC20._transfer(address,address,uint256) (0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol#165-185)
+	- ERC20.balanceOf(address) (0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol#114-116)
+	- super._transfer(from,address(treasury),fees) (0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol#713)
+		- _balances[sender] = senderBalance - amount (0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol#178)
+		- _balances[recipient] += amount (0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol#180)
+	ERC20._balances (0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol#84) can be used in cross function reentrancies:
+	- ERC20._mint(address,uint256) (0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol#187-197)
+	- ERC20._transfer(address,address,uint256) (0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol#165-185)
+	- ERC20.balanceOf(address) (0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol#114-116)
+	- super._transfer(from,to,amount) (0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol#717)
+		- _balances[sender] = senderBalance - amount (0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol#178)
+		- _balances[recipient] += amount (0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol#180)
+	ERC20._balances (0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol#84) can be used in cross function reentrancies:
+	- ERC20._mint(address,uint256) (0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol#187-197)
+	- ERC20._transfer(address,address,uint256) (0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol#165-185)
+	- ERC20.balanceOf(address) (0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol#114-116)
+	- swapping = false (0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol#689)
+	BullDogeAIToken.swapping (0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol#609) can be used in cross function reentrancies:
+	- BullDogeAIToken._transfer(address,address,uint256) (0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol#657-718)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+BullDogeAIToken.claimStuckTokens(address) (0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol#775-784) ignores return value by ERC20token.transfer(msg.sender,balance) (0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol#783)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+BullDogeAIToken._transfer(address,address,uint256) (0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol#657-718) uses a dangerous strict equality:
+	- to == uniswapV2Pair && launchTime == 0 && amount > 0 (0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol#670)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-strict-equalities
+
+Treasury.swap() (0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol#579-596) ignores return value by token.approve(address(dexRouter),balance) (0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol#587)
+BullDogeAIToken.swapAndLiquify(uint256) (0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol#750-773) ignores return value by uniswapV2Router.addLiquidityETH{value: newBalance}(address(this),otherHalf,0,0,owner(),block.timestamp) (0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol#770)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+Treasury.constructor(address,address,address)._marketing (0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol#565) lacks a zero-check on :
+		- marketingWallet = _marketing (0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol#569)
+Treasury.setMarketingWallet(address)._address (0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol#573) lacks a zero-check on :
+		- marketingWallet = _address (0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol#575)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in BullDogeAIToken._transfer(address,address,uint256) (0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol#657-718):
+	External calls:
+	- swapAndLiquify(contractTokenBalance) (0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol#685)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(half,0,path,address(this),block.timestamp) (0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol#760-766)
+		- uniswapV2Router.addLiquidityETH{value: newBalance}(address(this),otherHalf,0,0,owner(),block.timestamp) (0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol#770)
+	- treasury.swap() (0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol#687)
+	External calls sending eth:
+	- swapAndLiquify(contractTokenBalance) (0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol#685)
+		- uniswapV2Router.addLiquidityETH{value: newBalance}(address(this),otherHalf,0,0,owner(),block.timestamp) (0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol#770)
+	Event emitted after the call(s):
+	- Transfer(sender,recipient,amount) (0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol#182)
+		- super._transfer(from,address(treasury),fees) (0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol#713)
+	- Transfer(sender,recipient,amount) (0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol#182)
+		- super._transfer(from,to,amount) (0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol#717)
+	- Transfer(sender,recipient,amount) (0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol#182)
+		- super._transfer(from,address(this),fees) (0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol#711)
+Reentrancy in BullDogeAIToken.swapAndLiquify(uint256) (0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol#750-773):
+	External calls:
+	- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(half,0,path,address(this),block.timestamp) (0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol#760-766)
+	- uniswapV2Router.addLiquidityETH{value: newBalance}(address(this),otherHalf,0,0,owner(),block.timestamp) (0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol#770)
+	External calls sending eth:
+	- uniswapV2Router.addLiquidityETH{value: newBalance}(address(this),otherHalf,0,0,owner(),block.timestamp) (0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol#770)
+	Event emitted after the call(s):
+	- SwapAndLiquify(half,newBalance,otherHalf) (0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol#772)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+BullDogeAIToken._transfer(address,address,uint256) (0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol#657-718) uses timestamp for comparisons
+	Dangerous comparisons:
+	- to == uniswapV2Pair && launchTime == 0 && amount > 0 (0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol#670)
+BullDogeAIToken.isBot(address,address) (0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol#746-748) uses timestamp for comparisons
+	Dangerous comparisons:
+	- block.timestamp - launchTime < 10 && launchTime != 0 && (uniswapV2Pair == to || uniswapV2Pair == from) (0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol#747)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Context._msgData() (0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol#45-48) is never used and should be removed
+ERC20._burn(address,uint256) (0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol#199-214) is never used and should be removed
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dead-code
+
+Version constraint 0.8.17 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- VerbatimInvalidDeduplication
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess.
+It is used by:
+	- 0.8.17 (0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol#9)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Function IUniswapV2Pair.DOMAIN_SEPARATOR() (0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol#287) is not in mixedCase
+Function IUniswapV2Pair.PERMIT_TYPEHASH() (0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol#289) is not in mixedCase
+Function IUniswapV2Pair.MINIMUM_LIQUIDITY() (0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol#315) is not in mixedCase
+Function IUniswapV2Router01.WETH() (0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol#359) is not in mixedCase
+Parameter Treasury.setMarketingWallet(address)._address (0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol#573) is not in mixedCase
+Parameter BullDogeAIToken.setSwapEnabled(bool)._swapEnabled (0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol#720) is not in mixedCase
+Parameter BullDogeAIToken.setTreasury(address)._treasury (0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol#726) is not in mixedCase
+Parameter BullDogeAIToken.setSwapWithLimitStatus(bool)._swapWithLimit (0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol#740) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Redundant expression "this (0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol#46)" inContext (0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol#40-49)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#redundant-statements
+
+BullDogeAIToken.taxFee (0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol#600) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+
+BullDogeAIToken.uniswapV2Pair (0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol#604) should be immutable 
+BullDogeAIToken.uniswapV2Router (0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol#602) should be immutable 
+Treasury.dexRouter (0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol#557) should be immutable 
+Treasury.token (0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol#559) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+./0x29b6f1f4f6513a6363e32d092bf95319ec5266b9.sol analyzed (11 contracts with 94 detectors), 28 result(s) found
+
+real	0m2.598s
+user	0m2.378s
+sys	0m0.223s

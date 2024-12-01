@@ -1,0 +1,222 @@
+'solc --version' running
+'solc ./0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol:
+./0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol:1:1: Warning: Source file does not specify required compiler version!Consider adding "pragma solidity ^0.4.11
+contract ERC20 {
+^
+Spanning multiple lines.
+./0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol:122:17: Warning: "msg.value" used in non-payable function. Do you want to add the "payable" modifier to this function?
+        require(msg.value == deploy_fee);
+                ^-------^
+./0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol:125:28: Warning: "msg.value" used in non-payable function. Do you want to add the "payable" modifier to this function?
+        require(owner.send(msg.value));
+                           ^-------^
+./0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol:254:55: Warning: "msg.value" used in non-payable function. Do you want to add the "payable" modifier to this function?
+        require(total_amount(token, amount, price) == msg.value);
+                                                      ^-------^
+./0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol:255:17: Warning: "msg.value" used in non-payable function. Do you want to add the "payable" modifier to this function?
+        require(msg.value >= minimum_trade);
+                ^-------^
+./0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol:265:37: Warning: "msg.value" used in non-payable function. Do you want to add the "payable" modifier to this function?
+        etx_balances[msg.sender] += msg.value;
+                                    ^-------^
+
+
+ERC20dex.collect_main_fee() (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#394-399) sends eth to arbitrary user
+	Dangerous calls:
+	- require(owner.send(main_fee)) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#398)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+ERC20dex (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#12-402) contract sets array length with a user-controlled value:
+	- order_book[token].push(order_t(SELL,msg.sender,amount,price,block.number)) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#248)
+ERC20dex (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#12-402) contract sets array length with a user-controlled value:
+	- order_book[token].push(order_t(BUY,msg.sender,amount,price,block.number)) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#268)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#array-length-assignment
+
+Reentrancy in ERC20dex.trade(string,uint256,uint256) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#271-356):
+	External calls:
+	- require(shitcoin.transfer(make.owner,send_to_maker)) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#317)
+	- require(shitcoin.transfer(take.owner,send_to_taker)) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#341)
+	External calls sending eth:
+	- require(take.owner.send(send_to_taker)) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#323)
+	- require(make.owner.send(send_to_maker)) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#347)
+	State variables written after the call(s):
+	- make.amount = safe_sub(make.amount,deal_amount) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#351)
+	ERC20dex.order_book (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#58) can be used in cross function reentrancies:
+	- ERC20dex.buy(string,uint256,uint256) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#251-269)
+	- ERC20dex.cancel(string,uint256) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#358-381)
+	- ERC20dex.get_order(string,uint256) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#215-218)
+	- ERC20dex.get_order_book_length(string) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#211-213)
+	- ERC20dex.sell(string,uint256,uint256) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#228-249)
+	- ERC20dex.trade(string,uint256,uint256) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#271-356)
+	- take.amount = safe_sub(take.amount,deal_amount) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#352)
+	ERC20dex.order_book (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#58) can be used in cross function reentrancies:
+	- ERC20dex.buy(string,uint256,uint256) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#251-269)
+	- ERC20dex.cancel(string,uint256) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#358-381)
+	- ERC20dex.get_order(string,uint256) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#215-218)
+	- ERC20dex.get_order_book_length(string) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#211-213)
+	- ERC20dex.sell(string,uint256,uint256) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#228-249)
+	- ERC20dex.trade(string,uint256,uint256) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#271-356)
+	- coin.price = make.price (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#355)
+	ERC20dex.shitcoins (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#49) can be used in cross function reentrancies:
+	- ERC20dex.add_coin(string,string,address,uint8) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#111-118)
+	- ERC20dex.approve_coin(string,bool) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#132-139)
+	- ERC20dex.buy(string,uint256,uint256) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#251-269)
+	- ERC20dex.cancel(string,uint256) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#358-381)
+	- ERC20dex.collect_fee(string) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#383-392)
+	- ERC20dex.createToken(string,string,address,uint8) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#120-130)
+	- ERC20dex.get_balance(address,string) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#197-205)
+	- ERC20dex.get_coin(uint256) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#192-195)
+	- ERC20dex.get_coins_count() (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#188-190)
+	- ERC20dex.get_price(string) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#220-222)
+	- ERC20dex.remove_coin(uint256) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#141-152)
+	- ERC20dex.sell(string,uint256,uint256) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#228-249)
+	- ERC20dex.set_coin_minimum_trade(string,uint256) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#171-174)
+	- ERC20dex.total_amount(string,uint256,uint256) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#224-226)
+	- ERC20dex.trade(string,uint256,uint256) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#271-356)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+ERC20dex.cancel(string,uint256) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#358-381) ignores return value by shitcoin.transfer(order.owner,order.amount) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#379)
+ERC20dex.collect_fee(string) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#383-392) ignores return value by shitcoin.transfer(owner,coin.fee) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#390)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+ERC20dex.require(bool) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#77-81) (function) shadows built-in symbol"
+ERC20dex.assert(bool) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#83-87) (function) shadows built-in symbol"
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#builtin-symbol-shadowing
+
+ERC20.totalSupply().totalSupply (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#2) shadows:
+	- ERC20.totalSupply() (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#2) (function)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#local-variable-shadowing
+
+ERC20dex.set_owner(address).new_owner (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#68) lacks a zero-check on :
+		- owner = new_owner (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#70)
+ERC20dex.set_trader(address).new_trader (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#72) lacks a zero-check on :
+		- trader = new_trader (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#74)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in ERC20dex.sell(string,uint256,uint256) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#228-249):
+	External calls:
+	- require(shitcoin.allowance(msg.sender,this) >= amount) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#242)
+	- require(shitcoin.transferFrom(msg.sender,this,amount)) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#245)
+	State variables written after the call(s):
+	- order_book[token].push(order_t(SELL,msg.sender,amount,price,block.number)) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#248)
+Reentrancy in ERC20dex.trade(string,uint256,uint256) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#271-356):
+	External calls:
+	- require(shitcoin.transfer(make.owner,send_to_maker)) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#317)
+	State variables written after the call(s):
+	- etx_balances[make.owner] = safe_sub(etx_balances[make.owner],total_deal) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#320)
+Reentrancy in ERC20dex.trade(string,uint256,uint256) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#271-356):
+	External calls:
+	- require(shitcoin.transfer(take.owner,send_to_taker)) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#341)
+	State variables written after the call(s):
+	- etx_balances[take.owner] = safe_sub(etx_balances[take.owner],total_deal) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#344)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+ERC20dex.require(bool) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#77-81) compares to a boolean constant:
+	-condition == false (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#78)
+ERC20dex.assert(bool) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#83-87) compares to a boolean constant:
+	-condition == false (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#84)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#boolean-equality
+
+Deprecated standard detected THROW (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#79):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#85):
+	- Usage of "throw" should be replaced with "revert()"
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#deprecated-standards
+
+solc-0.4.11 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Struct ERC20dex.order_t (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#28-34) is not in CapWords
+Struct ERC20dex.coin_t (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#36-46) is not in CapWords
+Function ERC20dex.set_owner(address) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#68-71) is not in mixedCase
+Parameter ERC20dex.set_owner(address).new_owner (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#68) is not in mixedCase
+Function ERC20dex.set_trader(address) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#72-75) is not in mixedCase
+Parameter ERC20dex.set_trader(address).new_trader (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#72) is not in mixedCase
+Function ERC20dex.safe_mul(uint256,uint256) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#89-94) is not in mixedCase
+Function ERC20dex.safe_add(uint256,uint256) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#96-99) is not in mixedCase
+Function ERC20dex.safe_sub(uint256,uint256) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#101-104) is not in mixedCase
+Function ERC20dex.add_coin(string,string,address,uint8) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#111-118) is not in mixedCase
+Parameter ERC20dex.createToken(string,string,address,uint8).coin_address (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#120) is not in mixedCase
+Function ERC20dex.approve_coin(string,bool) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#132-139) is not in mixedCase
+Function ERC20dex.remove_coin(uint256) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#141-152) is not in mixedCase
+Function ERC20dex.set_fee(uint256,uint256,uint256) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#154-160) is not in mixedCase
+Parameter ERC20dex.set_fee(uint256,uint256,uint256).the_maker_fee (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#154) is not in mixedCase
+Parameter ERC20dex.set_fee(uint256,uint256,uint256).the_taker_fee (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#154) is not in mixedCase
+Parameter ERC20dex.set_fee(uint256,uint256,uint256).the_deploy_fee (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#154) is not in mixedCase
+Function ERC20dex.set_minimum_trade(uint256) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#162-165) is not in mixedCase
+Parameter ERC20dex.set_minimum_trade(uint256).the_minimum_trade (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#162) is not in mixedCase
+Function ERC20dex.get_minimum_trade() (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#167-169) is not in mixedCase
+Function ERC20dex.set_coin_minimum_trade(string,uint256) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#171-174) is not in mixedCase
+Parameter ERC20dex.set_coin_minimum_trade(string,uint256).the_minimum_trade (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#171) is not in mixedCase
+Function ERC20dex.get_maker_fee() (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#176-178) is not in mixedCase
+Function ERC20dex.get_taker_fee() (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#180-182) is not in mixedCase
+Function ERC20dex.get_deploy_fee() (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#184-186) is not in mixedCase
+Function ERC20dex.get_coins_count() (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#188-190) is not in mixedCase
+Function ERC20dex.get_coin(uint256) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#192-195) is not in mixedCase
+Function ERC20dex.get_balance(address,string) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#197-205) is not in mixedCase
+Function ERC20dex.get_etc_balance(address) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#207-209) is not in mixedCase
+Function ERC20dex.get_order_book_length(string) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#211-213) is not in mixedCase
+Function ERC20dex.get_order(string,uint256) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#215-218) is not in mixedCase
+Function ERC20dex.get_price(string) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#220-222) is not in mixedCase
+Function ERC20dex.total_amount(string,uint256,uint256) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#224-226) is not in mixedCase
+Function ERC20dex.collect_fee(string) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#383-392) is not in mixedCase
+Function ERC20dex.collect_main_fee() (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#394-399) is not in mixedCase
+Variable ERC20dex.maker_fee (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#22) is not in mixedCase
+Variable ERC20dex.taker_fee (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#23) is not in mixedCase
+Variable ERC20dex.deploy_fee (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#24) is not in mixedCase
+Variable ERC20dex.main_fee (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#26) is not in mixedCase
+Variable ERC20dex.minimum_trade (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#52) is not in mixedCase
+Variable ERC20dex.shitcoin_index (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#55) is not in mixedCase
+Variable ERC20dex.order_book (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#58) is not in mixedCase
+Variable ERC20dex.etx_balances (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#61) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in ERC20dex.createToken(string,string,address,uint8) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#120-130):
+	External calls:
+	- require(owner.send(msg.value)) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#125)
+	State variables written after the call(s):
+	- shitcoin_index[symbol] = uint16(shitcoins.length) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#129)
+	- shitcoins.push(coin_t(symbol,name,coin_address,decimals,msg.sender,0,COIN_NON_APPROVED,0,0)) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#128)
+Reentrancy in ERC20dex.trade(string,uint256,uint256) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#271-356):
+	External calls:
+	- require(take.owner.send(send_to_taker)) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#323)
+	- require(make.owner.send(send_to_maker)) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#347)
+	State variables written after the call(s):
+	- make.amount = safe_sub(make.amount,deal_amount) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#351)
+	- take.amount = safe_sub(take.amount,deal_amount) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#352)
+	- coin.price = make.price (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#355)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+add_coin(string,string,address,uint8) should be declared external:
+	- ERC20dex.add_coin(string,string,address,uint8) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#111-118)
+createToken(string,string,address,uint8) should be declared external:
+	- ERC20dex.createToken(string,string,address,uint8) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#120-130)
+approve_coin(string,bool) should be declared external:
+	- ERC20dex.approve_coin(string,bool) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#132-139)
+set_coin_minimum_trade(string,uint256) should be declared external:
+	- ERC20dex.set_coin_minimum_trade(string,uint256) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#171-174)
+get_balance(address,string) should be declared external:
+	- ERC20dex.get_balance(address,string) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#197-205)
+get_order_book_length(string) should be declared external:
+	- ERC20dex.get_order_book_length(string) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#211-213)
+get_order(string,uint256) should be declared external:
+	- ERC20dex.get_order(string,uint256) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#215-218)
+get_price(string) should be declared external:
+	- ERC20dex.get_price(string) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#220-222)
+sell(string,uint256,uint256) should be declared external:
+	- ERC20dex.sell(string,uint256,uint256) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#228-249)
+buy(string,uint256,uint256) should be declared external:
+	- ERC20dex.buy(string,uint256,uint256) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#251-269)
+trade(string,uint256,uint256) should be declared external:
+	- ERC20dex.trade(string,uint256,uint256) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#271-356)
+cancel(string,uint256) should be declared external:
+	- ERC20dex.cancel(string,uint256) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#358-381)
+collect_fee(string) should be declared external:
+	- ERC20dex.collect_fee(string) (0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol#383-392)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#public-function-that-could-be-declared-external
+./0x1c1de57cc864072f7eab381c4c06b14a6963dd4b.sol analyzed (2 contracts with 94 detectors), 77 result(s) found
+
+real	0m2.225s
+user	0m2.005s
+sys	0m0.223s

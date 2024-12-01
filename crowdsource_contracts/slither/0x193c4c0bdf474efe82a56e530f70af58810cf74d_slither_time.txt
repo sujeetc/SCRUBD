@@ -1,0 +1,310 @@
+'solc --version' running
+'solc ./0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol:
+Warning: Function state mutability can be restricted to view
+   --> ./0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol:338:5:
+    |
+338 |     function _getTaxes(address _sender, address _recipient, uint256 _amount) private returns (uint256) {
+    |     ^ (Relevant source part starts here and spans across multiple lines).
+
+
+
+Taxable.payTaxes(uint256,uint256) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#102-113) sends eth to arbitrary user
+	Dangerous calls:
+	- _address.transfer(_amount) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#108)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+Reentrancy in WINORWATCH._disperseEth() (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#378-392):
+	External calls:
+	- payTaxes(_newEth,_d) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#388)
+		- External.deposit(_amount) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#110)
+	- _depositWETH(_newEth.mul(m_LiqAlloc).div(_d)) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#389)
+		- WETH.deposit{value: _amount}() (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#368)
+		- WETH.transfer(m_UniswapV2Pair,_wethBal) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#370)
+	External calls sending eth:
+	- payTaxes(_newEth,_d) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#388)
+		- _address.transfer(_amount) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#108)
+	- _depositWETH(_newEth.mul(m_LiqAlloc).div(_d)) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#389)
+		- WETH.deposit{value: _amount}() (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#368)
+	State variables written after the call(s):
+	- m_LastEthBal = address(this).balance (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#391)
+	WINORWATCH.m_LastEthBal (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#215) can be used in cross function reentrancies:
+	- WINORWATCH._disperseEth() (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#378-392)
+Reentrancy in WINORWATCH._transfer(address,address,uint256) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#307-330):
+	External calls:
+	- _tax(_sender) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#322)
+		- WETH.deposit{value: _amount}() (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#368)
+		- WETH.transfer(m_UniswapV2Pair,_wethBal) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#370)
+		- m_UniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(_amount,0,_path,address(this),block.timestamp) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#359-365)
+		- External.deposit(_amount) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#110)
+	External calls sending eth:
+	- _tax(_sender) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#322)
+		- WETH.deposit{value: _amount}() (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#368)
+		- _address.transfer(_amount) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#108)
+	State variables written after the call(s):
+	- _updateBalances(_sender,_recipient,_amount,_taxes) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#329)
+		- m_Balances[_sender] = m_Balances[_sender].sub(_amount) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#333)
+		- m_Balances[_recipient] = m_Balances[_recipient].add(_netAmount) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#334)
+		- m_Balances[address(this)] = m_Balances[address(this)].add(_taxes) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#335)
+	WINORWATCH.m_Balances (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#213) can be used in cross function reentrancies:
+	- WINORWATCH._updateBalances(address,address,uint256,uint256) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#331-337)
+	- WINORWATCH.balanceOf(address) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#255-257)
+	- WINORWATCH.constructor() (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#233-242)
+Reentrancy in WINORWATCH.addLiquidity() (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#393-403):
+	External calls:
+	- m_UniswapV2Pair = IUniswapV2Factory(m_UniswapV2Router.factory()).createPair(address(this),m_UniswapV2Router.WETH()) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#397)
+	- m_UniswapV2Router.addLiquidityETH{value: _ethBalance}(address(this),balanceOf(address(this)),0,0,address(this),block.timestamp) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#398)
+	- IERC20(m_UniswapV2Pair).approve(m_LiqLockSvcAddress,type()(uint256).max) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#399)
+	- FTPLiqLock(m_LiqLockSvcAddress).lockTokens(m_UniswapV2Pair,block.timestamp.add(345600),msg.sender) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#400)
+	- WETH.approve(address(this),type()(uint256).max) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#401)
+	External calls sending eth:
+	- m_UniswapV2Router.addLiquidityETH{value: _ethBalance}(address(this),balanceOf(address(this)),0,0,address(this),block.timestamp) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#398)
+	State variables written after the call(s):
+	- m_Liquidity = true (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#402)
+	WINORWATCH.m_Liquidity (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#203) can be used in cross function reentrancies:
+	- WINORWATCH._transfer(address,address,uint256) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#307-330)
+	- WINORWATCH.addLiquidity() (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#393-403)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+WINORWATCH._depositWETH(uint256) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#367-371) ignores return value by WETH.transfer(m_UniswapV2Pair,_wethBal) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#370)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+WINORWATCH._getTaxes(address,address,uint256) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#338-346) performs a multiplication on the result of a division:
+	- _ret = _ret.add(_amount.div(pMax).mul(totalTaxAlloc())) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#343)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+Reentrancy in WINORWATCH.setWebThree(address) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#432-434):
+	External calls:
+	- onlyDev() (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#432)
+		- require(bool,string)(_msgSender() == External.owner() || _msgSender() == m_WebThree,Unauthorized) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#227)
+	State variables written after the call(s):
+	- m_WebThree = _address (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#433)
+	Taxable.m_WebThree (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#83) can be used in cross function reentrancies:
+	- WINORWATCH.onlyDev() (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#226-229)
+	- Taxable.setTaxAlloc(address,uint256) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#114-141)
+	- WINORWATCH.setWebThree(address) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#432-434)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+WINORWATCH._transfer(address,address,uint256) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#307-330) uses tx.origin for authorization: require(bool)(! m_Blacklist[_sender] && ! m_Blacklist[_recipient] && ! m_Blacklist[tx.origin]) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#310)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-usage-of-txorigin
+
+Taxable.setTaxAlloc(address,uint256) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#114-141) contains a tautology or contradiction:
+	- require(bool,string)(_alloc >= 0,Allocation must be at least 0) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#115)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#tautology-or-contradiction
+
+WINORWATCH.addLiquidity() (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#393-403) ignores return value by m_UniswapV2Router.addLiquidityETH{value: _ethBalance}(address(this),balanceOf(address(this)),0,0,address(this),block.timestamp) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#398)
+WINORWATCH.addLiquidity() (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#393-403) ignores return value by IERC20(m_UniswapV2Pair).approve(m_LiqLockSvcAddress,type()(uint256).max) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#399)
+WINORWATCH.addLiquidity() (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#393-403) ignores return value by WETH.approve(address(this),type()(uint256).max) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#401)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+WINORWATCH.launch(uint256) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#404-406) should emit an event for: 
+	- m_Launched = block.timestamp.add(_timer) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#405) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+Taxable.updateDevWallet(address,uint256)._address (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#149) lacks a zero-check on :
+		- m_DevAddress = _address (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#151)
+Ownable.transferOwnership(address)._address (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#68) lacks a zero-check on :
+		- m_Owner = _address (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#70)
+WINORWATCH.setWebThree(address)._address (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#432) lacks a zero-check on :
+		- m_WebThree = _address (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#433)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in WINORWATCH.transferFrom(address,address,uint256) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#269-273):
+	External calls:
+	- _transfer(_sender,_recipient,_amount) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#270)
+		- WETH.deposit{value: _amount}() (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#368)
+		- WETH.transfer(m_UniswapV2Pair,_wethBal) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#370)
+		- m_UniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(_amount,0,_path,address(this),block.timestamp) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#359-365)
+		- External.deposit(_amount) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#110)
+	External calls sending eth:
+	- _transfer(_sender,_recipient,_amount) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#270)
+		- WETH.deposit{value: _amount}() (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#368)
+		- _address.transfer(_amount) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#108)
+	State variables written after the call(s):
+	- _approve(_sender,_msgSender(),m_Allowances[_sender][_msgSender()].sub(_amount,ERC20: transfer amount exceeds allowance)) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#271)
+		- m_Allowances[_owner][_spender] = _amount (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#304)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in WINORWATCH._transfer(address,address,uint256) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#307-330):
+	External calls:
+	- _tax(_sender) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#322)
+		- WETH.deposit{value: _amount}() (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#368)
+		- WETH.transfer(m_UniswapV2Pair,_wethBal) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#370)
+		- m_UniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(_amount,0,_path,address(this),block.timestamp) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#359-365)
+		- External.deposit(_amount) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#110)
+	External calls sending eth:
+	- _tax(_sender) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#322)
+		- WETH.deposit{value: _amount}() (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#368)
+		- _address.transfer(_amount) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#108)
+	Event emitted after the call(s):
+	- Transfer(_sender,_recipient,_netAmount) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#336)
+		- _updateBalances(_sender,_recipient,_amount,_taxes) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#329)
+Reentrancy in WINORWATCH.transferFrom(address,address,uint256) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#269-273):
+	External calls:
+	- _transfer(_sender,_recipient,_amount) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#270)
+		- WETH.deposit{value: _amount}() (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#368)
+		- WETH.transfer(m_UniswapV2Pair,_wethBal) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#370)
+		- m_UniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(_amount,0,_path,address(this),block.timestamp) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#359-365)
+		- External.deposit(_amount) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#110)
+	External calls sending eth:
+	- _transfer(_sender,_recipient,_amount) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#270)
+		- WETH.deposit{value: _amount}() (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#368)
+		- _address.transfer(_amount) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#108)
+	Event emitted after the call(s):
+	- Approval(_owner,_spender,_amount) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#305)
+		- _approve(_sender,_msgSender(),m_Allowances[_sender][_msgSender()].sub(_amount,ERC20: transfer amount exceeds allowance)) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#271)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+WINORWATCH._walletCapped(address) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#292-294) uses timestamp for comparisons
+	Dangerous comparisons:
+	- _recipient != m_UniswapV2Pair && _recipient != address(m_UniswapV2Router) && block.timestamp <= m_Launched.add(3600) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#293)
+WINORWATCH._checkTX() (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#295-300) uses timestamp for comparisons
+	Dangerous comparisons:
+	- block.timestamp <= m_Launched.add(360) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#296)
+WINORWATCH._transfer(address,address,uint256) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#307-330) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(block.timestamp >= m_Launched) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#317)
+	- require(bool,string)(block.timestamp >= m_Launched.add(604800),Dumping discouraged) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#326)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+WINORWATCH._isExchangeTransfer(address,address) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#286-288) is never used and should be removed
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dead-code
+
+Version constraint ^0.8.7 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- VerbatimInvalidDeduplication
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- SignedImmutables.
+It is used by:
+	- ^0.8.7 (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#10)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Parameter Ownable.transferOwnership(address)._address (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#68) is not in mixedCase
+Variable Ownable.m_Owner (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#58) is not in mixedCase
+Parameter Taxable.payTaxes(uint256,uint256)._eth (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#102) is not in mixedCase
+Parameter Taxable.payTaxes(uint256,uint256)._d (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#102) is not in mixedCase
+Parameter Taxable.setTaxAlloc(address,uint256)._address (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#114) is not in mixedCase
+Parameter Taxable.setTaxAlloc(address,uint256)._alloc (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#114) is not in mixedCase
+Parameter Taxable.getTaxAlloc(address)._address (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#145) is not in mixedCase
+Parameter Taxable.updateDevWallet(address,uint256)._address (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#149) is not in mixedCase
+Parameter Taxable.updateDevWallet(address,uint256)._alloc (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#149) is not in mixedCase
+Variable Taxable.External (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#79) is not in mixedCase
+Variable Taxable.m_ExternalServiceAddress (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#80) is not in mixedCase
+Variable Taxable.m_DevAddress (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#81) is not in mixedCase
+Variable Taxable.m_DevAlloc (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#82) is not in mixedCase
+Variable Taxable.m_WebThree (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#83) is not in mixedCase
+Variable Taxable.m_TaxAlloc (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#84) is not in mixedCase
+Variable Taxable.m_TaxAddresses (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#85) is not in mixedCase
+Variable Taxable.m_TaxIdx (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#86) is not in mixedCase
+Variable Taxable.m_TotalAlloc (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#87) is not in mixedCase
+Variable Taxable.m_TotalAddresses (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#88) is not in mixedCase
+Variable Taxable.m_DidDeploy (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#89) is not in mixedCase
+Function IUniswapV2Router02.WETH() (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#168) is not in mixedCase
+Parameter WINORWATCH.balanceOf(address)._account (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#255) is not in mixedCase
+Parameter WINORWATCH.transfer(address,uint256)._recipient (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#258) is not in mixedCase
+Parameter WINORWATCH.transfer(address,uint256)._amount (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#258) is not in mixedCase
+Parameter WINORWATCH.allowance(address,address)._owner (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#262) is not in mixedCase
+Parameter WINORWATCH.allowance(address,address)._spender (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#262) is not in mixedCase
+Parameter WINORWATCH.approve(address,uint256)._spender (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#265) is not in mixedCase
+Parameter WINORWATCH.approve(address,uint256)._amount (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#265) is not in mixedCase
+Parameter WINORWATCH.transferFrom(address,address,uint256)._sender (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#269) is not in mixedCase
+Parameter WINORWATCH.transferFrom(address,address,uint256)._recipient (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#269) is not in mixedCase
+Parameter WINORWATCH.transferFrom(address,address,uint256)._amount (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#269) is not in mixedCase
+Parameter WINORWATCH.launch(uint256)._timer (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#404) is not in mixedCase
+Parameter WINORWATCH.checkIfBlacklist(address)._address (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#407) is not in mixedCase
+Parameter WINORWATCH.blacklist(address)._address (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#410) is not in mixedCase
+Parameter WINORWATCH.rmBlacklist(address)._address (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#415) is not in mixedCase
+Parameter WINORWATCH.updateTaxAlloc(address,uint256)._address (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#418) is not in mixedCase
+Parameter WINORWATCH.updateTaxAlloc(address,uint256)._alloc (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#418) is not in mixedCase
+Parameter WINORWATCH.addTaxWhitelist(address)._address (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#426) is not in mixedCase
+Parameter WINORWATCH.rmTaxWhitelist(address)._address (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#429) is not in mixedCase
+Parameter WINORWATCH.setWebThree(address)._address (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#432) is not in mixedCase
+Variable WINORWATCH.m_Name (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#195) is not in mixedCase
+Variable WINORWATCH.m_Symbol (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#196) is not in mixedCase
+Variable WINORWATCH.m_Decimals (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#197) is not in mixedCase
+Variable WINORWATCH.m_UniswapV2Pair (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#199) is not in mixedCase
+Variable WINORWATCH.m_UniswapV2Router (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#200) is not in mixedCase
+Variable WINORWATCH.m_WalletLimit (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#202) is not in mixedCase
+Variable WINORWATCH.m_Liquidity (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#203) is not in mixedCase
+Variable WINORWATCH.WETH (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#207) is not in mixedCase
+Variable WINORWATCH.m_LiqAlloc (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#208) is not in mixedCase
+Variable WINORWATCH.m_LiqLockSvcAddress (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#210) is not in mixedCase
+Variable WINORWATCH.m_Blacklist (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#211) is not in mixedCase
+Variable WINORWATCH.m_ExcludedAddresses (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#212) is not in mixedCase
+Variable WINORWATCH.m_Balances (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#213) is not in mixedCase
+Variable WINORWATCH.m_Allowances (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#214) is not in mixedCase
+Variable WINORWATCH.m_LastEthBal (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#215) is not in mixedCase
+Variable WINORWATCH.m_Launched (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#216) is not in mixedCase
+Variable WINORWATCH.m_IsSwap (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#217) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in WINORWATCH._disperseEth() (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#378-392):
+	External calls:
+	- payTaxes(_newEth,_d) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#388)
+		- _address.transfer(_amount) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#108)
+	External calls sending eth:
+	- payTaxes(_newEth,_d) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#388)
+		- _address.transfer(_amount) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#108)
+	- _depositWETH(_newEth.mul(m_LiqAlloc).div(_d)) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#389)
+		- WETH.deposit{value: _amount}() (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#368)
+	State variables written after the call(s):
+	- m_LastEthBal = address(this).balance (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#391)
+Reentrancy in WINORWATCH._transfer(address,address,uint256) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#307-330):
+	External calls:
+	- _tax(_sender) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#322)
+		- _address.transfer(_amount) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#108)
+	External calls sending eth:
+	- _tax(_sender) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#322)
+		- WETH.deposit{value: _amount}() (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#368)
+		- _address.transfer(_amount) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#108)
+	State variables written after the call(s):
+	- _updateBalances(_sender,_recipient,_amount,_taxes) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#329)
+		- m_Balances[_sender] = m_Balances[_sender].sub(_amount) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#333)
+		- m_Balances[_recipient] = m_Balances[_recipient].add(_netAmount) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#334)
+		- m_Balances[address(this)] = m_Balances[address(this)].add(_taxes) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#335)
+	Event emitted after the call(s):
+	- Transfer(_sender,_recipient,_netAmount) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#336)
+		- _updateBalances(_sender,_recipient,_amount,_taxes) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#329)
+Reentrancy in WINORWATCH.transferFrom(address,address,uint256) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#269-273):
+	External calls:
+	- _transfer(_sender,_recipient,_amount) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#270)
+		- _address.transfer(_amount) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#108)
+	External calls sending eth:
+	- _transfer(_sender,_recipient,_amount) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#270)
+		- WETH.deposit{value: _amount}() (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#368)
+		- _address.transfer(_amount) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#108)
+	State variables written after the call(s):
+	- _approve(_sender,_msgSender(),m_Allowances[_sender][_msgSender()].sub(_amount,ERC20: transfer amount exceeds allowance)) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#271)
+		- m_Allowances[_owner][_spender] = _amount (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#304)
+	Event emitted after the call(s):
+	- Approval(_owner,_spender,_amount) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#305)
+		- _approve(_sender,_msgSender(),m_Allowances[_sender][_msgSender()].sub(_amount,ERC20: transfer amount exceeds allowance)) (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#271)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+WINORWATCH.slitherConstructorVariables() (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#191-436) uses literals with too many digits:
+	- pMax = 100000 (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#218)
+WINORWATCH.slitherConstructorConstantVariables() (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#191-436) uses literals with too many digits:
+	- TOTAL_SUPPLY = 100000000000000 * 10 ** 9 (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#194)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+WINORWATCH.m_Decimals (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#197) should be constant 
+WINORWATCH.m_LiqAlloc (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#208) should be constant 
+WINORWATCH.m_LiqLockSvcAddress (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#210) should be constant 
+WINORWATCH.m_Name (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#195) should be constant 
+WINORWATCH.m_Symbol (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#196) should be constant 
+WINORWATCH.m_WalletLimit (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#202) should be constant 
+WINORWATCH.pMax (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#218) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+
+WINORWATCH.WETH (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#207) should be immutable 
+WINORWATCH.m_UniswapV2Router (0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol#200) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+./0x193c4c0bdf474efe82a56e530f70af58810cf74d.sol analyzed (11 contracts with 94 detectors), 95 result(s) found
+
+real	0m2.872s
+user	0m2.539s
+sys	0m0.334s

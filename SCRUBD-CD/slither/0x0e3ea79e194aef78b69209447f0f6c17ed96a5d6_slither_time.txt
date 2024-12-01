@@ -1,0 +1,425 @@
+'solc --version' running
+'solc ./0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol:
+Warning: Contract code size is 30071 bytes and exceeds 24576 bytes (a limit introduced in Spurious Dragon). This contract may not be deployable on mainnet. Consider enabling the optimizer (with a low "runs" value!), turning off revert strings, or using libraries.
+    --> 0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol:1692:1:
+     |
+1692 | contract Web3NameService is ERC721A, Ownable, ReentrancyGuard {
+     | ^ (Relevant source part starts here and spans across multiple lines).
+
+
+
+Reentrancy in Ownable.renounceOwnership() (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#442-444):
+	External calls:
+	- onlyOwner() (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#442)
+		- Address.sendValue(address(0x6049aCf6993e8eF2BF0e6DD0297C4F3a37995091),balance) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#428)
+		- (success,None) = recipient.call{value: amount}() (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#530)
+	External calls sending eth:
+	- onlyOwner() (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#442)
+		- (success,None) = recipient.call{value: amount}() (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#530)
+	State variables written after the call(s):
+	- _transferOwnership(address(0)) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#443)
+		- _owner = newOwner (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#461)
+	Ownable._owner (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#404) can be used in cross function reentrancies:
+	- Ownable._transferOwnership(address) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#459-463)
+	- Ownable.owner() (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#418-420)
+Reentrancy in Ownable.transferOwnership(address) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#450-453):
+	External calls:
+	- onlyOwner() (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#450)
+		- Address.sendValue(address(0x6049aCf6993e8eF2BF0e6DD0297C4F3a37995091),balance) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#428)
+		- (success,None) = recipient.call{value: amount}() (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#530)
+	External calls sending eth:
+	- onlyOwner() (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#450)
+		- (success,None) = recipient.call{value: amount}() (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#530)
+	State variables written after the call(s):
+	- _transferOwnership(newOwner) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#452)
+		- _owner = newOwner (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#461)
+	Ownable._owner (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#404) can be used in cross function reentrancies:
+	- Ownable._transferOwnership(address) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#459-463)
+	- Ownable.owner() (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#418-420)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+Web3NameService.register(address,string) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1800-1831) performs a multiplication on the result of a division:
+	- ref_cost = price * ref_owner / 100 (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1814)
+	- price = price * (100 - ref_discount) / 100 (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1818)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+Reentrancy in ERC721A._safeMint(address,uint256,bytes) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1378-1419):
+	External calls:
+	- ! _checkContractOnERC721Received(address(0),to,updatedIndex ++,_data) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1405)
+		- retval = IERC721Receiver(to).onERC721Received(_msgSender(),from,tokenId,_data) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1622-1632)
+	State variables written after the call(s):
+	- _currentIndex = updatedIndex (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1416)
+	ERC721A._currentIndex (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1094) can be used in cross function reentrancies:
+	- ERC721A._exists(uint256) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1356-1358)
+	- ERC721A._ownershipOf(uint256) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1205-1230)
+	- ERC721A._transfer(address,address,uint256) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1470-1519)
+	- ERC721A.constructor(string,string) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1119-1123)
+	- ERC721A.totalSupply() (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1135-1141)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+Web3NameService.lastAddresses(uint256) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1942-1959) contains a tautology or contradiction:
+	- require(bool,string)(currentId >= 0,Invalid) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1951)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#tautology-or-contradiction
+
+Web3NameService.walletOfOwnerName(address)._owner (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1916) shadows:
+	- Ownable._owner (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#404) (state variable)
+Web3NameService._checkName(string)._name (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1976) shadows:
+	- ERC721A._name (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1101) (state variable)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#local-variable-shadowing
+
+Reentrancy in Web3NameService.namediff(uint256,string) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1910-1913):
+	External calls:
+	- onlyOwner() (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1910)
+		- Address.sendValue(address(0x6049aCf6993e8eF2BF0e6DD0297C4F3a37995091),balance) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#428)
+		- (success,None) = recipient.call{value: amount}() (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#530)
+	External calls sending eth:
+	- onlyOwner() (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1910)
+		- (success,None) = recipient.call{value: amount}() (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#530)
+	State variables written after the call(s):
+	- tokenAddressandID[new_pepe_name] = tokenId (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1912)
+	- tokenIDandAddress[tokenId] = new_pepe_name (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1911)
+Reentrancy in Web3NameService.setAllowChars(bytes) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1767-1769):
+	External calls:
+	- onlyOwner() (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1767)
+		- Address.sendValue(address(0x6049aCf6993e8eF2BF0e6DD0297C4F3a37995091),balance) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#428)
+		- (success,None) = recipient.call{value: amount}() (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#530)
+	External calls sending eth:
+	- onlyOwner() (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1767)
+		- (success,None) = recipient.call{value: amount}() (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#530)
+	State variables written after the call(s):
+	- _allowChars = allwchr (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1768)
+Reentrancy in Web3NameService.setAllowListSaleActive(bool) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1788-1790):
+	External calls:
+	- onlyOwner() (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1788)
+		- Address.sendValue(address(0x6049aCf6993e8eF2BF0e6DD0297C4F3a37995091),balance) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#428)
+		- (success,None) = recipient.call{value: amount}() (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#530)
+	External calls sending eth:
+	- onlyOwner() (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1788)
+		- (success,None) = recipient.call{value: amount}() (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#530)
+	State variables written after the call(s):
+	- IS_ALLOWLIST_ACTIVE = WhitesaleIsActive (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1789)
+Reentrancy in Web3NameService.setBaseURI(string) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1759-1761):
+	External calls:
+	- onlyOwner() (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1759)
+		- Address.sendValue(address(0x6049aCf6993e8eF2BF0e6DD0297C4F3a37995091),balance) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#428)
+		- (success,None) = recipient.call{value: amount}() (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#530)
+	External calls sending eth:
+	- onlyOwner() (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1759)
+		- (success,None) = recipient.call{value: amount}() (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#530)
+	State variables written after the call(s):
+	- BASE_URI = customBaseURI_ (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1760)
+Reentrancy in Web3NameService.setMaxCharSize(uint256) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1763-1765):
+	External calls:
+	- onlyOwner() (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1763)
+		- Address.sendValue(address(0x6049aCf6993e8eF2BF0e6DD0297C4F3a37995091),balance) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#428)
+		- (success,None) = recipient.call{value: amount}() (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#530)
+	External calls sending eth:
+	- onlyOwner() (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1763)
+		- (success,None) = recipient.call{value: amount}() (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#530)
+	State variables written after the call(s):
+	- maxCharSize = maxCharSize_ (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1764)
+Reentrancy in Web3NameService.setMerkleRoot(bytes32) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1962-1964):
+	External calls:
+	- onlyOwner() (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1962)
+		- Address.sendValue(address(0x6049aCf6993e8eF2BF0e6DD0297C4F3a37995091),balance) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#428)
+		- (success,None) = recipient.call{value: amount}() (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#530)
+	External calls sending eth:
+	- onlyOwner() (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1962)
+		- (success,None) = recipient.call{value: amount}() (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#530)
+	State variables written after the call(s):
+	- merkleRoot = _newMerkleRoot (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1963)
+Reentrancy in Web3NameService.setPrice(uint256) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1771-1773):
+	External calls:
+	- onlyOwner() (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1771)
+		- Address.sendValue(address(0x6049aCf6993e8eF2BF0e6DD0297C4F3a37995091),balance) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#428)
+		- (success,None) = recipient.call{value: amount}() (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#530)
+	External calls sending eth:
+	- onlyOwner() (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1771)
+		- (success,None) = recipient.call{value: amount}() (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#530)
+	State variables written after the call(s):
+	- cost = customPrice (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1772)
+Reentrancy in Web3NameService.setRefSettings(uint256,uint256,uint256,uint256) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1775-1781):
+	External calls:
+	- onlyOwner() (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1775)
+		- Address.sendValue(address(0x6049aCf6993e8eF2BF0e6DD0297C4F3a37995091),balance) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#428)
+		- (success,None) = recipient.call{value: amount}() (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#530)
+	External calls sending eth:
+	- onlyOwner() (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1775)
+		- (success,None) = recipient.call{value: amount}() (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#530)
+	State variables written after the call(s):
+	- ref = ref_ (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1776)
+	- ref_discount = ref_discount_ (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1778)
+	- ref_owner = ref_owner_ (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1777)
+	- subdomains_fee = subdomains_fee_ (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1779)
+Reentrancy in Web3NameService.setSaleActive(bool) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1784-1786):
+	External calls:
+	- onlyOwner() (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1784)
+		- Address.sendValue(address(0x6049aCf6993e8eF2BF0e6DD0297C4F3a37995091),balance) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#428)
+		- (success,None) = recipient.call{value: amount}() (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#530)
+	External calls sending eth:
+	- onlyOwner() (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1784)
+		- (success,None) = recipient.call{value: amount}() (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#530)
+	State variables written after the call(s):
+	- IS_SALE_ACTIVE = saleIsActive (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1785)
+Reentrancy in Web3NameService.withdraw() (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1992-1995):
+	External calls:
+	- onlyOwner() (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1992)
+		- Address.sendValue(address(0x6049aCf6993e8eF2BF0e6DD0297C4F3a37995091),balance) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#428)
+		- (success,None) = recipient.call{value: amount}() (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#530)
+	External calls sending eth:
+	- onlyOwner() (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1992)
+		- (success,None) = recipient.call{value: amount}() (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#530)
+	State variables written after the call(s):
+	- nonReentrant() (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1992)
+		- _status = _ENTERED (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#276)
+		- _status = _NOT_ENTERED (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#282)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in ERC721A._safeMint(address,uint256,bytes) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1378-1419):
+	External calls:
+	- ! _checkContractOnERC721Received(address(0),to,updatedIndex ++,_data) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1405)
+		- retval = IERC721Receiver(to).onERC721Received(_msgSender(),from,tokenId,_data) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1622-1632)
+	Event emitted after the call(s):
+	- Transfer(address(0),to,updatedIndex) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1404)
+Reentrancy in Ownable.renounceOwnership() (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#442-444):
+	External calls:
+	- onlyOwner() (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#442)
+		- Address.sendValue(address(0x6049aCf6993e8eF2BF0e6DD0297C4F3a37995091),balance) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#428)
+		- (success,None) = recipient.call{value: amount}() (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#530)
+	External calls sending eth:
+	- onlyOwner() (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#442)
+		- (success,None) = recipient.call{value: amount}() (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#530)
+	Event emitted after the call(s):
+	- OwnershipTransferred(oldOwner,newOwner) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#462)
+		- _transferOwnership(address(0)) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#443)
+Reentrancy in Ownable.transferOwnership(address) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#450-453):
+	External calls:
+	- onlyOwner() (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#450)
+		- Address.sendValue(address(0x6049aCf6993e8eF2BF0e6DD0297C4F3a37995091),balance) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#428)
+		- (success,None) = recipient.call{value: amount}() (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#530)
+	External calls sending eth:
+	- onlyOwner() (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#450)
+		- (success,None) = recipient.call{value: amount}() (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#530)
+	Event emitted after the call(s):
+	- OwnershipTransferred(oldOwner,newOwner) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#462)
+		- _transferOwnership(newOwner) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#452)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+MerkleProof._efficientHash(bytes32,bytes32) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#212-219) uses assembly
+	- INLINE ASM (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#214-218)
+Address.verifyCallResult(bool,bytes,string) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#668-688) uses assembly
+	- INLINE ASM (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#680-683)
+ERC721A._checkContractOnERC721Received(address,address,uint256,bytes) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1616-1633) uses assembly
+	- INLINE ASM (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1628-1630)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#assembly-usage
+
+Web3NameService.allowList(string,bytes32[]) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1833-1850) compares to a boolean constant:
+	-require(bool,string)(allowlistAddresses[msg.sender] != true,Claimed!) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1843)
+Web3NameService.registerSubdomain(string,string) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1853-1881) compares to a boolean constant:
+	-require(bool,string)(subDomains_publicSale[pepe_name] == true,Only Owner can register) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1873)
+Web3NameService.allowListSubdomain(string,string,bytes32[]) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1884-1907) compares to a boolean constant:
+	-require(bool,string)(subDomains_allowlistAddresses[pepe_name][msg.sender] != true,Claimed!) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1898)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#boolean-equality
+
+3 different versions of Solidity are used:
+	- Version constraint ^0.8.0 is used by:
+		-^0.8.0 (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#12)
+		-^0.8.0 (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#225)
+		-^0.8.0 (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#291)
+		-^0.8.0 (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#361)
+		-^0.8.0 (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#388)
+		-^0.8.0 (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#696)
+		-^0.8.0 (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#726)
+		-^0.8.0 (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#754)
+		-^0.8.0 (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#785)
+		-^0.8.0 (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#930)
+	- Version constraint ^0.8.1 is used by:
+		-^0.8.1 (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#471)
+	- Version constraint ^0.8.4 is used by:
+		-^0.8.4 (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#960)
+		-^0.8.4 (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1071)
+		-^0.8.4 (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1685)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#different-pragma-directives-are-used
+
+Context._msgData() (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#378-380) is never used and should be removed
+ERC721A._baseURI() (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1268-1270) is never used and should be removed
+ERC721A._burn(uint256) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1524-1526) is never used and should be removed
+ERC721A._burn(uint256,bool) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1538-1591) is never used and should be removed
+ERC721A._getAux(address) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1189-1191) is never used and should be removed
+ERC721A._mint(address,uint256) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1431-1458) is never used and should be removed
+ERC721A._numberBurned(address) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1182-1184) is never used and should be removed
+ERC721A._numberMinted(address) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1175-1177) is never used and should be removed
+ERC721A._setAux(address,uint64) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1197-1199) is never used and should be removed
+ERC721A._totalMinted() (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1146-1152) is never used and should be removed
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dead-code
+
+Version constraint ^0.8.0 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- SignedImmutables
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching.
+It is used by:
+	- ^0.8.0 (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#12)
+	- ^0.8.0 (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#225)
+	- ^0.8.0 (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#291)
+	- ^0.8.0 (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#361)
+	- ^0.8.0 (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#388)
+	- ^0.8.0 (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#696)
+	- ^0.8.0 (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#726)
+	- ^0.8.0 (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#754)
+	- ^0.8.0 (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#785)
+	- ^0.8.0 (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#930)
+Version constraint ^0.8.1 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- SignedImmutables
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching.
+It is used by:
+	- ^0.8.1 (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#471)
+Version constraint ^0.8.4 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- SignedImmutables.
+It is used by:
+	- ^0.8.4 (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#960)
+	- ^0.8.4 (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1071)
+	- ^0.8.4 (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1685)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in Address.sendValue(address,uint256) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#527-532):
+	- (success,None) = recipient.call{value: amount}() (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#530)
+Low level call in Address.functionCallWithValue(address,bytes,uint256,string) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#595-606):
+	- (success,returndata) = target.call{value: value}(data) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#604)
+Low level call in Address.functionStaticCall(address,bytes,string) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#624-633):
+	- (success,returndata) = target.staticcall(data) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#631)
+Low level call in Address.functionDelegateCall(address,bytes,string) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#651-660):
+	- (success,returndata) = target.delegatecall(data) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#658)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Parameter ERC721A.safeTransferFrom(address,address,uint256,bytes)._data (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1341) is not in mixedCase
+Parameter Web3NameService.setAddress(string,address).pepe_name (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1729) is not in mixedCase
+Parameter Web3NameService.setPrimaryAddress(string).pepe_name (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1741) is not in mixedCase
+Parameter Web3NameService.setDataAddress(string,string,string).pepe_name (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1747) is not in mixedCase
+Parameter Web3NameService.getDataAddress(string,string).pepe_name (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1754) is not in mixedCase
+Parameter Web3NameService.getDataAddress(string,string).Area (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1754) is not in mixedCase
+Parameter Web3NameService.setRefSettings(uint256,uint256,uint256,uint256).ref_owner_ (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1775) is not in mixedCase
+Parameter Web3NameService.setRefSettings(uint256,uint256,uint256,uint256).ref_discount_ (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1775) is not in mixedCase
+Parameter Web3NameService.setRefSettings(uint256,uint256,uint256,uint256).subdomains_fee_ (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1775) is not in mixedCase
+Parameter Web3NameService.setAllowListSaleActive(bool).WhitesaleIsActive (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1788) is not in mixedCase
+Parameter Web3NameService.setSubdomainSaleActive(bool,uint256,string).pepe_name (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1792) is not in mixedCase
+Parameter Web3NameService.register(address,string).ref_address (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1800) is not in mixedCase
+Parameter Web3NameService.register(address,string).pepe_name (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1800) is not in mixedCase
+Parameter Web3NameService.allowList(string,bytes32[]).pepe_name (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1833) is not in mixedCase
+Parameter Web3NameService.allowList(string,bytes32[])._merkleProof (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1833) is not in mixedCase
+Parameter Web3NameService.registerSubdomain(string,string).pepe_name (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1853) is not in mixedCase
+Parameter Web3NameService.registerSubdomain(string,string).subdomain_name (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1853) is not in mixedCase
+Parameter Web3NameService.allowListSubdomain(string,string,bytes32[]).pepe_name (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1884) is not in mixedCase
+Parameter Web3NameService.allowListSubdomain(string,string,bytes32[]).subdomain_name (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1884) is not in mixedCase
+Parameter Web3NameService.allowListSubdomain(string,string,bytes32[])._merkleProof (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1884) is not in mixedCase
+Parameter Web3NameService.namediff(uint256,string).new_pepe_name (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1910) is not in mixedCase
+Parameter Web3NameService.walletOfOwnerName(address)._owner (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1916) is not in mixedCase
+Parameter Web3NameService.setMerkleRoot(bytes32)._newMerkleRoot (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1962) is not in mixedCase
+Parameter Web3NameService.setMerkleRootSubdomain(bytes32,string,uint256)._newMerkleRoot (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1966) is not in mixedCase
+Parameter Web3NameService.setMerkleRootSubdomain(bytes32,string,uint256).pepe_name (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1966) is not in mixedCase
+Parameter Web3NameService.setMerkleRootSubdomain(bytes32,string,uint256)._cost (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1966) is not in mixedCase
+Function Web3NameService._checkName(string) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1976-1988) is not in mixedCase
+Parameter Web3NameService._checkName(string)._name (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1976) is not in mixedCase
+Variable Web3NameService.ref_owner (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1696) is not in mixedCase
+Variable Web3NameService.ref_discount (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1697) is not in mixedCase
+Variable Web3NameService.subdomains_fee (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1698) is not in mixedCase
+Variable Web3NameService.BASE_URI (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1703) is not in mixedCase
+Variable Web3NameService.IS_SALE_ACTIVE (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1704) is not in mixedCase
+Variable Web3NameService.IS_ALLOWLIST_ACTIVE (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1705) is not in mixedCase
+Variable Web3NameService.subDomains_allowlistAddresses (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1707) is not in mixedCase
+Variable Web3NameService.subDomains_publicSale (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1710) is not in mixedCase
+Variable Web3NameService.subDomains_cost (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1711) is not in mixedCase
+Variable Web3NameService.subDomains_allowList (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1712) is not in mixedCase
+Variable Web3NameService.subDomains_allowList_cost (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1713) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in Web3NameService.allowListSubdomain(string,string,bytes32[]) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1884-1907):
+	External calls:
+	- address(Ownership.addr).transfer(msg.value * (100 - subdomains_fee) / 100) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1901)
+	State variables written after the call(s):
+	- _safeMint(msg.sender,1) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1906)
+		- _addressData[to].balance += uint64(quantity) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1393)
+		- _addressData[to].numberMinted += uint64(quantity) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1394)
+	- _safeMint(msg.sender,1) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1906)
+		- _currentIndex = updatedIndex (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1416)
+	- _safeMint(msg.sender,1) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1906)
+		- _ownerships[startTokenId].addr = to (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1396)
+		- _ownerships[startTokenId].startTimestamp = uint64(block.timestamp) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1397)
+	- resolveAddress[new_domain] = msg.sender (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1905)
+	- subDomains_allowlistAddresses[pepe_name][msg.sender] = true (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1902)
+	- tokenAddressandID[new_domain] = _currentIndex (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1904)
+	- tokenIDandAddress[_currentIndex] = new_domain (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1903)
+	Event emitted after the call(s):
+	- Transfer(address(0),to,updatedIndex) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1404)
+		- _safeMint(msg.sender,1) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1906)
+	- Transfer(address(0),to,updatedIndex ++) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1413)
+		- _safeMint(msg.sender,1) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1906)
+Reentrancy in Web3NameService.register(address,string) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1800-1831):
+	External calls:
+	- address(ref_address).transfer(ref_cost) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1828)
+	State variables written after the call(s):
+	- _safeMint(msg.sender,1) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1830)
+		- _addressData[to].balance += uint64(quantity) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1393)
+		- _addressData[to].numberMinted += uint64(quantity) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1394)
+	- _safeMint(msg.sender,1) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1830)
+		- _currentIndex = updatedIndex (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1416)
+	- _safeMint(msg.sender,1) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1830)
+		- _ownerships[startTokenId].addr = to (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1396)
+		- _ownerships[startTokenId].startTimestamp = uint64(block.timestamp) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1397)
+	Event emitted after the call(s):
+	- Transfer(address(0),to,updatedIndex) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1404)
+		- _safeMint(msg.sender,1) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1830)
+	- Transfer(address(0),to,updatedIndex ++) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1413)
+		- _safeMint(msg.sender,1) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1830)
+Reentrancy in Web3NameService.registerSubdomain(string,string) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1853-1881):
+	External calls:
+	- address(Ownership.addr).transfer(msg.value * (100 - subdomains_fee) / 100) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1875)
+	State variables written after the call(s):
+	- _safeMint(msg.sender,1) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1879)
+		- _addressData[to].balance += uint64(quantity) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1393)
+		- _addressData[to].numberMinted += uint64(quantity) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1394)
+	- _safeMint(msg.sender,1) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1879)
+		- _currentIndex = updatedIndex (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1416)
+	- _safeMint(msg.sender,1) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1879)
+		- _ownerships[startTokenId].addr = to (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1396)
+		- _ownerships[startTokenId].startTimestamp = uint64(block.timestamp) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1397)
+	- resolveAddress[new_domain] = msg.sender (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1878)
+	- tokenAddressandID[new_domain] = _currentIndex (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1877)
+	- tokenIDandAddress[_currentIndex] = new_domain (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1876)
+	Event emitted after the call(s):
+	- Transfer(address(0),to,updatedIndex) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1404)
+		- _safeMint(msg.sender,1) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1879)
+	- Transfer(address(0),to,updatedIndex ++) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1413)
+		- _safeMint(msg.sender,1) (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1879)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+Web3NameService.slitherConstructorVariables() (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1692-1998) uses literals with too many digits:
+	- cost = 10000000000000000 (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1694)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+Web3NameService.domain (0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol#1701) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+./0x0e3ea79e194aef78b69209447f0f6c17ed96a5d6.sol analyzed (14 contracts with 94 detectors), 88 result(s) found
+
+real	0m5.568s
+user	0m5.316s
+sys	0m0.252s

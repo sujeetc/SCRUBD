@@ -1,0 +1,351 @@
+'solc --version' running
+'solc ./0x018194f1e70185eb153bcab2f6d64070c605a318.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+Reentrancy in LEET._transfer(address,address,uint256) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#282-307):
+	External calls:
+	- swapAndLiquify() (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#294)
+		- (success,None) = recipient.call{value: amount}() (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#34)
+		- (None,ethFromLiquidity,None) = router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#376-383)
+		- address(marketingAddr).sendValue(ethAmount - ethFromLiquidity) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#386)
+		- router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#340-346)
+	External calls sending eth:
+	- swapAndLiquify() (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#294)
+		- (success,None) = recipient.call{value: amount}() (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#34)
+		- (None,ethFromLiquidity,None) = router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#376-383)
+		- address(marketingAddr).transfer(ethSwapped) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#354)
+	State variables written after the call(s):
+	- _tOwned[from] -= amount (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#298)
+	LEET._tOwned (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#117) can be used in cross function reentrancies:
+	- LEET._getTaxValues(uint256,address,bool) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#309-330)
+	- LEET._transfer(address,address,uint256) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#282-307)
+	- LEET.balanceOf(address) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#195-197)
+	- LEET.constructor() (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#161-176)
+	- transferAmount = _getTaxValues(amount,from,to == pair) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#302)
+		- _tOwned[address(this)] += totalTaxedTokens (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#326)
+	LEET._tOwned (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#117) can be used in cross function reentrancies:
+	- LEET._getTaxValues(uint256,address,bool) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#309-330)
+	- LEET._transfer(address,address,uint256) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#282-307)
+	- LEET.balanceOf(address) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#195-197)
+	- LEET.constructor() (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#161-176)
+	- _tOwned[to] += transferAmount (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#305)
+	LEET._tOwned (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#117) can be used in cross function reentrancies:
+	- LEET._getTaxValues(uint256,address,bool) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#309-330)
+	- LEET._transfer(address,address,uint256) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#282-307)
+	- LEET.balanceOf(address) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#195-197)
+	- LEET.constructor() (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#161-176)
+	- transferAmount = _getTaxValues(amount,from,to == pair) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#302)
+		- totalTokensFromTax.marketingTokens += tokensForMarketing (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#319)
+		- totalTokensFromTax.lpTokens += tokensForLP (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#322)
+	LEET.totalTokensFromTax (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#133) can be used in cross function reentrancies:
+	- LEET._getTaxValues(uint256,address,bool) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#309-330)
+	- LEET.owner_rescueERCTokens() (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#254-261)
+	- LEET.swapAndLiquify() (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#350-371)
+	- LEET.totalTokensFromTax (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#133)
+Reentrancy in LEET.swapAndLiquify() (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#350-371):
+	External calls:
+	- ethSwapped = swapTokensForETH(totalTokensFromTax.marketingTokens) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#352)
+		- router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#340-346)
+	External calls sending eth:
+	- address(marketingAddr).transfer(ethSwapped) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#354)
+	State variables written after the call(s):
+	- totalTokensFromTax.marketingTokens = 0 (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#355)
+	LEET.totalTokensFromTax (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#133) can be used in cross function reentrancies:
+	- LEET._getTaxValues(uint256,address,bool) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#309-330)
+	- LEET.owner_rescueERCTokens() (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#254-261)
+	- LEET.swapAndLiquify() (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#350-371)
+	- LEET.totalTokensFromTax (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#133)
+Reentrancy in LEET.swapAndLiquify() (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#350-371):
+	External calls:
+	- ethSwapped = swapTokensForETH(totalTokensFromTax.marketingTokens) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#352)
+		- router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#340-346)
+	- balAutoLP = swapTokensForETH(half) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#362)
+		- router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#340-346)
+	- addLiquidity(otherHalf,balAutoLP) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#364)
+		- (success,None) = recipient.call{value: amount}() (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#34)
+		- (None,ethFromLiquidity,None) = router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#376-383)
+		- address(marketingAddr).sendValue(ethAmount - ethFromLiquidity) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#386)
+	External calls sending eth:
+	- address(marketingAddr).transfer(ethSwapped) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#354)
+	- addLiquidity(otherHalf,balAutoLP) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#364)
+		- (success,None) = recipient.call{value: amount}() (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#34)
+		- (None,ethFromLiquidity,None) = router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#376-383)
+	State variables written after the call(s):
+	- totalTokensFromTax.lpTokens = 0 (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#365)
+	LEET.totalTokensFromTax (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#133) can be used in cross function reentrancies:
+	- LEET._getTaxValues(uint256,address,bool) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#309-330)
+	- LEET.owner_rescueERCTokens() (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#254-261)
+	- LEET.swapAndLiquify() (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#350-371)
+	- LEET.totalTokensFromTax (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#133)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+LEET.startTrading() (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#268-279) ignores return value by router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#271-278)
+LEET.addLiquidity(uint256,uint256) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#373-387) ignores return value by (None,ethFromLiquidity,None) = router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#376-383)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+LEET.allowance(address,address).owner (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#204) shadows:
+	- Ownable.owner() (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#49-51) (function)
+LEET._approve(address,address,uint256).owner (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#229) shadows:
+	- Ownable.owner() (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#49-51) (function)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#local-variable-shadowing
+
+Reentrancy in LEET.startTrading() (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#268-279):
+	External calls:
+	- pair = IFactory(router.factory()).createPair(address(this),router.WETH()) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#269)
+	State variables written after the call(s):
+	- _approve(address(this),address(router),type()(uint256).max) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#270)
+		- _allowances[owner][spender] = amount (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#232)
+	- _isExcludedFromMaxBalance[pair] = true (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#270)
+Reentrancy in LEET.swapAndLiquify() (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#350-371):
+	External calls:
+	- ethSwapped = swapTokensForETH(totalTokensFromTax.marketingTokens) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#352)
+		- router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#340-346)
+	- balAutoLP = swapTokensForETH(half) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#362)
+		- router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#340-346)
+	External calls sending eth:
+	- address(marketingAddr).transfer(ethSwapped) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#354)
+	State variables written after the call(s):
+	- balAutoLP = swapTokensForETH(half) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#362)
+		- _allowances[owner][spender] = amount (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#232)
+Reentrancy in LEET.swapAndLiquify() (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#350-371):
+	External calls:
+	- ethSwapped = swapTokensForETH(totalTokensFromTax.marketingTokens) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#352)
+		- router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#340-346)
+	- balAutoLP = swapTokensForETH(half) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#362)
+		- router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#340-346)
+	- addLiquidity(otherHalf,balAutoLP) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#364)
+		- (success,None) = recipient.call{value: amount}() (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#34)
+		- (None,ethFromLiquidity,None) = router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#376-383)
+		- address(marketingAddr).sendValue(ethAmount - ethFromLiquidity) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#386)
+	External calls sending eth:
+	- address(marketingAddr).transfer(ethSwapped) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#354)
+	- addLiquidity(otherHalf,balAutoLP) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#364)
+		- (success,None) = recipient.call{value: amount}() (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#34)
+		- (None,ethFromLiquidity,None) = router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#376-383)
+	State variables written after the call(s):
+	- addLiquidity(otherHalf,balAutoLP) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#364)
+		- _allowances[owner][spender] = amount (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#232)
+	- _lastSwap = block.timestamp (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#370)
+Reentrancy in LEET.transferFrom(address,address,uint256) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#223-227):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#224)
+		- (success,None) = recipient.call{value: amount}() (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#34)
+		- (None,ethFromLiquidity,None) = router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#376-383)
+		- address(marketingAddr).sendValue(ethAmount - ethFromLiquidity) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#386)
+		- router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#340-346)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#224)
+		- (success,None) = recipient.call{value: amount}() (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#34)
+		- (None,ethFromLiquidity,None) = router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#376-383)
+		- address(marketingAddr).transfer(ethSwapped) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#354)
+	State variables written after the call(s):
+	- _approve(sender,_msgSender(),_allowances[sender][_msgSender()] - amount) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#225)
+		- _allowances[owner][spender] = amount (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#232)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in LEET._transfer(address,address,uint256) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#282-307):
+	External calls:
+	- swapAndLiquify() (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#294)
+		- (success,None) = recipient.call{value: amount}() (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#34)
+		- (None,ethFromLiquidity,None) = router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#376-383)
+		- address(marketingAddr).sendValue(ethAmount - ethFromLiquidity) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#386)
+		- router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#340-346)
+	External calls sending eth:
+	- swapAndLiquify() (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#294)
+		- (success,None) = recipient.call{value: amount}() (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#34)
+		- (None,ethFromLiquidity,None) = router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#376-383)
+		- address(marketingAddr).transfer(ethSwapped) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#354)
+	Event emitted after the call(s):
+	- Transfer(from,address(this),totalTaxedTokens) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#327)
+		- transferAmount = _getTaxValues(amount,from,to == pair) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#302)
+	- Transfer(from,to,transferAmount) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#306)
+Reentrancy in LEET.startTrading() (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#268-279):
+	External calls:
+	- pair = IFactory(router.factory()).createPair(address(this),router.WETH()) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#269)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#233)
+		- _approve(address(this),address(router),type()(uint256).max) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#270)
+Reentrancy in LEET.swapAndLiquify() (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#350-371):
+	External calls:
+	- ethSwapped = swapTokensForETH(totalTokensFromTax.marketingTokens) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#352)
+		- router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#340-346)
+	- balAutoLP = swapTokensForETH(half) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#362)
+		- router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#340-346)
+	External calls sending eth:
+	- address(marketingAddr).transfer(ethSwapped) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#354)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#233)
+		- balAutoLP = swapTokensForETH(half) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#362)
+Reentrancy in LEET.swapAndLiquify() (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#350-371):
+	External calls:
+	- ethSwapped = swapTokensForETH(totalTokensFromTax.marketingTokens) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#352)
+		- router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#340-346)
+	- balAutoLP = swapTokensForETH(half) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#362)
+		- router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#340-346)
+	- addLiquidity(otherHalf,balAutoLP) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#364)
+		- (success,None) = recipient.call{value: amount}() (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#34)
+		- (None,ethFromLiquidity,None) = router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#376-383)
+		- address(marketingAddr).sendValue(ethAmount - ethFromLiquidity) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#386)
+	External calls sending eth:
+	- address(marketingAddr).transfer(ethSwapped) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#354)
+	- addLiquidity(otherHalf,balAutoLP) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#364)
+		- (success,None) = recipient.call{value: amount}() (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#34)
+		- (None,ethFromLiquidity,None) = router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#376-383)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#233)
+		- addLiquidity(otherHalf,balAutoLP) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#364)
+	- SwapAndLiquify() (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#368)
+Reentrancy in LEET.transferFrom(address,address,uint256) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#223-227):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#224)
+		- (success,None) = recipient.call{value: amount}() (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#34)
+		- (None,ethFromLiquidity,None) = router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#376-383)
+		- address(marketingAddr).sendValue(ethAmount - ethFromLiquidity) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#386)
+		- router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#340-346)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#224)
+		- (success,None) = recipient.call{value: amount}() (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#34)
+		- (None,ethFromLiquidity,None) = router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#376-383)
+		- address(marketingAddr).transfer(ethSwapped) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#354)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#233)
+		- _approve(sender,_msgSender(),_allowances[sender][_msgSender()] - amount) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#225)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+LEET._transfer(address,address,uint256) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#282-307) uses timestamp for comparisons
+	Dangerous comparisons:
+	- balanceOf(address(this)) >= swapLimit && swapEnabled && block.timestamp >= (_lastSwap + _swapCooldown) && ! swapping && from != pair && from != owner() && to != owner() (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#290-293)
+LEET.addLiquidity(uint256,uint256) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#373-387) uses timestamp for comparisons
+	Dangerous comparisons:
+	- ethAmount - ethFromLiquidity > 0 (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#385)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Context._msgData() (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#24-27) is never used and should be removed
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dead-code
+
+LEET.swapLimit (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#125) is set pre-construction with a non-constant function or state variable:
+	- _tTotal / 8000
+LEET.maxTransAmount (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#126) is set pre-construction with a non-constant function or state variable:
+	- _tTotal * 3 / 100
+LEET.maxWalletSize (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#127) is set pre-construction with a non-constant function or state variable:
+	- _tTotal * 3 / 100
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#function-initializing-state
+
+Version constraint ^0.8.12 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- VerbatimInvalidDeduplication
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- AbiEncodeCallLiteralAsFixedBytesBug.
+It is used by:
+	- ^0.8.12 (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#17)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in Address.sendValue(address,uint256) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#31-36):
+	- (success,None) = recipient.call{value: amount}() (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#34)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Function IRouter.WETH() (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#95) is not in mixedCase
+Function LEET.owner_setMaxWallets() (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#242-244) is not in mixedCase
+Function LEET.owner_disableSwapEnabled() (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#246-248) is not in mixedCase
+Function LEET.owner_setDogSellTimeForAddress(address,uint256) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#250-252) is not in mixedCase
+Function LEET.owner_rescueERCTokens() (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#254-261) is not in mixedCase
+Function LEET.owner_rescueETH(uint256) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#263-266) is not in mixedCase
+Constant LEET._name (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#120) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant LEET._symbol (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#121) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant LEET._decimals (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#122) is not in UPPER_CASE_WITH_UNDERSCORES
+Variable LEET._isExcludedFromFee (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#135) is not in mixedCase
+Variable LEET._isExcludedFromMaxBalance (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#136) is not in mixedCase
+Variable LEET._dogSellTime (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#151) is not in mixedCase
+Variable LEET._caughtDogs (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#153) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Redundant expression "this (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#25)" inContext (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#19-28)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#redundant-statements
+
+Reentrancy in LEET._transfer(address,address,uint256) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#282-307):
+	External calls:
+	- swapAndLiquify() (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#294)
+		- address(marketingAddr).transfer(ethSwapped) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#354)
+	External calls sending eth:
+	- swapAndLiquify() (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#294)
+		- (success,None) = recipient.call{value: amount}() (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#34)
+		- (None,ethFromLiquidity,None) = router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#376-383)
+		- address(marketingAddr).transfer(ethSwapped) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#354)
+	State variables written after the call(s):
+	- _tOwned[from] -= amount (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#298)
+	- transferAmount = _getTaxValues(amount,from,to == pair) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#302)
+		- _tOwned[address(this)] += totalTaxedTokens (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#326)
+	- _tOwned[to] += transferAmount (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#305)
+	- transferAmount = _getTaxValues(amount,from,to == pair) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#302)
+		- totalTokensFromTax.marketingTokens += tokensForMarketing (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#319)
+		- totalTokensFromTax.lpTokens += tokensForLP (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#322)
+	Event emitted after the call(s):
+	- Transfer(from,address(this),totalTaxedTokens) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#327)
+		- transferAmount = _getTaxValues(amount,from,to == pair) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#302)
+	- Transfer(from,to,transferAmount) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#306)
+Reentrancy in LEET.swapAndLiquify() (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#350-371):
+	External calls:
+	- address(marketingAddr).transfer(ethSwapped) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#354)
+	State variables written after the call(s):
+	- balAutoLP = swapTokensForETH(half) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#362)
+		- _allowances[owner][spender] = amount (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#232)
+	- totalTokensFromTax.marketingTokens = 0 (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#355)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#233)
+		- balAutoLP = swapTokensForETH(half) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#362)
+Reentrancy in LEET.swapAndLiquify() (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#350-371):
+	External calls:
+	- address(marketingAddr).transfer(ethSwapped) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#354)
+	External calls sending eth:
+	- address(marketingAddr).transfer(ethSwapped) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#354)
+	- addLiquidity(otherHalf,balAutoLP) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#364)
+		- (success,None) = recipient.call{value: amount}() (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#34)
+		- (None,ethFromLiquidity,None) = router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#376-383)
+	State variables written after the call(s):
+	- addLiquidity(otherHalf,balAutoLP) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#364)
+		- _allowances[owner][spender] = amount (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#232)
+	- _lastSwap = block.timestamp (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#370)
+	- totalTokensFromTax.lpTokens = 0 (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#365)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#233)
+		- addLiquidity(otherHalf,balAutoLP) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#364)
+	- SwapAndLiquify() (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#368)
+Reentrancy in LEET.transferFrom(address,address,uint256) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#223-227):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#224)
+		- address(marketingAddr).transfer(ethSwapped) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#354)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#224)
+		- (success,None) = recipient.call{value: amount}() (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#34)
+		- (None,ethFromLiquidity,None) = router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#376-383)
+		- address(marketingAddr).transfer(ethSwapped) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#354)
+	State variables written after the call(s):
+	- _approve(sender,_msgSender(),_allowances[sender][_msgSender()] - amount) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#225)
+		- _allowances[owner][spender] = amount (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#232)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#233)
+		- _approve(sender,_msgSender(),_allowances[sender][_msgSender()] - amount) (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#225)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+LEET._dogSellTimeOffset (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#152) is never used in LEET (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#112-394)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-state-variable
+
+LEET._caughtDogs (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#153) should be constant 
+LEET._dogSellTimeOffset (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#152) should be constant 
+LEET._swapCooldown (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#144) should be constant 
+LEET._tTotal (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#124) should be constant 
+LEET.feeDenominator (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#154) should be constant 
+LEET.marketingAddr (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#116) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+
+LEET.router (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#114) should be immutable 
+LEET.swapLimit (0x018194f1e70185eb153bcab2f6d64070c605a318.sol#125) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+./0x018194f1e70185eb153bcab2f6d64070c605a318.sol analyzed (7 contracts with 94 detectors), 51 result(s) found
+
+real	0m2.789s
+user	0m2.553s
+sys	0m0.239s

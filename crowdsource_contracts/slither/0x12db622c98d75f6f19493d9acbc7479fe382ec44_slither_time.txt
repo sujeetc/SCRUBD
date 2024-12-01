@@ -1,0 +1,113 @@
+'solc --version' running
+'solc ./0x12db622c98d75f6f19493d9acbc7479fe382ec44.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x12db622c98d75f6f19493d9acbc7479fe382ec44.sol:
+./0x12db622c98d75f6f19493d9acbc7479fe382ec44.sol:162:9: Warning: Invoking events without "emit" prefix is deprecated.
+        FundTransfer(msg.sender, amount, true);
+        ^------------------------------------^
+
+
+TBECrowdsale.fallback() (0x12db622c98d75f6f19493d9acbc7479fe382ec44.sol#142-164) performs a multiplication on the result of a division:
+	- _amount = amount / 10 (0x12db622c98d75f6f19493d9acbc7479fe382ec44.sol#155)
+	- amount += _amount * 3 (0x12db622c98d75f6f19493d9acbc7479fe382ec44.sol#156)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+Token (0x12db622c98d75f6f19493d9acbc7479fe382ec44.sol#50-52) has incorrect ERC20 function interface:Token.transfer(address,uint256) (0x12db622c98d75f6f19493d9acbc7479fe382ec44.sol#51)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-erc20-interface
+
+Reentrancy in TBECrowdsale.fallback() (0x12db622c98d75f6f19493d9acbc7479fe382ec44.sol#142-164):
+	External calls:
+	- tokenReward.transfer(msg.sender,amount) (0x12db622c98d75f6f19493d9acbc7479fe382ec44.sol#160)
+	State variables written after the call(s):
+	- whitelistedMax[msg.sender] = whitelistedMax[msg.sender] + msg.value (0x12db622c98d75f6f19493d9acbc7479fe382ec44.sol#161)
+	TBECrowdsale.whitelistedMax (0x12db622c98d75f6f19493d9acbc7479fe382ec44.sol#66) can be used in cross function reentrancies:
+	- TBECrowdsale.fallback() (0x12db622c98d75f6f19493d9acbc7479fe382ec44.sol#142-164)
+	- TBECrowdsale.whitelistedMax (0x12db622c98d75f6f19493d9acbc7479fe382ec44.sol#66)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+TBECrowdsale.setCreator(address) (0x12db622c98d75f6f19493d9acbc7479fe382ec44.sol#96-98) should emit an event for: 
+	- creator = _creator (0x12db622c98d75f6f19493d9acbc7479fe382ec44.sol#97) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-access-control
+
+TBECrowdsale.setStartDate(uint256) (0x12db622c98d75f6f19493d9acbc7479fe382ec44.sol#100-102) should emit an event for: 
+	- startDate = _startDate (0x12db622c98d75f6f19493d9acbc7479fe382ec44.sol#101) 
+TBECrowdsale.setEndtDate(uint256) (0x12db622c98d75f6f19493d9acbc7479fe382ec44.sol#104-106) should emit an event for: 
+	- endDate = _endDate (0x12db622c98d75f6f19493d9acbc7479fe382ec44.sol#105) 
+TBECrowdsale.setbonusDate(uint256) (0x12db622c98d75f6f19493d9acbc7479fe382ec44.sol#108-110) should emit an event for: 
+	- bonusDate = _bonusDate (0x12db622c98d75f6f19493d9acbc7479fe382ec44.sol#109) 
+TBECrowdsale.setPrice(uint256) (0x12db622c98d75f6f19493d9acbc7479fe382ec44.sol#111-113) should emit an event for: 
+	- price = _price (0x12db622c98d75f6f19493d9acbc7479fe382ec44.sol#112) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+TBECrowdsale.setOwner(address)._owner (0x12db622c98d75f6f19493d9acbc7479fe382ec44.sol#92) lacks a zero-check on :
+		- owner = _owner (0x12db622c98d75f6f19493d9acbc7479fe382ec44.sol#93)
+TBECrowdsale.setCreator(address)._creator (0x12db622c98d75f6f19493d9acbc7479fe382ec44.sol#96) lacks a zero-check on :
+		- creator = _creator (0x12db622c98d75f6f19493d9acbc7479fe382ec44.sol#97)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in TBECrowdsale.fallback() (0x12db622c98d75f6f19493d9acbc7479fe382ec44.sol#142-164):
+	External calls:
+	- tokenReward.transfer(msg.sender,amount) (0x12db622c98d75f6f19493d9acbc7479fe382ec44.sol#160)
+	Event emitted after the call(s):
+	- FundTransfer(msg.sender,amount,true) (0x12db622c98d75f6f19493d9acbc7479fe382ec44.sol#162)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+TBECrowdsale.fallback() (0x12db622c98d75f6f19493d9acbc7479fe382ec44.sol#142-164) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(now > startDate) (0x12db622c98d75f6f19493d9acbc7479fe382ec44.sol#144)
+	- require(bool)(now < endDate) (0x12db622c98d75f6f19493d9acbc7479fe382ec44.sol#145)
+	- now > startDate && now <= bonusDate (0x12db622c98d75f6f19493d9acbc7479fe382ec44.sol#154)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+TBECrowdsale.fallback() (0x12db622c98d75f6f19493d9acbc7479fe382ec44.sol#142-164) compares to a boolean constant:
+	-categorie1[msg.sender] == false (0x12db622c98d75f6f19493d9acbc7479fe382ec44.sol#148)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#boolean-equality
+
+Version constraint ^0.4.21 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ABIEncoderV2PackedStorage_0.4.x
+	- ExpExponentCleanup
+	- EventStructWrongData
+	- NestedArrayFunctionCallDecoder.
+It is used by:
+	- ^0.4.21 (0x12db622c98d75f6f19493d9acbc7479fe382ec44.sol#1)
+solc-0.4.21 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Parameter TBECrowdsale.setOwner(address)._owner (0x12db622c98d75f6f19493d9acbc7479fe382ec44.sol#92) is not in mixedCase
+Parameter TBECrowdsale.setCreator(address)._creator (0x12db622c98d75f6f19493d9acbc7479fe382ec44.sol#96) is not in mixedCase
+Parameter TBECrowdsale.setStartDate(uint256)._startDate (0x12db622c98d75f6f19493d9acbc7479fe382ec44.sol#100) is not in mixedCase
+Parameter TBECrowdsale.setEndtDate(uint256)._endDate (0x12db622c98d75f6f19493d9acbc7479fe382ec44.sol#104) is not in mixedCase
+Parameter TBECrowdsale.setbonusDate(uint256)._bonusDate (0x12db622c98d75f6f19493d9acbc7479fe382ec44.sol#108) is not in mixedCase
+Parameter TBECrowdsale.setPrice(uint256)._price (0x12db622c98d75f6f19493d9acbc7479fe382ec44.sol#111) is not in mixedCase
+Parameter TBECrowdsale.settokenCap(uint256)._tokenCap (0x12db622c98d75f6f19493d9acbc7479fe382ec44.sol#114) is not in mixedCase
+Parameter TBECrowdsale.addToWhitelist(address)._address (0x12db622c98d75f6f19493d9acbc7479fe382ec44.sol#118) is not in mixedCase
+Parameter TBECrowdsale.addToCategorie1(address)._address (0x12db622c98d75f6f19493d9acbc7479fe382ec44.sol#122) is not in mixedCase
+Parameter TBECrowdsale.addToCategorie2(address)._address (0x12db622c98d75f6f19493d9acbc7479fe382ec44.sol#126) is not in mixedCase
+Parameter TBECrowdsale.setToken(address)._token (0x12db622c98d75f6f19493d9acbc7479fe382ec44.sol#130) is not in mixedCase
+Parameter TBECrowdsale.sendToken(address,uint256)._to (0x12db622c98d75f6f19493d9acbc7479fe382ec44.sol#134) is not in mixedCase
+Parameter TBECrowdsale.sendToken(address,uint256)._value (0x12db622c98d75f6f19493d9acbc7479fe382ec44.sol#134) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+TBECrowdsale.TBECrowdsale() (0x12db622c98d75f6f19493d9acbc7479fe382ec44.sol#80-88) uses literals with too many digits:
+	- tokenCap = 2400000000000000000000 (0x12db622c98d75f6f19493d9acbc7479fe382ec44.sol#86)
+TBECrowdsale.fallback() (0x12db622c98d75f6f19493d9acbc7479fe382ec44.sol#142-164) uses literals with too many digits:
+	- require(bool)((whitelistedMax[msg.sender] + msg.value) <= 5000000000000000000) (0x12db622c98d75f6f19493d9acbc7479fe382ec44.sol#149)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+./0x12db622c98d75f6f19493d9acbc7479fe382ec44.sol analyzed (3 contracts with 94 detectors), 30 result(s) found
+
+real	0m1.574s
+user	0m1.414s
+sys	0m0.163s

@@ -1,0 +1,315 @@
+'solc --version' running
+'solc ./0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol:
+Warning: Contract code size exceeds 24576 bytes (a limit introduced in Spurious Dragon). This contract may not be deployable on mainnet. Consider enabling the optimizer (with a low "runs" value!), turning off revert strings, or using libraries.
+   --> ./0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol:300:1:
+    |
+300 | contract XYZProtocol is IERC20Metadata, Ownable, ReentrancyGuard {
+    | ^ (Relevant source part starts here and spans across multiple lines).
+
+
+
+XYZProtocol._addLiquidity(uint256,uint256) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#843-858) sends eth to arbitrary user
+	Dangerous calls:
+	- (tokenAmountSent,ethAmountSent,liquidity) = router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#848-855)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+Reentrancy in XYZProtocol._beforeTokenTransfer(address) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#802-818):
+	External calls:
+	- swapBack() (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#812)
+		- (tokenAmountSent,ethAmountSent,liquidity) = router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#848-855)
+		- router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#869-875)
+	External calls sending eth:
+	- swapBack() (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#812)
+		- recipient.transfer(amount) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#882)
+		- (tokenAmountSent,ethAmountSent,liquidity) = router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#848-855)
+	State variables written after the call(s):
+	- swapping = false (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#814)
+	XYZProtocol.swapping (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#326) can be used in cross function reentrancies:
+	- XYZProtocol._beforeTokenTransfer(address) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#802-818)
+Reentrancy in XYZProtocol._transfer(address,address,uint256) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#764-800):
+	External calls:
+	- _beforeTokenTransfer(recipient) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#797)
+		- (tokenAmountSent,ethAmountSent,liquidity) = router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#848-855)
+		- router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#869-875)
+	External calls sending eth:
+	- _beforeTokenTransfer(recipient) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#797)
+		- recipient.transfer(amount) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#882)
+		- (tokenAmountSent,ethAmountSent,liquidity) = router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#848-855)
+	State variables written after the call(s):
+	- _transferTokens(sender,recipient,amount,_isTakeFee) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#798)
+		- _balances[sender] = _balances[sender].sub(tAmount) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#753)
+		- _balances[recipient] = _balances[recipient].add(tAmount) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#711)
+		- _balances[recipient] = _balances[recipient].add(tTransferAmount) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#754)
+	XYZProtocol._balances (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#351) can be used in cross function reentrancies:
+	- XYZProtocol._exclude(address) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#536-542)
+	- XYZProtocol._getCurrentSupply() (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#578-595)
+	- XYZProtocol._takeFee(uint256,uint256,uint256,address) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#705-712)
+	- XYZProtocol.balanceOf(address) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#421-424)
+	- XYZProtocol.includeInReward(address) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#544-555)
+	- XYZProtocol.theReflection(address,address,uint256,uint256,uint256,uint256) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#744-755)
+	- _transferTokens(sender,recipient,amount,_isTakeFee) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#798)
+		- _reflectedBalances[sender] = _reflectedBalances[sender].sub(rAmount) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#747)
+		- _reflectedBalances[recipient] = _reflectedBalances[recipient].add(rTransferAmount) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#748)
+		- _reflectedBalances[recipient] = _reflectedBalances[recipient].add(rAmount) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#709)
+	XYZProtocol._reflectedBalances (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#350) can be used in cross function reentrancies:
+	- XYZProtocol._exclude(address) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#536-542)
+	- XYZProtocol._getCurrentSupply() (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#578-595)
+	- XYZProtocol._takeFee(uint256,uint256,uint256,address) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#705-712)
+	- XYZProtocol.balanceOf(address) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#421-424)
+	- XYZProtocol.constructor() (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#376-401)
+	- XYZProtocol.theReflection(address,address,uint256,uint256,uint256,uint256) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#744-755)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+XYZProtocol._getValues(uint256,uint256) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#561-571) performs a multiplication on the result of a division:
+	- tTotalFees = tAmount.mul(feesSum).div(FEES_DIVISOR) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#563)
+	- rTotalFees = tTotalFees.mul(currentRate) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#567)
+XYZProtocol._redistribute(uint256,uint256,uint256) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#604-611) performs a multiplication on the result of a division:
+	- tFee = amount.mul(fee).div(FEES_DIVISOR) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#605)
+	- rFee = tFee.mul(currentRate) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#606)
+XYZProtocol._burn(uint256,uint256,uint256) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#613-620) performs a multiplication on the result of a division:
+	- tBurn = amount.mul(fee).div(FEES_DIVISOR) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#614)
+	- rBurn = tBurn.mul(currentRate) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#615)
+XYZProtocol._takeFee(uint256,uint256,uint256,address) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#705-712) performs a multiplication on the result of a division:
+	- tAmount = amount.mul(fee).div(FEES_DIVISOR) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#706)
+	- rAmount = tAmount.mul(currentRate) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#707)
+XYZProtocol.swapBack() (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#820-841) performs a multiplication on the result of a division:
+	- splitLiquidityPortion = lpPortionOfSwap.div(2) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#821)
+	- amountToLiquify = balanceOf(address(this)).mul(splitLiquidityPortion).div(FEES_DIVISOR) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#822)
+XYZProtocol.swapBack() (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#820-841) performs a multiplication on the result of a division:
+	- splitLiquidityPortion = lpPortionOfSwap.div(2) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#821)
+	- amountBNBLiquidity = amountBNB.mul(splitLiquidityPortion).div(FEES_DIVISOR) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#833)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+XYZProtocol.allowance(address,address).owner (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#431) shadows:
+	- Ownable.owner() (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#226-228) (function)
+XYZProtocol._approve(address,address,uint256).owner (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#496) shadows:
+	- Ownable.owner() (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#226-228) (function)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#local-variable-shadowing
+
+XYZProtocol.updateSwapTokensAt(uint256) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#639-641) should emit an event for: 
+	- swapTokensAtAmount = _swaptokens * (10 ** 18) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#640) 
+XYZProtocol.updateWalletMax(uint256) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#643-645) should emit an event for: 
+	- maxWalletBalance = _walletMax * (10 ** 18) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#644) 
+XYZProtocol.updateTransactionMax(uint256) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#647-649) should emit an event for: 
+	- maxTxAmount = _txMax * (10 ** 18) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#648) 
+XYZProtocol.updateFees(uint256,uint256,uint256) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#651-658) should emit an event for: 
+	- totalFee = _marketing.add(_devolpment).add(_lp) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#652) 
+XYZProtocol.updatePortionsOfSwap(uint256,uint256,uint256) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#676-685) should emit an event for: 
+	- marketingPortionOfSwap = marketingPortion (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#682) 
+	- devolpmentPortionOfSwap = devolpmentPortion (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#683) 
+	- lpPortionOfSwap = lpPortion (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#684) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+Reentrancy in XYZProtocol.swapBack() (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#820-841):
+	External calls:
+	- swapTokensForETH(amountToSwap) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#827)
+		- router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#869-875)
+	- _addLiquidity(amountToLiquify,amountBNBLiquidity) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#840)
+		- (tokenAmountSent,ethAmountSent,liquidity) = router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#848-855)
+	External calls sending eth:
+	- transferToAddress(address(marketingWallet),amountBNBMarketing) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#836)
+		- recipient.transfer(amount) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#882)
+	- transferToAddress(address(devolpmentWallet),amountBNBDevolpment) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#837)
+		- recipient.transfer(amount) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#882)
+	- _addLiquidity(amountToLiquify,amountBNBLiquidity) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#840)
+		- (tokenAmountSent,ethAmountSent,liquidity) = router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#848-855)
+	State variables written after the call(s):
+	- _addLiquidity(amountToLiquify,amountBNBLiquidity) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#840)
+		- _allowances[owner][spender] = amount (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#500)
+Reentrancy in XYZProtocol.transferFrom(address,address,uint256) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#440-444):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#441)
+		- (tokenAmountSent,ethAmountSent,liquidity) = router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#848-855)
+		- router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#869-875)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#441)
+		- recipient.transfer(amount) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#882)
+		- (tokenAmountSent,ethAmountSent,liquidity) = router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#848-855)
+	State variables written after the call(s):
+	- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#442)
+		- _allowances[owner][spender] = amount (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#500)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in XYZProtocol._addLiquidity(uint256,uint256) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#843-858):
+	External calls:
+	- (tokenAmountSent,ethAmountSent,liquidity) = router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#848-855)
+	Event emitted after the call(s):
+	- LiquidityAdded(tokenAmountSent,ethAmountSent,liquidity) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#857)
+Reentrancy in XYZProtocol._transfer(address,address,uint256) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#764-800):
+	External calls:
+	- _beforeTokenTransfer(recipient) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#797)
+		- (tokenAmountSent,ethAmountSent,liquidity) = router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#848-855)
+		- router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#869-875)
+	External calls sending eth:
+	- _beforeTokenTransfer(recipient) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#797)
+		- recipient.transfer(amount) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#882)
+		- (tokenAmountSent,ethAmountSent,liquidity) = router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#848-855)
+	Event emitted after the call(s):
+	- Transfer(sender,recipient,tTransferAmount) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#741)
+		- _transferTokens(sender,recipient,amount,_isTakeFee) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#798)
+Reentrancy in XYZProtocol.swapTokensForETH(uint256) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#860-878):
+	External calls:
+	- router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#869-875)
+	Event emitted after the call(s):
+	- SwapTokensForETH(tokenAmount,path) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#877)
+Reentrancy in XYZProtocol.transferFrom(address,address,uint256) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#440-444):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#441)
+		- (tokenAmountSent,ethAmountSent,liquidity) = router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#848-855)
+		- router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#869-875)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#441)
+		- recipient.transfer(amount) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#882)
+		- (tokenAmountSent,ethAmountSent,liquidity) = router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#848-855)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#501)
+		- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#442)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+XYZProtocol._transferTokens(address,address,uint256,bool) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#714-730) uses timestamp for comparisons
+	Dangerous comparisons:
+	- antiBotEnabled && block.timestamp <= _startTimeForSwap (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#719)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Address.isContract(address) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#162-164) uses assembly
+	- INLINE ASM (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#163)
+Address._verifyCallResult(bool,bytes,string) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#203-212) uses assembly
+	- INLINE ASM (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#206-209)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#assembly-usage
+
+XYZProtocol.includeInReward(address) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#544-555) has costly operations inside a loop:
+	- _excluded.pop() (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#551)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#costly-operations-inside-a-loop
+
+Context._msgData() (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#158) is never used and should be removed
+XYZProtocol._burn(uint256,uint256,uint256) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#613-620) is never used and should be removed
+XYZProtocol._redistribute(uint256,uint256,uint256) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#604-611) is never used and should be removed
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dead-code
+
+Version constraint ^0.8.6 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- VerbatimInvalidDeduplication
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- SignedImmutables.
+It is used by:
+	- ^0.8.6 (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#7)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in Address.sendValue(address,uint256) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#165-168):
+	- (success,None) = recipient.call{value: amount}() (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#166)
+Low level call in Address.functionCallWithValue(address,bytes,uint256,string) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#181-186):
+	- (success,returndata) = target.call{value: value}(data) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#184)
+Low level call in Address.functionStaticCall(address,bytes,string) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#190-194):
+	- (success,returndata) = target.staticcall(data) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#192)
+Low level call in Address.functionDelegateCall(address,bytes,string) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#198-202):
+	- (success,returndata) = target.delegatecall(data) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#200)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Function IPancakeV2Router.WETH() (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#254) is not in mixedCase
+Parameter XYZProtocol.setSwapEnabled(bool)._enabled (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#635) is not in mixedCase
+Parameter XYZProtocol.updateSwapTokensAt(uint256)._swaptokens (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#639) is not in mixedCase
+Parameter XYZProtocol.updateWalletMax(uint256)._walletMax (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#643) is not in mixedCase
+Parameter XYZProtocol.updateTransactionMax(uint256)._txMax (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#647) is not in mixedCase
+Parameter XYZProtocol.updateFees(uint256,uint256,uint256)._marketing (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#651) is not in mixedCase
+Parameter XYZProtocol.updateFees(uint256,uint256,uint256)._devolpment (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#651) is not in mixedCase
+Parameter XYZProtocol.updateFees(uint256,uint256,uint256)._lp (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#651) is not in mixedCase
+Function XYZProtocol.TransferETH(address,uint256) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#885-888) is not in mixedCase
+Constant XYZProtocol._name (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#309) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant XYZProtocol._symbol (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#310) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant XYZProtocol._decimals (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#311) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant XYZProtocol._totalSupply (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#314) is not in UPPER_CASE_WITH_UNDERSCORES
+Variable XYZProtocol._startTimeForSwap (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#332) is not in mixedCase
+Variable XYZProtocol._isBlacklisted (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#354) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Redundant expression "this (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#158)" inContext (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#156-159)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#redundant-statements
+
+Reentrancy in XYZProtocol._beforeTokenTransfer(address) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#802-818):
+	External calls:
+	- swapBack() (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#812)
+		- recipient.transfer(amount) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#882)
+	External calls sending eth:
+	- swapBack() (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#812)
+		- recipient.transfer(amount) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#882)
+		- (tokenAmountSent,ethAmountSent,liquidity) = router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#848-855)
+	State variables written after the call(s):
+	- swapping = false (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#814)
+Reentrancy in XYZProtocol._transfer(address,address,uint256) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#764-800):
+	External calls:
+	- _beforeTokenTransfer(recipient) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#797)
+		- recipient.transfer(amount) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#882)
+	External calls sending eth:
+	- _beforeTokenTransfer(recipient) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#797)
+		- recipient.transfer(amount) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#882)
+		- (tokenAmountSent,ethAmountSent,liquidity) = router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#848-855)
+	State variables written after the call(s):
+	- _transferTokens(sender,recipient,amount,_isTakeFee) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#798)
+		- _balances[sender] = _balances[sender].sub(tAmount) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#753)
+		- _balances[recipient] = _balances[recipient].add(tAmount) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#711)
+		- _balances[recipient] = _balances[recipient].add(tTransferAmount) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#754)
+	- _transferTokens(sender,recipient,amount,_isTakeFee) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#798)
+		- _reflectedBalances[sender] = _reflectedBalances[sender].sub(rAmount) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#747)
+		- _reflectedBalances[recipient] = _reflectedBalances[recipient].add(rTransferAmount) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#748)
+		- _reflectedBalances[recipient] = _reflectedBalances[recipient].add(rAmount) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#709)
+	Event emitted after the call(s):
+	- Transfer(sender,recipient,tTransferAmount) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#741)
+		- _transferTokens(sender,recipient,amount,_isTakeFee) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#798)
+Reentrancy in XYZProtocol.swapBack() (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#820-841):
+	External calls:
+	- transferToAddress(address(marketingWallet),amountBNBMarketing) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#836)
+		- recipient.transfer(amount) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#882)
+	- transferToAddress(address(devolpmentWallet),amountBNBDevolpment) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#837)
+		- recipient.transfer(amount) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#882)
+	External calls sending eth:
+	- transferToAddress(address(marketingWallet),amountBNBMarketing) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#836)
+		- recipient.transfer(amount) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#882)
+	- transferToAddress(address(devolpmentWallet),amountBNBDevolpment) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#837)
+		- recipient.transfer(amount) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#882)
+	- _addLiquidity(amountToLiquify,amountBNBLiquidity) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#840)
+		- (tokenAmountSent,ethAmountSent,liquidity) = router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#848-855)
+	State variables written after the call(s):
+	- _addLiquidity(amountToLiquify,amountBNBLiquidity) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#840)
+		- _allowances[owner][spender] = amount (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#500)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#501)
+		- _addLiquidity(amountToLiquify,amountBNBLiquidity) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#840)
+	- LiquidityAdded(tokenAmountSent,ethAmountSent,liquidity) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#857)
+		- _addLiquidity(amountToLiquify,amountBNBLiquidity) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#840)
+Reentrancy in XYZProtocol.transferFrom(address,address,uint256) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#440-444):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#441)
+		- recipient.transfer(amount) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#882)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#441)
+		- recipient.transfer(amount) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#882)
+		- (tokenAmountSent,ethAmountSent,liquidity) = router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#848-855)
+	State variables written after the call(s):
+	- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#442)
+		- _allowances[owner][spender] = amount (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#500)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#501)
+		- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#442)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+Loop condition i < _excluded.length (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#587) should use cached array length instead of referencing `length` member of the storage array.
+ Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#cache-array-length
+
+XYZProtocol.antiBotFee (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#331) should be constant 
+XYZProtocol.deadAddress (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#304) should be constant 
+XYZProtocol.isInPresale (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#324) should be constant 
+XYZProtocol.takeFeeEnabled (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#322) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+
+XYZProtocol.pair (0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol#347) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+./0x052f4e43d9d65ca35ce6d3438aa956fda91ef520.sol analyzed (10 contracts with 94 detectors), 60 result(s) found
+
+real	0m3.413s
+user	0m3.188s
+sys	0m0.228s

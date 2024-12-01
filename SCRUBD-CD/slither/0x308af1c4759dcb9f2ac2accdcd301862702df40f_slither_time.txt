@@ -1,0 +1,339 @@
+'solc --version' running
+'solc ./0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+Escrow.userRecover(address,address,uint256) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#239-258) uses arbitrary from in transferFrom: base.transferFrom(_origin,owner,transaction.sellerFee) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#253)
+Escrow.userRecover(address,address,uint256) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#239-258) uses arbitrary from in transferFrom: base.transferFrom(_origin,reserve,rF) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#254)
+Escrow.userRecover(address,address,uint256) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#239-258) uses arbitrary from in transferFrom: base.transferFrom(_origin,_destination,destinationAmt) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#256)
+Escrow.createTokenTransaction(address,uint256,uint256,uint256,uint256,address,uint256) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#287-316) uses arbitrary from in transferFrom: token.transferFrom(_buyer,address(this),buyerTotal) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#314)
+Escrow.releaseFunds(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#322-345) uses arbitrary from in transferFrom: base.transferFrom(_tag,transaction.buyer,transaction.baseAmt) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#329)
+Escrow.r1(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#352-357) uses arbitrary from in transferFrom: base.transferFrom(reserve,_tag,rF) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#356)
+Escrow.r2(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#359-365) uses arbitrary from in transferFrom: base.transferFrom(_tag,r,rF) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#364)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#arbitrary-from-in-transferfrom
+
+Reentrancy in Escrow.releaseFunds(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#322-345):
+	External calls:
+	- base.transferFrom(_tag,transaction.buyer,transaction.baseAmt) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#329)
+	- token = ERC20(eternal.getAddress(transaction.token)) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#338)
+	- token.transfer(_tag,sellerTotal) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#339)
+	- token.transfer(owner,totalFees) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#340)
+	External calls sending eth:
+	- _tag.transfer(sellerTotal) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#335)
+	- owner.transfer(totalFees) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#336)
+	State variables written after the call(s):
+	- transaction.status = transactionStatus.PendingR1 (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#343)
+	Escrow.transactions (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#218) can be used in cross function reentrancies:
+	- Escrow.cancel(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#367-374)
+	- Escrow.cancelTokenTransaction(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#387-397)
+	- Escrow.cancelTransaction(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#376-385)
+	- Escrow.createTokenTransaction(address,uint256,uint256,uint256,uint256,address,uint256) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#287-316)
+	- Escrow.createTransaction(address,uint256,uint256,uint256,uint256) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#260-285)
+	- Escrow.r1(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#352-357)
+	- Escrow.r2(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#359-365)
+	- Escrow.releaseFunds(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#322-345)
+	- Escrow.status(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#413-434)
+	- Escrow.userRecover(address,address,uint256) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#239-258)
+Reentrancy in Escrow.releaseFunds(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#322-345):
+	External calls:
+	- base.transferFrom(_tag,transaction.buyer,transaction.baseAmt) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#329)
+	- token = ERC20(eternal.getAddress(transaction.token)) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#338)
+	- token.transfer(_tag,sellerTotal) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#339)
+	- token.transfer(owner,totalFees) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#340)
+	- recovery(_tag) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#344)
+		- base.transferFrom(reserve,_tag,rF) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#356)
+		- base.transferFrom(_tag,r,rF) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#364)
+	External calls sending eth:
+	- _tag.transfer(sellerTotal) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#335)
+	- owner.transfer(totalFees) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#336)
+	State variables written after the call(s):
+	- recovery(_tag) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#344)
+		- transaction.buyer = 0x0 (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#362)
+		- transaction.status = transactionStatus.PendingR2 (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#355)
+		- transaction.status = transactionStatus.Completed (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#363)
+	Escrow.transactions (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#218) can be used in cross function reentrancies:
+	- Escrow.cancel(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#367-374)
+	- Escrow.cancelTokenTransaction(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#387-397)
+	- Escrow.cancelTransaction(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#376-385)
+	- Escrow.createTokenTransaction(address,uint256,uint256,uint256,uint256,address,uint256) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#287-316)
+	- Escrow.createTransaction(address,uint256,uint256,uint256,uint256) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#260-285)
+	- Escrow.r1(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#352-357)
+	- Escrow.r2(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#359-365)
+	- Escrow.releaseFunds(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#322-345)
+	- Escrow.status(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#413-434)
+	- Escrow.userRecover(address,address,uint256) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#239-258)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+Escrow.userRecover(address,address,uint256) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#239-258) ignores return value by base.transferFrom(_origin,owner,transaction.sellerFee) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#253)
+Escrow.userRecover(address,address,uint256) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#239-258) ignores return value by base.transferFrom(_origin,reserve,rF) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#254)
+Escrow.userRecover(address,address,uint256) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#239-258) ignores return value by base.transferFrom(_origin,_destination,destinationAmt) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#256)
+Escrow.createTokenTransaction(address,uint256,uint256,uint256,uint256,address,uint256) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#287-316) ignores return value by token.transferFrom(_buyer,address(this),buyerTotal) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#314)
+Escrow.releaseFunds(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#322-345) ignores return value by base.transferFrom(_tag,transaction.buyer,transaction.baseAmt) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#329)
+Escrow.releaseFunds(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#322-345) ignores return value by token.transfer(_tag,sellerTotal) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#339)
+Escrow.releaseFunds(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#322-345) ignores return value by token.transfer(owner,totalFees) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#340)
+Escrow.r1(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#352-357) ignores return value by base.transferFrom(reserve,_tag,rF) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#356)
+Escrow.r2(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#359-365) ignores return value by base.transferFrom(_tag,r,rF) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#364)
+Escrow.cancelTokenTransaction(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#387-397) ignores return value by token.transfer(buyer,refund) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#395)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+Reentrancy in Escrow.cancelTokenTransaction(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#387-397):
+	External calls:
+	- token = ERC20(eternal.getAddress(transaction.token)) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#390)
+	State variables written after the call(s):
+	- transaction.buyerBalance = 0 (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#392)
+	Escrow.transactions (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#218) can be used in cross function reentrancies:
+	- Escrow.cancel(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#367-374)
+	- Escrow.cancelTokenTransaction(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#387-397)
+	- Escrow.cancelTransaction(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#376-385)
+	- Escrow.createTokenTransaction(address,uint256,uint256,uint256,uint256,address,uint256) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#287-316)
+	- Escrow.createTransaction(address,uint256,uint256,uint256,uint256) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#260-285)
+	- Escrow.r1(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#352-357)
+	- Escrow.r2(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#359-365)
+	- Escrow.releaseFunds(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#322-345)
+	- Escrow.status(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#413-434)
+	- Escrow.userRecover(address,address,uint256) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#239-258)
+	- transaction.buyer = 0x0 (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#394)
+	Escrow.transactions (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#218) can be used in cross function reentrancies:
+	- Escrow.cancel(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#367-374)
+	- Escrow.cancelTokenTransaction(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#387-397)
+	- Escrow.cancelTransaction(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#376-385)
+	- Escrow.createTokenTransaction(address,uint256,uint256,uint256,uint256,address,uint256) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#287-316)
+	- Escrow.createTransaction(address,uint256,uint256,uint256,uint256) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#260-285)
+	- Escrow.r1(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#352-357)
+	- Escrow.r2(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#359-365)
+	- Escrow.releaseFunds(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#322-345)
+	- Escrow.status(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#413-434)
+	- Escrow.userRecover(address,address,uint256) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#239-258)
+Reentrancy in Escrow.cancelTokenTransaction(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#387-397):
+	External calls:
+	- token = ERC20(eternal.getAddress(transaction.token)) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#390)
+	- token.transfer(buyer,refund) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#395)
+	State variables written after the call(s):
+	- transaction.status = transactionStatus.Canceled (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#396)
+	Escrow.transactions (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#218) can be used in cross function reentrancies:
+	- Escrow.cancel(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#367-374)
+	- Escrow.cancelTokenTransaction(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#387-397)
+	- Escrow.cancelTransaction(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#376-385)
+	- Escrow.createTokenTransaction(address,uint256,uint256,uint256,uint256,address,uint256) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#287-316)
+	- Escrow.createTransaction(address,uint256,uint256,uint256,uint256) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#260-285)
+	- Escrow.r1(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#352-357)
+	- Escrow.r2(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#359-365)
+	- Escrow.releaseFunds(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#322-345)
+	- Escrow.status(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#413-434)
+	- Escrow.userRecover(address,address,uint256) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#239-258)
+Reentrancy in Escrow.createTokenTransaction(address,uint256,uint256,uint256,uint256,address,uint256) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#287-316):
+	External calls:
+	- require(bool)(eternal.getAddress(_token) != 0x0) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#298)
+	- token = ERC20(eternal.getAddress(_token)) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#313)
+	- token.transferFrom(_buyer,address(this),buyerTotal) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#314)
+	- onlyAllowed() (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#295)
+		- require(bool)(msg.sender == owner || msg.sender == eternal.getAddress(0)) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#235)
+	State variables written after the call(s):
+	- transaction.buyerBalance += buyerTotal (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#315)
+	Escrow.transactions (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#218) can be used in cross function reentrancies:
+	- Escrow.cancel(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#367-374)
+	- Escrow.cancelTokenTransaction(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#387-397)
+	- Escrow.cancelTransaction(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#376-385)
+	- Escrow.createTokenTransaction(address,uint256,uint256,uint256,uint256,address,uint256) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#287-316)
+	- Escrow.createTransaction(address,uint256,uint256,uint256,uint256) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#260-285)
+	- Escrow.r1(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#352-357)
+	- Escrow.r2(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#359-365)
+	- Escrow.releaseFunds(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#322-345)
+	- Escrow.status(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#413-434)
+	- Escrow.userRecover(address,address,uint256) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#239-258)
+Reentrancy in Escrow.recovery(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#347-350):
+	External calls:
+	- r1(_tag) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#348)
+		- base.transferFrom(reserve,_tag,rF) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#356)
+	- r2(_tag) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#349)
+		- base.transferFrom(_tag,r,rF) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#364)
+	State variables written after the call(s):
+	- r2(_tag) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#349)
+		- transaction.buyer = 0x0 (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#362)
+		- transaction.status = transactionStatus.Completed (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#363)
+	Escrow.transactions (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#218) can be used in cross function reentrancies:
+	- Escrow.cancel(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#367-374)
+	- Escrow.cancelTokenTransaction(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#387-397)
+	- Escrow.cancelTransaction(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#376-385)
+	- Escrow.createTokenTransaction(address,uint256,uint256,uint256,uint256,address,uint256) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#287-316)
+	- Escrow.createTransaction(address,uint256,uint256,uint256,uint256) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#260-285)
+	- Escrow.r1(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#352-357)
+	- Escrow.r2(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#359-365)
+	- Escrow.releaseFunds(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#322-345)
+	- Escrow.status(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#413-434)
+	- Escrow.userRecover(address,address,uint256) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#239-258)
+Reentrancy in Escrow.releaseFunds(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#322-345):
+	External calls:
+	- base.transferFrom(_tag,transaction.buyer,transaction.baseAmt) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#329)
+	State variables written after the call(s):
+	- transaction.txnAmt = 0 (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#332)
+	Escrow.transactions (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#218) can be used in cross function reentrancies:
+	- Escrow.cancel(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#367-374)
+	- Escrow.cancelTokenTransaction(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#387-397)
+	- Escrow.cancelTransaction(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#376-385)
+	- Escrow.createTokenTransaction(address,uint256,uint256,uint256,uint256,address,uint256) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#287-316)
+	- Escrow.createTransaction(address,uint256,uint256,uint256,uint256) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#260-285)
+	- Escrow.r1(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#352-357)
+	- Escrow.r2(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#359-365)
+	- Escrow.releaseFunds(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#322-345)
+	- Escrow.status(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#413-434)
+	- Escrow.userRecover(address,address,uint256) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#239-258)
+	- transaction.sellerFee = 0 (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#333)
+	Escrow.transactions (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#218) can be used in cross function reentrancies:
+	- Escrow.cancel(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#367-374)
+	- Escrow.cancelTokenTransaction(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#387-397)
+	- Escrow.cancelTransaction(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#376-385)
+	- Escrow.createTokenTransaction(address,uint256,uint256,uint256,uint256,address,uint256) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#287-316)
+	- Escrow.createTransaction(address,uint256,uint256,uint256,uint256) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#260-285)
+	- Escrow.r1(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#352-357)
+	- Escrow.r2(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#359-365)
+	- Escrow.releaseFunds(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#322-345)
+	- Escrow.status(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#413-434)
+	- Escrow.userRecover(address,address,uint256) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#239-258)
+Reentrancy in Escrow.userRecover(address,address,uint256) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#239-258):
+	External calls:
+	- transactions[_origin] = Transaction(transactionStatus.PendingR1,_baseAmt,0,eternal.getUint(2),0,0,_destination,0) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#241-250)
+	- base.transferFrom(_origin,owner,transaction.sellerFee) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#253)
+	- base.transferFrom(_origin,reserve,rF) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#254)
+	- base.transferFrom(_origin,_destination,destinationAmt) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#256)
+	- recovery(_origin) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#257)
+		- base.transferFrom(reserve,_tag,rF) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#356)
+		- base.transferFrom(_tag,r,rF) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#364)
+	State variables written after the call(s):
+	- recovery(_origin) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#257)
+		- transaction.buyer = 0x0 (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#362)
+		- transaction.status = transactionStatus.PendingR2 (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#355)
+		- transaction.status = transactionStatus.Completed (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#363)
+	Escrow.transactions (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#218) can be used in cross function reentrancies:
+	- Escrow.cancel(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#367-374)
+	- Escrow.cancelTokenTransaction(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#387-397)
+	- Escrow.cancelTransaction(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#376-385)
+	- Escrow.createTokenTransaction(address,uint256,uint256,uint256,uint256,address,uint256) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#287-316)
+	- Escrow.createTransaction(address,uint256,uint256,uint256,uint256) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#260-285)
+	- Escrow.r1(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#352-357)
+	- Escrow.r2(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#359-365)
+	- Escrow.releaseFunds(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#322-345)
+	- Escrow.status(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#413-434)
+	- Escrow.userRecover(address,address,uint256) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#239-258)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+Reentrancy in Escrow.cancel(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#367-374):
+	External calls:
+	- onlyAllowed() (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#367)
+		- require(bool)(msg.sender == owner || msg.sender == eternal.getAddress(0)) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#235)
+	External calls sending eth:
+	- cancelTransaction(_tag) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#370)
+		- buyer.transfer(refund) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#383)
+	State variables written after the call(s):
+	- cancelTransaction(_tag) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#370)
+		- transaction.buyerBalance = 0 (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#380)
+		- transaction.buyer = 0x0 (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#382)
+		- transaction.status = transactionStatus.Canceled (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#384)
+Reentrancy in Escrow.createTokenTransaction(address,uint256,uint256,uint256,uint256,address,uint256) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#287-316):
+	External calls:
+	- require(bool)(eternal.getAddress(_token) != 0x0) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#298)
+	- onlyAllowed() (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#295)
+		- require(bool)(msg.sender == owner || msg.sender == eternal.getAddress(0)) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#235)
+	State variables written after the call(s):
+	- transactions[_tag] = Transaction(transactionStatus.Pending,_baseAmt,_txnAmt,_sellerFee,_buyerFee,0,_buyer,_token) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#301-310)
+Reentrancy in Escrow.createTokenTransaction(address,uint256,uint256,uint256,uint256,address,uint256) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#287-316):
+	External calls:
+	- require(bool)(eternal.getAddress(_token) != 0x0) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#298)
+	- token = ERC20(eternal.getAddress(_token)) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#313)
+	- onlyAllowed() (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#295)
+		- require(bool)(msg.sender == owner || msg.sender == eternal.getAddress(0)) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#235)
+	State variables written after the call(s):
+	- token = ERC20(eternal.getAddress(_token)) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#313)
+Reentrancy in Escrow.releaseFunds(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#322-345):
+	External calls:
+	- base.transferFrom(_tag,transaction.buyer,transaction.baseAmt) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#329)
+	- token = ERC20(eternal.getAddress(transaction.token)) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#338)
+	State variables written after the call(s):
+	- token = ERC20(eternal.getAddress(transaction.token)) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#338)
+Reentrancy in Escrow.resync() (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#399-403):
+	External calls:
+	- rF = eternal.getUint(1) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#400)
+	- r = eternal.getAddress(1) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#401)
+	State variables written after the call(s):
+	- r = eternal.getAddress(1) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#401)
+Reentrancy in Escrow.resync() (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#399-403):
+	External calls:
+	- rF = eternal.getUint(1) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#400)
+	- r = eternal.getAddress(1) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#401)
+	- reserve = eternal.getAddress(2) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#402)
+	State variables written after the call(s):
+	- reserve = eternal.getAddress(2) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#402)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Version constraint ^0.4.25 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ABIEncoderV2PackedStorage_0.4.x.
+It is used by:
+	- ^0.4.25 (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#1)
+solc-0.4.25 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Parameter Ownable.transferOwnership(address)._newOwner (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#55) is not in mixedCase
+Parameter EternalStorage.identify(address)._address (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#102) is not in mixedCase
+Parameter EternalStorage.revoke(address)._address (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#106) is not in mixedCase
+Parameter Escrow.userRecover(address,address,uint256)._origin (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#239) is not in mixedCase
+Parameter Escrow.userRecover(address,address,uint256)._destination (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#239) is not in mixedCase
+Parameter Escrow.userRecover(address,address,uint256)._baseAmt (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#239) is not in mixedCase
+Parameter Escrow.createTransaction(address,uint256,uint256,uint256,uint256)._tag (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#262) is not in mixedCase
+Parameter Escrow.createTransaction(address,uint256,uint256,uint256,uint256)._baseAmt (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#263) is not in mixedCase
+Parameter Escrow.createTransaction(address,uint256,uint256,uint256,uint256)._txnAmt (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#264) is not in mixedCase
+Parameter Escrow.createTransaction(address,uint256,uint256,uint256,uint256)._sellerFee (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#265) is not in mixedCase
+Parameter Escrow.createTransaction(address,uint256,uint256,uint256,uint256)._buyerFee (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#266) is not in mixedCase
+Parameter Escrow.createTokenTransaction(address,uint256,uint256,uint256,uint256,address,uint256)._tag (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#289) is not in mixedCase
+Parameter Escrow.createTokenTransaction(address,uint256,uint256,uint256,uint256,address,uint256)._baseAmt (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#290) is not in mixedCase
+Parameter Escrow.createTokenTransaction(address,uint256,uint256,uint256,uint256,address,uint256)._txnAmt (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#291) is not in mixedCase
+Parameter Escrow.createTokenTransaction(address,uint256,uint256,uint256,uint256,address,uint256)._sellerFee (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#292) is not in mixedCase
+Parameter Escrow.createTokenTransaction(address,uint256,uint256,uint256,uint256,address,uint256)._buyerFee (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#293) is not in mixedCase
+Parameter Escrow.createTokenTransaction(address,uint256,uint256,uint256,uint256,address,uint256)._buyer (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#294) is not in mixedCase
+Parameter Escrow.createTokenTransaction(address,uint256,uint256,uint256,uint256,address,uint256)._token (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#295) is not in mixedCase
+Parameter Escrow.release(address)._tag (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#318) is not in mixedCase
+Parameter Escrow.releaseFunds(address)._tag (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#322) is not in mixedCase
+Parameter Escrow.recovery(address)._tag (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#347) is not in mixedCase
+Parameter Escrow.r1(address)._tag (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#352) is not in mixedCase
+Parameter Escrow.r2(address)._tag (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#359) is not in mixedCase
+Parameter Escrow.cancel(address)._tag (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#367) is not in mixedCase
+Parameter Escrow.cancelTransaction(address)._tag (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#376) is not in mixedCase
+Parameter Escrow.cancelTokenTransaction(address)._tag (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#387) is not in mixedCase
+Function Escrow.Eternal(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#405-407) is not in mixedCase
+Parameter Escrow.Eternal(address)._s (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#405) is not in mixedCase
+Parameter Escrow.status(address)._tag (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#413) is not in mixedCase
+Enum Escrow.transactionStatus (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#199-205) is not in CapWords
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in Escrow.cancelTransaction(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#376-385):
+	External calls:
+	- buyer.transfer(refund) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#383)
+	State variables written after the call(s):
+	- transaction.status = transactionStatus.Canceled (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#384)
+Reentrancy in Escrow.releaseFunds(address) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#322-345):
+	External calls:
+	- _tag.transfer(sellerTotal) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#335)
+	- owner.transfer(totalFees) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#336)
+	State variables written after the call(s):
+	- transaction.status = transactionStatus.PendingR1 (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#343)
+	- recovery(_tag) (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#344)
+		- transaction.buyer = 0x0 (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#362)
+		- transaction.status = transactionStatus.PendingR2 (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#355)
+		- transaction.status = transactionStatus.Completed (0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol#363)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+./0x308af1c4759dcb9f2ac2accdcd301862702df40f.sol analyzed (4 contracts with 94 detectors), 65 result(s) found
+
+real	0m2.081s
+user	0m1.890s
+sys	0m0.194s

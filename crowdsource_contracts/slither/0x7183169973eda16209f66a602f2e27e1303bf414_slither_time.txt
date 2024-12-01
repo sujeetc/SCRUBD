@@ -1,0 +1,126 @@
+'solc --version' running
+'solc ./0x7183169973eda16209f66a602f2e27e1303bf414.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x7183169973eda16209f66a602f2e27e1303bf414.sol:
+./0x7183169973eda16209f66a602f2e27e1303bf414.sol:99:17: Warning: Return value of low-level calls not used.
+                participants[payoutOrder].etherAddress.call.value(payoutToSend).gas(1000000)();
+                ^----------------------------------------------------------------------------^
+./0x7183169973eda16209f66a602f2e27e1303bf414.sol:17:5: Warning: Function state mutability can be restricted to pure
+    function withdraw() public {}
+    ^---------------------------^
+./0x7183169973eda16209f66a602f2e27e1303bf414.sol:18:5: Warning: Function state mutability can be restricted to pure
+    function myTokens() public view returns(uint256) {}
+    ^-------------------------------------------------^
+
+
+BoomerangLiquidity.payout() (0x7183169973eda16209f66a602f2e27e1303bf414.sol#87-106) sends eth to arbitrary user
+	Dangerous calls:
+	- weak_hands.buy.value(investment)(msg.sender) (0x7183169973eda16209f66a602f2e27e1303bf414.sol#92)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+BoomerangLiquidity (0x7183169973eda16209f66a602f2e27e1303bf414.sol#45-129) contract sets array length with a user-controlled value:
+	- participants.push(Participant(msg.sender,(msg.value * multiplier) / 100)) (0x7183169973eda16209f66a602f2e27e1303bf414.sol#82)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#array-length-assignment
+
+Reentrancy in BoomerangLiquidity.payout() (0x7183169973eda16209f66a602f2e27e1303bf414.sol#87-106):
+	External calls:
+	- weak_hands.buy.value(investment)(msg.sender) (0x7183169973eda16209f66a602f2e27e1303bf414.sol#92)
+	- participants[payoutOrder].etherAddress.call.value(payoutToSend).gas(1000000)() (0x7183169973eda16209f66a602f2e27e1303bf414.sol#99)
+	External calls sending eth:
+	- weak_hands.buy.value(investment)(msg.sender) (0x7183169973eda16209f66a602f2e27e1303bf414.sol#92)
+	- ! participants[payoutOrder].etherAddress.send(payoutToSend) (0x7183169973eda16209f66a602f2e27e1303bf414.sol#98)
+	- participants[payoutOrder].etherAddress.call.value(payoutToSend).gas(1000000)() (0x7183169973eda16209f66a602f2e27e1303bf414.sol#99)
+	State variables written after the call(s):
+	- participants[payoutOrder].payout -= payoutToSend (0x7183169973eda16209f66a602f2e27e1303bf414.sol#96)
+	BoomerangLiquidity.participants (0x7183169973eda16209f66a602f2e27e1303bf414.sol#74) can be used in cross function reentrancies:
+	- BoomerangLiquidity.deposit() (0x7183169973eda16209f66a602f2e27e1303bf414.sol#81-85)
+	- BoomerangLiquidity.participants (0x7183169973eda16209f66a602f2e27e1303bf414.sol#74)
+	- BoomerangLiquidity.payout() (0x7183169973eda16209f66a602f2e27e1303bf414.sol#87-106)
+	- payoutOrder += 1 (0x7183169973eda16209f66a602f2e27e1303bf414.sol#103)
+	BoomerangLiquidity.payoutOrder (0x7183169973eda16209f66a602f2e27e1303bf414.sol#58) can be used in cross function reentrancies:
+	- BoomerangLiquidity.payout() (0x7183169973eda16209f66a602f2e27e1303bf414.sol#87-106)
+	- BoomerangLiquidity.payoutOrder (0x7183169973eda16209f66a602f2e27e1303bf414.sol#58)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+Contract locking ether found:
+	Contract POWH (0x7183169973eda16209f66a602f2e27e1303bf414.sol#14-19) has payable functions:
+	 - POWH.buy(address) (0x7183169973eda16209f66a602f2e27e1303bf414.sol#16)
+	But does not have a function to withdraw the ether
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#contracts-that-lock-ether
+
+BoomerangLiquidity.payout() (0x7183169973eda16209f66a602f2e27e1303bf414.sol#87-106) ignores return value by participants[payoutOrder].etherAddress.call.value(payoutToSend).gas(1000000)() (0x7183169973eda16209f66a602f2e27e1303bf414.sol#99)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-low-level-calls
+
+BoomerangLiquidity.payout() (0x7183169973eda16209f66a602f2e27e1303bf414.sol#87-106) ignores return value by weak_hands.buy.value(investment)(msg.sender) (0x7183169973eda16209f66a602f2e27e1303bf414.sol#92)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+Owned.changeOwner(address)._newOwner (0x7183169973eda16209f66a602f2e27e1303bf414.sol#34) lacks a zero-check on :
+		- ownerCandidate = _newOwner (0x7183169973eda16209f66a602f2e27e1303bf414.sol#35)
+BoomerangLiquidity.BoomerangLiquidity(uint256,address).powh (0x7183169973eda16209f66a602f2e27e1303bf414.sol#62) lacks a zero-check on :
+		- powh_address = powh (0x7183169973eda16209f66a602f2e27e1303bf414.sol#64)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+BoomerangLiquidity.payout() (0x7183169973eda16209f66a602f2e27e1303bf414.sol#87-106) has external calls inside a loop: ! participants[payoutOrder].etherAddress.send(payoutToSend) (0x7183169973eda16209f66a602f2e27e1303bf414.sol#98)
+BoomerangLiquidity.payout() (0x7183169973eda16209f66a602f2e27e1303bf414.sol#87-106) has external calls inside a loop: participants[payoutOrder].etherAddress.call.value(payoutToSend).gas(1000000)() (0x7183169973eda16209f66a602f2e27e1303bf414.sol#99)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation/#calls-inside-a-loop
+
+BoomerangLiquidity.payout() (0x7183169973eda16209f66a602f2e27e1303bf414.sol#87-106) tries to limit the gas of an external call that controls implicit decoding
+	participants[payoutOrder].etherAddress.call.value(payoutToSend).gas(1000000)() (0x7183169973eda16209f66a602f2e27e1303bf414.sol#99)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#return-bomb
+
+BoomerangLiquidity.payout() (0x7183169973eda16209f66a602f2e27e1303bf414.sol#87-106) has costly operations inside a loop:
+	- payoutOrder += 1 (0x7183169973eda16209f66a602f2e27e1303bf414.sol#103)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#costly-operations-inside-a-loop
+
+Version constraint ^0.4.21 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ABIEncoderV2PackedStorage_0.4.x
+	- ExpExponentCleanup
+	- EventStructWrongData
+	- NestedArrayFunctionCallDecoder.
+It is used by:
+	- ^0.4.21 (0x7183169973eda16209f66a602f2e27e1303bf414.sol#1)
+solc-0.4.21 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in BoomerangLiquidity.payout() (0x7183169973eda16209f66a602f2e27e1303bf414.sol#87-106):
+	- participants[payoutOrder].etherAddress.call.value(payoutToSend).gas(1000000)() (0x7183169973eda16209f66a602f2e27e1303bf414.sol#99)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Parameter Owned.changeOwner(address)._newOwner (0x7183169973eda16209f66a602f2e27e1303bf414.sol#34) is not in mixedCase
+Variable BoomerangLiquidity.powh_address (0x7183169973eda16209f66a602f2e27e1303bf414.sol#59) is not in mixedCase
+Variable BoomerangLiquidity.weak_hands (0x7183169973eda16209f66a602f2e27e1303bf414.sol#60) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in BoomerangLiquidity.payout() (0x7183169973eda16209f66a602f2e27e1303bf414.sol#87-106):
+	External calls:
+	- ! participants[payoutOrder].etherAddress.send(payoutToSend) (0x7183169973eda16209f66a602f2e27e1303bf414.sol#98)
+	External calls sending eth:
+	- weak_hands.buy.value(investment)(msg.sender) (0x7183169973eda16209f66a602f2e27e1303bf414.sol#92)
+	- ! participants[payoutOrder].etherAddress.send(payoutToSend) (0x7183169973eda16209f66a602f2e27e1303bf414.sol#98)
+	- participants[payoutOrder].etherAddress.call.value(payoutToSend).gas(1000000)() (0x7183169973eda16209f66a602f2e27e1303bf414.sol#99)
+	State variables written after the call(s):
+	- participants[payoutOrder].payout -= payoutToSend (0x7183169973eda16209f66a602f2e27e1303bf414.sol#96)
+	- payoutOrder += 1 (0x7183169973eda16209f66a602f2e27e1303bf414.sol#103)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+BoomerangLiquidity.payout() (0x7183169973eda16209f66a602f2e27e1303bf414.sol#87-106) uses literals with too many digits:
+	- participants[payoutOrder].etherAddress.call.value(payoutToSend).gas(1000000)() (0x7183169973eda16209f66a602f2e27e1303bf414.sol#99)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+./0x7183169973eda16209f66a602f2e27e1303bf414.sol analyzed (4 contracts with 94 detectors), 20 result(s) found
+
+real	0m1.650s
+user	0m1.406s
+sys	0m0.246s

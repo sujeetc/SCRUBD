@@ -1,0 +1,262 @@
+'solc --version' running
+'solc ./0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol:
+./0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol:628:1: Warning: Base constructor arguments given twice.
+contract InstaDice is
+^ (Relevant source part starts here and spans across multiple lines).
+./0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol:340:9: First constructor call is here: 
+        UsingRegistry(_registry)
+        ^----------------------^
+./0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol:580:9: Second constructor call is here: 
+        UsingRegistry(_registry)
+        ^----------------------^
+
+
+
+Bankrollable.removeBankroll(uint256,string) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#455-475) sends eth to arbitrary user
+	Dangerous calls:
+	- require(bool)(_bankroller.call.value(_amount)(_sig)) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#472)
+Bankrollable.sendProfits() (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#478-490) sends eth to arbitrary user
+	Dangerous calls:
+	- require(bool)(_tr.call.value(_profits)()) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#488)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+InstaDice.computeResult(uint32,uint32) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#935-943) uses a weak PRNG: "uint8(uint256(keccak256()(_blockHash,_id)) % 100 + 1) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#942)" 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#weak-PRNG
+
+Reentrancy in InstaDice.payoutPreviousRoll() (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#793-822):
+	External calls:
+	- _finalizePreviousRoll(_prevUser,_stats) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#819)
+		- require(bool)(msg.sender.call.value(_user.r_payout)()) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#871)
+	State variables written after the call(s):
+	- stats.totalWon = _stats.totalWon (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#820)
+	InstaDice.stats (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#658) can be used in cross function reentrancies:
+	- InstaDice.constructor(address) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#672-690)
+	- InstaDice.numRolls() (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#949-951)
+	- InstaDice.numUsers() (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#946-948)
+	- InstaDice.payoutPreviousRoll() (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#793-822)
+	- InstaDice.roll(uint8) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#743-782)
+	- InstaDice.totalWagered() (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#952-954)
+	- InstaDice.totalWon() (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#955-957)
+Reentrancy in InstaDice.roll(uint8) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#743-782):
+	External calls:
+	- ! _validateBetOrRefund(_number) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#749)
+		- require(bool)(msg.sender.call.value(msg.value)()) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#883)
+	- _finalizePreviousRoll(_prevUser,_stats) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#771)
+		- require(bool)(msg.sender.call.value(_user.r_payout)()) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#871)
+	State variables written after the call(s):
+	- stats = _stats (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#777)
+	InstaDice.stats (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#658) can be used in cross function reentrancies:
+	- InstaDice.constructor(address) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#672-690)
+	- InstaDice.numRolls() (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#949-951)
+	- InstaDice.numUsers() (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#946-948)
+	- InstaDice.payoutPreviousRoll() (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#793-822)
+	- InstaDice.roll(uint8) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#743-782)
+	- InstaDice.totalWagered() (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#952-954)
+	- InstaDice.totalWon() (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#955-957)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+InstaDice.computePayout(uint256,uint256) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#921-931) performs a multiplication on the result of a division:
+	- _bigPayout = (_bigBet * 100) / _number (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#928)
+	- _bigFee = (_bigPayout * _feeBips) / 10000 (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#929)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+InstaDice.computeResult(uint32,uint32) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#935-943) uses a dangerous strict equality:
+	- _blockHash == 0 (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#941)
+InstaDice.payoutPreviousRoll() (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#793-822) uses a dangerous strict equality:
+	- _prevUser.r_block == uint32(block.number) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#800)
+InstaDice.payoutPreviousRoll() (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#793-822) uses a dangerous strict equality:
+	- _prevUser.r_block == 0 (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#805)
+Bankrollable.removeBankroll(uint256,string) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#455-475) uses a dangerous strict equality:
+	- _amount == 0 (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#469)
+InstaDice.roll(uint8) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#743-782) uses a dangerous strict equality:
+	- _prevUser.r_block == uint32(block.number) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#753)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-strict-equalities
+
+InstaDice (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#628-979) gives base constructor UsingRegistry.constructor(address) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#26-31) arguments more than once in inheritance hierarchy:
+	- From UsingAdmin (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#576-596) constructor definition
+	- From UsingTreasury (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#336-356) constructor definition
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reused-base-constructors
+
+Bankrollable.bankrollerTable() (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#557-563) ignores return value by ledger.balances() (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#562)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+Ledger.constructor(address)._owner (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#92) lacks a zero-check on :
+		- owner = _owner (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#95)
+AddressSet.constructor(address)._owner (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#221) lacks a zero-check on :
+		- owner = _owner (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#224)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in Bankrollable.addBankroll() (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#444-452):
+	External calls:
+	- require(bool)(whitelist.size() == 0 || whitelist.has(msg.sender)) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#448)
+	- ledger.add(msg.sender,msg.value) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#449)
+	- bankroll = ledger.total() (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#450)
+	State variables written after the call(s):
+	- bankroll = ledger.total() (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#450)
+Reentrancy in InstaDice.changeSettings(uint64,uint64,uint8,uint8,uint16) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#698-719):
+	External calls:
+	- fromAdmin() (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#706)
+		- registry.addressOf(_name) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#38)
+	State variables written after the call(s):
+	- settings.minBet = _minBet (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#713)
+	- settings.maxBet = _maxBet (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#714)
+	- settings.minNumber = _minNumber (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#715)
+	- settings.maxNumber = _maxNumber (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#716)
+	- settings.feeBips = _feeBips (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#717)
+Reentrancy in Bankrollable.removeBankroll(uint256,string) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#455-475):
+	External calls:
+	- _amount = ledger.subtract(_bankroller,_amount) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#467)
+	- bankroll = ledger.total() (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#468)
+	State variables written after the call(s):
+	- bankroll = ledger.total() (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#468)
+Reentrancy in InstaDice.roll(uint8) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#743-782):
+	External calls:
+	- ! _validateBetOrRefund(_number) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#749)
+		- require(bool)(msg.sender.call.value(msg.value)()) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#883)
+	State variables written after the call(s):
+	- users[msg.sender] = _newUser (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#767)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in InstaDice._errorAndRefund(string,uint256,uint8) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#880-885):
+	External calls:
+	- require(bool)(msg.sender.call.value(msg.value)()) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#883)
+	Event emitted after the call(s):
+	- RollRefunded(now,msg.sender,_msg,_bet,_number) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#884)
+Reentrancy in InstaDice._finalizePreviousRoll(InstaDice.User,InstaDice.Stats) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#861-876):
+	External calls:
+	- require(bool)(msg.sender.call.value(_user.r_payout)()) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#871)
+	Event emitted after the call(s):
+	- RollFinalized(now,_user.r_id,msg.sender,_result,_user.r_payout) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#875)
+	- RollFinalized(now,_user.r_id,msg.sender,_result,0) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#875)
+Reentrancy in Bankrollable.addBankroll() (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#444-452):
+	External calls:
+	- require(bool)(whitelist.size() == 0 || whitelist.has(msg.sender)) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#448)
+	- ledger.add(msg.sender,msg.value) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#449)
+	- bankroll = ledger.total() (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#450)
+	Event emitted after the call(s):
+	- BankrollAdded(now,msg.sender,msg.value,bankroll) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#451)
+Reentrancy in Bankrollable.addToWhitelist(address) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#420-426):
+	External calls:
+	- _didAdd = whitelist.add(_addr) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#424)
+	Event emitted after the call(s):
+	- AddedToWhitelist(now,_addr,msg.sender) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#425)
+Reentrancy in InstaDice.changeSettings(uint64,uint64,uint8,uint8,uint16) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#698-719):
+	External calls:
+	- fromAdmin() (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#706)
+		- registry.addressOf(_name) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#38)
+	Event emitted after the call(s):
+	- SettingsChanged(now,msg.sender) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#718)
+Reentrancy in Bankrollable.removeBankroll(uint256,string) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#455-475):
+	External calls:
+	- _amount = ledger.subtract(_bankroller,_amount) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#467)
+	- bankroll = ledger.total() (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#468)
+	- require(bool)(_bankroller.call.value(_amount)(_sig)) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#472)
+	External calls sending eth:
+	- require(bool)(_bankroller.call.value(_amount)(_sig)) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#472)
+	Event emitted after the call(s):
+	- BankrollRemoved(now,_bankroller,_amount,bankroll) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#473)
+Reentrancy in Bankrollable.removeFromWhitelist(address) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#428-434):
+	External calls:
+	- _didRemove = whitelist.remove(_addr) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#432)
+	Event emitted after the call(s):
+	- RemovedFromWhitelist(now,_addr,msg.sender) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#433)
+Reentrancy in InstaDice.roll(uint8) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#743-782):
+	External calls:
+	- ! _validateBetOrRefund(_number) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#749)
+		- require(bool)(msg.sender.call.value(msg.value)()) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#883)
+	- _errorAndRefund(Only one bet per block allowed.,msg.value,_number) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#754)
+		- require(bool)(msg.sender.call.value(msg.value)()) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#883)
+	Event emitted after the call(s):
+	- RollRefunded(now,msg.sender,_msg,_bet,_number) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#884)
+		- _errorAndRefund(Only one bet per block allowed.,msg.value,_number) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#754)
+Reentrancy in InstaDice.roll(uint8) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#743-782):
+	External calls:
+	- ! _validateBetOrRefund(_number) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#749)
+		- require(bool)(msg.sender.call.value(msg.value)()) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#883)
+	- _finalizePreviousRoll(_prevUser,_stats) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#771)
+		- require(bool)(msg.sender.call.value(_user.r_payout)()) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#871)
+	Event emitted after the call(s):
+	- RollFinalized(now,_user.r_id,msg.sender,_result,_user.r_payout) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#875)
+		- _finalizePreviousRoll(_prevUser,_stats) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#771)
+	- RollFinalized(now,_user.r_id,msg.sender,_result,0) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#875)
+		- _finalizePreviousRoll(_prevUser,_stats) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#771)
+	- RollWagered(now,_newUser.r_id,msg.sender,msg.value,_newUser.r_number,_newUser.r_payout) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#780)
+Reentrancy in Bankrollable.sendProfits() (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#478-490):
+	External calls:
+	- _tr = getTreasury() (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#487)
+		- registry.addressOf(_name) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#38)
+	- require(bool)(_tr.call.value(_profits)()) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#488)
+	External calls sending eth:
+	- require(bool)(_tr.call.value(_profits)()) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#488)
+	Event emitted after the call(s):
+	- ProfitsSent(now,_tr,_profits) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#489)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+Version constraint ^0.4.23 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ABIEncoderV2PackedStorage_0.4.x
+	- ExpExponentCleanup
+	- EventStructWrongData.
+It is used by:
+	- ^0.4.23 (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#1)
+solc-0.4.23 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in Bankrollable.removeBankroll(uint256,string) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#455-475):
+	- require(bool)(_bankroller.call.value(_amount)(_sig)) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#472)
+Low level call in Bankrollable.sendProfits() (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#478-490):
+	- require(bool)(_tr.call.value(_profits)()) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#488)
+Low level call in InstaDice._finalizePreviousRoll(InstaDice.User,InstaDice.Stats) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#861-876):
+	- require(bool)(msg.sender.call.value(_user.r_payout)()) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#871)
+Low level call in InstaDice._errorAndRefund(string,uint256,uint8) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#880-885):
+	- require(bool)(msg.sender.call.value(msg.value)()) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#883)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Parameter UsingRegistry.addressOf(bytes32)._name (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#33) is not in mixedCase
+Parameter Ledger.add(address,uint256)._address (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#103) is not in mixedCase
+Parameter Ledger.add(address,uint256)._amt (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#103) is not in mixedCase
+Parameter Ledger.subtract(address,uint256)._address (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#121) is not in mixedCase
+Parameter Ledger.subtract(address,uint256)._amt (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#121) is not in mixedCase
+Parameter Ledger.balanceOf(address)._address (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#166) is not in mixedCase
+Parameter AddressSet.add(address)._address (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#232) is not in mixedCase
+Parameter AddressSet.remove(address)._address (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#255) is not in mixedCase
+Parameter AddressSet.has(address)._address (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#295) is not in mixedCase
+Parameter Bankrollable.addToWhitelist(address)._addr (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#420) is not in mixedCase
+Parameter Bankrollable.removeFromWhitelist(address)._addr (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#428) is not in mixedCase
+Parameter Bankrollable.removeBankroll(uint256,string)._amount (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#455) is not in mixedCase
+Parameter Bankrollable.removeBankroll(uint256,string)._callbackFn (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#455) is not in mixedCase
+Parameter Bankrollable.bankrolledBy(address)._addr (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#549) is not in mixedCase
+Parameter InstaDice.changeSettings(uint64,uint64,uint8,uint8,uint16)._minBet (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#699) is not in mixedCase
+Parameter InstaDice.changeSettings(uint64,uint64,uint8,uint8,uint16)._maxBet (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#700) is not in mixedCase
+Parameter InstaDice.changeSettings(uint64,uint64,uint8,uint8,uint16)._minNumber (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#701) is not in mixedCase
+Parameter InstaDice.changeSettings(uint64,uint64,uint8,uint8,uint16)._maxNumber (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#702) is not in mixedCase
+Parameter InstaDice.changeSettings(uint64,uint64,uint8,uint8,uint16)._feeBips (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#703) is not in mixedCase
+Parameter InstaDice.roll(uint8)._number (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#743) is not in mixedCase
+Parameter InstaDice.computePayout(uint256,uint256)._bet (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#921) is not in mixedCase
+Parameter InstaDice.computePayout(uint256,uint256)._number (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#921) is not in mixedCase
+Parameter InstaDice.computeResult(uint32,uint32)._blockNumber (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#935) is not in mixedCase
+Parameter InstaDice.computeResult(uint32,uint32)._id (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#935) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+InstaDice.constructor(address) (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#672-690) uses literals with too many digits:
+	- stats.totalWagered = 3650000000000000000 (0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol#678)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+./0x04797c1ae852a31665d8e512ddae33e6044ef39d.sol analyzed (9 contracts with 94 detectors), 60 result(s) found
+
+real	0m2.558s
+user	0m2.353s
+sys	0m0.208s

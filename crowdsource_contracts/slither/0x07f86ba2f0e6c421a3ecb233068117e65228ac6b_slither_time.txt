@@ -1,0 +1,520 @@
+'solc --version' running
+'solc ./0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol:
+Warning: SPDX license identifier not provided in source file. Before publishing, consider adding a comment containing "SPDX-License-Identifier: <SPDX-License>" to each source file. Use "SPDX-License-Identifier: UNLICENSED" for non-open-source code. Please see https://spdx.org for more information.
+--> ./0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol
+
+Warning: Contract code size exceeds 24576 bytes (a limit introduced in Spurious Dragon). This contract may not be deployable on mainnet. Consider enabling the optimizer (with a low "runs" value!), turning off revert strings, or using libraries.
+   --> ./0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol:318:1:
+    |
+318 | contract Society is Context, IERC20, Ownable {
+    | ^ (Relevant source part starts here and spans across multiple lines).
+
+
+
+Society.swapBack() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#845-898) sends eth to arbitrary user
+	Dangerous calls:
+	- (success,None) = address(devAddress).call{value: ethForDev}() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#880)
+	- (success,None) = address(treasuryAddress).call{value: ethForTreasury}() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#881-883)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+Reentrancy in Society._transfer(address,address,uint256) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#721-843):
+	External calls:
+	- swapBack() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#795)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#939-946)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#928-934)
+		- (success,None) = address(marketingAddress).call{value: ethForMarketing}() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#877-879)
+		- (success,None) = address(devAddress).call{value: ethForDev}() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#880)
+		- (success,None) = address(treasuryAddress).call{value: ethForTreasury}() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#881-883)
+		- (success,None) = address(marketingAddress).call{value: address(this).balance}() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#894-896)
+	External calls sending eth:
+	- swapBack() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#795)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#939-946)
+		- (success,None) = address(marketingAddress).call{value: ethForMarketing}() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#877-879)
+		- (success,None) = address(devAddress).call{value: ethForDev}() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#880)
+		- (success,None) = address(treasuryAddress).call{value: ethForTreasury}() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#881-883)
+		- (success,None) = address(marketingAddress).call{value: address(this).balance}() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#894-896)
+	State variables written after the call(s):
+	- _tokenTransfer(from,to,amount,takeFee) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#842)
+		- _liquidityTokensToSwap += (tLiquidity * _buyLiquidityFee) / _liquidityFee (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#1150-1152)
+		- _liquidityTokensToSwap += (tLiquidity * _sellLiquidityFee) / _liquidityFee (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#1155-1157)
+	Society._liquidityTokensToSwap (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#387) can be used in cross function reentrancies:
+	- Society._liquidityTokensToSwap (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#387)
+	- Society._takeLiquidity(uint256) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#1148-1165)
+	- Society._transfer(address,address,uint256) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#721-843)
+	- Society.swapBack() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#845-898)
+	- _tokenTransfer(from,to,amount,takeFee) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#842)
+		- _rOwned[sender] = _rOwned[sender].sub(rAmount) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#983)
+		- _rOwned[sender] = _rOwned[sender].sub(rAmount) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#1003)
+		- _rOwned[sender] = _rOwned[sender].sub(rAmount) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#1025)
+		- _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#984)
+		- _rOwned[sender] = _rOwned[sender].sub(rAmount) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#1046)
+		- _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#1005)
+		- _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#1026)
+		- _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#1048)
+		- _rOwned[address(this)] = _rOwned[address(this)].add(rLiquidity) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#1162)
+	Society._rOwned (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#333) can be used in cross function reentrancies:
+	- Society._getCurrentSupply() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#1133-1146)
+	- Society._takeLiquidity(uint256) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#1148-1165)
+	- Society._transferBothExcluded(address,address,uint256) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#1032-1052)
+	- Society._transferFromExcluded(address,address,uint256) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#1011-1030)
+	- Society._transferStandard(address,address,uint256) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#970-988)
+	- Society._transferToExcluded(address,address,uint256) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#990-1009)
+	- Society.balanceOf(address) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#494-497)
+	- Society.constructor() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#450-476)
+	- Society.excludeFromReward(address) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#683-694)
+	- _tokenTransfer(from,to,amount,takeFee) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#842)
+		- _rTotal = _rTotal.sub(rFee) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#1055)
+	Society._rTotal (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#348) can be used in cross function reentrancies:
+	- Society._getCurrentSupply() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#1133-1146)
+	- Society._reflectFee(uint256,uint256) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#1054-1057)
+	- Society.constructor() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#450-476)
+	- Society.tokenFromReflection(uint256) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#670-681)
+	- _tokenTransfer(from,to,amount,takeFee) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#842)
+		- _tOwned[sender] = _tOwned[sender].sub(tAmount) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#1024)
+		- _tOwned[sender] = _tOwned[sender].sub(tAmount) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#1045)
+		- _tOwned[recipient] = _tOwned[recipient].add(tTransferAmount) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#1004)
+		- _tOwned[recipient] = _tOwned[recipient].add(tTransferAmount) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#1047)
+		- _tOwned[address(this)] = _tOwned[address(this)].add(tLiquidity) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#1164)
+	Society._tOwned (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#334) can be used in cross function reentrancies:
+	- Society._getCurrentSupply() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#1133-1146)
+	- Society._takeLiquidity(uint256) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#1148-1165)
+	- Society._transferBothExcluded(address,address,uint256) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#1032-1052)
+	- Society._transferFromExcluded(address,address,uint256) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#1011-1030)
+	- Society._transferToExcluded(address,address,uint256) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#990-1009)
+	- Society.balanceOf(address) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#494-497)
+	- Society.excludeFromReward(address) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#683-694)
+	- Society.includeInReward(address) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#696-707)
+	- _tokenTransfer(from,to,amount,takeFee) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#842)
+		- _teamTokensToSwap += (tLiquidity * _buyTeamFee) / _liquidityFee (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#1153)
+		- _teamTokensToSwap += (tLiquidity * _sellTeamFee) / _liquidityFee (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#1158)
+	Society._teamTokensToSwap (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#388) can be used in cross function reentrancies:
+	- Society._takeLiquidity(uint256) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#1148-1165)
+	- Society._teamTokensToSwap (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#388)
+	- Society._transfer(address,address,uint256) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#721-843)
+	- Society.swapBack() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#845-898)
+Reentrancy in Society.launch() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#605-626):
+	External calls:
+	- uniswapV2Pair = IUniswapV2Factory(_uniswapV2Router.factory()).createPair(address(this),_uniswapV2Router.WETH()) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#615-616)
+	- addLiquidity(balanceOf(address(this)),address(this).balance) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#623)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#939-946)
+	External calls sending eth:
+	- addLiquidity(balanceOf(address(this)),address(this).balance) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#623)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#939-946)
+	State variables written after the call(s):
+	- transferOwnership(_owner) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#624)
+		- _owner = newOwner (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#56)
+	Ownable._owner (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#21) can be used in cross function reentrancies:
+	- Ownable.onlyOwner() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#40-43)
+	- Ownable.owner() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#36-38)
+	- Ownable.renounceOwnership() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#45-48)
+	- Ownable.transferOwnership(address) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#50-57)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+Society._owner (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#331) shadows:
+	- Ownable._owner (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#21)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variable-shadowing
+
+Society.constructor() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#450-476) performs a multiplication on the result of a division:
+	- _rOwned[_owner] = (_rTotal / 1000) * 30 (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#452)
+Society.constructor() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#450-476) performs a multiplication on the result of a division:
+	- _rOwned[address(this)] = (_rTotal / 1000) * 970 (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#453)
+Society.swapBack() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#845-898) performs a multiplication on the result of a division:
+	- ethForMarketing = ethBalance.mul(_teamTokensToSwap).div(totalTokensToSwap) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#859-861)
+	- ethForDev = ethForMarketing.mul(_percentTeamFundsToDev).div(1000) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#865-867)
+Society.swapBack() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#845-898) performs a multiplication on the result of a division:
+	- ethForMarketing = ethBalance.mul(_teamTokensToSwap).div(totalTokensToSwap) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#859-861)
+	- ethForTreasury = ethForMarketing.mul(_percentTeamFundsToTreasury).div(1000) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#868-870)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+Society._transfer(address,address,uint256) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#721-843) uses a dangerous strict equality:
+	- block.number == tradingActiveBlock (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#809)
+Society._transfer(address,address,uint256) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#721-843) uses a dangerous strict equality:
+	- block.number == tradingActiveBlock + 1 (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#812)
+Society._transfer(address,address,uint256) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#721-843) uses a dangerous strict equality:
+	- block.number == tradingActiveBlock (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#825)
+Society._transfer(address,address,uint256) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#721-843) uses a dangerous strict equality:
+	- block.number == tradingActiveBlock + 1 (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#828)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-strict-equalities
+
+Reentrancy in Society.swapBack() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#845-898):
+	External calls:
+	- swapTokensForETH(amountToSwapForETH) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#855)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#928-934)
+	State variables written after the call(s):
+	- _liquidityTokensToSwap = 0 (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#874)
+	Society._liquidityTokensToSwap (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#387) can be used in cross function reentrancies:
+	- Society._liquidityTokensToSwap (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#387)
+	- Society._takeLiquidity(uint256) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#1148-1165)
+	- Society._transfer(address,address,uint256) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#721-843)
+	- Society.swapBack() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#845-898)
+	- _teamTokensToSwap = 0 (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#875)
+	Society._teamTokensToSwap (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#388) can be used in cross function reentrancies:
+	- Society._takeLiquidity(uint256) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#1148-1165)
+	- Society._teamTokensToSwap (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#388)
+	- Society._transfer(address,address,uint256) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#721-843)
+	- Society.swapBack() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#845-898)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+Society.addLiquidity(uint256,uint256) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#937-947) ignores return value by uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#939-946)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+Society.swapBack().success (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#877) is written in both
+	(success,None) = address(marketingAddress).call{value: ethForMarketing}() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#877-879)
+	(success,None) = address(devAddress).call{value: ethForDev}() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#880)
+Society.swapBack().success (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#877) is written in both
+	(success,None) = address(devAddress).call{value: ethForDev}() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#880)
+	(success,None) = address(treasuryAddress).call{value: ethForTreasury}() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#881-883)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#write-after-write
+
+Society.allowance(address,address).owner (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#508) shadows:
+	- Ownable.owner() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#36-38) (function)
+Society._approve(address,address,uint256).owner (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#710) shadows:
+	- Ownable.owner() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#36-38) (function)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#local-variable-shadowing
+
+Society.setMaxTransactionAmount(uint256) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#1208-1211) should emit an event for: 
+	- maxTransactionAmount = (_tTotal * newMaxBuy) / 1000 (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#1210) 
+Society.setMaxWallet(uint256) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#1213-1216) should emit an event for: 
+	- maxWalletAmount = (_tTotal * newMaxWallet) / 1000 (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#1215) 
+Society.setTeamSplit(uint256,uint256) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#1248-1255) should emit an event for: 
+	- _percentTeamFundsToTreasury = treasurySplit (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#1253) 
+	- _percentTeamFundsToDev = devSplit (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#1254) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+Reentrancy in Society._transfer(address,address,uint256) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#721-843):
+	External calls:
+	- swapBack() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#795)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#939-946)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#928-934)
+		- (success,None) = address(marketingAddress).call{value: ethForMarketing}() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#877-879)
+		- (success,None) = address(devAddress).call{value: ethForDev}() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#880)
+		- (success,None) = address(treasuryAddress).call{value: ethForTreasury}() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#881-883)
+		- (success,None) = address(marketingAddress).call{value: address(this).balance}() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#894-896)
+	External calls sending eth:
+	- swapBack() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#795)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#939-946)
+		- (success,None) = address(marketingAddress).call{value: ethForMarketing}() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#877-879)
+		- (success,None) = address(devAddress).call{value: ethForDev}() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#880)
+		- (success,None) = address(treasuryAddress).call{value: ethForTreasury}() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#881-883)
+		- (success,None) = address(marketingAddress).call{value: address(this).balance}() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#894-896)
+	State variables written after the call(s):
+	- removeAllFee() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#807)
+		- _liquidityFee = 0 (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#1186)
+	- _liquidityFee = 90 (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#811)
+	- _liquidityFee = 50 (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#814)
+	- _liquidityFee = _buyLiquidityFee + _buyTeamFee (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#817)
+	- removeAllFee() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#822)
+		- _liquidityFee = 0 (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#1186)
+	- _liquidityFee = 90 (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#827)
+	- _liquidityFee = 50 (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#830)
+	- _liquidityFee = _sellLiquidityFee + _sellTeamFee (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#833)
+	- removeAllFee() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#837)
+		- _liquidityFee = 0 (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#1186)
+	- _tokenTransfer(from,to,amount,takeFee) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#842)
+		- _liquidityFee = _previousLiquidityFee (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#1191)
+		- _liquidityFee = 0 (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#1186)
+	- removeAllFee() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#807)
+		- _previousLiquidityFee = _liquidityFee (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#1183)
+	- removeAllFee() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#822)
+		- _previousLiquidityFee = _liquidityFee (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#1183)
+	- removeAllFee() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#837)
+		- _previousLiquidityFee = _liquidityFee (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#1183)
+	- _tokenTransfer(from,to,amount,takeFee) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#842)
+		- _previousLiquidityFee = _liquidityFee (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#1183)
+	- removeAllFee() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#807)
+		- _previousTaxFee = _taxFee (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#1182)
+	- removeAllFee() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#822)
+		- _previousTaxFee = _taxFee (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#1182)
+	- removeAllFee() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#837)
+		- _previousTaxFee = _taxFee (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#1182)
+	- _tokenTransfer(from,to,amount,takeFee) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#842)
+		- _previousTaxFee = _taxFee (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#1182)
+	- _tokenTransfer(from,to,amount,takeFee) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#842)
+		- _tFeeTotal = _tFeeTotal.add(tFee) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#1056)
+	- removeAllFee() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#807)
+		- _taxFee = 0 (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#1185)
+	- _taxFee = 0 (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#810)
+	- _taxFee = 0 (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#813)
+	- _taxFee = _buyTaxFee (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#816)
+	- removeAllFee() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#822)
+		- _taxFee = 0 (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#1185)
+	- _taxFee = 0 (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#826)
+	- _taxFee = 0 (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#829)
+	- _taxFee = _sellTaxFee (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#832)
+	- removeAllFee() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#837)
+		- _taxFee = 0 (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#1185)
+	- _tokenTransfer(from,to,amount,takeFee) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#842)
+		- _taxFee = _previousTaxFee (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#1190)
+		- _taxFee = 0 (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#1185)
+	- buyOrSellSwitch = TRANSFER (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#803)
+	- buyOrSellSwitch = BUY (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#808)
+	- buyOrSellSwitch = SELL (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#823)
+	- buyOrSellSwitch = TRANSFER (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#838)
+Reentrancy in Society.launch() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#605-626):
+	External calls:
+	- uniswapV2Pair = IUniswapV2Factory(_uniswapV2Router.factory()).createPair(address(this),_uniswapV2Router.WETH()) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#615-616)
+	State variables written after the call(s):
+	- _setAutomatedMarketMakerPair(address(uniswapV2Pair),true) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#618)
+		- _excluded.push(account) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#693)
+		- _excluded[i] = _excluded[_excluded.length - 1] (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#700)
+		- _excluded.pop() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#703)
+	- _setAutomatedMarketMakerPair(address(uniswapV2Pair),true) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#618)
+		- _isExcluded[account] = true (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#692)
+		- _isExcluded[account] = false (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#702)
+	- excludeFromMaxTransaction(address(uniswapV2Pair),true) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#617)
+		- _isExcludedMaxTransactionAmount[updAds] = isEx (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#594)
+	- _setAutomatedMarketMakerPair(address(uniswapV2Pair),true) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#618)
+		- _isExcludedMaxTransactionAmount[pair] = value (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#646)
+	- _setAutomatedMarketMakerPair(address(uniswapV2Pair),true) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#618)
+		- _tOwned[account] = tokenFromReflection(_rOwned[account]) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#690)
+		- _tOwned[account] = 0 (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#701)
+	- _setAutomatedMarketMakerPair(address(uniswapV2Pair),true) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#618)
+		- automatedMarketMakerPairs[pair] = value (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#645)
+Reentrancy in Society.launch() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#605-626):
+	External calls:
+	- uniswapV2Pair = IUniswapV2Factory(_uniswapV2Router.factory()).createPair(address(this),_uniswapV2Router.WETH()) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#615-616)
+	- addLiquidity(balanceOf(address(this)),address(this).balance) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#623)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#939-946)
+	External calls sending eth:
+	- addLiquidity(balanceOf(address(this)),address(this).balance) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#623)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#939-946)
+	State variables written after the call(s):
+	- addLiquidity(balanceOf(address(this)),address(this).balance) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#623)
+		- _allowances[owner][spender] = amount (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#717)
+Reentrancy in Society.swapBack() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#845-898):
+	External calls:
+	- swapTokensForETH(amountToSwapForETH) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#855)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#928-934)
+	- (success,None) = address(marketingAddress).call{value: ethForMarketing}() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#877-879)
+	- (success,None) = address(devAddress).call{value: ethForDev}() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#880)
+	- (success,None) = address(treasuryAddress).call{value: ethForTreasury}() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#881-883)
+	- addLiquidity(tokensForLiquidity,ethForLiquidity) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#885)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#939-946)
+	External calls sending eth:
+	- (success,None) = address(marketingAddress).call{value: ethForMarketing}() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#877-879)
+	- (success,None) = address(devAddress).call{value: ethForDev}() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#880)
+	- (success,None) = address(treasuryAddress).call{value: ethForTreasury}() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#881-883)
+	- addLiquidity(tokensForLiquidity,ethForLiquidity) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#885)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#939-946)
+	State variables written after the call(s):
+	- addLiquidity(tokensForLiquidity,ethForLiquidity) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#885)
+		- _allowances[owner][spender] = amount (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#717)
+Reentrancy in Society.transferFrom(address,address,uint256) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#526-541):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#531)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#939-946)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#928-934)
+		- (success,None) = address(marketingAddress).call{value: ethForMarketing}() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#877-879)
+		- (success,None) = address(devAddress).call{value: ethForDev}() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#880)
+		- (success,None) = address(treasuryAddress).call{value: ethForTreasury}() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#881-883)
+		- (success,None) = address(marketingAddress).call{value: address(this).balance}() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#894-896)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#531)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#939-946)
+		- (success,None) = address(marketingAddress).call{value: ethForMarketing}() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#877-879)
+		- (success,None) = address(devAddress).call{value: ethForDev}() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#880)
+		- (success,None) = address(treasuryAddress).call{value: ethForTreasury}() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#881-883)
+		- (success,None) = address(marketingAddress).call{value: address(this).balance}() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#894-896)
+	State variables written after the call(s):
+	- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#532-539)
+		- _allowances[owner][spender] = amount (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#717)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in Society._transfer(address,address,uint256) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#721-843):
+	External calls:
+	- swapBack() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#795)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#939-946)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#928-934)
+		- (success,None) = address(marketingAddress).call{value: ethForMarketing}() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#877-879)
+		- (success,None) = address(devAddress).call{value: ethForDev}() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#880)
+		- (success,None) = address(treasuryAddress).call{value: ethForTreasury}() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#881-883)
+		- (success,None) = address(marketingAddress).call{value: address(this).balance}() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#894-896)
+	External calls sending eth:
+	- swapBack() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#795)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#939-946)
+		- (success,None) = address(marketingAddress).call{value: ethForMarketing}() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#877-879)
+		- (success,None) = address(devAddress).call{value: ethForDev}() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#880)
+		- (success,None) = address(treasuryAddress).call{value: ethForTreasury}() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#881-883)
+		- (success,None) = address(marketingAddress).call{value: address(this).balance}() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#894-896)
+	Event emitted after the call(s):
+	- Transfer(sender,recipient,tTransferAmount) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#987)
+		- _tokenTransfer(from,to,amount,takeFee) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#842)
+	- Transfer(sender,recipient,tTransferAmount) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#1029)
+		- _tokenTransfer(from,to,amount,takeFee) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#842)
+	- Transfer(sender,recipient,tTransferAmount) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#1008)
+		- _tokenTransfer(from,to,amount,takeFee) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#842)
+	- Transfer(sender,recipient,tTransferAmount) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#1051)
+		- _tokenTransfer(from,to,amount,takeFee) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#842)
+Reentrancy in Society.forceSwapBack() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#901-909):
+	External calls:
+	- swapBack() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#907)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#939-946)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#928-934)
+		- (success,None) = address(marketingAddress).call{value: ethForMarketing}() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#877-879)
+		- (success,None) = address(devAddress).call{value: ethForDev}() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#880)
+		- (success,None) = address(treasuryAddress).call{value: ethForTreasury}() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#881-883)
+		- (success,None) = address(marketingAddress).call{value: address(this).balance}() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#894-896)
+	External calls sending eth:
+	- swapBack() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#907)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#939-946)
+		- (success,None) = address(marketingAddress).call{value: ethForMarketing}() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#877-879)
+		- (success,None) = address(devAddress).call{value: ethForDev}() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#880)
+		- (success,None) = address(treasuryAddress).call{value: ethForTreasury}() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#881-883)
+		- (success,None) = address(marketingAddress).call{value: address(this).balance}() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#894-896)
+	Event emitted after the call(s):
+	- OwnerForcedSwapBack(block.timestamp) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#908)
+Reentrancy in Society.launch() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#605-626):
+	External calls:
+	- uniswapV2Pair = IUniswapV2Factory(_uniswapV2Router.factory()).createPair(address(this),_uniswapV2Router.WETH()) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#615-616)
+	- addLiquidity(balanceOf(address(this)),address(this).balance) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#623)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#939-946)
+	External calls sending eth:
+	- addLiquidity(balanceOf(address(this)),address(this).balance) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#623)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#939-946)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#718)
+		- addLiquidity(balanceOf(address(this)),address(this).balance) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#623)
+	- OwnershipTransferred(_owner,newOwner) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#55)
+		- transferOwnership(_owner) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#624)
+Reentrancy in Society.swapBack() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#845-898):
+	External calls:
+	- swapTokensForETH(amountToSwapForETH) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#855)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#928-934)
+	- (success,None) = address(marketingAddress).call{value: ethForMarketing}() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#877-879)
+	- (success,None) = address(devAddress).call{value: ethForDev}() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#880)
+	- (success,None) = address(treasuryAddress).call{value: ethForTreasury}() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#881-883)
+	- addLiquidity(tokensForLiquidity,ethForLiquidity) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#885)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#939-946)
+	External calls sending eth:
+	- (success,None) = address(marketingAddress).call{value: ethForMarketing}() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#877-879)
+	- (success,None) = address(devAddress).call{value: ethForDev}() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#880)
+	- (success,None) = address(treasuryAddress).call{value: ethForTreasury}() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#881-883)
+	- addLiquidity(tokensForLiquidity,ethForLiquidity) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#885)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#939-946)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#718)
+		- addLiquidity(tokensForLiquidity,ethForLiquidity) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#885)
+	- SwapAndLiquify(amountToSwapForETH,ethForLiquidity,tokensForLiquidity) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#886-890)
+Reentrancy in Society.transferForeignToken(address,address) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#1298-1308):
+	External calls:
+	- _sent = IERC20(_token).transfer(_to,_contractBalance) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#1306)
+	Event emitted after the call(s):
+	- TransferForeignToken(_token,_contractBalance) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#1307)
+Reentrancy in Society.transferFrom(address,address,uint256) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#526-541):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#531)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#939-946)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#928-934)
+		- (success,None) = address(marketingAddress).call{value: ethForMarketing}() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#877-879)
+		- (success,None) = address(devAddress).call{value: ethForDev}() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#880)
+		- (success,None) = address(treasuryAddress).call{value: ethForTreasury}() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#881-883)
+		- (success,None) = address(marketingAddress).call{value: address(this).balance}() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#894-896)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#531)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,liquidityAddress,block.timestamp) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#939-946)
+		- (success,None) = address(marketingAddress).call{value: ethForMarketing}() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#877-879)
+		- (success,None) = address(devAddress).call{value: ethForDev}() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#880)
+		- (success,None) = address(treasuryAddress).call{value: ethForTreasury}() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#881-883)
+		- (success,None) = address(marketingAddress).call{value: address(this).balance}() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#894-896)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#718)
+		- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#532-539)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+Address.isContract(address) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#158-169) uses assembly
+	- INLINE ASM (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#165-167)
+Address._functionCallWithValue(address,bytes,uint256,string) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#227-250) uses assembly
+	- INLINE ASM (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#242-245)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#assembly-usage
+
+Society.includeInReward(address) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#696-707) has costly operations inside a loop:
+	- _excluded.pop() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#703)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#costly-operations-inside-a-loop
+
+Society._transfer(address,address,uint256) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#721-843) has a high cyclomatic complexity (15).
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#cyclomatic-complexity
+
+Context._msgData() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#14-17) is never used and should be removed
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dead-code
+
+Society._previousTaxFee (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#357) is set pre-construction with a non-constant function or state variable:
+	- _taxFee
+Society._previousLiquidityFee (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#362) is set pre-construction with a non-constant function or state variable:
+	- _liquidityFee
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#function-initializing-state
+
+Version constraint ^0.8.0 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- SignedImmutables
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching.
+It is used by:
+	- ^0.8.0 (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#7)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in Address.sendValue(address,uint256) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#171-183):
+	- (success,None) = recipient.call{value: amount}() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#178)
+Low level call in Address._functionCallWithValue(address,bytes,uint256,string) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#227-250):
+	- (success,returndata) = target.call{value: weiValue}(data) (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#235-237)
+Low level call in Society.swapBack() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#845-898):
+	- (success,None) = address(marketingAddress).call{value: ethForMarketing}() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#877-879)
+	- (success,None) = address(devAddress).call{value: ethForDev}() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#880)
+	- (success,None) = address(treasuryAddress).call{value: ethForTreasury}() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#881-883)
+	- (success,None) = address(marketingAddress).call{value: address(this).balance}() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#894-896)
+Low level call in Society.withdrawStuckETH() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#1311-1317):
+	- (success,None) = address(msg.sender).call{value: address(this).balance}() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#1314-1316)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Function IUniswapV2Router.WETH() (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#123) is not in mixedCase
+Parameter Society.calculateTaxFee(uint256)._amount (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#1167) is not in mixedCase
+Parameter Society.calculateLiquidityFee(uint256)._amount (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#1171) is not in mixedCase
+Parameter Society.setMarketingAddress(address)._marketingAddress (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#1257) is not in mixedCase
+Parameter Society.setLiquidityAddress(address)._liquidityAddress (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#1268) is not in mixedCase
+Parameter Society.setDeveloperAddress(address)._devAddress (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#1278) is not in mixedCase
+Parameter Society.setTreasuryAddress(address)._treasuryAddress (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#1284) is not in mixedCase
+Parameter Society.setSwapAndLiquifyEnabled(bool)._enabled (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#1290) is not in mixedCase
+Parameter Society.transferForeignToken(address,address)._token (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#1298) is not in mixedCase
+Parameter Society.transferForeignToken(address,address)._to (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#1298) is not in mixedCase
+Constant Society._tTotal (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#347) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant Society._name (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#351) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant Society._symbol (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#352) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant Society._decimals (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#353) is not in UPPER_CASE_WITH_UNDERSCORES
+Variable Society._buyTaxFee (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#371) is not in mixedCase
+Variable Society._buyLiquidityFee (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#372) is not in mixedCase
+Variable Society._buyTeamFee (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#373) is not in mixedCase
+Variable Society._sellTaxFee (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#375) is not in mixedCase
+Variable Society._sellLiquidityFee (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#376) is not in mixedCase
+Variable Society._sellTeamFee (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#377) is not in mixedCase
+Variable Society._percentTeamFundsToDev (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#382) is not in mixedCase
+Variable Society._percentTeamFundsToTreasury (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#383) is not in mixedCase
+Variable Society._liquidityTokensToSwap (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#387) is not in mixedCase
+Variable Society._teamTokensToSwap (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#388) is not in mixedCase
+Variable Society._isExcludedMaxTransactionAmount (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#392) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Redundant expression "this (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#15)" inContext (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#9-18)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#redundant-statements
+
+Society._teamFee (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#359) is never used in Society (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#318-1319)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-state-variable
+
+Loop condition i < _excluded.length (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#1136) should use cached array length instead of referencing `length` member of the storage array.
+ Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#cache-array-length
+
+Society._teamFee (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#359) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+
+Society._owner (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#331) should be immutable 
+Society.minimumTokensBeforeSwap (0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol#398) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+./0x07f86ba2f0e6c421a3ecb233068117e65228ac6b.sol analyzed (9 contracts with 94 detectors), 75 result(s) found
+
+real	0m6.641s
+user	0m6.260s
+sys	0m0.380s

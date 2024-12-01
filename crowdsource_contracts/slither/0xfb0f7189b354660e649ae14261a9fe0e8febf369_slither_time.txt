@@ -1,0 +1,73 @@
+'solc --version' running
+'solc ./0xfb0f7189b354660e649ae14261a9fe0e8febf369.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+token (0xfb0f7189b354660e649ae14261a9fe0e8febf369.sol#3-5) has incorrect ERC20 function interface:token.transfer(address,uint256) (0xfb0f7189b354660e649ae14261a9fe0e8febf369.sol#4)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-erc20-interface
+
+Contract locking ether found:
+	Contract CandyContract (0xfb0f7189b354660e649ae14261a9fe0e8febf369.sol#24-91) has payable functions:
+	 - CandyContract.fallback() (0xfb0f7189b354660e649ae14261a9fe0e8febf369.sol#52-63)
+	But does not have a function to withdraw the ether
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#contracts-that-lock-ether
+
+Reentrancy in CandyContract.collectBack() (0xfb0f7189b354660e649ae14261a9fe0e8febf369.sol#80-89):
+	External calls:
+	- tokenReward.transfer(collectorAddress,totalCandyNo * 1e18) (0xfb0f7189b354660e649ae14261a9fe0e8febf369.sol#86)
+	State variables written after the call(s):
+	- totalCandyNo = 0 (0xfb0f7189b354660e649ae14261a9fe0e8febf369.sol#87)
+	CandyContract.totalCandyNo (0xfb0f7189b354660e649ae14261a9fe0e8febf369.sol#27) can be used in cross function reentrancies:
+	- CandyContract.collectBack() (0xfb0f7189b354660e649ae14261a9fe0e8febf369.sol#80-89)
+	- CandyContract.constructor(address,address) (0xfb0f7189b354660e649ae14261a9fe0e8febf369.sol#38-45)
+	- CandyContract.fallback() (0xfb0f7189b354660e649ae14261a9fe0e8febf369.sol#52-63)
+	- CandyContract.getCurrentCandyAmount() (0xfb0f7189b354660e649ae14261a9fe0e8febf369.sol#65-78)
+	- CandyContract.totalCandyNo (0xfb0f7189b354660e649ae14261a9fe0e8febf369.sol#27)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+owned.transferOwnership(address) (0xfb0f7189b354660e649ae14261a9fe0e8febf369.sol#19-21) should emit an event for: 
+	- owner = newOwner (0xfb0f7189b354660e649ae14261a9fe0e8febf369.sol#20) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-access-control
+
+owned.transferOwnership(address).newOwner (0xfb0f7189b354660e649ae14261a9fe0e8febf369.sol#19) lacks a zero-check on :
+		- owner = newOwner (0xfb0f7189b354660e649ae14261a9fe0e8febf369.sol#20)
+CandyContract.constructor(address,address).collector (0xfb0f7189b354660e649ae14261a9fe0e8febf369.sol#40) lacks a zero-check on :
+		- collectorAddress = collector (0xfb0f7189b354660e649ae14261a9fe0e8febf369.sol#44)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in CandyContract.fallback() (0xfb0f7189b354660e649ae14261a9fe0e8febf369.sol#52-63):
+	External calls:
+	- tokenReward.transfer(msg.sender,amount * 1e18) (0xfb0f7189b354660e649ae14261a9fe0e8febf369.sol#61)
+	Event emitted after the call(s):
+	- FundTransfer(msg.sender,amount,true) (0xfb0f7189b354660e649ae14261a9fe0e8febf369.sol#62)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+Version constraint ^0.4.18 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ExpExponentCleanup
+	- EventStructWrongData
+	- NestedArrayFunctionCallDecoder.
+It is used by:
+	- ^0.4.18 (0xfb0f7189b354660e649ae14261a9fe0e8febf369.sol#1)
+solc-0.4.22 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Contract token (0xfb0f7189b354660e649ae14261a9fe0e8febf369.sol#3-5) is not in CapWords
+Contract owned (0xfb0f7189b354660e649ae14261a9fe0e8febf369.sol#7-22) is not in CapWords
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+./0xfb0f7189b354660e649ae14261a9fe0e8febf369.sol analyzed (3 contracts with 94 detectors), 11 result(s) found
+
+real	0m1.318s
+user	0m1.205s
+sys	0m0.117s

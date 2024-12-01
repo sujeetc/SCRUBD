@@ -1,0 +1,82 @@
+'solc --version' running
+'solc ./0x62a03c868c959386b2df7f266e79bc711fb92398.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+Token (0x62a03c868c959386b2df7f266e79bc711fb92398.sol#82-87) has incorrect ERC20 function interface:Token.transfer(address,uint256) (0x62a03c868c959386b2df7f266e79bc711fb92398.sol#83)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-erc20-interface
+
+Reentrancy in BatchTransfer.batchTransfer(address[],uint256[]) (0x62a03c868c959386b2df7f266e79bc711fb92398.sol#128-142):
+	External calls:
+	- require(bool)(total <= standardToken.balanceOf(msg.sender)) (0x62a03c868c959386b2df7f266e79bc711fb92398.sol#134)
+	- standardToken.transfer(_recipients[j],_values[j]) (0x62a03c868c959386b2df7f266e79bc711fb92398.sol#136)
+	State variables written after the call(s):
+	- totalUserTransfered = totalUserTransfered.add(1) (0x62a03c868c959386b2df7f266e79bc711fb92398.sol#137)
+	BatchTransfer.totalUserTransfered (0x62a03c868c959386b2df7f266e79bc711fb92398.sol#97) can be used in cross function reentrancies:
+	- BatchTransfer.batchTransfer(address[],uint256[]) (0x62a03c868c959386b2df7f266e79bc711fb92398.sol#128-142)
+	- BatchTransfer.setContractToken(address) (0x62a03c868c959386b2df7f266e79bc711fb92398.sol#105-109)
+	- BatchTransfer.totalUserTransfered (0x62a03c868c959386b2df7f266e79bc711fb92398.sol#97)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+Ownable.owner (0x62a03c868c959386b2df7f266e79bc711fb92398.sol#51) is written in both
+	owner = _owner (0x62a03c868c959386b2df7f266e79bc711fb92398.sol#101)
+	owner = msg.sender (0x62a03c868c959386b2df7f266e79bc711fb92398.sol#102)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#write-after-write
+
+BatchTransfer.batchTransfer(address[],uint256[]) (0x62a03c868c959386b2df7f266e79bc711fb92398.sol#128-142) has external calls inside a loop: standardToken.transfer(_recipients[j],_values[j]) (0x62a03c868c959386b2df7f266e79bc711fb92398.sol#136)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation/#calls-inside-a-loop
+
+Reentrancy in BatchTransfer.batchTransfer(address[],uint256[]) (0x62a03c868c959386b2df7f266e79bc711fb92398.sol#128-142):
+	External calls:
+	- require(bool)(total <= standardToken.balanceOf(msg.sender)) (0x62a03c868c959386b2df7f266e79bc711fb92398.sol#134)
+	- standardToken.transfer(_recipients[j],_values[j]) (0x62a03c868c959386b2df7f266e79bc711fb92398.sol#136)
+	State variables written after the call(s):
+	- userTransfered[_recipients[j]] = true (0x62a03c868c959386b2df7f266e79bc711fb92398.sol#138)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in BatchTransfer.batchTransfer(address[],uint256[]) (0x62a03c868c959386b2df7f266e79bc711fb92398.sol#128-142):
+	External calls:
+	- require(bool)(total <= standardToken.balanceOf(msg.sender)) (0x62a03c868c959386b2df7f266e79bc711fb92398.sol#134)
+	- standardToken.transfer(_recipients[j],_values[j]) (0x62a03c868c959386b2df7f266e79bc711fb92398.sol#136)
+	Event emitted after the call(s):
+	- TransferToken(msg.sender,_recipients[j],_values[j]) (0x62a03c868c959386b2df7f266e79bc711fb92398.sol#139)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+BatchTransfer.batchTransfer(address[],uint256[]) (0x62a03c868c959386b2df7f266e79bc711fb92398.sol#128-142) has costly operations inside a loop:
+	- totalUserTransfered = totalUserTransfered.add(1) (0x62a03c868c959386b2df7f266e79bc711fb92398.sol#137)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#costly-operations-inside-a-loop
+
+Version constraint ^0.4.18 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ExpExponentCleanup
+	- EventStructWrongData
+	- NestedArrayFunctionCallDecoder.
+It is used by:
+	- ^0.4.18 (0x62a03c868c959386b2df7f266e79bc711fb92398.sol#1)
+solc-0.4.18 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Parameter Ownable.changeOwner(address)._newOwner (0x62a03c868c959386b2df7f266e79bc711fb92398.sol#74) is not in mixedCase
+Parameter BatchTransfer.setContractToken(address)._addressContract (0x62a03c868c959386b2df7f266e79bc711fb92398.sol#105) is not in mixedCase
+Parameter BatchTransfer.balanceOf(address)._owner (0x62a03c868c959386b2df7f266e79bc711fb92398.sol#111) is not in mixedCase
+Parameter BatchTransfer.setContractAdmin(address,bool)._admin (0x62a03c868c959386b2df7f266e79bc711fb92398.sol#123) is not in mixedCase
+Parameter BatchTransfer.setContractAdmin(address,bool)._isAdmin (0x62a03c868c959386b2df7f266e79bc711fb92398.sol#123) is not in mixedCase
+Parameter BatchTransfer.batchTransfer(address[],uint256[])._recipients (0x62a03c868c959386b2df7f266e79bc711fb92398.sol#128) is not in mixedCase
+Parameter BatchTransfer.batchTransfer(address[],uint256[])._values (0x62a03c868c959386b2df7f266e79bc711fb92398.sol#128) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+./0x62a03c868c959386b2df7f266e79bc711fb92398.sol analyzed (4 contracts with 94 detectors), 16 result(s) found
+
+real	0m1.585s
+user	0m1.391s
+sys	0m0.196s

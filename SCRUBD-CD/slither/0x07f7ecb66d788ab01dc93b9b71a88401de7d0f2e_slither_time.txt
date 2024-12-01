@@ -1,0 +1,106 @@
+'solc --version' running
+'solc ./0x07f7ecb66d788ab01dc93b9b71a88401de7d0f2e.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x07f7ecb66d788ab01dc93b9b71a88401de7d0f2e.sol:
+./0x07f7ecb66d788ab01dc93b9b71a88401de7d0f2e.sol:199:9: Warning: Return value of low-level calls not used.
+        whale.call.value(amount)(bytes4(keccak256("donate()")));
+        ^-----------------------------------------------------^
+./0x07f7ecb66d788ab01dc93b9b71a88401de7d0f2e.sol:210:9: Warning: Return value of low-level calls not used.
+        whale.call.value(amount)(bytes4(keccak256("donate()")));
+        ^-----------------------------------------------------^
+
+
+PoCGame.payout(address) (0x07f7ecb66d788ab01dc93b9b71a88401de7d0f2e.sol#184-191) sends eth to arbitrary user
+	Dangerous calls:
+	- winner.transfer(ethToTransfer) (0x07f7ecb66d788ab01dc93b9b71a88401de7d0f2e.sol#189)
+PoCGame.loseWager(uint256) (0x07f7ecb66d788ab01dc93b9b71a88401de7d0f2e.sol#207-213) sends eth to arbitrary user
+	Dangerous calls:
+	- whale.call.value(amount)(bytes4(keccak256()(donate()))) (0x07f7ecb66d788ab01dc93b9b71a88401de7d0f2e.sol#210)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+PoCGame.play() (0x07f7ecb66d788ab01dc93b9b71a88401de7d0f2e.sol#140-168) uses a weak PRNG: "winningNumber = uint256(keccak256()(abi.encodePacked(blockhash(uint256)(blockNumber),msg.sender))) % difficulty + 1 (0x07f7ecb66d788ab01dc93b9b71a88401de7d0f2e.sol#152)" 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#weak-PRNG
+
+PoCGame.donateToWhale(uint256) (0x07f7ecb66d788ab01dc93b9b71a88401de7d0f2e.sol#196-202) ignores return value by whale.call.value(amount)(bytes4(keccak256()(donate()))) (0x07f7ecb66d788ab01dc93b9b71a88401de7d0f2e.sol#199)
+PoCGame.loseWager(uint256) (0x07f7ecb66d788ab01dc93b9b71a88401de7d0f2e.sol#207-213) ignores return value by whale.call.value(amount)(bytes4(keccak256()(donate()))) (0x07f7ecb66d788ab01dc93b9b71a88401de7d0f2e.sol#210)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-low-level-calls
+
+PoCGame.constructor(address,uint256).whaleAddress (0x07f7ecb66d788ab01dc93b9b71a88401de7d0f2e.sol#66) lacks a zero-check on :
+		- whale = whaleAddress (0x07f7ecb66d788ab01dc93b9b71a88401de7d0f2e.sol#72)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in PoCGame.donateToWhale(uint256) (0x07f7ecb66d788ab01dc93b9b71a88401de7d0f2e.sol#196-202):
+	External calls:
+	- whale.call.value(amount)(bytes4(keccak256()(donate()))) (0x07f7ecb66d788ab01dc93b9b71a88401de7d0f2e.sol#199)
+	State variables written after the call(s):
+	- totalDonated += amount (0x07f7ecb66d788ab01dc93b9b71a88401de7d0f2e.sol#200)
+Reentrancy in PoCGame.loseWager(uint256) (0x07f7ecb66d788ab01dc93b9b71a88401de7d0f2e.sol#207-213):
+	External calls:
+	- whale.call.value(amount)(bytes4(keccak256()(donate()))) (0x07f7ecb66d788ab01dc93b9b71a88401de7d0f2e.sol#210)
+	State variables written after the call(s):
+	- totalDonated += amount (0x07f7ecb66d788ab01dc93b9b71a88401de7d0f2e.sol#211)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in PoCGame.donateToWhale(uint256) (0x07f7ecb66d788ab01dc93b9b71a88401de7d0f2e.sol#196-202):
+	External calls:
+	- whale.call.value(amount)(bytes4(keccak256()(donate()))) (0x07f7ecb66d788ab01dc93b9b71a88401de7d0f2e.sol#199)
+	Event emitted after the call(s):
+	- Donate(amount,whale,msg.sender) (0x07f7ecb66d788ab01dc93b9b71a88401de7d0f2e.sol#201)
+Reentrancy in PoCGame.loseWager(uint256) (0x07f7ecb66d788ab01dc93b9b71a88401de7d0f2e.sol#207-213):
+	External calls:
+	- whale.call.value(amount)(bytes4(keccak256()(donate()))) (0x07f7ecb66d788ab01dc93b9b71a88401de7d0f2e.sol#210)
+	Event emitted after the call(s):
+	- Lose(amount,msg.sender) (0x07f7ecb66d788ab01dc93b9b71a88401de7d0f2e.sol#212)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+Version constraint ^0.4.21 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ABIEncoderV2PackedStorage_0.4.x
+	- ExpExponentCleanup
+	- EventStructWrongData
+	- NestedArrayFunctionCallDecoder.
+It is used by:
+	- ^0.4.21 (0x07f7ecb66d788ab01dc93b9b71a88401de7d0f2e.sol#1)
+solc-0.4.22 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in PoCGame.donateToWhale(uint256) (0x07f7ecb66d788ab01dc93b9b71a88401de7d0f2e.sol#196-202):
+	- whale.call.value(amount)(bytes4(keccak256()(donate()))) (0x07f7ecb66d788ab01dc93b9b71a88401de7d0f2e.sol#199)
+Low level call in PoCGame.loseWager(uint256) (0x07f7ecb66d788ab01dc93b9b71a88401de7d0f2e.sol#207-213):
+	- whale.call.value(amount)(bytes4(keccak256()(donate()))) (0x07f7ecb66d788ab01dc93b9b71a88401de7d0f2e.sol#210)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Function PoCGame.OpenToThePublic() (0x07f7ecb66d788ab01dc93b9b71a88401de7d0f2e.sol#82-87) is not in mixedCase
+Function PoCGame.AdjustBetAmounts(uint256) (0x07f7ecb66d788ab01dc93b9b71a88401de7d0f2e.sol#92-99) is not in mixedCase
+Function PoCGame.AdjustDifficulty(uint256) (0x07f7ecb66d788ab01dc93b9b71a88401de7d0f2e.sol#104-111) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in PoCGame.payout(address) (0x07f7ecb66d788ab01dc93b9b71a88401de7d0f2e.sol#184-191):
+	External calls:
+	- winner.transfer(ethToTransfer) (0x07f7ecb66d788ab01dc93b9b71a88401de7d0f2e.sol#189)
+	Event emitted after the call(s):
+	- Win(ethToTransfer,winner) (0x07f7ecb66d788ab01dc93b9b71a88401de7d0f2e.sol#190)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+PoCGame.randomSeed (0x07f7ecb66d788ab01dc93b9b71a88401de7d0f2e.sol#56) is never used in PoCGame (0x07f7ecb66d788ab01dc93b9b71a88401de7d0f2e.sol#8-288)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-state-variable
+
+PoCGame.randomSeed (0x07f7ecb66d788ab01dc93b9b71a88401de7d0f2e.sol#56) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+./0x07f7ecb66d788ab01dc93b9b71a88401de7d0f2e.sol analyzed (2 contracts with 94 detectors), 20 result(s) found
+
+real	0m1.698s
+user	0m1.428s
+sys	0m0.272s

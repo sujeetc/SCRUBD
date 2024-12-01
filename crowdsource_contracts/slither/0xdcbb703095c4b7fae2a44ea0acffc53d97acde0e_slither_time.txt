@@ -1,0 +1,114 @@
+'solc --version' running
+'solc ./0xdcbb703095c4b7fae2a44ea0acffc53d97acde0e.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+POOHMOWHALE.donate() (0xdcbb703095c4b7fae2a44ea0acffc53d97acde0e.sol#60-128) sends eth to arbitrary user
+	Dangerous calls:
+	- address(doublr).transfer(ethToTransfer) (0xdcbb703095c4b7fae2a44ea0acffc53d97acde0e.sol#72)
+	- owner.transfer(ethToTransfer) (0xdcbb703095c4b7fae2a44ea0acffc53d97acde0e.sol#88)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+Reentrancy in POOHMOWHALE.donate() (0xdcbb703095c4b7fae2a44ea0acffc53d97acde0e.sol#60-128):
+	External calls:
+	- tokenBalance = myTokens() (0xdcbb703095c4b7fae2a44ea0acffc53d97acde0e.sol#95)
+		- poohContract.myTokens() (0xdcbb703095c4b7fae2a44ea0acffc53d97acde0e.sol#139)
+	- poohContract.buy.value(ethToTransfer)(0x0) (0xdcbb703095c4b7fae2a44ea0acffc53d97acde0e.sol#120)
+	- tokenBalance = myTokens() (0xdcbb703095c4b7fae2a44ea0acffc53d97acde0e.sol#121)
+		- poohContract.myTokens() (0xdcbb703095c4b7fae2a44ea0acffc53d97acde0e.sol#139)
+	External calls sending eth:
+	- poohContract.buy.value(ethToTransfer)(0x0) (0xdcbb703095c4b7fae2a44ea0acffc53d97acde0e.sol#120)
+	State variables written after the call(s):
+	- tokenBalance = myTokens() (0xdcbb703095c4b7fae2a44ea0acffc53d97acde0e.sol#121)
+	POOHMOWHALE.tokenBalance (0xdcbb703095c4b7fae2a44ea0acffc53d97acde0e.sol#36) can be used in cross function reentrancies:
+	- POOHMOWHALE.constructor() (0xdcbb703095c4b7fae2a44ea0acffc53d97acde0e.sol#43-51)
+	- POOHMOWHALE.donate() (0xdcbb703095c4b7fae2a44ea0acffc53d97acde0e.sol#60-128)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+Reentrancy in POOHMOWHALE.donate() (0xdcbb703095c4b7fae2a44ea0acffc53d97acde0e.sol#60-128):
+	External calls:
+	- tokenBalance = myTokens() (0xdcbb703095c4b7fae2a44ea0acffc53d97acde0e.sol#95)
+		- poohContract.myTokens() (0xdcbb703095c4b7fae2a44ea0acffc53d97acde0e.sol#139)
+	- poohContract.exit() (0xdcbb703095c4b7fae2a44ea0acffc53d97acde0e.sol#99)
+	State variables written after the call(s):
+	- tokenBalance = 0 (0xdcbb703095c4b7fae2a44ea0acffc53d97acde0e.sol#100)
+	POOHMOWHALE.tokenBalance (0xdcbb703095c4b7fae2a44ea0acffc53d97acde0e.sol#36) can be used in cross function reentrancies:
+	- POOHMOWHALE.constructor() (0xdcbb703095c4b7fae2a44ea0acffc53d97acde0e.sol#43-51)
+	- POOHMOWHALE.donate() (0xdcbb703095c4b7fae2a44ea0acffc53d97acde0e.sol#60-128)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+POOHMOWHALE.donate() (0xdcbb703095c4b7fae2a44ea0acffc53d97acde0e.sol#60-128) ignores return value by poohContract.buy.value(ethToTransfer)(0x0) (0xdcbb703095c4b7fae2a44ea0acffc53d97acde0e.sol#106)
+POOHMOWHALE.donate() (0xdcbb703095c4b7fae2a44ea0acffc53d97acde0e.sol#60-128) ignores return value by poohContract.buy.value(msg.value)(0x0) (0xdcbb703095c4b7fae2a44ea0acffc53d97acde0e.sol#110)
+POOHMOWHALE.donate() (0xdcbb703095c4b7fae2a44ea0acffc53d97acde0e.sol#60-128) ignores return value by poohContract.buy.value(ethToTransfer)(0x0) (0xdcbb703095c4b7fae2a44ea0acffc53d97acde0e.sol#120)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+Reentrancy in POOHMOWHALE.donate() (0xdcbb703095c4b7fae2a44ea0acffc53d97acde0e.sol#60-128):
+	External calls:
+	- poohContract.exit() (0xdcbb703095c4b7fae2a44ea0acffc53d97acde0e.sol#84)
+	State variables written after the call(s):
+	- tokenBalance = 0 (0xdcbb703095c4b7fae2a44ea0acffc53d97acde0e.sol#85)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in POOHMOWHALE.donate() (0xdcbb703095c4b7fae2a44ea0acffc53d97acde0e.sol#60-128):
+	External calls:
+	- poohContract.exit() (0xdcbb703095c4b7fae2a44ea0acffc53d97acde0e.sol#84)
+	External calls sending eth:
+	- owner.transfer(ethToTransfer) (0xdcbb703095c4b7fae2a44ea0acffc53d97acde0e.sol#88)
+	Event emitted after the call(s):
+	- Transfer(ethToTransfer,address(owner)) (0xdcbb703095c4b7fae2a44ea0acffc53d97acde0e.sol#89)
+Reentrancy in POOHMOWHALE.donate() (0xdcbb703095c4b7fae2a44ea0acffc53d97acde0e.sol#60-128):
+	External calls:
+	- tokenBalance = myTokens() (0xdcbb703095c4b7fae2a44ea0acffc53d97acde0e.sol#95)
+		- poohContract.myTokens() (0xdcbb703095c4b7fae2a44ea0acffc53d97acde0e.sol#139)
+	- poohContract.buy.value(ethToTransfer)(0x0) (0xdcbb703095c4b7fae2a44ea0acffc53d97acde0e.sol#120)
+	- tokenBalance = myTokens() (0xdcbb703095c4b7fae2a44ea0acffc53d97acde0e.sol#121)
+		- poohContract.myTokens() (0xdcbb703095c4b7fae2a44ea0acffc53d97acde0e.sol#139)
+	External calls sending eth:
+	- poohContract.buy.value(ethToTransfer)(0x0) (0xdcbb703095c4b7fae2a44ea0acffc53d97acde0e.sol#120)
+	Event emitted after the call(s):
+	- Deposit(msg.value,msg.sender) (0xdcbb703095c4b7fae2a44ea0acffc53d97acde0e.sol#123)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+Version constraint ^0.4.21 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ABIEncoderV2PackedStorage_0.4.x
+	- ExpExponentCleanup
+	- EventStructWrongData
+	- NestedArrayFunctionCallDecoder.
+It is used by:
+	- ^0.4.21 (0xdcbb703095c4b7fae2a44ea0acffc53d97acde0e.sol#1)
+solc-0.4.23 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Reentrancy in POOHMOWHALE.donate() (0xdcbb703095c4b7fae2a44ea0acffc53d97acde0e.sol#60-128):
+	External calls:
+	- owner.transfer(ethToTransfer) (0xdcbb703095c4b7fae2a44ea0acffc53d97acde0e.sol#88)
+	Event emitted after the call(s):
+	- Transfer(ethToTransfer,address(owner)) (0xdcbb703095c4b7fae2a44ea0acffc53d97acde0e.sol#89)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+POOHMOWHALE.donate() (0xdcbb703095c4b7fae2a44ea0acffc53d97acde0e.sol#60-128) uses literals with too many digits:
+	- require(bool)(msg.value > 1000000) (0xdcbb703095c4b7fae2a44ea0acffc53d97acde0e.sol#64)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+POOHMOWHALE.game (0xdcbb703095c4b7fae2a44ea0acffc53d97acde0e.sol#34) is never used in POOHMOWHALE (0xdcbb703095c4b7fae2a44ea0acffc53d97acde0e.sol#3-206)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-state-variable
+
+POOHMOWHALE.game (0xdcbb703095c4b7fae2a44ea0acffc53d97acde0e.sol#34) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+./0xdcbb703095c4b7fae2a44ea0acffc53d97acde0e.sol analyzed (4 contracts with 94 detectors), 15 result(s) found
+
+real	0m1.563s
+user	0m1.309s
+sys	0m0.256s

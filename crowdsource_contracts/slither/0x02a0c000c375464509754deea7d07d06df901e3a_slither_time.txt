@@ -1,0 +1,205 @@
+'solc --version' running
+'solc ./0x02a0c000c375464509754deea7d07d06df901e3a.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+EthereumCate.sendETHToFee(uint256) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#381-384) sends eth to arbitrary user
+	Dangerous calls:
+	- _teamAddress.transfer(amount.div(2)) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#382)
+	- _marketingFunds.transfer(amount.div(2)) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#383)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+Reentrancy in EthereumCate._transfer(address,address,uint256) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#314-365):
+	External calls:
+	- swapTokensForEth(contractTokenBalance) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#351)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#372-378)
+	External calls sending eth:
+	- sendETHToFee(address(this).balance) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#354)
+		- _teamAddress.transfer(amount.div(2)) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#382)
+		- _marketingFunds.transfer(amount.div(2)) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#383)
+	State variables written after the call(s):
+	- _tokenTransfer(from,to,amount,takeFee) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#364)
+		- _rOwned[address(this)] = _rOwned[address(this)].add(rTeam) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#467)
+		- _rOwned[sender] = _rOwned[sender].sub(rAmount) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#457)
+		- _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#458)
+	EthereumCate._rOwned (0x02a0c000c375464509754deea7d07d06df901e3a.sol#169) can be used in cross function reentrancies:
+	- EthereumCate._takeTeam(uint256) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#464-468)
+	- EthereumCate._transferStandard(address,address,uint256) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#444-462)
+	- EthereumCate.balanceOf(address) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#227-229)
+	- EthereumCate.constructor(address,address) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#200-209)
+	- _tokenTransfer(from,to,amount,takeFee) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#364)
+		- _rTotal = _rTotal.sub(rFee) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#471)
+	EthereumCate._rTotal (0x02a0c000c375464509754deea7d07d06df901e3a.sol#175) can be used in cross function reentrancies:
+	- EthereumCate._getCurrentSupply() (0x02a0c000c375464509754deea7d07d06df901e3a.sol#546-552)
+	- EthereumCate._reflectFee(uint256,uint256) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#470-473)
+	- EthereumCate.constructor(address,address) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#200-209)
+	- EthereumCate.tokenFromReflection(uint256) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#279-290)
+Reentrancy in EthereumCate.startTrading() (0x02a0c000c375464509754deea7d07d06df901e3a.sol#386-409):
+	External calls:
+	- uniswapV2Pair = IUniswapV2Factory(_uniswapV2Router.factory()).createPair(address(this),_uniswapV2Router.WETH()) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#391-392)
+	- uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#393-400)
+	External calls sending eth:
+	- uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#393-400)
+	State variables written after the call(s):
+	- tradingOpen = true (0x02a0c000c375464509754deea7d07d06df901e3a.sol#404)
+	EthereumCate.tradingOpen (0x02a0c000c375464509754deea7d07d06df901e3a.sol#187) can be used in cross function reentrancies:
+	- EthereumCate.startTrading() (0x02a0c000c375464509754deea7d07d06df901e3a.sol#386-409)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+EthereumCate.startTrading() (0x02a0c000c375464509754deea7d07d06df901e3a.sol#386-409) ignores return value by uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#393-400)
+EthereumCate.startTrading() (0x02a0c000c375464509754deea7d07d06df901e3a.sol#386-409) ignores return value by IERC20(uniswapV2Pair).approve(address(uniswapV2Router),type()(uint256).max) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#405-408)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+EthereumCate.allowance(address,address).owner (0x02a0c000c375464509754deea7d07d06df901e3a.sol#240) shadows:
+	- Ownable.owner() (0x02a0c000c375464509754deea7d07d06df901e3a.sol#65-67) (function)
+EthereumCate._approve(address,address,uint256).owner (0x02a0c000c375464509754deea7d07d06df901e3a.sol#304) shadows:
+	- Ownable.owner() (0x02a0c000c375464509754deea7d07d06df901e3a.sol#65-67) (function)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#local-variable-shadowing
+
+Ownable.constructor().msgSender (0x02a0c000c375464509754deea7d07d06df901e3a.sol#60) lacks a zero-check on :
+		- _owner = msgSender (0x02a0c000c375464509754deea7d07d06df901e3a.sol#61)
+EthereumCate.constructor(address,address).addr1 (0x02a0c000c375464509754deea7d07d06df901e3a.sol#200) lacks a zero-check on :
+		- _teamAddress = addr1 (0x02a0c000c375464509754deea7d07d06df901e3a.sol#201)
+EthereumCate.constructor(address,address).addr2 (0x02a0c000c375464509754deea7d07d06df901e3a.sol#200) lacks a zero-check on :
+		- _marketingFunds = addr2 (0x02a0c000c375464509754deea7d07d06df901e3a.sol#202)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in EthereumCate._transfer(address,address,uint256) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#314-365):
+	External calls:
+	- swapTokensForEth(contractTokenBalance) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#351)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#372-378)
+	External calls sending eth:
+	- sendETHToFee(address(this).balance) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#354)
+		- _teamAddress.transfer(amount.div(2)) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#382)
+		- _marketingFunds.transfer(amount.div(2)) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#383)
+	State variables written after the call(s):
+	- _tokenTransfer(from,to,amount,takeFee) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#364)
+		- _tFeeTotal = _tFeeTotal.add(tFee) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#472)
+	- _tokenTransfer(from,to,amount,takeFee) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#364)
+		- _taxFee = 5 (0x02a0c000c375464509754deea7d07d06df901e3a.sol#299)
+		- _taxFee = 0 (0x02a0c000c375464509754deea7d07d06df901e3a.sol#294)
+	- _tokenTransfer(from,to,amount,takeFee) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#364)
+		- _teamFee = 10 (0x02a0c000c375464509754deea7d07d06df901e3a.sol#300)
+		- _teamFee = 0 (0x02a0c000c375464509754deea7d07d06df901e3a.sol#295)
+Reentrancy in EthereumCate.startTrading() (0x02a0c000c375464509754deea7d07d06df901e3a.sol#386-409):
+	External calls:
+	- uniswapV2Pair = IUniswapV2Factory(_uniswapV2Router.factory()).createPair(address(this),_uniswapV2Router.WETH()) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#391-392)
+	- uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#393-400)
+	External calls sending eth:
+	- uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#393-400)
+	State variables written after the call(s):
+	- _maxTxAmount = 10000000000 * 10 ** 9 (0x02a0c000c375464509754deea7d07d06df901e3a.sol#403)
+	- cooldownEnabled = false (0x02a0c000c375464509754deea7d07d06df901e3a.sol#402)
+	- swapEnabled = true (0x02a0c000c375464509754deea7d07d06df901e3a.sol#401)
+Reentrancy in EthereumCate.transferFrom(address,address,uint256) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#258-273):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#263)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#372-378)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#263)
+		- _teamAddress.transfer(amount.div(2)) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#382)
+		- _marketingFunds.transfer(amount.div(2)) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#383)
+	State variables written after the call(s):
+	- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#264-271)
+		- _allowances[owner][spender] = amount (0x02a0c000c375464509754deea7d07d06df901e3a.sol#310)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in EthereumCate._transfer(address,address,uint256) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#314-365):
+	External calls:
+	- swapTokensForEth(contractTokenBalance) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#351)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#372-378)
+	External calls sending eth:
+	- sendETHToFee(address(this).balance) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#354)
+		- _teamAddress.transfer(amount.div(2)) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#382)
+		- _marketingFunds.transfer(amount.div(2)) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#383)
+	Event emitted after the call(s):
+	- Transfer(sender,recipient,tTransferAmount) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#461)
+		- _tokenTransfer(from,to,amount,takeFee) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#364)
+Reentrancy in EthereumCate.transferFrom(address,address,uint256) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#258-273):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#263)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#372-378)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#263)
+		- _teamAddress.transfer(amount.div(2)) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#382)
+		- _marketingFunds.transfer(amount.div(2)) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#383)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#311)
+		- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#264-271)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+EthereumCate._transfer(address,address,uint256) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#314-365) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(cooldown[to] < block.timestamp) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#346)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Version constraint ^0.8.4 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- SignedImmutables.
+It is used by:
+	- ^0.8.4 (0x02a0c000c375464509754deea7d07d06df901e3a.sol#18)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Function IUniswapV2Router02.WETH() (0x02a0c000c375464509754deea7d07d06df901e3a.sol#142) is not in mixedCase
+Constant EthereumCate._name (0x02a0c000c375464509754deea7d07d06df901e3a.sol#164) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant EthereumCate._symbol (0x02a0c000c375464509754deea7d07d06df901e3a.sol#165) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant EthereumCate._decimals (0x02a0c000c375464509754deea7d07d06df901e3a.sol#166) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant EthereumCate._tTotal (0x02a0c000c375464509754deea7d07d06df901e3a.sol#174) is not in UPPER_CASE_WITH_UNDERSCORES
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in EthereumCate._transfer(address,address,uint256) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#314-365):
+	External calls:
+	- sendETHToFee(address(this).balance) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#354)
+		- _teamAddress.transfer(amount.div(2)) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#382)
+		- _marketingFunds.transfer(amount.div(2)) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#383)
+	State variables written after the call(s):
+	- _tokenTransfer(from,to,amount,takeFee) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#364)
+		- _rOwned[address(this)] = _rOwned[address(this)].add(rTeam) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#467)
+		- _rOwned[sender] = _rOwned[sender].sub(rAmount) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#457)
+		- _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#458)
+	- _tokenTransfer(from,to,amount,takeFee) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#364)
+		- _rTotal = _rTotal.sub(rFee) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#471)
+	- _tokenTransfer(from,to,amount,takeFee) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#364)
+		- _tFeeTotal = _tFeeTotal.add(tFee) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#472)
+	- _tokenTransfer(from,to,amount,takeFee) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#364)
+		- _taxFee = 5 (0x02a0c000c375464509754deea7d07d06df901e3a.sol#299)
+		- _taxFee = 0 (0x02a0c000c375464509754deea7d07d06df901e3a.sol#294)
+	- _tokenTransfer(from,to,amount,takeFee) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#364)
+		- _teamFee = 10 (0x02a0c000c375464509754deea7d07d06df901e3a.sol#300)
+		- _teamFee = 0 (0x02a0c000c375464509754deea7d07d06df901e3a.sol#295)
+	Event emitted after the call(s):
+	- Transfer(sender,recipient,tTransferAmount) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#461)
+		- _tokenTransfer(from,to,amount,takeFee) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#364)
+Reentrancy in EthereumCate.transferFrom(address,address,uint256) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#258-273):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#263)
+		- _teamAddress.transfer(amount.div(2)) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#382)
+		- _marketingFunds.transfer(amount.div(2)) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#383)
+	State variables written after the call(s):
+	- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#264-271)
+		- _allowances[owner][spender] = amount (0x02a0c000c375464509754deea7d07d06df901e3a.sol#310)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#311)
+		- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x02a0c000c375464509754deea7d07d06df901e3a.sol#264-271)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+EthereumCate.startTrading() (0x02a0c000c375464509754deea7d07d06df901e3a.sol#386-409) uses literals with too many digits:
+	- _maxTxAmount = 10000000000 * 10 ** 9 (0x02a0c000c375464509754deea7d07d06df901e3a.sol#403)
+EthereumCate.slitherConstructorConstantVariables() (0x02a0c000c375464509754deea7d07d06df901e3a.sol#161-560) uses literals with too many digits:
+	- _tTotal = 1000000000000 * 10 ** 9 (0x02a0c000c375464509754deea7d07d06df901e3a.sol#174)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+EthereumCate._tOwned (0x02a0c000c375464509754deea7d07d06df901e3a.sol#170) is never used in EthereumCate (0x02a0c000c375464509754deea7d07d06df901e3a.sol#161-560)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-state-variable
+
+EthereumCate._marketingFunds (0x02a0c000c375464509754deea7d07d06df901e3a.sol#184) should be immutable 
+EthereumCate._teamAddress (0x02a0c000c375464509754deea7d07d06df901e3a.sol#183) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+./0x02a0c000c375464509754deea7d07d06df901e3a.sol analyzed (7 contracts with 94 detectors), 29 result(s) found
+
+real	0m2.633s
+user	0m2.388s
+sys	0m0.246s

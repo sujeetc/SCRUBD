@@ -1,0 +1,98 @@
+'solc --version' running
+'solc ./0x9d661f7773be14439b4223f5b516bc7ef67b0369.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x9d661f7773be14439b4223f5b516bc7ef67b0369.sol:
+./0x9d661f7773be14439b4223f5b516bc7ef67b0369.sol:2:1: Warning: Experimental features are turned on. Do not use experimental features on live deployments.
+pragma experimental ABIEncoderV2;
+^-------------------------------^
+./0x9d661f7773be14439b4223f5b516bc7ef67b0369.sol:165:9: Warning: Failure condition of 'send' ignored. Consider using 'transfer' instead.
+        msg.sender.send(address(this).balance);
+        ^------------------------------------^
+
+
+PayableHumanityApplicant.applyWithEtherFor(address) (0x9d661f7773be14439b4223f5b516bc7ef67b0369.sol#156-168) sends eth to arbitrary user
+	Dangerous calls:
+	- msg.sender.send(address(this).balance) (0x9d661f7773be14439b4223f5b516bc7ef67b0369.sol#165)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+PayableHumanityApplicant.applyWithEtherFor(address) (0x9d661f7773be14439b4223f5b516bc7ef67b0369.sol#156-168) ignores return value by msg.sender.send(address(this).balance) (0x9d661f7773be14439b4223f5b516bc7ef67b0369.sol#165)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-send
+
+PayableHumanityApplicant.applyWithEtherFor(address) (0x9d661f7773be14439b4223f5b516bc7ef67b0369.sol#156-168) ignores return value by exchange.ethToTokenSwapOutput.value(msg.value)(fee,block.timestamp) (0x9d661f7773be14439b4223f5b516bc7ef67b0369.sol#159)
+HumanityApplicant.constructor(IGovernance,IRegistry,IERC20) (0x9d661f7773be14439b4223f5b516bc7ef67b0369.sol#120-125) ignores return value by humanity.approve(address(governance),uint256(- 1)) (0x9d661f7773be14439b4223f5b516bc7ef67b0369.sol#124)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+Reentrancy in TwitterHumanityApplicant.applyWithTwitterFor(address,string) (0x9d661f7773be14439b4223f5b516bc7ef67b0369.sol#193-197):
+	External calls:
+	- proposalId = applyFor(who) (0x9d661f7773be14439b4223f5b516bc7ef67b0369.sol#194)
+		- require(bool,string)(humanity.transferFrom(msg.sender,address(this),fee.sub(balance)),HumanityApplicant::applyFor: Transfer failed) (0x9d661f7773be14439b4223f5b516bc7ef67b0369.sol#131)
+		- governance.proposeWithFeeRecipient(msg.sender,address(registry),data) (0x9d661f7773be14439b4223f5b516bc7ef67b0369.sol#134)
+	Event emitted after the call(s):
+	- Apply(proposalId,who,username) (0x9d661f7773be14439b4223f5b516bc7ef67b0369.sol#195)
+Reentrancy in TwitterHumanityApplicant.applyWithTwitterUsingEtherFor(address,string) (0x9d661f7773be14439b4223f5b516bc7ef67b0369.sol#203-207):
+	External calls:
+	- proposalId = applyWithEtherFor(who) (0x9d661f7773be14439b4223f5b516bc7ef67b0369.sol#204)
+		- exchange.ethToTokenSwapOutput.value(msg.value)(fee,block.timestamp) (0x9d661f7773be14439b4223f5b516bc7ef67b0369.sol#159)
+		- require(bool,string)(humanity.transferFrom(msg.sender,address(this),fee.sub(balance)),HumanityApplicant::applyFor: Transfer failed) (0x9d661f7773be14439b4223f5b516bc7ef67b0369.sol#131)
+		- governance.proposeWithFeeRecipient(msg.sender,address(registry),data) (0x9d661f7773be14439b4223f5b516bc7ef67b0369.sol#134)
+	External calls sending eth:
+	- proposalId = applyWithEtherFor(who) (0x9d661f7773be14439b4223f5b516bc7ef67b0369.sol#204)
+		- exchange.ethToTokenSwapOutput.value(msg.value)(fee,block.timestamp) (0x9d661f7773be14439b4223f5b516bc7ef67b0369.sol#159)
+		- msg.sender.send(address(this).balance) (0x9d661f7773be14439b4223f5b516bc7ef67b0369.sol#165)
+	Event emitted after the call(s):
+	- Apply(proposalId,who,username) (0x9d661f7773be14439b4223f5b516bc7ef67b0369.sol#205)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+Version constraint 0.5.7 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- ABIEncoderV2CalldataStructsWithStaticallySizedAndDynamicallyEncodedMembers
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor
+	- IncorrectEventSignatureInLibraries.
+It is used by:
+	- 0.5.7 (0x9d661f7773be14439b4223f5b516bc7ef67b0369.sol#1)
+solc-0.5.7 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Parameter IUniswapExchange.ethToTokenSwapOutput(uint256,uint256).tokens_bought (0x9d661f7773be14439b4223f5b516bc7ef67b0369.sol#34) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in TwitterHumanityApplicant.applyWithTwitterUsingEtherFor(address,string) (0x9d661f7773be14439b4223f5b516bc7ef67b0369.sol#203-207):
+	External calls:
+	- proposalId = applyWithEtherFor(who) (0x9d661f7773be14439b4223f5b516bc7ef67b0369.sol#204)
+		- msg.sender.send(address(this).balance) (0x9d661f7773be14439b4223f5b516bc7ef67b0369.sol#165)
+	External calls sending eth:
+	- proposalId = applyWithEtherFor(who) (0x9d661f7773be14439b4223f5b516bc7ef67b0369.sol#204)
+		- exchange.ethToTokenSwapOutput.value(msg.value)(fee,block.timestamp) (0x9d661f7773be14439b4223f5b516bc7ef67b0369.sol#159)
+		- msg.sender.send(address(this).balance) (0x9d661f7773be14439b4223f5b516bc7ef67b0369.sol#165)
+	Event emitted after the call(s):
+	- Apply(proposalId,who,username) (0x9d661f7773be14439b4223f5b516bc7ef67b0369.sol#205)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+proposeWithFeeRecipient(address,address,bytes) should be declared external:
+	- IGovernance.proposeWithFeeRecipient(address,address,bytes) (0x9d661f7773be14439b4223f5b516bc7ef67b0369.sol#39)
+Moreover, the following function parameters should change its data location:
+data location should be calldata
+applyWithTwitter(string) should be declared external:
+	- TwitterHumanityApplicant.applyWithTwitter(string) (0x9d661f7773be14439b4223f5b516bc7ef67b0369.sol#189-191)
+Moreover, the following function parameters should change its data location:
+username location should be calldata
+applyWithTwitterUsingEther(string) should be declared external:
+	- TwitterHumanityApplicant.applyWithTwitterUsingEther(string) (0x9d661f7773be14439b4223f5b516bc7ef67b0369.sol#199-201)
+Moreover, the following function parameters should change its data location:
+username location should be calldata
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#public-function-that-could-be-declared-external
+./0x9d661f7773be14439b4223f5b516bc7ef67b0369.sol analyzed (8 contracts with 94 detectors), 13 result(s) found
+
+real	0m1.826s
+user	0m1.568s
+sys	0m0.260s

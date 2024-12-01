@@ -1,0 +1,70 @@
+'solc --version' running
+'solc ./0xd96d1947b7758271c4b0621d90808825121bf329.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0xd96d1947b7758271c4b0621d90808825121bf329.sol:
+./0xd96d1947b7758271c4b0621d90808825121bf329.sol:52:9: Warning: Failure condition of 'send' ignored. Consider using 'transfer' instead.
+        bid.bidder.send(bid.amount);
+        ^-------------------------^
+./0xd96d1947b7758271c4b0621d90808825121bf329.sol:82:34: Warning: Failure condition of 'send' ignored. Consider using 'transfer' instead.
+        if (msg.sender == owner) owner.send(address(this).balance);
+                                 ^-------------------------------^
+
+
+DomainAuction.refundBid(DomainAuction.Bid) (0xd96d1947b7758271c4b0621d90808825121bf329.sol#51-54) ignores return value by bid.bidder.send(bid.amount) (0xd96d1947b7758271c4b0621d90808825121bf329.sol#52)
+DomainAuction.withdraw() (0xd96d1947b7758271c4b0621d90808825121bf329.sol#81-83) ignores return value by owner.send(address(this).balance) (0xd96d1947b7758271c4b0621d90808825121bf329.sol#82)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-send
+
+DomainAuction.placeBid(string) (0xd96d1947b7758271c4b0621d90808825121bf329.sol#31-44) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(msg.value >= ((highestBid.amount * 11) / 10)) (0xd96d1947b7758271c4b0621d90808825121bf329.sol#32)
+	- highestBid.bidder != 0 (0xd96d1947b7758271c4b0621d90808825121bf329.sol#37)
+DomainAuction.pickWinner() (0xd96d1947b7758271c4b0621d90808825121bf329.sol#57-73) uses timestamp for comparisons
+	Dangerous comparisons:
+	- winningBid.bidTimestamp != highestBid.timestamp (0xd96d1947b7758271c4b0621d90808825121bf329.sol#60)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Version constraint ^0.4.18 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ExpExponentCleanup
+	- EventStructWrongData
+	- NestedArrayFunctionCallDecoder.
+It is used by:
+	- ^0.4.18 (0xd96d1947b7758271c4b0621d90808825121bf329.sol#1)
+solc-0.4.22 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Reentrancy in DomainAuction.placeBid(string) (0xd96d1947b7758271c4b0621d90808825121bf329.sol#31-44):
+	External calls:
+	- refundBid(highestBid) (0xd96d1947b7758271c4b0621d90808825121bf329.sol#38)
+		- bid.bidder.send(bid.amount) (0xd96d1947b7758271c4b0621d90808825121bf329.sol#52)
+	State variables written after the call(s):
+	- highestBid = newBid (0xd96d1947b7758271c4b0621d90808825121bf329.sol#42)
+	Event emitted after the call(s):
+	- BidLog(newBid.timestamp,newBid.bidder,newBid.amount,newBid.url) (0xd96d1947b7758271c4b0621d90808825121bf329.sol#43)
+Reentrancy in DomainAuction.refundBid(DomainAuction.Bid) (0xd96d1947b7758271c4b0621d90808825121bf329.sol#51-54):
+	External calls:
+	- bid.bidder.send(bid.amount) (0xd96d1947b7758271c4b0621d90808825121bf329.sol#52)
+	Event emitted after the call(s):
+	- Refund(now,bid.bidder,bid.amount) (0xd96d1947b7758271c4b0621d90808825121bf329.sol#53)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+placeBid(string) should be declared external:
+	- DomainAuction.placeBid(string) (0xd96d1947b7758271c4b0621d90808825121bf329.sol#31-44)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#public-function-that-could-be-declared-external
+./0xd96d1947b7758271c4b0621d90808825121bf329.sol analyzed (1 contracts with 94 detectors), 9 result(s) found
+
+real	0m1.417s
+user	0m1.169s
+sys	0m0.252s

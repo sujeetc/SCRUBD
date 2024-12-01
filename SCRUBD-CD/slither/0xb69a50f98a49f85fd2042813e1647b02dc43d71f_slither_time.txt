@@ -1,0 +1,210 @@
+'solc --version' running
+'solc ./0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol:
+./0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol:4:5: Warning: No visibility specified. Defaulting to "public".
+    function balanceOf(address _owner) constant returns (uint256);
+    ^------------------------------------------------------------^
+./0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol:5:5: Warning: No visibility specified. Defaulting to "public".
+    function transfer(address _to, uint256 _value) returns (bool);
+    ^------------------------------------------------------------^
+./0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol:9:5: Warning: No visibility specified. Defaulting to "public".
+    function transfer(address _to, uint256 _value) returns (bool);
+    ^------------------------------------------------------------^
+./0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol:10:5: Warning: No visibility specified. Defaulting to "public".
+    function totalSupply() constant returns (uint256 supply);
+    ^-------------------------------------------------------^
+./0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol:11:5: Warning: No visibility specified. Defaulting to "public".
+    function balanceOf(address _owner) constant returns (uint256 balance);
+    ^--------------------------------------------------------------------^
+./0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol:30:5: Warning: No visibility specified. Defaulting to "public".
+    function EbyteDistribution(address _tokenAddress, address _owner) {
+    ^
+Spanning multiple lines.
+./0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol:35:5: Warning: No visibility specified. Defaulting to "public".
+    function transferOwnership(address newOwner) onlyOwner {
+    ^
+Spanning multiple lines.
+./0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol:64:5: Warning: No visibility specified. Defaulting to "public".
+    function enableWhitelist(address[] addresses) onlyOwner {
+    ^
+Spanning multiple lines.
+./0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol:70:5: Warning: No visibility specified. Defaulting to "public".
+    function disableWhitelist(address[] addresses) onlyOwner {
+    ^
+Spanning multiple lines.
+./0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol:88:5: Warning: No visibility specified. Defaulting to "public".
+    function balanceOf(address _holder) constant returns (uint256 balance) {
+    ^
+Spanning multiple lines.
+./0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol:152:5: Warning: No visibility specified. Defaulting to "public".
+    function tokensAvailable() constant returns (uint256) {
+    ^
+Spanning multiple lines.
+
+
+EbyteDistribution.distributeEbyte(address[],uint256) (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#101-106) ignores return value by ebyteToken.transfer(addresses[i],value) (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#104)
+EbyteDistribution.distributeEbyteForETH(address[]) (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#108-118) ignores return value by ebyteToken.transfer(addresses[i],toDistr) (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#116)
+EbyteDistribution.distributeEbyteForEBYTE(address[]) (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#120-129) ignores return value by ebyteToken.transfer(addresses[i],toDistr) (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#127)
+EbyteDistribution.fallback() (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#140-150) ignores return value by ebyteToken.transfer(investor,toGiveT) (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#146)
+EbyteDistribution.fallback() (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#140-150) ignores return value by ebyteToken.transfer(investor,toGiveE) (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#148)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+EbyteDistribution.balances (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#16) is never initialized. It is used in:
+	- EbyteDistribution.balanceOf(address) (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#88-90)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#uninitialized-state-variables
+
+EbyteDistribution.distributeEbyteForETH(address[]) (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#108-118) performs a multiplication on the result of a division:
+	- ethMulti = getEthBalance(addresses[i]) / 1000000000 (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#113)
+	- toDistr = (rate * ethMulti) / 1000000000 (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#114)
+EbyteDistribution.distributeEbyteForEBYTE(address[]) (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#120-129) performs a multiplication on the result of a division:
+	- toDistr = (getTokenBalance(addresses[i]) / 100) * percentage (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#125)
+EbyteDistribution.fallback() (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#140-150) performs a multiplication on the result of a division:
+	- toGiveT = (getTokenBalance(investor) / 100) * percentage (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#142)
+EbyteDistribution.fallback() (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#140-150) performs a multiplication on the result of a division:
+	- ethMulti = getEthBalance(investor) / 1000000000 (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#143)
+	- toGiveE = (rate * ethMulti) / 1000000000 (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#144)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+Reentrancy in EbyteDistribution.fallback() (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#140-150):
+	External calls:
+	- toGiveT = (getTokenBalance(investor) / 100) * percentage (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#142)
+		- bal = ebyteToken.balanceOf(who) (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#93)
+	- ebyteToken.transfer(investor,toGiveT) (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#146)
+	- ebyteToken.transfer(investor,toGiveE) (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#148)
+	State variables written after the call(s):
+	- blacklist[investor] = true (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#149)
+	EbyteDistribution.blacklist (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#17) can be used in cross function reentrancies:
+	- EbyteDistribution.blacklist (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#17)
+	- EbyteDistribution.disableWhitelist(address[]) (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#70-74)
+	- EbyteDistribution.enableWhitelist(address[]) (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#64-68)
+	- EbyteDistribution.fallback() (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#140-150)
+	- EbyteDistribution.onlyWhitelist() (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#49-52)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+EbyteDistribution.transferOwnership(address) (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#35-39) should emit an event for: 
+	- owner = newOwner (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#37) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-access-control
+
+EbyteDistribution.setParameters(uint256,uint256,uint256,uint256) (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#41-47) should emit an event for: 
+	- rate = _Rate (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#43) 
+	- percentage = _Percentage (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#44) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+EbyteDistribution.EbyteDistribution(address,address)._owner (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#30) lacks a zero-check on :
+		- owner = _owner (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#32)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+EbyteDistribution.distributeEbyte(address[],uint256) (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#101-106) has external calls inside a loop: ebyteToken.transfer(addresses[i],value) (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#104)
+EbyteDistribution.distributeEbyteForETH(address[]) (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#108-118) has external calls inside a loop: ebyteToken.transfer(addresses[i],toDistr) (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#116)
+EbyteDistribution.getTokenBalance(address) (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#92-95) has external calls inside a loop: bal = ebyteToken.balanceOf(who) (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#93)
+EbyteDistribution.distributeEbyteForEBYTE(address[]) (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#120-129) has external calls inside a loop: ebyteToken.transfer(addresses[i],toDistr) (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#127)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation/#calls-inside-a-loop
+
+Reentrancy in EbyteDistribution.distributeEbyte(address[],uint256) (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#101-106):
+	External calls:
+	- ebyteToken.transfer(addresses[i],value) (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#104)
+	Event emitted after the call(s):
+	- sendTokens(addresses[i],value) (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#103)
+Reentrancy in EbyteDistribution.distributeEbyteForEBYTE(address[]) (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#120-129):
+	External calls:
+	- toDistr = (getTokenBalance(addresses[i]) / 100) * percentage (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#125)
+		- bal = ebyteToken.balanceOf(who) (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#93)
+	- ebyteToken.transfer(addresses[i],toDistr) (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#127)
+	Event emitted after the call(s):
+	- sendTokens(addresses[i],toDistr) (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#126)
+Reentrancy in EbyteDistribution.distributeEbyteForETH(address[]) (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#108-118):
+	External calls:
+	- ebyteToken.transfer(addresses[i],toDistr) (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#116)
+	Event emitted after the call(s):
+	- sendTokens(addresses[i],toDistr) (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#115)
+Reentrancy in EbyteDistribution.distribution(address[]) (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#131-138):
+	External calls:
+	- distributeEbyteForEBYTE(addresses) (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#134)
+		- bal = ebyteToken.balanceOf(who) (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#93)
+		- ebyteToken.transfer(addresses[i],toDistr) (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#127)
+	- distributeEbyteForETH(addresses) (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#135)
+		- ebyteToken.transfer(addresses[i],toDistr) (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#116)
+	Event emitted after the call(s):
+	- sendTokens(addresses[i],toDistr) (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#115)
+		- distributeEbyteForETH(addresses) (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#135)
+Reentrancy in EbyteDistribution.fallback() (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#140-150):
+	External calls:
+	- toGiveT = (getTokenBalance(investor) / 100) * percentage (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#142)
+		- bal = ebyteToken.balanceOf(who) (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#93)
+	Event emitted after the call(s):
+	- sendTokens(investor,toGiveT) (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#145)
+Reentrancy in EbyteDistribution.fallback() (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#140-150):
+	External calls:
+	- toGiveT = (getTokenBalance(investor) / 100) * percentage (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#142)
+		- bal = ebyteToken.balanceOf(who) (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#93)
+	- ebyteToken.transfer(investor,toGiveT) (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#146)
+	Event emitted after the call(s):
+	- sendTokens(investor,toGiveE) (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#147)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+EbyteDistribution.onlyWhitelist() (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#49-52) compares to a boolean constant:
+	-require(bool)(blacklist[msg.sender] == false) (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#50)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#boolean-equality
+
+Version constraint ^0.4.19 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ABIEncoderV2PackedStorage_0.4.x
+	- ExpExponentCleanup
+	- EventStructWrongData
+	- NestedArrayFunctionCallDecoder.
+It is used by:
+	- ^0.4.19 (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#1)
+solc-0.4.19 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Event EbyteDistribution.sendTokens(address,uint256) (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#26) is not in CapWords
+Parameter EbyteDistribution.setParameters(uint256,uint256,uint256,uint256)._Rate (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#41) is not in mixedCase
+Parameter EbyteDistribution.setParameters(uint256,uint256,uint256,uint256)._Percentage (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#41) is not in mixedCase
+Parameter EbyteDistribution.setParameters(uint256,uint256,uint256,uint256)._EthBalance (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#41) is not in mixedCase
+Parameter EbyteDistribution.setParameters(uint256,uint256,uint256,uint256)._EbyteBalance (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#42) is not in mixedCase
+Parameter EbyteDistribution.balanceOf(address)._holder (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#88) is not in mixedCase
+Parameter EbyteDistribution.getEthBalance(address)._addr (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#97) is not in mixedCase
+Parameter EbyteDistribution.withdrawForeignTokens(address)._tokenContract (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#161) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+EbyteDistribution.distributeEbyteForETH(address[]) (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#108-118) uses literals with too many digits:
+	- ethMulti = getEthBalance(addresses[i]) / 1000000000 (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#113)
+EbyteDistribution.distributeEbyteForETH(address[]) (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#108-118) uses literals with too many digits:
+	- toDistr = (rate * ethMulti) / 1000000000 (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#114)
+EbyteDistribution.fallback() (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#140-150) uses literals with too many digits:
+	- ethMulti = getEthBalance(investor) / 1000000000 (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#143)
+EbyteDistribution.fallback() (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#140-150) uses literals with too many digits:
+	- toGiveE = (rate * ethMulti) / 1000000000 (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#144)
+EbyteDistribution.slitherConstructorVariables() (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#14-168) uses literals with too many digits:
+	- rate = 100000000 (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#20)
+EbyteDistribution.slitherConstructorVariables() (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#14-168) uses literals with too many digits:
+	- ethBalance = 10000000000 (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#22)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+enableWhitelist(address[]) should be declared external:
+	- EbyteDistribution.enableWhitelist(address[]) (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#64-68)
+disableWhitelist(address[]) should be declared external:
+	- EbyteDistribution.disableWhitelist(address[]) (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#70-74)
+distributeEbyte(address[],uint256) should be declared external:
+	- EbyteDistribution.distributeEbyte(address[],uint256) (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#101-106)
+distribution(address[]) should be declared external:
+	- EbyteDistribution.distribution(address[]) (0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol#131-138)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#public-function-that-could-be-declared-external
+./0xb69a50f98a49f85fd2042813e1647b02dc43d71f.sol analyzed (3 contracts with 94 detectors), 45 result(s) found
+
+real	0m1.755s
+user	0m1.536s
+sys	0m0.221s

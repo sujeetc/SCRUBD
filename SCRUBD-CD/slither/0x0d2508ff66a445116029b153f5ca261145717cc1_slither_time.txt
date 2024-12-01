@@ -1,0 +1,361 @@
+'solc --version' running
+'solc ./0x0d2508ff66a445116029b153f5ca261145717cc1.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+Taxable.payTaxes(uint256,uint256) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#109-120) sends eth to arbitrary user
+	Dangerous calls:
+	- _address.transfer(_amount) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#115)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+Reentrancy in UnicornToken._disperseEth() (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#393-408):
+	External calls:
+	- payTaxes(_newEth,_d) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#403)
+		- External.deposit(_amount) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#117)
+	External calls sending eth:
+	- payTaxes(_newEth,_d) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#403)
+		- _address.transfer(_amount) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#115)
+	- m_EthReflectSvcAddress.transfer(m_EthReflectAmount) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#405)
+	State variables written after the call(s):
+	- m_LastEthBal = address(this).balance (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#407)
+	UnicornToken.m_LastEthBal (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#223) can be used in cross function reentrancies:
+	- UnicornToken._disperseEth() (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#393-408)
+Reentrancy in UnicornToken._transfer(address,address,uint256) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#312-339):
+	External calls:
+	- require(bool,string)(! AntiBot.scanAddress(_recipient,m_UniswapV2Pair,tx.origin),Beep Beep Boop, You're a piece of poop) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#319)
+	- require(bool,string)(! AntiBot.scanAddress(_sender,m_UniswapV2Pair,tx.origin),Beep Beep Boop, You're a piece of poop) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#320)
+	- AntiBot.registerBlock(_sender,_recipient,tx.origin) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#321)
+	- _tax(_sender) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#334)
+		- m_UniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(_amount,0,_path,address(this),block.timestamp) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#379-385)
+		- External.deposit(_amount) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#117)
+	External calls sending eth:
+	- _tax(_sender) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#334)
+		- _address.transfer(_amount) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#115)
+		- m_EthReflectSvcAddress.transfer(m_EthReflectAmount) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#405)
+	State variables written after the call(s):
+	- _updateBalances(_sender,_recipient,_amount,_taxes) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#337)
+		- m_Balances[_sender] = m_Balances[_sender].sub(_amount) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#342)
+		- m_Balances[_recipient] = m_Balances[_recipient].add(_netAmount) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#343)
+		- m_Balances[address(this)] = m_Balances[address(this)].add(_taxes) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#344)
+	UnicornToken.m_Balances (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#221) can be used in cross function reentrancies:
+	- UnicornToken._updateBalances(address,address,uint256,uint256) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#340-346)
+	- UnicornToken.balanceOf(address) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#263-265)
+	- UnicornToken.constructor() (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#241-250)
+Reentrancy in UnicornToken._transfer(address,address,uint256) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#312-339):
+	External calls:
+	- require(bool,string)(! AntiBot.scanAddress(_recipient,m_UniswapV2Pair,tx.origin),Beep Beep Boop, You're a piece of poop) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#319)
+	- require(bool,string)(! AntiBot.scanAddress(_sender,m_UniswapV2Pair,tx.origin),Beep Beep Boop, You're a piece of poop) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#320)
+	- AntiBot.registerBlock(_sender,_recipient,tx.origin) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#321)
+	- _tax(_sender) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#334)
+		- m_UniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(_amount,0,_path,address(this),block.timestamp) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#379-385)
+		- External.deposit(_amount) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#117)
+	- _trackEthReflection(_sender,_recipient) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#338)
+		- EthReflect.trackPurchase(_recipient) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#350)
+		- EthReflect.trackSell(_sender,m_EthReflectAmount) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#352)
+	External calls sending eth:
+	- _tax(_sender) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#334)
+		- _address.transfer(_amount) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#115)
+		- m_EthReflectSvcAddress.transfer(m_EthReflectAmount) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#405)
+	State variables written after the call(s):
+	- _trackEthReflection(_sender,_recipient) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#338)
+		- m_EthReflectAmount = 0 (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#353)
+	UnicornToken.m_EthReflectAmount (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#213) can be used in cross function reentrancies:
+	- UnicornToken._disperseEth() (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#393-408)
+	- UnicornToken._trackEthReflection(address,address) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#347-356)
+Reentrancy in UnicornToken.addLiquidity() (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#409-421):
+	External calls:
+	- m_UniswapV2Pair = IUniswapV2Factory(_uniswapV2Router.factory()).createPair(address(this),_uniswapV2Router.WETH()) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#415)
+	- m_UniswapV2Router.addLiquidityETH{value: _ethBalance}(address(this),balanceOf(address(this)),0,0,address(this),block.timestamp) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#416)
+	- IERC20(m_UniswapV2Pair).approve(m_LiqLockSvcAddress,type()(uint256).max) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#417)
+	- FTPLiqLock(m_LiqLockSvcAddress).lockTokens(m_UniswapV2Pair,block.timestamp.add(5184000),msg.sender) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#418)
+	- EthReflect.init(address(this),5000,m_UniswapV2Pair,_uniswapV2Router.WETH(),_ethBalance,TOTAL_SUPPLY) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#419)
+	External calls sending eth:
+	- m_UniswapV2Router.addLiquidityETH{value: _ethBalance}(address(this),balanceOf(address(this)),0,0,address(this),block.timestamp) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#416)
+	State variables written after the call(s):
+	- m_Liquidity = true (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#420)
+	UnicornToken.m_Liquidity (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#207) can be used in cross function reentrancies:
+	- UnicornToken.addLiquidity() (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#409-421)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+UnicornToken._getTaxes(address,address,uint256) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#357-366) performs a multiplication on the result of a division:
+	- _ret = _ret.add(_amount.div(pMax).mul(totalTaxAlloc())) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#362)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+Reentrancy in UnicornToken._trackEthReflection(address,address) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#347-356):
+	External calls:
+	- EthReflect.trackSell(_sender,m_EthReflectAmount) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#352)
+	State variables written after the call(s):
+	- m_EthReflectAmount = 0 (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#353)
+	UnicornToken.m_EthReflectAmount (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#213) can be used in cross function reentrancies:
+	- UnicornToken._disperseEth() (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#393-408)
+	- UnicornToken._trackEthReflection(address,address) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#347-356)
+Reentrancy in UnicornToken.setWebThree(address) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#446-448):
+	External calls:
+	- onlyDev() (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#446)
+		- require(bool,string)(_msgSender() == External.owner() || _msgSender() == m_WebThree,Unauthorized) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#235)
+	State variables written after the call(s):
+	- m_WebThree = _address (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#447)
+	Taxable.m_WebThree (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#90) can be used in cross function reentrancies:
+	- UnicornToken.onlyDev() (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#234-237)
+	- Taxable.setTaxAlloc(address,uint256) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#121-141)
+	- UnicornToken.setWebThree(address) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#446-448)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+UnicornToken._transfer(address,address,uint256) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#312-339) uses tx.origin for authorization: require(bool)(! m_Blacklist[_sender] && ! m_Blacklist[_recipient] && ! m_Blacklist[tx.origin]) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#316)
+UnicornToken._transfer(address,address,uint256) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#312-339) uses tx.origin for authorization: require(bool,string)(! AntiBot.scanAddress(_recipient,m_UniswapV2Pair,tx.origin),Beep Beep Boop, You're a piece of poop) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#319)
+UnicornToken._transfer(address,address,uint256) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#312-339) uses tx.origin for authorization: require(bool,string)(! AntiBot.scanAddress(_sender,m_UniswapV2Pair,tx.origin),Beep Beep Boop, You're a piece of poop) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#320)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-usage-of-txorigin
+
+UnicornToken.addLiquidity() (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#409-421) ignores return value by m_UniswapV2Router.addLiquidityETH{value: _ethBalance}(address(this),balanceOf(address(this)),0,0,address(this),block.timestamp) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#416)
+UnicornToken.addLiquidity() (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#409-421) ignores return value by IERC20(m_UniswapV2Pair).approve(m_LiqLockSvcAddress,type()(uint256).max) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#417)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+UnicornToken.launch(uint256) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#422-424) should emit an event for: 
+	- m_Launched = block.timestamp.add(_timer) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#423) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+Taxable.updateDevWallet(address,uint256)._address (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#149) lacks a zero-check on :
+		- m_DevAddress = _address (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#151)
+Ownable.transferOwnership(address)._address (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#75) lacks a zero-check on :
+		- m_Owner = _address (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#77)
+UnicornToken.setWebThree(address)._address (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#446) lacks a zero-check on :
+		- m_WebThree = _address (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#447)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in UnicornToken._disperseEth() (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#393-408):
+	External calls:
+	- payTaxes(_newEth,_d) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#403)
+		- External.deposit(_amount) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#117)
+	External calls sending eth:
+	- payTaxes(_newEth,_d) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#403)
+		- _address.transfer(_amount) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#115)
+	State variables written after the call(s):
+	- m_EthReflectAmount = _newEth.mul(m_EthReflectAlloc).div(_d) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#404)
+Reentrancy in UnicornToken._transfer(address,address,uint256) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#312-339):
+	External calls:
+	- require(bool,string)(! AntiBot.scanAddress(_recipient,m_UniswapV2Pair,tx.origin),Beep Beep Boop, You're a piece of poop) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#319)
+	- require(bool,string)(! AntiBot.scanAddress(_sender,m_UniswapV2Pair,tx.origin),Beep Beep Boop, You're a piece of poop) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#320)
+	- AntiBot.registerBlock(_sender,_recipient,tx.origin) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#321)
+	State variables written after the call(s):
+	- _taxes = _getTaxes(_sender,_recipient,_amount) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#333)
+		- m_EthReflectAlloc = EthReflect.getAlloc() (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#363)
+Reentrancy in UnicornToken._transfer(address,address,uint256) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#312-339):
+	External calls:
+	- require(bool,string)(! AntiBot.scanAddress(_recipient,m_UniswapV2Pair,tx.origin),Beep Beep Boop, You're a piece of poop) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#319)
+	- require(bool,string)(! AntiBot.scanAddress(_sender,m_UniswapV2Pair,tx.origin),Beep Beep Boop, You're a piece of poop) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#320)
+	- AntiBot.registerBlock(_sender,_recipient,tx.origin) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#321)
+	- _tax(_sender) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#334)
+		- m_UniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(_amount,0,_path,address(this),block.timestamp) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#379-385)
+		- External.deposit(_amount) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#117)
+	External calls sending eth:
+	- _tax(_sender) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#334)
+		- _address.transfer(_amount) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#115)
+		- m_EthReflectSvcAddress.transfer(m_EthReflectAmount) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#405)
+	State variables written after the call(s):
+	- _tax(_sender) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#334)
+		- m_Allowances[_owner][_spender] = _amount (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#309)
+Reentrancy in UnicornToken.transferFrom(address,address,uint256) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#277-281):
+	External calls:
+	- _transfer(_sender,_recipient,_amount) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#278)
+		- EthReflect.trackPurchase(_recipient) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#350)
+		- EthReflect.trackSell(_sender,m_EthReflectAmount) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#352)
+		- m_UniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(_amount,0,_path,address(this),block.timestamp) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#379-385)
+		- require(bool,string)(! AntiBot.scanAddress(_recipient,m_UniswapV2Pair,tx.origin),Beep Beep Boop, You're a piece of poop) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#319)
+		- require(bool,string)(! AntiBot.scanAddress(_sender,m_UniswapV2Pair,tx.origin),Beep Beep Boop, You're a piece of poop) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#320)
+		- AntiBot.registerBlock(_sender,_recipient,tx.origin) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#321)
+		- External.deposit(_amount) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#117)
+	External calls sending eth:
+	- _transfer(_sender,_recipient,_amount) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#278)
+		- _address.transfer(_amount) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#115)
+		- m_EthReflectSvcAddress.transfer(m_EthReflectAmount) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#405)
+	State variables written after the call(s):
+	- _approve(_sender,_msgSender(),m_Allowances[_sender][_msgSender()].sub(_amount,ERC20: transfer amount exceeds allowance)) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#279)
+		- m_Allowances[_owner][_spender] = _amount (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#309)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in UnicornToken._transfer(address,address,uint256) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#312-339):
+	External calls:
+	- require(bool,string)(! AntiBot.scanAddress(_recipient,m_UniswapV2Pair,tx.origin),Beep Beep Boop, You're a piece of poop) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#319)
+	- require(bool,string)(! AntiBot.scanAddress(_sender,m_UniswapV2Pair,tx.origin),Beep Beep Boop, You're a piece of poop) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#320)
+	- AntiBot.registerBlock(_sender,_recipient,tx.origin) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#321)
+	- _tax(_sender) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#334)
+		- m_UniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(_amount,0,_path,address(this),block.timestamp) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#379-385)
+		- External.deposit(_amount) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#117)
+	External calls sending eth:
+	- _tax(_sender) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#334)
+		- _address.transfer(_amount) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#115)
+		- m_EthReflectSvcAddress.transfer(m_EthReflectAmount) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#405)
+	Event emitted after the call(s):
+	- Approval(_owner,_spender,_amount) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#310)
+		- _tax(_sender) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#334)
+	- Transfer(_sender,_recipient,_netAmount) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#345)
+		- _updateBalances(_sender,_recipient,_amount,_taxes) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#337)
+Reentrancy in UnicornToken.transferFrom(address,address,uint256) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#277-281):
+	External calls:
+	- _transfer(_sender,_recipient,_amount) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#278)
+		- EthReflect.trackPurchase(_recipient) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#350)
+		- EthReflect.trackSell(_sender,m_EthReflectAmount) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#352)
+		- m_UniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(_amount,0,_path,address(this),block.timestamp) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#379-385)
+		- require(bool,string)(! AntiBot.scanAddress(_recipient,m_UniswapV2Pair,tx.origin),Beep Beep Boop, You're a piece of poop) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#319)
+		- require(bool,string)(! AntiBot.scanAddress(_sender,m_UniswapV2Pair,tx.origin),Beep Beep Boop, You're a piece of poop) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#320)
+		- AntiBot.registerBlock(_sender,_recipient,tx.origin) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#321)
+		- External.deposit(_amount) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#117)
+	External calls sending eth:
+	- _transfer(_sender,_recipient,_amount) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#278)
+		- _address.transfer(_amount) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#115)
+		- m_EthReflectSvcAddress.transfer(m_EthReflectAmount) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#405)
+	Event emitted after the call(s):
+	- Approval(_owner,_spender,_amount) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#310)
+		- _approve(_sender,_msgSender(),m_Allowances[_sender][_msgSender()].sub(_amount,ERC20: transfer amount exceeds allowance)) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#279)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+UnicornToken._walletCapped(address) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#297-299) uses timestamp for comparisons
+	Dangerous comparisons:
+	- _recipient != m_UniswapV2Pair && _recipient != address(m_UniswapV2Router) && block.timestamp <= m_Launched.add(3600) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#298)
+UnicornToken._checkTX() (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#300-305) uses timestamp for comparisons
+	Dangerous comparisons:
+	- block.timestamp <= m_Launched.add(1200) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#301)
+UnicornToken._transfer(address,address,uint256) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#312-339) uses timestamp for comparisons
+	Dangerous comparisons:
+	- _isExchangeTransfer(_sender,_recipient) && block.timestamp >= m_Launched (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#318)
+	- require(bool)(block.timestamp >= m_Launched) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#329)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Version constraint ^0.8.7 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- VerbatimInvalidDeduplication
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- SignedImmutables.
+It is used by:
+	- ^0.8.7 (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#17)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Parameter Ownable.transferOwnership(address)._address (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#75) is not in mixedCase
+Variable Ownable.m_Owner (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#65) is not in mixedCase
+Parameter Taxable.payTaxes(uint256,uint256)._eth (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#109) is not in mixedCase
+Parameter Taxable.payTaxes(uint256,uint256)._d (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#109) is not in mixedCase
+Parameter Taxable.setTaxAlloc(address,uint256)._address (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#121) is not in mixedCase
+Parameter Taxable.setTaxAlloc(address,uint256)._alloc (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#121) is not in mixedCase
+Parameter Taxable.getTaxAlloc(address)._address (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#145) is not in mixedCase
+Parameter Taxable.updateDevWallet(address,uint256)._address (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#149) is not in mixedCase
+Parameter Taxable.updateDevWallet(address,uint256)._alloc (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#149) is not in mixedCase
+Variable Taxable.External (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#86) is not in mixedCase
+Variable Taxable.m_ExternalServiceAddress (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#87) is not in mixedCase
+Variable Taxable.m_DevAddress (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#88) is not in mixedCase
+Variable Taxable.m_DevAlloc (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#89) is not in mixedCase
+Variable Taxable.m_WebThree (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#90) is not in mixedCase
+Variable Taxable.m_TaxAlloc (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#91) is not in mixedCase
+Variable Taxable.m_TaxAddresses (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#92) is not in mixedCase
+Variable Taxable.m_TaxIdx (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#93) is not in mixedCase
+Variable Taxable.m_TotalAlloc (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#94) is not in mixedCase
+Variable Taxable.m_DidDeploy (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#95) is not in mixedCase
+Function IUniswapV2Router02.WETH() (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#168) is not in mixedCase
+Parameter UnicornToken.balanceOf(address)._account (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#263) is not in mixedCase
+Parameter UnicornToken.transfer(address,uint256)._recipient (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#266) is not in mixedCase
+Parameter UnicornToken.transfer(address,uint256)._amount (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#266) is not in mixedCase
+Parameter UnicornToken.allowance(address,address)._owner (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#270) is not in mixedCase
+Parameter UnicornToken.allowance(address,address)._spender (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#270) is not in mixedCase
+Parameter UnicornToken.approve(address,uint256)._spender (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#273) is not in mixedCase
+Parameter UnicornToken.approve(address,uint256)._amount (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#273) is not in mixedCase
+Parameter UnicornToken.transferFrom(address,address,uint256)._sender (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#277) is not in mixedCase
+Parameter UnicornToken.transferFrom(address,address,uint256)._recipient (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#277) is not in mixedCase
+Parameter UnicornToken.transferFrom(address,address,uint256)._amount (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#277) is not in mixedCase
+Parameter UnicornToken.launch(uint256)._timer (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#422) is not in mixedCase
+Parameter UnicornToken.checkIfBlacklist(address)._address (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#425) is not in mixedCase
+Parameter UnicornToken.blacklist(address)._a (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#428) is not in mixedCase
+Parameter UnicornToken.rmBlacklist(address)._a (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#431) is not in mixedCase
+Parameter UnicornToken.updateTaxAlloc(address,uint256)._address (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#434) is not in mixedCase
+Parameter UnicornToken.updateTaxAlloc(address,uint256)._alloc (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#434) is not in mixedCase
+Parameter UnicornToken.addTaxWhitelist(address)._address (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#440) is not in mixedCase
+Parameter UnicornToken.rmTaxWhitelist(address)._address (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#443) is not in mixedCase
+Parameter UnicornToken.setWebThree(address)._address (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#446) is not in mixedCase
+Variable UnicornToken.m_Name (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#199) is not in mixedCase
+Variable UnicornToken.m_Symbol (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#200) is not in mixedCase
+Variable UnicornToken.m_Decimals (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#201) is not in mixedCase
+Variable UnicornToken.m_UniswapV2Pair (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#203) is not in mixedCase
+Variable UnicornToken.m_UniswapV2Router (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#204) is not in mixedCase
+Variable UnicornToken.m_WalletLimit (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#206) is not in mixedCase
+Variable UnicornToken.m_Liquidity (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#207) is not in mixedCase
+Variable UnicornToken.EthReflect (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#210) is not in mixedCase
+Variable UnicornToken.m_EthReflectSvcAddress (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#211) is not in mixedCase
+Variable UnicornToken.m_EthReflectAlloc (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#212) is not in mixedCase
+Variable UnicornToken.m_EthReflectAmount (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#213) is not in mixedCase
+Variable UnicornToken.AntiBot (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#215) is not in mixedCase
+Variable UnicornToken.m_AntibotSvcAddress (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#216) is not in mixedCase
+Variable UnicornToken.m_LiqLockSvcAddress (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#218) is not in mixedCase
+Variable UnicornToken.m_Blacklist (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#219) is not in mixedCase
+Variable UnicornToken.m_ExcludedAddresses (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#220) is not in mixedCase
+Variable UnicornToken.m_Balances (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#221) is not in mixedCase
+Variable UnicornToken.m_Allowances (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#222) is not in mixedCase
+Variable UnicornToken.m_LastEthBal (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#223) is not in mixedCase
+Variable UnicornToken.m_Launched (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#224) is not in mixedCase
+Variable UnicornToken.m_IsSwap (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#225) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in UnicornToken._disperseEth() (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#393-408):
+	External calls:
+	- payTaxes(_newEth,_d) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#403)
+		- _address.transfer(_amount) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#115)
+	State variables written after the call(s):
+	- m_EthReflectAmount = _newEth.mul(m_EthReflectAlloc).div(_d) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#404)
+Reentrancy in UnicornToken._disperseEth() (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#393-408):
+	External calls:
+	- payTaxes(_newEth,_d) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#403)
+		- _address.transfer(_amount) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#115)
+	- m_EthReflectSvcAddress.transfer(m_EthReflectAmount) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#405)
+	State variables written after the call(s):
+	- m_LastEthBal = address(this).balance (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#407)
+Reentrancy in UnicornToken._transfer(address,address,uint256) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#312-339):
+	External calls:
+	- _tax(_sender) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#334)
+		- _address.transfer(_amount) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#115)
+		- m_EthReflectSvcAddress.transfer(m_EthReflectAmount) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#405)
+	State variables written after the call(s):
+	- _updateBalances(_sender,_recipient,_amount,_taxes) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#337)
+		- m_Balances[_sender] = m_Balances[_sender].sub(_amount) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#342)
+		- m_Balances[_recipient] = m_Balances[_recipient].add(_netAmount) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#343)
+		- m_Balances[address(this)] = m_Balances[address(this)].add(_taxes) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#344)
+	- _trackEthReflection(_sender,_recipient) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#338)
+		- m_EthReflectAmount = 0 (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#353)
+	Event emitted after the call(s):
+	- Transfer(_sender,_recipient,_netAmount) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#345)
+		- _updateBalances(_sender,_recipient,_amount,_taxes) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#337)
+Reentrancy in UnicornToken.transferFrom(address,address,uint256) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#277-281):
+	External calls:
+	- _transfer(_sender,_recipient,_amount) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#278)
+		- _address.transfer(_amount) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#115)
+		- m_EthReflectSvcAddress.transfer(m_EthReflectAmount) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#405)
+	State variables written after the call(s):
+	- _approve(_sender,_msgSender(),m_Allowances[_sender][_msgSender()].sub(_amount,ERC20: transfer amount exceeds allowance)) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#279)
+		- m_Allowances[_owner][_spender] = _amount (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#309)
+	Event emitted after the call(s):
+	- Approval(_owner,_spender,_amount) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#310)
+		- _approve(_sender,_msgSender(),m_Allowances[_sender][_msgSender()].sub(_amount,ERC20: transfer amount exceeds allowance)) (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#279)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+UnicornToken.slitherConstructorVariables() (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#195-450) uses literals with too many digits:
+	- pMax = 100000 (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#226)
+UnicornToken.slitherConstructorConstantVariables() (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#195-450) uses literals with too many digits:
+	- TOTAL_SUPPLY = 1000000000000000 * 10 ** 9 (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#198)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+UnicornToken.m_AntibotSvcAddress (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#216) should be constant 
+UnicornToken.m_Decimals (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#201) should be constant 
+UnicornToken.m_EthReflectSvcAddress (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#211) should be constant 
+UnicornToken.m_LiqLockSvcAddress (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#218) should be constant 
+UnicornToken.m_Name (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#199) should be constant 
+UnicornToken.m_Symbol (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#200) should be constant 
+UnicornToken.m_WalletLimit (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#206) should be constant 
+UnicornToken.pMax (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#226) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+
+UnicornToken.AntiBot (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#215) should be immutable 
+UnicornToken.EthReflect (0x0d2508ff66a445116029b153f5ca261145717cc1.sol#210) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+./0x0d2508ff66a445116029b153f5ca261145717cc1.sol analyzed (12 contracts with 94 detectors), 103 result(s) found
+
+real	0m2.655s
+user	0m2.437s
+sys	0m0.221s

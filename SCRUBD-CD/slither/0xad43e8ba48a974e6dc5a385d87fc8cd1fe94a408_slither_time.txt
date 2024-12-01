@@ -1,0 +1,101 @@
+'solc --version' running
+'solc ./0xad43e8ba48a974e6dc5a385d87fc8cd1fe94a408.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0xad43e8ba48a974e6dc5a385d87fc8cd1fe94a408.sol:
+./0xad43e8ba48a974e6dc5a385d87fc8cd1fe94a408.sol:4:5: Warning: No visibility specified. Defaulting to "public".
+    function transfer(address receiver, uint amount);
+    ^-----------------------------------------------^
+./0xad43e8ba48a974e6dc5a385d87fc8cd1fe94a408.sol:26:5: Warning: No visibility specified. Defaulting to "public".
+    function Crowdsale() {
+    ^
+Spanning multiple lines.
+./0xad43e8ba48a974e6dc5a385d87fc8cd1fe94a408.sol:39:5: Warning: No visibility specified. Defaulting to "public".
+    function checkAdmin() onlyOwner {
+    ^
+Spanning multiple lines.
+./0xad43e8ba48a974e6dc5a385d87fc8cd1fe94a408.sol:46:5: Warning: No visibility specified. Defaulting to "public".
+    function getUnsoldTokens(uint val_) onlyOwner {
+    ^
+Spanning multiple lines.
+./0xad43e8ba48a974e6dc5a385d87fc8cd1fe94a408.sol:53:5: Warning: No visibility specified. Defaulting to "public".
+    function getUnsoldTokensWithDecimals(uint val_, uint dec_) onlyOwner {
+    ^
+Spanning multiple lines.
+./0xad43e8ba48a974e6dc5a385d87fc8cd1fe94a408.sol:61:5: Warning: No visibility specified. Defaulting to "public".
+    function closeCrowdsale(bool closeType) onlyOwner {
+    ^
+Spanning multiple lines.
+./0xad43e8ba48a974e6dc5a385d87fc8cd1fe94a408.sol:70:5: Warning: No visibility specified. Defaulting to "public".
+    function () payable {
+    ^
+Spanning multiple lines.
+
+
+Crowdsale.fallback() (0xad43e8ba48a974e6dc5a385d87fc8cd1fe94a408.sol#70-80) performs a multiplication on the result of a division:
+	- sendTokens = (amount / price) * 10 ** uint256(18) (0xad43e8ba48a974e6dc5a385d87fc8cd1fe94a408.sol#75)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+token (0xad43e8ba48a974e6dc5a385d87fc8cd1fe94a408.sol#3-5) has incorrect ERC20 function interface:token.transfer(address,uint256) (0xad43e8ba48a974e6dc5a385d87fc8cd1fe94a408.sol#4)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-erc20-interface
+
+Reentrancy in Crowdsale.fallback() (0xad43e8ba48a974e6dc5a385d87fc8cd1fe94a408.sol#70-80):
+	External calls:
+	- tokenReward.transfer(msg.sender,sendTokens) (0xad43e8ba48a974e6dc5a385d87fc8cd1fe94a408.sol#76)
+	State variables written after the call(s):
+	- soldTokensCounter += sendTokens (0xad43e8ba48a974e6dc5a385d87fc8cd1fe94a408.sol#77)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in Crowdsale.fallback() (0xad43e8ba48a974e6dc5a385d87fc8cd1fe94a408.sol#70-80):
+	External calls:
+	- tokenReward.transfer(msg.sender,sendTokens) (0xad43e8ba48a974e6dc5a385d87fc8cd1fe94a408.sol#76)
+	Event emitted after the call(s):
+	- FundTransfer(msg.sender,amount,price,true) (0xad43e8ba48a974e6dc5a385d87fc8cd1fe94a408.sol#78)
+Reentrancy in Crowdsale.fallback() (0xad43e8ba48a974e6dc5a385d87fc8cd1fe94a408.sol#70-80):
+	External calls:
+	- tokenReward.transfer(msg.sender,sendTokens) (0xad43e8ba48a974e6dc5a385d87fc8cd1fe94a408.sol#76)
+	External calls sending eth:
+	- beneficiary.send(amount) (0xad43e8ba48a974e6dc5a385d87fc8cd1fe94a408.sol#79)
+	Event emitted after the call(s):
+	- FundTransfer(beneficiary,amount,price,false) (0xad43e8ba48a974e6dc5a385d87fc8cd1fe94a408.sol#79)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+Version constraint ^0.4.19 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ABIEncoderV2PackedStorage_0.4.x
+	- ExpExponentCleanup
+	- EventStructWrongData
+	- NestedArrayFunctionCallDecoder.
+It is used by:
+	- ^0.4.19 (0xad43e8ba48a974e6dc5a385d87fc8cd1fe94a408.sol#1)
+solc-0.4.19 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Contract token (0xad43e8ba48a974e6dc5a385d87fc8cd1fe94a408.sol#3-5) is not in CapWords
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in Crowdsale.fallback() (0xad43e8ba48a974e6dc5a385d87fc8cd1fe94a408.sol#70-80):
+	External calls:
+	- beneficiary.send(amount) (0xad43e8ba48a974e6dc5a385d87fc8cd1fe94a408.sol#79)
+	Event emitted after the call(s):
+	- FundTransfer(beneficiary,amount,price,false) (0xad43e8ba48a974e6dc5a385d87fc8cd1fe94a408.sol#79)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+Crowdsale.price (0xad43e8ba48a974e6dc5a385d87fc8cd1fe94a408.sol#12) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+./0xad43e8ba48a974e6dc5a385d87fc8cd1fe94a408.sol analyzed (2 contracts with 94 detectors), 10 result(s) found
+
+real	0m1.524s
+user	0m1.266s
+sys	0m0.260s

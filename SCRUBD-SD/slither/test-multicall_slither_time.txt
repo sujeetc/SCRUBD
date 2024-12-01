@@ -1,0 +1,198 @@
+'solc --version' running
+'solc ./test-multicall.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/manual_dataset' running
+Compilation warnings/errors on ./test-multicall.sol:
+./test-multicall.sol:20:9: Warning: Return value of low-level calls not used.
+        msg.sender.call.value(alocal)();
+        ^-----------------------------^
+./test-multicall.sol:21:9: Warning: Failure condition of 'send' ignored. Consider using 'transfer' instead.
+        msg.sender.send(alocal); msg.sender.send(alocal);
+        ^---------------------^
+./test-multicall.sol:21:34: Warning: Failure condition of 'send' ignored. Consider using 'transfer' instead.
+        msg.sender.send(alocal); msg.sender.send(alocal);
+                                 ^---------------------^
+./test-multicall.sol:25:9: Warning: Failure condition of 'send' ignored. Consider using 'transfer' instead.
+        addr_a.send(alocal);
+        ^-----------------^
+./test-multicall.sol:31:13: Warning: Failure condition of 'send' ignored. Consider using 'transfer' instead.
+            addr_a.send(alocal);
+            ^-----------------^
+./test-multicall.sol:34:13: Warning: Failure condition of 'send' ignored. Consider using 'transfer' instead.
+            msg.sender.send(alocal);
+            ^---------------------^
+./test-multicall.sol:35:9: Warning: Failure condition of 'send' ignored. Consider using 'transfer' instead.
+        addr_a.send(alocal);
+        ^-----------------^
+./test-multicall.sol:41:13: Warning: Failure condition of 'send' ignored. Consider using 'transfer' instead.
+            addr_a.send(alocal);
+            ^-----------------^
+./test-multicall.sol:44:13: Warning: Failure condition of 'send' ignored. Consider using 'transfer' instead.
+            msg.sender.send(alocal);
+            ^---------------------^
+./test-multicall.sol:45:9: Warning: Failure condition of 'send' ignored. Consider using 'transfer' instead.
+        addr_a.send(alocal);
+        ^-----------------^
+./test-multicall.sol:46:9: Warning: Failure condition of 'send' ignored. Consider using 'transfer' instead.
+        msg.sender.send(alocal);
+        ^---------------------^
+./test-multicall.sol:53:13: Warning: Failure condition of 'send' ignored. Consider using 'transfer' instead.
+            addr_a.send(alocal);
+            ^-----------------^
+./test-multicall.sol:54:13: Warning: Failure condition of 'send' ignored. Consider using 'transfer' instead.
+            msg.sender.send(alocal);    
+            ^---------------------^
+./test-multicall.sol:71:13: Warning: Failure condition of 'send' ignored. Consider using 'transfer' instead.
+            addr_a.send(alocal);
+            ^-----------------^
+./test-multicall.sol:73:17: Warning: Failure condition of 'send' ignored. Consider using 'transfer' instead.
+                msg.sender.send(a);
+                ^----------------^
+./test-multicall.sol:76:13: Warning: Failure condition of 'send' ignored. Consider using 'transfer' instead.
+            msg.sender.send(alocal);    
+            ^---------------------^
+
+
+SimpleDAO.check_multi_call() (test-multicall.sol#18-26) sends eth to arbitrary user
+	Dangerous calls:
+	- msg.sender.call.value(alocal)() (test-multicall.sol#20)
+	- msg.sender.send(alocal) (test-multicall.sol#21)
+	- msg.sender.send(alocal) (test-multicall.sol#21)
+	- msg.sender.transfer(alocal) (test-multicall.sol#22)
+	- msg.sender.send(alocal) (test-multicall.sol#23)
+SimpleDAO.check_multi_call_2() (test-multicall.sol#27-36) sends eth to arbitrary user
+	Dangerous calls:
+	- msg.sender.send(alocal) (test-multicall.sol#34)
+SimpleDAO.check_multi_call_3() (test-multicall.sol#37-47) sends eth to arbitrary user
+	Dangerous calls:
+	- msg.sender.send(alocal) (test-multicall.sol#44)
+	- msg.sender.send(alocal) (test-multicall.sol#46)
+SimpleDAO.check_multi_loop() (test-multicall.sol#49-57) sends eth to arbitrary user
+	Dangerous calls:
+	- msg.sender.send(alocal) (test-multicall.sol#54)
+SimpleDAO.check_multi_loop_require() (test-multicall.sol#58-65) sends eth to arbitrary user
+	Dangerous calls:
+	- msg.sender.send(a) (test-multicall.sol#60)
+SimpleDAO.check_multi_for_loop() (test-multicall.sol#67-77) sends eth to arbitrary user
+	Dangerous calls:
+	- msg.sender.send(a) (test-multicall.sol#73)
+	- msg.sender.send(alocal) (test-multicall.sol#76)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+SimpleDAO.addr_a (test-multicall.sol#10) is never initialized. It is used in:
+	- SimpleDAO.check_multi_call() (test-multicall.sol#18-26)
+	- SimpleDAO.check_multi_call_2() (test-multicall.sol#27-36)
+	- SimpleDAO.check_multi_call_3() (test-multicall.sol#37-47)
+	- SimpleDAO.check_multi_loop() (test-multicall.sol#49-57)
+	- SimpleDAO.check_multi_loop_require() (test-multicall.sol#58-65)
+	- SimpleDAO.check_multi_for_loop() (test-multicall.sol#67-77)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#uninitialized-state-variables
+
+SimpleDAO.check_multi_call() (test-multicall.sol#18-26) ignores return value by msg.sender.call.value(alocal)() (test-multicall.sol#20)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-low-level-calls
+
+SimpleDAO.check_multi_call() (test-multicall.sol#18-26) ignores return value by msg.sender.send(alocal) (test-multicall.sol#21)
+SimpleDAO.check_multi_call() (test-multicall.sol#18-26) ignores return value by addr_a.send(alocal) (test-multicall.sol#25)
+SimpleDAO.check_multi_call_2() (test-multicall.sol#27-36) ignores return value by addr_a.send(alocal) (test-multicall.sol#31)
+SimpleDAO.check_multi_call_2() (test-multicall.sol#27-36) ignores return value by msg.sender.send(alocal) (test-multicall.sol#34)
+SimpleDAO.check_multi_call_2() (test-multicall.sol#27-36) ignores return value by addr_a.send(alocal) (test-multicall.sol#35)
+SimpleDAO.check_multi_call_3() (test-multicall.sol#37-47) ignores return value by addr_a.send(alocal) (test-multicall.sol#41)
+SimpleDAO.check_multi_call_3() (test-multicall.sol#37-47) ignores return value by msg.sender.send(alocal) (test-multicall.sol#44)
+SimpleDAO.check_multi_call_3() (test-multicall.sol#37-47) ignores return value by addr_a.send(alocal) (test-multicall.sol#45)
+SimpleDAO.check_multi_call_3() (test-multicall.sol#37-47) ignores return value by msg.sender.send(alocal) (test-multicall.sol#46)
+SimpleDAO.check_multi_loop() (test-multicall.sol#49-57) ignores return value by addr_a.send(alocal) (test-multicall.sol#53)
+SimpleDAO.check_multi_loop() (test-multicall.sol#49-57) ignores return value by msg.sender.send(alocal) (test-multicall.sol#54)
+SimpleDAO.check_multi_for_loop() (test-multicall.sol#67-77) ignores return value by addr_a.send(alocal) (test-multicall.sol#71)
+SimpleDAO.check_multi_for_loop() (test-multicall.sol#67-77) ignores return value by msg.sender.send(a) (test-multicall.sol#73)
+SimpleDAO.check_multi_for_loop() (test-multicall.sol#67-77) ignores return value by msg.sender.send(alocal) (test-multicall.sol#76)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-send
+
+SimpleDAO.check_multi_loop() (test-multicall.sol#49-57) has external calls inside a loop: addr_a.send(alocal) (test-multicall.sol#53)
+SimpleDAO.check_multi_loop() (test-multicall.sol#49-57) has external calls inside a loop: msg.sender.send(alocal) (test-multicall.sol#54)
+SimpleDAO.check_multi_loop_require() (test-multicall.sol#58-65) has external calls inside a loop: msg.sender.send(a) (test-multicall.sol#60)
+SimpleDAO.check_multi_loop_require() (test-multicall.sol#58-65) has external calls inside a loop: require(bool)(addr_a.send(alocal)) (test-multicall.sol#62)
+SimpleDAO.check_multi_for_loop() (test-multicall.sol#67-77) has external calls inside a loop: addr_a.send(alocal) (test-multicall.sol#71)
+SimpleDAO.check_multi_for_loop() (test-multicall.sol#67-77) has external calls inside a loop: msg.sender.send(a) (test-multicall.sol#73)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation/#calls-inside-a-loop
+
+SimpleDAO.check_multi_loop() (test-multicall.sol#49-57) has costly operations inside a loop:
+	- a ++ (test-multicall.sol#55)
+SimpleDAO.check_multi_loop_require() (test-multicall.sol#58-65) has costly operations inside a loop:
+	- a ++ (test-multicall.sol#63)
+SimpleDAO.check_multi_for_loop() (test-multicall.sol#67-77) has costly operations inside a loop:
+	- a ++ (test-multicall.sol#74)
+SimpleDAO.check_multi_for_loop() (test-multicall.sol#67-77) has costly operations inside a loop:
+	- a ++ (test-multicall.sol#69)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#costly-operations-inside-a-loop
+
+Version constraint 0.4.24 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ABIEncoderV2PackedStorage_0.4.x
+	- ExpExponentCleanup
+	- EventStructWrongData.
+It is used by:
+	- 0.4.24 (test-multicall.sol#6)
+solc-0.4.24 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in SimpleDAO.check_multi_call() (test-multicall.sol#18-26):
+	- msg.sender.call.value(alocal)() (test-multicall.sol#20)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Function SimpleDAO.check_multi_call() (test-multicall.sol#18-26) is not in mixedCase
+Function SimpleDAO.check_multi_call_2() (test-multicall.sol#27-36) is not in mixedCase
+Function SimpleDAO.check_multi_call_3() (test-multicall.sol#37-47) is not in mixedCase
+Function SimpleDAO.check_multi_loop() (test-multicall.sol#49-57) is not in mixedCase
+Function SimpleDAO.check_multi_loop_require() (test-multicall.sol#58-65) is not in mixedCase
+Function SimpleDAO.check_multi_for_loop() (test-multicall.sol#67-77) is not in mixedCase
+Variable SimpleDAO.addr_a (test-multicall.sol#10) is not in mixedCase
+Variable SimpleDAO.addr_b (test-multicall.sol#11) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in SimpleDAO.check_multi_for_loop() (test-multicall.sol#67-77):
+	External calls:
+	- addr_a.send(alocal) (test-multicall.sol#71)
+	- msg.sender.send(a) (test-multicall.sol#73)
+	State variables written after the call(s):
+	- a < 10 (test-multicall.sol#69)
+	- a ++ (test-multicall.sol#74)
+	- a ++ (test-multicall.sol#69)
+Reentrancy in SimpleDAO.check_multi_loop() (test-multicall.sol#49-57):
+	External calls:
+	- addr_a.send(alocal) (test-multicall.sol#53)
+	- msg.sender.send(alocal) (test-multicall.sol#54)
+	State variables written after the call(s):
+	- a ++ (test-multicall.sol#55)
+Reentrancy in SimpleDAO.check_multi_loop_require() (test-multicall.sol#58-65):
+	External calls:
+	- msg.sender.send(a) (test-multicall.sol#60)
+	- require(bool)(addr_a.send(alocal)) (test-multicall.sol#62)
+	State variables written after the call(s):
+	- a ++ (test-multicall.sol#63)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+SimpleDAO.aaaa (test-multicall.sol#16) should be constant 
+SimpleDAO.addr_a (test-multicall.sol#10) should be constant 
+SimpleDAO.addr_b (test-multicall.sol#11) should be constant 
+SimpleDAO.b (test-multicall.sol#12) should be constant 
+SimpleDAO.c (test-multicall.sol#13) should be constant 
+SimpleDAO.temp (test-multicall.sol#15) should be constant 
+SimpleDAO.x (test-multicall.sol#17) should be constant 
+SimpleDAO.z (test-multicall.sol#14) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+./test-multicall.sol analyzed (1 contracts with 94 detectors), 54 result(s) found
+
+real	0m1.143s
+user	0m0.994s
+sys	0m0.153s

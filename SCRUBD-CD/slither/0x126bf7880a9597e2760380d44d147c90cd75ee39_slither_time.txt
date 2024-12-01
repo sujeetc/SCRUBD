@@ -1,0 +1,674 @@
+'solc --version' running
+'solc ./0x126bf7880a9597e2760380d44d147c90cd75ee39.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x126bf7880a9597e2760380d44d147c90cd75ee39.sol:
+Warning: Contract code size is 28512 bytes and exceeds 24576 bytes (a limit introduced in Spurious Dragon). This contract may not be deployable on mainnet. Consider enabling the optimizer (with a low "runs" value!), turning off revert strings, or using libraries.
+  --> 0x126bf7880a9597e2760380d44d147c90cd75ee39.sol:81:1:
+   |
+81 | contract The_Disturbance is IERC20, Ownable {
+   | ^ (Relevant source part starts here and spans across multiple lines).
+
+
+
+The_Disturbance.transferETHOut(uint256) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#475-485) sends eth to arbitrary user
+	Dangerous calls:
+	- (success,None) = address(_devWallet).call{value: toDev}() (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#480)
+	- (success,None) = address(_marketingWallet).call{value: toMarketing}() (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#483)
+The_Disturbance.addLiquidity(uint256,uint256) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#501-511) sends eth to arbitrary user
+	Dangerous calls:
+	- dexRouter.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#503-510)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+Reentrancy in The_Disturbance._transfer(address,address,uint256) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#402-437):
+	External calls:
+	- swapAndLiquify(contractTokenBalance) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#432)
+		- dexRouter.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#503-510)
+		- dexRouter.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#492-498)
+		- (success,None) = address(_devWallet).call{value: toDev}() (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#480)
+		- (success,None) = address(_marketingWallet).call{value: toMarketing}() (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#483)
+	External calls sending eth:
+	- swapAndLiquify(contractTokenBalance) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#432)
+		- dexRouter.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#503-510)
+		- (success,None) = address(_devWallet).call{value: toDev}() (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#480)
+		- (success,None) = address(_marketingWallet).call{value: toMarketing}() (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#483)
+	State variables written after the call(s):
+	- _finalizeTransfer(from,to,amount,takeFee) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#436)
+		- _burnFee = _buyBurnFee (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#386)
+		- _burnFee = _sellBurnFee (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#392)
+		- _burnFee = 0 (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#398)
+	The_Disturbance._burnFee (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#100) can be used in cross function reentrancies:
+	- The_Disturbance._getValues(uint256,bool) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#602-625)
+	- The_Disturbance.adjustTaxes(address,address) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#380-400)
+	- _finalizeTransfer(from,to,amount,takeFee) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#436)
+		- _devFee = _buyDevFee (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#384)
+		- _devFee = _sellDevFee (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#390)
+		- _devFee = 0 (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#396)
+	The_Disturbance._devFee (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#98) can be used in cross function reentrancies:
+	- The_Disturbance.adjustTaxes(address,address) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#380-400)
+	- The_Disturbance.getETHFee() (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#598-600)
+	- _finalizeTransfer(from,to,amount,takeFee) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#436)
+		- _hasLiqBeenAdded = true (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#523)
+	The_Disturbance._hasLiqBeenAdded (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#157) can be used in cross function reentrancies:
+	- The_Disturbance._checkLiquidityAdd(address,address) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#513-528)
+	- The_Disturbance._finalizeTransfer(address,address,uint256,bool) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#554-596)
+	- The_Disturbance._hasLiqBeenAdded (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#157)
+	- The_Disturbance.enableTrading(uint8) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#530-542)
+	- _finalizeTransfer(from,to,amount,takeFee) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#436)
+		- _liqAddBlock = block.number + 2 (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#517)
+		- _liqAddBlock = block.number (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#519)
+	The_Disturbance._liqAddBlock (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#159) can be used in cross function reentrancies:
+	- The_Disturbance._checkLiquidityAdd(address,address) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#513-528)
+	- The_Disturbance._finalizeTransfer(address,address,uint256,bool) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#554-596)
+	- The_Disturbance.enableTrading(uint8) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#530-542)
+	- _finalizeTransfer(from,to,amount,takeFee) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#436)
+		- _liquidityFee = _buyLiquidityFee (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#383)
+		- _liquidityFee = _sellLiquidityFee (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#389)
+		- _liquidityFee = 0 (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#395)
+	The_Disturbance._liquidityFee (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#97) can be used in cross function reentrancies:
+	- The_Disturbance.adjustTaxes(address,address) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#380-400)
+	- The_Disturbance.getETHFee() (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#598-600)
+	- _finalizeTransfer(from,to,amount,takeFee) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#436)
+		- _liquidityHolders[from] = true (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#522)
+	The_Disturbance._liquidityHolders (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#90) can be used in cross function reentrancies:
+	- The_Disturbance._checkLiquidityAdd(address,address) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#513-528)
+	- The_Disturbance._hasLimits(address,address) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#357-365)
+	- The_Disturbance.constructor() (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#175-191)
+	- _finalizeTransfer(from,to,amount,takeFee) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#436)
+		- _rOwned[burnAddress] = _rOwned[burnAddress] + rBurn (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#661)
+		- _rOwned[address(this)] = _rOwned[address(this)] + rLiquidity (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#652)
+		- _rOwned[from] = _rOwned[from] - values.rAmount (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#576)
+		- _rOwned[to] = _rOwned[to] + values.rTransferAmount (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#577)
+	The_Disturbance._rOwned (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#82) can be used in cross function reentrancies:
+	- The_Disturbance._finalizeTransfer(address,address,uint256,bool) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#554-596)
+	- The_Disturbance._getCurrentSupply() (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#632-642)
+	- The_Disturbance._takeBurn(address,uint256) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#658-665)
+	- The_Disturbance._takeLiquidity(address,uint256) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#649-656)
+	- The_Disturbance.balanceOf(address) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#201)
+	- The_Disturbance.constructor() (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#175-191)
+	- The_Disturbance.setExcludedFromReward(address,bool) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#331-351)
+	- _finalizeTransfer(from,to,amount,takeFee) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#436)
+		- _rTotal = _rTotal - rFee (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#645)
+	The_Disturbance._rTotal (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#122) can be used in cross function reentrancies:
+	- The_Disturbance._getCurrentSupply() (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#632-642)
+	- The_Disturbance._takeReflect(uint256,uint256) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#644-647)
+	- The_Disturbance.constructor() (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#175-191)
+	- The_Disturbance.tokenFromReflect(uint256) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#367-371)
+	- _finalizeTransfer(from,to,amount,takeFee) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#436)
+		- _reflectFee = _buyReflectFee (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#382)
+		- _reflectFee = _sellReflectFee (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#388)
+		- _reflectFee = 0 (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#394)
+	The_Disturbance._reflectFee (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#96) can be used in cross function reentrancies:
+	- The_Disturbance._getValues(uint256,bool) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#602-625)
+	- The_Disturbance.adjustTaxes(address,address) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#380-400)
+	- _finalizeTransfer(from,to,amount,takeFee) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#436)
+		- _tFeeTotal = _tFeeTotal + tFee (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#646)
+	The_Disturbance._tFeeTotal (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#123) can be used in cross function reentrancies:
+	- The_Disturbance._takeReflect(uint256,uint256) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#644-647)
+	- The_Disturbance.totalFees() (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#353-355)
+	- _finalizeTransfer(from,to,amount,takeFee) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#436)
+		- _tOwned[address(this)] = _tOwned[address(this)] + tLiquidity (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#654)
+		- _tOwned[burnAddress] = _tOwned[burnAddress] + tBurn (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#663)
+		- _tOwned[from] = _tOwned[from] - tAmount (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#580)
+		- _tOwned[to] = _tOwned[to] + values.tTransferAmount (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#582)
+		- _tOwned[from] = _tOwned[from] - tAmount (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#584)
+		- _tOwned[to] = _tOwned[to] + values.tTransferAmount (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#585)
+	The_Disturbance._tOwned (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#83) can be used in cross function reentrancies:
+	- The_Disturbance._finalizeTransfer(address,address,uint256,bool) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#554-596)
+	- The_Disturbance._getCurrentSupply() (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#632-642)
+	- The_Disturbance._takeBurn(address,uint256) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#658-665)
+	- The_Disturbance._takeLiquidity(address,uint256) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#649-656)
+	- The_Disturbance.balanceOf(address) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#201)
+	- The_Disturbance.setExcludedFromReward(address,bool) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#331-351)
+	- _finalizeTransfer(from,to,amount,takeFee) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#436)
+		- botsCaught ++ (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#567)
+	The_Disturbance.botsCaught (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#162) can be used in cross function reentrancies:
+	- The_Disturbance._finalizeTransfer(address,address,uint256,bool) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#554-596)
+	- The_Disturbance.botsCaught (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#162)
+	- _finalizeTransfer(from,to,amount,takeFee) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#436)
+		- swapAndLiquifyEnabled = true (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#525)
+	The_Disturbance.swapAndLiquifyEnabled (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#134) can be used in cross function reentrancies:
+	- The_Disturbance._checkLiquidityAdd(address,address) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#513-528)
+	- The_Disturbance._transfer(address,address,uint256) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#402-437)
+	- The_Disturbance.setSwapAndLiquifyEnabled(bool) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#322-325)
+	- The_Disturbance.swapAndLiquifyEnabled (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#134)
+Reentrancy in The_Disturbance.swapAndLiquify(uint256) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#439-473):
+	External calls:
+	- swapTokensForEth(toSwapForEth) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#455)
+		- dexRouter.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#492-498)
+	- addLiquidity(otherHalf,liquidityBalance) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#461)
+		- dexRouter.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#503-510)
+	- _transfer(address(this),_devWallet,toMarketing) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#465)
+		- dexRouter.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#503-510)
+		- dexRouter.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#492-498)
+		- (success,None) = address(_devWallet).call{value: toDev}() (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#480)
+		- (success,None) = address(_marketingWallet).call{value: toMarketing}() (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#483)
+	- _transfer(address(this),_marketingWallet,toMarketing) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#468)
+		- dexRouter.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#503-510)
+		- dexRouter.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#492-498)
+		- (success,None) = address(_devWallet).call{value: toDev}() (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#480)
+		- (success,None) = address(_marketingWallet).call{value: toMarketing}() (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#483)
+	External calls sending eth:
+	- addLiquidity(otherHalf,liquidityBalance) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#461)
+		- dexRouter.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#503-510)
+	- _transfer(address(this),_devWallet,toMarketing) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#465)
+		- dexRouter.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#503-510)
+		- (success,None) = address(_devWallet).call{value: toDev}() (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#480)
+		- (success,None) = address(_marketingWallet).call{value: toMarketing}() (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#483)
+	- _transfer(address(this),_marketingWallet,toMarketing) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#468)
+		- dexRouter.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#503-510)
+		- (success,None) = address(_devWallet).call{value: toDev}() (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#480)
+		- (success,None) = address(_marketingWallet).call{value: toMarketing}() (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#483)
+	State variables written after the call(s):
+	- _transfer(address(this),_marketingWallet,toMarketing) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#468)
+		- _burnFee = _buyBurnFee (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#386)
+		- _burnFee = _sellBurnFee (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#392)
+		- _burnFee = 0 (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#398)
+	The_Disturbance._burnFee (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#100) can be used in cross function reentrancies:
+	- The_Disturbance._getValues(uint256,bool) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#602-625)
+	- The_Disturbance.adjustTaxes(address,address) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#380-400)
+	- _transfer(address(this),_marketingWallet,toMarketing) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#468)
+		- _devFee = _buyDevFee (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#384)
+		- _devFee = _sellDevFee (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#390)
+		- _devFee = 0 (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#396)
+	The_Disturbance._devFee (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#98) can be used in cross function reentrancies:
+	- The_Disturbance.adjustTaxes(address,address) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#380-400)
+	- The_Disturbance.getETHFee() (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#598-600)
+	- _transfer(address(this),_marketingWallet,toMarketing) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#468)
+		- _hasLiqBeenAdded = true (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#523)
+	The_Disturbance._hasLiqBeenAdded (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#157) can be used in cross function reentrancies:
+	- The_Disturbance._checkLiquidityAdd(address,address) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#513-528)
+	- The_Disturbance._finalizeTransfer(address,address,uint256,bool) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#554-596)
+	- The_Disturbance._hasLiqBeenAdded (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#157)
+	- The_Disturbance.enableTrading(uint8) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#530-542)
+	- _transfer(address(this),_marketingWallet,toMarketing) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#468)
+		- _liqAddBlock = block.number + 2 (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#517)
+		- _liqAddBlock = block.number (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#519)
+	The_Disturbance._liqAddBlock (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#159) can be used in cross function reentrancies:
+	- The_Disturbance._checkLiquidityAdd(address,address) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#513-528)
+	- The_Disturbance._finalizeTransfer(address,address,uint256,bool) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#554-596)
+	- The_Disturbance.enableTrading(uint8) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#530-542)
+	- _transfer(address(this),_marketingWallet,toMarketing) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#468)
+		- _liquidityFee = _buyLiquidityFee (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#383)
+		- _liquidityFee = _sellLiquidityFee (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#389)
+		- _liquidityFee = 0 (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#395)
+	The_Disturbance._liquidityFee (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#97) can be used in cross function reentrancies:
+	- The_Disturbance.adjustTaxes(address,address) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#380-400)
+	- The_Disturbance.getETHFee() (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#598-600)
+	- _transfer(address(this),_marketingWallet,toMarketing) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#468)
+		- _liquidityHolders[from] = true (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#522)
+	The_Disturbance._liquidityHolders (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#90) can be used in cross function reentrancies:
+	- The_Disturbance._checkLiquidityAdd(address,address) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#513-528)
+	- The_Disturbance._hasLimits(address,address) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#357-365)
+	- The_Disturbance.constructor() (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#175-191)
+	- _transfer(address(this),_marketingWallet,toMarketing) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#468)
+		- _rOwned[burnAddress] = _rOwned[burnAddress] + rBurn (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#661)
+		- _rOwned[address(this)] = _rOwned[address(this)] + rLiquidity (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#652)
+		- _rOwned[from] = _rOwned[from] - values.rAmount (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#576)
+		- _rOwned[to] = _rOwned[to] + values.rTransferAmount (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#577)
+	The_Disturbance._rOwned (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#82) can be used in cross function reentrancies:
+	- The_Disturbance._finalizeTransfer(address,address,uint256,bool) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#554-596)
+	- The_Disturbance._getCurrentSupply() (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#632-642)
+	- The_Disturbance._takeBurn(address,uint256) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#658-665)
+	- The_Disturbance._takeLiquidity(address,uint256) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#649-656)
+	- The_Disturbance.balanceOf(address) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#201)
+	- The_Disturbance.constructor() (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#175-191)
+	- The_Disturbance.setExcludedFromReward(address,bool) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#331-351)
+	- _transfer(address(this),_marketingWallet,toMarketing) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#468)
+		- _rTotal = _rTotal - rFee (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#645)
+	The_Disturbance._rTotal (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#122) can be used in cross function reentrancies:
+	- The_Disturbance._getCurrentSupply() (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#632-642)
+	- The_Disturbance._takeReflect(uint256,uint256) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#644-647)
+	- The_Disturbance.constructor() (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#175-191)
+	- The_Disturbance.tokenFromReflect(uint256) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#367-371)
+	- _transfer(address(this),_marketingWallet,toMarketing) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#468)
+		- _reflectFee = _buyReflectFee (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#382)
+		- _reflectFee = _sellReflectFee (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#388)
+		- _reflectFee = 0 (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#394)
+	The_Disturbance._reflectFee (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#96) can be used in cross function reentrancies:
+	- The_Disturbance._getValues(uint256,bool) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#602-625)
+	- The_Disturbance.adjustTaxes(address,address) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#380-400)
+	- _transfer(address(this),_marketingWallet,toMarketing) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#468)
+		- _tFeeTotal = _tFeeTotal + tFee (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#646)
+	The_Disturbance._tFeeTotal (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#123) can be used in cross function reentrancies:
+	- The_Disturbance._takeReflect(uint256,uint256) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#644-647)
+	- The_Disturbance.totalFees() (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#353-355)
+	- _transfer(address(this),_marketingWallet,toMarketing) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#468)
+		- _tOwned[address(this)] = _tOwned[address(this)] + tLiquidity (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#654)
+		- _tOwned[burnAddress] = _tOwned[burnAddress] + tBurn (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#663)
+		- _tOwned[from] = _tOwned[from] - tAmount (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#580)
+		- _tOwned[to] = _tOwned[to] + values.tTransferAmount (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#582)
+		- _tOwned[from] = _tOwned[from] - tAmount (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#584)
+		- _tOwned[to] = _tOwned[to] + values.tTransferAmount (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#585)
+	The_Disturbance._tOwned (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#83) can be used in cross function reentrancies:
+	- The_Disturbance._finalizeTransfer(address,address,uint256,bool) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#554-596)
+	- The_Disturbance._getCurrentSupply() (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#632-642)
+	- The_Disturbance._takeBurn(address,uint256) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#658-665)
+	- The_Disturbance._takeLiquidity(address,uint256) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#649-656)
+	- The_Disturbance.balanceOf(address) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#201)
+	- The_Disturbance.setExcludedFromReward(address,bool) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#331-351)
+	- _transfer(address(this),_marketingWallet,toMarketing) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#468)
+		- botsCaught ++ (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#567)
+	The_Disturbance.botsCaught (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#162) can be used in cross function reentrancies:
+	- The_Disturbance._finalizeTransfer(address,address,uint256,bool) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#554-596)
+	- The_Disturbance.botsCaught (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#162)
+	- _transfer(address(this),_marketingWallet,toMarketing) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#468)
+		- inSwapAndLiquify = true (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#170)
+		- inSwapAndLiquify = false (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#172)
+	The_Disturbance.inSwapAndLiquify (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#133) can be used in cross function reentrancies:
+	- The_Disturbance._transfer(address,address,uint256) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#402-437)
+	- The_Disturbance.inSwapAndLiquify (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#133)
+	- The_Disturbance.lockTheSwap() (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#169-173)
+	- _transfer(address(this),_marketingWallet,toMarketing) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#468)
+		- swapAndLiquifyEnabled = true (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#525)
+	The_Disturbance.swapAndLiquifyEnabled (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#134) can be used in cross function reentrancies:
+	- The_Disturbance._checkLiquidityAdd(address,address) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#513-528)
+	- The_Disturbance._transfer(address,address,uint256) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#402-437)
+	- The_Disturbance.setSwapAndLiquifyEnabled(bool) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#322-325)
+	- The_Disturbance.swapAndLiquifyEnabled (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#134)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+The_Disturbance.sweepTokens(address) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#667-670) ignores return value by toTransfer.transfer(msg.sender,toTransfer.balanceOf(address(this))) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#669)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+The_Disturbance.swapAndLiquify(uint256) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#439-473) performs a multiplication on the result of a division:
+	- half = toLiquify / 2 (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#451)
+	- liquidityBalance = (fromSwap * half) / toSwapForEth (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#458)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+The_Disturbance._getValues(uint256,bool).values (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#603) is a local variable never initialized
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#uninitialized-local-variables
+
+The_Disturbance.addLiquidity(uint256,uint256) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#501-511) ignores return value by dexRouter.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#503-510)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+The_Disturbance.setTaxesBuy(uint256,uint256,uint256,uint256,uint256) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#259-271) should emit an event for: 
+	- _buyLiquidityFee = liquidityFee (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#266) 
+	- _buyReflectFee = reflectionFee (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#267) 
+	- _buyDevFee = devFee (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#268) 
+	- _buyMarketingFee = marketingFee (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#269) 
+	- _buyBurnFee = burnFee (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#270) 
+The_Disturbance.setTaxesSell(uint256,uint256,uint256,uint256,uint256) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#273-285) should emit an event for: 
+	- _sellLiquidityFee = liquidityFee (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#280) 
+	- _sellReflectFee = reflectionFee (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#281) 
+	- _sellDevFee = devFee (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#282) 
+	- _sellMarketingFee = marketingFee (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#283) 
+	- _sellBurnFee = burnFee (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#284) 
+The_Disturbance.setMaxTxPercents(uint256,uint256,uint256,uint256) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#287-296) should emit an event for: 
+	- _buyMaxTxAmount = (_tTotal * buyPercent) / buyDivisor (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#288) 
+	- _sellMaxTxAmount = (_tTotal * sellPercent) / sellDivisor (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#290) 
+The_Disturbance.setMaxWalletSize(uint256,uint256) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#298-303) should emit an event for: 
+	- _maxWalletSize = check (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#301) 
+The_Disturbance.setSwapSettings(uint256,uint256,uint256,uint256) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#305-308) should emit an event for: 
+	- swapThreshold = (_tTotal * thresholdPercent) / thresholdDivisor (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#306) 
+	- swapAmount = (_tTotal * amountPercent) / amountDivisor (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#307) 
+The_Disturbance.enableTrading(uint8) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#530-542) should emit an event for: 
+	- snipeBlockAmt = _block (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#533) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+Reentrancy in The_Disturbance._transfer(address,address,uint256) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#402-437):
+	External calls:
+	- swapAndLiquify(contractTokenBalance) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#432)
+		- dexRouter.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#503-510)
+		- dexRouter.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#492-498)
+		- (success,None) = address(_devWallet).call{value: toDev}() (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#480)
+		- (success,None) = address(_marketingWallet).call{value: toMarketing}() (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#483)
+	External calls sending eth:
+	- swapAndLiquify(contractTokenBalance) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#432)
+		- dexRouter.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#503-510)
+		- (success,None) = address(_devWallet).call{value: toDev}() (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#480)
+		- (success,None) = address(_marketingWallet).call{value: toMarketing}() (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#483)
+	State variables written after the call(s):
+	- _finalizeTransfer(from,to,amount,takeFee) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#436)
+		- _isBot[to] = true (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#566)
+	- _finalizeTransfer(from,to,amount,takeFee) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#436)
+		- _liqAddStamp = block.timestamp (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#524)
+	- _finalizeTransfer(from,to,amount,takeFee) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#436)
+		- _marketingFee = _buyMarketingFee (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#385)
+		- _marketingFee = _sellMarketingFee (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#391)
+		- _marketingFee = 0 (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#397)
+Reentrancy in The_Disturbance.setNewRouter(address) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#222-232):
+	External calls:
+	- lpPair = IUniswapV2Factory(_newRouter.factory()).createPair(address(this),_newRouter.WETH()) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#226)
+	State variables written after the call(s):
+	- dexRouter = _newRouter (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#231)
+Reentrancy in The_Disturbance.swapAndLiquify(uint256) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#439-473):
+	External calls:
+	- swapTokensForEth(toSwapForEth) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#455)
+		- dexRouter.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#492-498)
+	- addLiquidity(otherHalf,liquidityBalance) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#461)
+		- dexRouter.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#503-510)
+	External calls sending eth:
+	- addLiquidity(otherHalf,liquidityBalance) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#461)
+		- dexRouter.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#503-510)
+	State variables written after the call(s):
+	- addLiquidity(otherHalf,liquidityBalance) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#461)
+		- _allowances[sender][spender] = amount (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#376)
+Reentrancy in The_Disturbance.swapAndLiquify(uint256) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#439-473):
+	External calls:
+	- swapTokensForEth(toSwapForEth) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#455)
+		- dexRouter.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#492-498)
+	- addLiquidity(otherHalf,liquidityBalance) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#461)
+		- dexRouter.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#503-510)
+	- _transfer(address(this),_devWallet,toMarketing) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#465)
+		- dexRouter.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#503-510)
+		- dexRouter.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#492-498)
+		- (success,None) = address(_devWallet).call{value: toDev}() (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#480)
+		- (success,None) = address(_marketingWallet).call{value: toMarketing}() (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#483)
+	External calls sending eth:
+	- addLiquidity(otherHalf,liquidityBalance) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#461)
+		- dexRouter.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#503-510)
+	- _transfer(address(this),_devWallet,toMarketing) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#465)
+		- dexRouter.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#503-510)
+		- (success,None) = address(_devWallet).call{value: toDev}() (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#480)
+		- (success,None) = address(_marketingWallet).call{value: toMarketing}() (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#483)
+	State variables written after the call(s):
+	- _transfer(address(this),_devWallet,toMarketing) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#465)
+		- _allowances[sender][spender] = amount (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#376)
+	- _transfer(address(this),_devWallet,toMarketing) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#465)
+		- _isBot[to] = true (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#566)
+	- _transfer(address(this),_devWallet,toMarketing) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#465)
+		- _liqAddStamp = block.timestamp (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#524)
+	- _transfer(address(this),_devWallet,toMarketing) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#465)
+		- _marketingFee = _buyMarketingFee (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#385)
+		- _marketingFee = _sellMarketingFee (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#391)
+		- _marketingFee = 0 (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#397)
+Reentrancy in The_Disturbance.swapAndLiquify(uint256) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#439-473):
+	External calls:
+	- swapTokensForEth(toSwapForEth) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#455)
+		- dexRouter.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#492-498)
+	- addLiquidity(otherHalf,liquidityBalance) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#461)
+		- dexRouter.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#503-510)
+	- _transfer(address(this),_devWallet,toMarketing) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#465)
+		- dexRouter.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#503-510)
+		- dexRouter.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#492-498)
+		- (success,None) = address(_devWallet).call{value: toDev}() (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#480)
+		- (success,None) = address(_marketingWallet).call{value: toMarketing}() (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#483)
+	- _transfer(address(this),_marketingWallet,toMarketing) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#468)
+		- dexRouter.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#503-510)
+		- dexRouter.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#492-498)
+		- (success,None) = address(_devWallet).call{value: toDev}() (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#480)
+		- (success,None) = address(_marketingWallet).call{value: toMarketing}() (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#483)
+	External calls sending eth:
+	- addLiquidity(otherHalf,liquidityBalance) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#461)
+		- dexRouter.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#503-510)
+	- _transfer(address(this),_devWallet,toMarketing) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#465)
+		- dexRouter.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#503-510)
+		- (success,None) = address(_devWallet).call{value: toDev}() (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#480)
+		- (success,None) = address(_marketingWallet).call{value: toMarketing}() (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#483)
+	- _transfer(address(this),_marketingWallet,toMarketing) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#468)
+		- dexRouter.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#503-510)
+		- (success,None) = address(_devWallet).call{value: toDev}() (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#480)
+		- (success,None) = address(_marketingWallet).call{value: toMarketing}() (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#483)
+	State variables written after the call(s):
+	- _transfer(address(this),_marketingWallet,toMarketing) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#468)
+		- _allowances[sender][spender] = amount (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#376)
+	- _transfer(address(this),_marketingWallet,toMarketing) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#468)
+		- _isBot[to] = true (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#566)
+	- _transfer(address(this),_marketingWallet,toMarketing) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#468)
+		- _liqAddStamp = block.timestamp (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#524)
+	- _transfer(address(this),_marketingWallet,toMarketing) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#468)
+		- _marketingFee = _buyMarketingFee (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#385)
+		- _marketingFee = _sellMarketingFee (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#391)
+		- _marketingFee = 0 (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#397)
+Reentrancy in The_Disturbance.transferFrom(address,address,uint256) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#206-210):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#207)
+		- dexRouter.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#503-510)
+		- dexRouter.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#492-498)
+		- (success,None) = address(_devWallet).call{value: toDev}() (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#480)
+		- (success,None) = address(_marketingWallet).call{value: toMarketing}() (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#483)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#207)
+		- dexRouter.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#503-510)
+		- (success,None) = address(_devWallet).call{value: toDev}() (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#480)
+		- (success,None) = address(_marketingWallet).call{value: toMarketing}() (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#483)
+	State variables written after the call(s):
+	- _approve(sender,msg.sender,_allowances[sender][msg.sender] - amount) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#208)
+		- _allowances[sender][spender] = amount (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#376)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in The_Disturbance._transfer(address,address,uint256) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#402-437):
+	External calls:
+	- swapAndLiquify(contractTokenBalance) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#432)
+		- dexRouter.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#503-510)
+		- dexRouter.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#492-498)
+		- (success,None) = address(_devWallet).call{value: toDev}() (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#480)
+		- (success,None) = address(_marketingWallet).call{value: toMarketing}() (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#483)
+	External calls sending eth:
+	- swapAndLiquify(contractTokenBalance) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#432)
+		- dexRouter.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#503-510)
+		- (success,None) = address(_devWallet).call{value: toDev}() (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#480)
+		- (success,None) = address(_marketingWallet).call{value: toMarketing}() (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#483)
+	Event emitted after the call(s):
+	- BotCaught(to) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#568)
+		- _finalizeTransfer(from,to,amount,takeFee) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#436)
+	- SwapAndLiquifyEnabledUpdated(true) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#526)
+		- _finalizeTransfer(from,to,amount,takeFee) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#436)
+	- Transfer(sender,burnAddress,tBurn) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#664)
+		- _finalizeTransfer(from,to,amount,takeFee) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#436)
+	- Transfer(sender,address(this),tLiquidity) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#655)
+		- _finalizeTransfer(from,to,amount,takeFee) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#436)
+	- Transfer(from,to,values.tTransferAmount) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#594)
+		- _finalizeTransfer(from,to,amount,takeFee) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#436)
+Reentrancy in The_Disturbance.swapAndLiquify(uint256) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#439-473):
+	External calls:
+	- swapTokensForEth(toSwapForEth) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#455)
+		- dexRouter.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#492-498)
+	- addLiquidity(otherHalf,liquidityBalance) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#461)
+		- dexRouter.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#503-510)
+	External calls sending eth:
+	- addLiquidity(otherHalf,liquidityBalance) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#461)
+		- dexRouter.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#503-510)
+	Event emitted after the call(s):
+	- Approval(sender,spender,amount) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#377)
+		- addLiquidity(otherHalf,liquidityBalance) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#461)
+	- SwapAndLiquify(half,liquidityBalance,otherHalf) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#462)
+Reentrancy in The_Disturbance.swapAndLiquify(uint256) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#439-473):
+	External calls:
+	- swapTokensForEth(toSwapForEth) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#455)
+		- dexRouter.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#492-498)
+	- addLiquidity(otherHalf,liquidityBalance) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#461)
+		- dexRouter.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#503-510)
+	- _transfer(address(this),_devWallet,toMarketing) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#465)
+		- dexRouter.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#503-510)
+		- dexRouter.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#492-498)
+		- (success,None) = address(_devWallet).call{value: toDev}() (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#480)
+		- (success,None) = address(_marketingWallet).call{value: toMarketing}() (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#483)
+	External calls sending eth:
+	- addLiquidity(otherHalf,liquidityBalance) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#461)
+		- dexRouter.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#503-510)
+	- _transfer(address(this),_devWallet,toMarketing) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#465)
+		- dexRouter.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#503-510)
+		- (success,None) = address(_devWallet).call{value: toDev}() (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#480)
+		- (success,None) = address(_marketingWallet).call{value: toMarketing}() (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#483)
+	Event emitted after the call(s):
+	- Approval(sender,spender,amount) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#377)
+		- _transfer(address(this),_devWallet,toMarketing) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#465)
+	- BotCaught(to) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#568)
+		- _transfer(address(this),_devWallet,toMarketing) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#465)
+	- SwapAndLiquify(half,liquidityBalance,otherHalf) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#462)
+		- _transfer(address(this),_devWallet,toMarketing) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#465)
+	- SwapAndLiquifyEnabledUpdated(true) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#526)
+		- _transfer(address(this),_devWallet,toMarketing) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#465)
+	- Transfer(sender,address(this),tLiquidity) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#655)
+		- _transfer(address(this),_devWallet,toMarketing) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#465)
+	- Transfer(sender,burnAddress,tBurn) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#664)
+		- _transfer(address(this),_devWallet,toMarketing) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#465)
+	- Transfer(from,to,values.tTransferAmount) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#594)
+		- _transfer(address(this),_devWallet,toMarketing) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#465)
+Reentrancy in The_Disturbance.swapAndLiquify(uint256) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#439-473):
+	External calls:
+	- swapTokensForEth(toSwapForEth) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#455)
+		- dexRouter.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#492-498)
+	- addLiquidity(otherHalf,liquidityBalance) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#461)
+		- dexRouter.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#503-510)
+	- _transfer(address(this),_devWallet,toMarketing) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#465)
+		- dexRouter.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#503-510)
+		- dexRouter.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#492-498)
+		- (success,None) = address(_devWallet).call{value: toDev}() (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#480)
+		- (success,None) = address(_marketingWallet).call{value: toMarketing}() (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#483)
+	- _transfer(address(this),_marketingWallet,toMarketing) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#468)
+		- dexRouter.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#503-510)
+		- dexRouter.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#492-498)
+		- (success,None) = address(_devWallet).call{value: toDev}() (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#480)
+		- (success,None) = address(_marketingWallet).call{value: toMarketing}() (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#483)
+	External calls sending eth:
+	- addLiquidity(otherHalf,liquidityBalance) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#461)
+		- dexRouter.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#503-510)
+	- _transfer(address(this),_devWallet,toMarketing) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#465)
+		- dexRouter.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#503-510)
+		- (success,None) = address(_devWallet).call{value: toDev}() (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#480)
+		- (success,None) = address(_marketingWallet).call{value: toMarketing}() (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#483)
+	- _transfer(address(this),_marketingWallet,toMarketing) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#468)
+		- dexRouter.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#503-510)
+		- (success,None) = address(_devWallet).call{value: toDev}() (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#480)
+		- (success,None) = address(_marketingWallet).call{value: toMarketing}() (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#483)
+	Event emitted after the call(s):
+	- Approval(sender,spender,amount) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#377)
+		- _transfer(address(this),_marketingWallet,toMarketing) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#468)
+	- BotCaught(to) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#568)
+		- _transfer(address(this),_marketingWallet,toMarketing) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#468)
+	- SwapAndLiquify(half,liquidityBalance,otherHalf) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#462)
+		- _transfer(address(this),_marketingWallet,toMarketing) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#468)
+	- SwapAndLiquifyEnabledUpdated(true) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#526)
+		- _transfer(address(this),_marketingWallet,toMarketing) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#468)
+	- Transfer(sender,burnAddress,tBurn) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#664)
+		- _transfer(address(this),_marketingWallet,toMarketing) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#468)
+	- Transfer(sender,address(this),tLiquidity) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#655)
+		- _transfer(address(this),_marketingWallet,toMarketing) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#468)
+	- Transfer(from,to,values.tTransferAmount) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#594)
+		- _transfer(address(this),_marketingWallet,toMarketing) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#468)
+Reentrancy in The_Disturbance.transferFrom(address,address,uint256) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#206-210):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#207)
+		- dexRouter.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#503-510)
+		- dexRouter.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#492-498)
+		- (success,None) = address(_devWallet).call{value: toDev}() (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#480)
+		- (success,None) = address(_marketingWallet).call{value: toMarketing}() (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#483)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#207)
+		- dexRouter.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,address(this),block.timestamp) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#503-510)
+		- (success,None) = address(_devWallet).call{value: toDev}() (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#480)
+		- (success,None) = address(_marketingWallet).call{value: toMarketing}() (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#483)
+	Event emitted after the call(s):
+	- Approval(sender,spender,amount) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#377)
+		- _approve(sender,msg.sender,_allowances[sender][msg.sender] - amount) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#208)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+The_Disturbance.setLpPair(address,bool) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#234-240) compares to a boolean constant:
+	-enabled == false (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#235)
+The_Disturbance.setExcludedFromReward(address,bool) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#331-351) compares to a boolean constant:
+	-enabled == true (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#332)
+The_Disturbance.setExcludedFromReward(address,bool) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#331-351) compares to a boolean constant:
+	-enabled == false (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#339)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#boolean-equality
+
+The_Disturbance.setExcludedFromReward(address,bool) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#331-351) has costly operations inside a loop:
+	- _excluded.pop() (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#346)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#costly-operations-inside-a-loop
+
+The_Disturbance._decimalsMul (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#120) is set pre-construction with a non-constant function or state variable:
+	- _decimals
+The_Disturbance._tTotal (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#121) is set pre-construction with a non-constant function or state variable:
+	- startingSupply * 10 ** _decimalsMul
+The_Disturbance._rTotal (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#122) is set pre-construction with a non-constant function or state variable:
+	- (MAX - (MAX % _tTotal))
+The_Disturbance._buyMaxTxAmount (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#138) is set pre-construction with a non-constant function or state variable:
+	- (_tTotal * buyMaxTxPercent) / buyMaxTxDivisor
+The_Disturbance._buyPreviousBuyMaxTxAmount (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#139) is set pre-construction with a non-constant function or state variable:
+	- _buyMaxTxAmount
+The_Disturbance.buyMaxTxAmountUI (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#140) is set pre-construction with a non-constant function or state variable:
+	- (startingSupply * buyMaxTxPercent) / buyMaxTxDivisor
+The_Disturbance._sellMaxTxAmount (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#143) is set pre-construction with a non-constant function or state variable:
+	- (_tTotal * sellMaxTxPercent) / sellMaxTxDivisor
+The_Disturbance._sellPreviousMaxTxAmount (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#144) is set pre-construction with a non-constant function or state variable:
+	- _sellMaxTxAmount
+The_Disturbance.sellMaxTxAmountUI (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#145) is set pre-construction with a non-constant function or state variable:
+	- (startingSupply * sellMaxTxPercent) / sellMaxTxDivisor
+The_Disturbance._maxWalletSize (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#149) is set pre-construction with a non-constant function or state variable:
+	- (_tTotal * maxWalletPercent) / maxWalletDivisor
+The_Disturbance._previousMaxWalletSize (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#150) is set pre-construction with a non-constant function or state variable:
+	- _maxWalletSize
+The_Disturbance.maxWalletSizeUI (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#151) is set pre-construction with a non-constant function or state variable:
+	- (startingSupply * maxWalletPercent) / maxWalletDivisor
+The_Disturbance.swapThreshold (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#153) is set pre-construction with a non-constant function or state variable:
+	- (_tTotal * 5) / 10000
+The_Disturbance.swapAmount (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#154) is set pre-construction with a non-constant function or state variable:
+	- (_tTotal * 5) / 1000
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#function-initializing-state
+
+Version constraint =0.8.15 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- VerbatimInvalidDeduplication
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- StorageWriteRemovalBeforeConditionalTermination
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup.
+It is used by:
+	- =0.8.15 (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#5)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in The_Disturbance.transferETHOut(uint256) (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#475-485):
+	- (success,None) = address(_devWallet).call{value: toDev}() (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#480)
+	- (success,None) = address(_marketingWallet).call{value: toMarketing}() (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#483)
+Low level call in The_Disturbance.sweepETH() (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#672-676):
+	- (success,None) = address(msg.sender).call{value: bal}() (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#675)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Function IUniswapV2Router01.WETH() (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#34) is not in mixedCase
+Contract The_Disturbance (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#81-678) is not in CapWords
+Parameter The_Disturbance.setSwapAndLiquifyEnabled(bool)._enabled (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#322) is not in mixedCase
+Parameter The_Disturbance.enableTrading(uint8)._block (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#530) is not in mixedCase
+Variable The_Disturbance._buyReflectFee (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#101) is not in mixedCase
+Variable The_Disturbance._buyLiquidityFee (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#102) is not in mixedCase
+Variable The_Disturbance._buyDevFee (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#103) is not in mixedCase
+Variable The_Disturbance._buyMarketingFee (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#104) is not in mixedCase
+Variable The_Disturbance._buyBurnFee (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#105) is not in mixedCase
+Variable The_Disturbance._sellReflectFee (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#106) is not in mixedCase
+Variable The_Disturbance._sellLiquidityFee (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#107) is not in mixedCase
+Variable The_Disturbance._sellDevFee (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#108) is not in mixedCase
+Variable The_Disturbance._sellMarketingFee (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#109) is not in mixedCase
+Variable The_Disturbance._sellBurnFee (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#110) is not in mixedCase
+Constant The_Disturbance.maxReflectFee (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#111) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant The_Disturbance.maxLiquidityFee (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#112) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant The_Disturbance.maxDevFee (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#113) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant The_Disturbance.maxMarketingFee (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#114) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant The_Disturbance.maxBurnFee (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#115) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant The_Disturbance.masterTaxDivisor (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#116) is not in UPPER_CASE_WITH_UNDERSCORES
+Variable The_Disturbance._hasLiqBeenAdded (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#157) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+The_Disturbance.slitherConstructorVariables() (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#81-678) uses literals with too many digits:
+	- startingSupply = 10000000 (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#92)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+The_Disturbance._buyPreviousBuyMaxTxAmount (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#139) is never used in The_Disturbance (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#81-678)
+The_Disturbance._sellPreviousMaxTxAmount (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#144) is never used in The_Disturbance (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#81-678)
+The_Disturbance._previousMaxWalletSize (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#150) is never used in The_Disturbance (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#81-678)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-state-variable
+
+Loop condition i < _excluded.length (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#635) should use cached array length instead of referencing `length` member of the storage array.
+ Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#cache-array-length
+
+The_Disturbance._decimals (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#119) should be constant 
+The_Disturbance._name (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#94) should be constant 
+The_Disturbance._routerAddress (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#127) should be constant 
+The_Disturbance._symbol (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#95) should be constant 
+The_Disturbance.buyMaxTxDivisor (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#137) should be constant 
+The_Disturbance.buyMaxTxPercent (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#136) should be constant 
+The_Disturbance.maxWalletDivisor (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#148) should be constant 
+The_Disturbance.maxWalletPercent (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#147) should be constant 
+The_Disturbance.sellMaxTxDivisor (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#142) should be constant 
+The_Disturbance.sellMaxTxPercent (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#141) should be constant 
+The_Disturbance.startingSupply (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#92) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+
+The_Disturbance._buyPreviousBuyMaxTxAmount (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#139) should be immutable 
+The_Disturbance._decimalsMul (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#120) should be immutable 
+The_Disturbance._previousMaxWalletSize (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#150) should be immutable 
+The_Disturbance._sellPreviousMaxTxAmount (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#144) should be immutable 
+The_Disturbance._tTotal (0x126bf7880a9597e2760380d44d147c90cd75ee39.sol#121) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+./0x126bf7880a9597e2760380d44d147c90cd75ee39.sol analyzed (7 contracts with 94 detectors), 88 result(s) found
+
+real	0m6.578s
+user	0m6.304s
+sys	0m0.275s

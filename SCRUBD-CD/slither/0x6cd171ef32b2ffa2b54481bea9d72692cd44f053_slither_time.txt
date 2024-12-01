@@ -1,0 +1,189 @@
+'solc --version' running
+'solc ./0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+Crowdsale.fallback() (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#34-71) sends eth to arbitrary user
+	Dangerous calls:
+	- owner.transfer(sendETH) (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#61)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+Reentrancy in Crowdsale.fallback() (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#34-71):
+	External calls:
+	- tokenFree = sharesTokenAddress.balanceOf(this) (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#35)
+	- sharesTokenAddress.transfer(msg.sender,tokenToBuy) (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#55)
+	External calls sending eth:
+	- owner.transfer(actualETHTransfer) (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#51)
+	- msg.sender.transfer(msg.value - actualETHTransfer) (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#53)
+	State variables written after the call(s):
+	- crowdsaleClosed = true (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#58)
+	Crowdsale.crowdsaleClosed (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#20) can be used in cross function reentrancies:
+	- Crowdsale.crowdsaleClosed (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#20)
+	- Crowdsale.fallback() (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#34-71)
+	- Crowdsale.unsoldTokensBack() (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#73-78)
+	- tokenFree -= tokenToBuy (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#57)
+	Crowdsale.tokenFree (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#19) can be used in cross function reentrancies:
+	- Crowdsale.fallback() (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#34-71)
+	- Crowdsale.tokenFree (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#19)
+	- Crowdsale.unsoldTokensBack() (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#73-78)
+Reentrancy in Crowdsale.fallback() (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#34-71):
+	External calls:
+	- tokenFree = sharesTokenAddress.balanceOf(this) (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#35)
+	- sharesTokenAddress.transfer(msg.sender,tokenFree) (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#62)
+	External calls sending eth:
+	- owner.transfer(sendETH) (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#61)
+	- msg.sender.transfer(msg.value - sendETH) (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#63)
+	State variables written after the call(s):
+	- crowdsaleClosed = true (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#66)
+	Crowdsale.crowdsaleClosed (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#20) can be used in cross function reentrancies:
+	- Crowdsale.crowdsaleClosed (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#20)
+	- Crowdsale.fallback() (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#34-71)
+	- Crowdsale.unsoldTokensBack() (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#73-78)
+	- tokenFree = 0 (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#65)
+	Crowdsale.tokenFree (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#19) can be used in cross function reentrancies:
+	- Crowdsale.fallback() (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#34-71)
+	- Crowdsale.tokenFree (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#19)
+	- Crowdsale.unsoldTokensBack() (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#73-78)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+Crowdsale.fallback() (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#34-71) performs a multiplication on the result of a division:
+	- tokenToBuy = msg.value / price * coeff (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#47)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+token (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#3-6) has incorrect ERC20 function interface:token.transfer(address,uint256) (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#4)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-erc20-interface
+
+Crowdsale.fallback() (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#34-71) uses a dangerous strict equality:
+	- tokenFree == 0 (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#58)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-strict-equalities
+
+Crowdsale.Crowdsale(address,address,uint256)._owner (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#27) lacks a zero-check on :
+		- owner = _owner (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#28)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in Crowdsale.fallback() (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#34-71):
+	External calls:
+	- tokenFree = sharesTokenAddress.balanceOf(this) (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#35)
+	External calls sending eth:
+	- msg.sender.transfer(msg.value) (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#40)
+	State variables written after the call(s):
+	- crowdsaleClosed = true (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#41)
+Reentrancy in Crowdsale.fallback() (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#34-71):
+	External calls:
+	- tokenFree = sharesTokenAddress.balanceOf(this) (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#35)
+	- sharesTokenAddress.transfer(msg.sender,tokenToBuy) (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#55)
+	External calls sending eth:
+	- owner.transfer(actualETHTransfer) (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#51)
+	- msg.sender.transfer(msg.value - actualETHTransfer) (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#53)
+	State variables written after the call(s):
+	- tokenSold += tokenToBuy (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#56)
+Reentrancy in Crowdsale.fallback() (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#34-71):
+	External calls:
+	- tokenFree = sharesTokenAddress.balanceOf(this) (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#35)
+	- sharesTokenAddress.transfer(msg.sender,tokenFree) (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#62)
+	External calls sending eth:
+	- owner.transfer(sendETH) (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#61)
+	- msg.sender.transfer(msg.value - sendETH) (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#63)
+	State variables written after the call(s):
+	- tokenSold += tokenFree (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#64)
+Reentrancy in Crowdsale.unsoldTokensBack() (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#73-78):
+	External calls:
+	- sharesTokenAddress.transfer(owner,sharesTokenAddress.balanceOf(this)) (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#76)
+	State variables written after the call(s):
+	- tokenFree = 0 (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#77)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in Crowdsale.fallback() (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#34-71):
+	External calls:
+	- tokenFree = sharesTokenAddress.balanceOf(this) (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#35)
+	- sharesTokenAddress.transfer(msg.sender,tokenToBuy) (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#55)
+	- sharesTokenAddress.transfer(msg.sender,tokenFree) (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#62)
+	External calls sending eth:
+	- msg.sender.transfer(msg.value) (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#37)
+	- msg.sender.transfer(msg.value) (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#40)
+	- msg.sender.transfer(msg.value) (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#44)
+	- owner.transfer(actualETHTransfer) (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#51)
+	- msg.sender.transfer(msg.value - actualETHTransfer) (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#53)
+	- owner.transfer(sendETH) (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#61)
+	- msg.sender.transfer(msg.value - sendETH) (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#63)
+	Event emitted after the call(s):
+	- CrowdsaleClosed(crowdsaleClosed) (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#70)
+	- TokenFree(tokenFree) (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#69)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+Crowdsale.fallback() (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#34-71) uses timestamp for comparisons
+	Dangerous comparisons:
+	- now < startICO (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#36)
+	- now > (stopICO + 1) (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#39)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Version constraint ^0.4.13 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ExpExponentCleanup
+	- NestedArrayFunctionCallDecoder
+	- ZeroFunctionSelector
+	- DelegateCallReturnValue
+	- ECRecoverMalformedInput.
+It is used by:
+	- ^0.4.13 (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#1)
+solc-0.4.13 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Contract token (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#3-6) is not in CapWords
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in Crowdsale.fallback() (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#34-71):
+	External calls:
+	- msg.sender.transfer(msg.value) (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#40)
+	State variables written after the call(s):
+	- crowdsaleClosed = true (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#41)
+Reentrancy in Crowdsale.fallback() (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#34-71):
+	External calls:
+	- owner.transfer(actualETHTransfer) (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#51)
+	- msg.sender.transfer(msg.value - actualETHTransfer) (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#53)
+	State variables written after the call(s):
+	- crowdsaleClosed = true (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#58)
+	- tokenFree -= tokenToBuy (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#57)
+	- tokenSold += tokenToBuy (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#56)
+Reentrancy in Crowdsale.fallback() (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#34-71):
+	External calls:
+	- owner.transfer(sendETH) (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#61)
+	- msg.sender.transfer(msg.value - sendETH) (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#63)
+	State variables written after the call(s):
+	- crowdsaleClosed = true (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#66)
+	- tokenFree = 0 (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#65)
+	- tokenSold += tokenFree (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#64)
+Reentrancy in Crowdsale.fallback() (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#34-71):
+	External calls:
+	- msg.sender.transfer(msg.value) (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#37)
+	- msg.sender.transfer(msg.value) (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#40)
+	- msg.sender.transfer(msg.value) (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#44)
+	- owner.transfer(actualETHTransfer) (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#51)
+	- msg.sender.transfer(msg.value - actualETHTransfer) (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#53)
+	- owner.transfer(sendETH) (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#61)
+	- msg.sender.transfer(msg.value - sendETH) (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#63)
+	Event emitted after the call(s):
+	- CrowdsaleClosed(crowdsaleClosed) (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#70)
+	- TokenFree(tokenFree) (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#69)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+Crowdsale.slitherConstructorVariables() (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#8-80) uses literals with too many digits:
+	- coeff = 200000 (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#16)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+Crowdsale.coeff (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#16) should be constant 
+Crowdsale.price (0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol#15) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+./0x6cd171ef32b2ffa2b54481bea9d72692cd44f053.sol analyzed (2 contracts with 94 detectors), 23 result(s) found
+
+real	0m1.589s
+user	0m1.384s
+sys	0m0.207s

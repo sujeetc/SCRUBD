@@ -1,0 +1,305 @@
+'solc --version' running
+'solc ./0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol:
+./0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol:27:47: Warning: Unused local variable
+     function totalSupply() constant returns (uint256 supply) {}
+                                              ^------------^
+./0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol:31:25: Warning: Unused local variable
+     function balanceOf(address _owner) constant returns (uint256 balance) {}
+                        ^------------^
+./0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol:31:59: Warning: Unused local variable
+     function balanceOf(address _owner) constant returns (uint256 balance) {}
+                                                          ^-------------^
+./0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol:36:24: Warning: Unused local variable
+     function transfer(address _to, uint256 _value) returns(bool) {}
+                       ^---------^
+./0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol:36:37: Warning: Unused local variable
+     function transfer(address _to, uint256 _value) returns(bool) {}
+                                    ^------------^
+./0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol:43:28: Warning: Unused local variable
+     function transferFrom(address _from, address _to, uint256 _value)returns(bool){}
+                           ^-----------^
+./0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol:43:43: Warning: Unused local variable
+     function transferFrom(address _from, address _to, uint256 _value)returns(bool){}
+                                          ^---------^
+./0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol:43:56: Warning: Unused local variable
+     function transferFrom(address _from, address _to, uint256 _value)returns(bool){}
+                                                       ^------------^
+./0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol:49:23: Warning: Unused local variable
+     function approve(address _spender, uint256 _value) returns (bool success) {}
+                      ^--------------^
+./0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol:49:41: Warning: Unused local variable
+     function approve(address _spender, uint256 _value) returns (bool success) {}
+                                        ^------------^
+./0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol:49:66: Warning: Unused local variable
+     function approve(address _spender, uint256 _value) returns (bool success) {}
+                                                                 ^----------^
+./0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol:54:25: Warning: Unused local variable
+     function allowance(address _owner, address _spender) constant returns (uint256 remaining) {}
+                        ^------------^
+./0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol:54:41: Warning: Unused local variable
+     function allowance(address _owner, address _spender) constant returns (uint256 remaining) {}
+                                        ^--------------^
+./0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol:54:77: Warning: Unused local variable
+     function allowance(address _owner, address _spender) constant returns (uint256 remaining) {}
+                                                                            ^---------------^
+
+
+Goldmint.finishICO() (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#429-447) sends eth to arbitrary user
+	Dangerous calls:
+	- multisigAddress.transfer(this.balance) (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#445)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+GoldmintUnsold.withdrawTokens() (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#226-234) ignores return value by mntToken.transfer(teamAccountAddress,total) (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#233)
+FoundersVesting.withdrawTokens() (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#259-281) ignores return value by mntToken.transfer(teamAccountAddress,amountToSend) (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#276)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+MNTP.slitherConstructorConstantVariables() (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#112-186) performs a multiplication on the result of a division:
+	- TOTAL_TOKEN_SUPPLY = 10000000 * (1000000000000000000 / 1) (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#123)
+Goldmint.getMntTokensPerEth(uint256) (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#531-547) performs a multiplication on the result of a division:
+	- pricePer1000tokensUsd = ((STD_PRICE_USD_PER_1000_TOKENS * 100) * (1000000000000000000 / 1)) / (100 + discountPercents[priceIndex]) (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#540-541)
+Goldmint.getMntTokensPerEth(uint256) (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#531-547) performs a multiplication on the result of a division:
+	- mntPerEth = (ETH_PRICE_IN_USD * 1000 * (1000000000000000000 / 1) * (1000000000000000000 / 1)) / pricePer1000tokensUsd (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#545)
+Goldmint.slitherConstructorConstantVariables() (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#289-624) performs a multiplication on the result of a division:
+	- BONUS_REWARD = 1000000 * (1000000000000000000 / 1) (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#318)
+Goldmint.slitherConstructorConstantVariables() (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#289-624) performs a multiplication on the result of a division:
+	- FOUNDERS_REWARD = 2000000 * (1000000000000000000 / 1) (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#320)
+Goldmint.slitherConstructorConstantVariables() (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#289-624) performs a multiplication on the result of a division:
+	- ICO_TOKEN_SUPPLY_LIMIT = 150 * (1000000000000000000 / 1) (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#326)
+Goldmint.slitherConstructorConstantVariables() (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#289-624) performs a multiplication on the result of a division:
+	- ICO_TOKEN_SOFT_CAP = 150000 * (1000000000000000000 / 1) (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#329)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+Goldmint.isIcoFinished() (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#486-499) uses a dangerous strict equality:
+	- icoStartedTime == 0 (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#487)
+Goldmint.startICO() (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#406-414) uses a dangerous strict equality:
+	- icoStartedTime == 0 (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#411)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-strict-equalities
+
+Contract locking ether found:
+	Contract GoldmintUnsold (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#190-240) has payable functions:
+	 - GoldmintUnsold.fallback() (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#237-239)
+	But does not have a function to withdraw the ether
+Contract locking ether found:
+	Contract FoundersVesting (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#242-287) has payable functions:
+	 - FoundersVesting.fallback() (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#284-286)
+	But does not have a function to withdraw the ether
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#contracts-that-lock-ether
+
+Reentrancy in Goldmint.issueTokensExternal(address,uint256) (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#579-586):
+	External calls:
+	- mntToken.issueTokens(_to,_tokens) (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#583)
+	State variables written after the call(s):
+	- issuedExternallyTokens = issuedExternallyTokens + _tokens (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#585)
+	Goldmint.issuedExternallyTokens (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#337) can be used in cross function reentrancies:
+	- Goldmint.issueTokensExternal(address,uint256) (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#579-586)
+	- Goldmint.issuedExternallyTokens (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#337)
+Reentrancy in Goldmint.issueTokensInternal(address,uint256) (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#588-596):
+	External calls:
+	- mntToken.issueTokens(_to,_tokens) (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#591)
+	State variables written after the call(s):
+	- icoTokensSold += _tokens (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#593)
+	Goldmint.icoTokensSold (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#332) can be used in cross function reentrancies:
+	- Goldmint.buyTokens(address) (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#549-567)
+	- Goldmint.finishICO() (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#429-447)
+	- Goldmint.getCurrentPrice() (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#477-479)
+	- Goldmint.getTokensIcoSold() (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#465-467)
+	- Goldmint.icoTokensSold (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#332)
+	- Goldmint.isIcoFinished() (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#486-499)
+	- Goldmint.issueTokensFromOtherCurrency(address,uint256) (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#570-575)
+	- Goldmint.issueTokensInternal(address,uint256) (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#588-596)
+	- Goldmint.startRefunding() (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#419-425)
+Reentrancy in FoundersVesting.withdrawTokens() (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#259-281):
+	External calls:
+	- amountToSend = mntToken.balanceOf(this) / 10 (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#266)
+	- currentBalance = mntToken.balanceOf(this) (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#272)
+	State variables written after the call(s):
+	- amountToSend = currentBalance (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#274)
+	FoundersVesting.amountToSend (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#247) can be used in cross function reentrancies:
+	- FoundersVesting.amountToSend (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#247)
+	- FoundersVesting.withdrawTokens() (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#259-281)
+Reentrancy in FoundersVesting.withdrawTokens() (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#259-281):
+	External calls:
+	- amountToSend = mntToken.balanceOf(this) / 10 (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#266)
+	- currentBalance = mntToken.balanceOf(this) (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#272)
+	- mntToken.transfer(teamAccountAddress,amountToSend) (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#276)
+	State variables written after the call(s):
+	- lastWithdrawTime = uint64(now) (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#280)
+	FoundersVesting.lastWithdrawTime (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#244) can be used in cross function reentrancies:
+	- FoundersVesting.FoundersVesting(address,address) (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#251-256)
+	- FoundersVesting.lastWithdrawTime (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#244)
+	- FoundersVesting.withdrawTokens() (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#259-281)
+	- withdrawsCount ++ (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#279)
+	FoundersVesting.withdrawsCount (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#246) can be used in cross function reentrancies:
+	- FoundersVesting.withdrawTokens() (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#259-281)
+	- FoundersVesting.withdrawsCount (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#246)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+Goldmint.getMntTokensPerEth(uint256) (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#531-547) contains a tautology or contradiction:
+	- assert(bool)(priceIndex >= 0 && (priceIndex <= 9)) (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#534)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#tautology-or-contradiction
+
+MNTP.setCreator(address) (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#136-138) should emit an event for: 
+	- creator = _creator (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#137) 
+	- creator = _creator (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#137) 
+MNTP.setIcoContractAddress(address) (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#141-143) should emit an event for: 
+	- icoContractAddress = _icoContractAddress (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#142) 
+GoldmintUnsold.setIcoContractAddress(address) (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#216-218) should emit an event for: 
+	- icoContractAddress = _icoContractAddress (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#217) 
+Goldmint.setTokenManager(address) (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#457-459) should emit an event for: 
+	- tokenManager = _new (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#458) 
+Goldmint.setOtherCurrenciesChecker(address) (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#461-463) should emit an event for: 
+	- otherCurrenciesChecker = _new (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#462) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-access-control
+
+MNTP.setCreator(address)._creator (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#136) lacks a zero-check on :
+		- creator = _creator (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#137)
+MNTP.setIcoContractAddress(address)._icoContractAddress (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#141) lacks a zero-check on :
+		- icoContractAddress = _icoContractAddress (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#142)
+GoldmintUnsold.GoldmintUnsold(address,address)._teamAccountAddress (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#198) lacks a zero-check on :
+		- teamAccountAddress = _teamAccountAddress (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#200)
+GoldmintUnsold.setIcoContractAddress(address)._icoContractAddress (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#216) lacks a zero-check on :
+		- icoContractAddress = _icoContractAddress (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#217)
+FoundersVesting.FoundersVesting(address,address)._teamAccountAddress (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#251) lacks a zero-check on :
+		- teamAccountAddress = _teamAccountAddress (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#252)
+Goldmint.Goldmint(address,address,address,address,address,address)._multisigAddress (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#383) lacks a zero-check on :
+		- multisigAddress = _multisigAddress (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#393)
+Goldmint.Goldmint(address,address,address,address,address,address)._tokenManager (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#384) lacks a zero-check on :
+		- tokenManager = _tokenManager (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#394)
+Goldmint.Goldmint(address,address,address,address,address,address)._otherCurrenciesChecker (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#385) lacks a zero-check on :
+		- otherCurrenciesChecker = _otherCurrenciesChecker (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#395)
+Goldmint.Goldmint(address,address,address,address,address,address)._foundersVestingAddress (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#389) lacks a zero-check on :
+		- foundersRewardsAccount = _foundersVestingAddress (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#401)
+Goldmint.setTokenManager(address)._new (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#457) lacks a zero-check on :
+		- tokenManager = _new (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#458)
+Goldmint.setOtherCurrenciesChecker(address)._new (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#461) lacks a zero-check on :
+		- otherCurrenciesChecker = _new (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#462)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in Goldmint.buyTokens(address) (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#549-567):
+	External calls:
+	- issueTokensInternal(_buyer,newTokens) (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#559)
+		- mntToken.issueTokens(_to,_tokens) (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#591)
+	State variables written after the call(s):
+	- buyers[msg.sender] = b (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#566)
+Reentrancy in Goldmint.finishICO() (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#429-447):
+	External calls:
+	- mntToken.lockTransfer(false) (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#430)
+	State variables written after the call(s):
+	- icoTokensUnsold = safeSub(ICO_TOKEN_SUPPLY_LIMIT,icoTokensSold) (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#436)
+	- restTokensMoved = true (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#433)
+Reentrancy in Goldmint.startICO() (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#406-414):
+	External calls:
+	- mintFoundersRewards(foundersRewardsAccount) (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#407)
+		- mntToken.issueTokens(_whereToMint,FOUNDERS_REWARD) (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#452)
+	- mntToken.lockTransfer(true) (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#409)
+	State variables written after the call(s):
+	- icoStartedTime = uint64(now) (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#412)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in Goldmint.burnTokens(address,uint256) (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#598-602):
+	External calls:
+	- mntToken.burnTokens(_from,_tokens) (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#599)
+	Event emitted after the call(s):
+	- LogBurn(_from,_tokens) (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#601)
+Reentrancy in Goldmint.issueTokensInternal(address,uint256) (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#588-596):
+	External calls:
+	- mntToken.issueTokens(_to,_tokens) (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#591)
+	Event emitted after the call(s):
+	- LogBuy(_to,_tokens) (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#595)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+GoldmintUnsold.withdrawTokens() (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#226-234) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(uint256(now) >= oneYearPassed) (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#229)
+FoundersVesting.withdrawTokens() (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#259-281) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(uint256(now) >= oneMonth) (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#262)
+Goldmint.startICO() (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#406-414) uses timestamp for comparisons
+	Dangerous comparisons:
+	- icoStartedTime == 0 (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#411)
+Goldmint.isIcoFinished() (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#486-499) uses timestamp for comparisons
+	Dangerous comparisons:
+	- icoStartedTime == 0 (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#487)
+	- uint256(now) > oneMonth (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#491)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+SafeMath.safeMul(uint256,uint256) (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#4-8) is never used and should be removed
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dead-code
+
+Version constraint ^0.4.16 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ExpExponentCleanup
+	- NestedArrayFunctionCallDecoder
+	- ZeroFunctionSelector.
+It is used by:
+	- ^0.4.16 (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#1)
+solc-0.4.16 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Parameter StdToken.transfer(address,uint256)._to (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#68) is not in mixedCase
+Parameter StdToken.transfer(address,uint256)._value (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#68) is not in mixedCase
+Parameter StdToken.transferFrom(address,address,uint256)._from (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#79) is not in mixedCase
+Parameter StdToken.transferFrom(address,address,uint256)._to (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#79) is not in mixedCase
+Parameter StdToken.transferFrom(address,address,uint256)._value (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#79) is not in mixedCase
+Parameter StdToken.balanceOf(address)._owner (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#92) is not in mixedCase
+Parameter StdToken.approve(address,uint256)._spender (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#96) is not in mixedCase
+Parameter StdToken.approve(address,uint256)._value (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#96) is not in mixedCase
+Parameter StdToken.allowance(address,address)._owner (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#102) is not in mixedCase
+Parameter StdToken.allowance(address,address)._spender (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#102) is not in mixedCase
+Parameter MNTP.setCreator(address)._creator (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#136) is not in mixedCase
+Parameter MNTP.setIcoContractAddress(address)._icoContractAddress (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#141) is not in mixedCase
+Parameter MNTP.transfer(address,uint256)._to (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#155) is not in mixedCase
+Parameter MNTP.transfer(address,uint256)._value (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#155) is not in mixedCase
+Parameter MNTP.transferFrom(address,address,uint256)._from (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#161) is not in mixedCase
+Parameter MNTP.transferFrom(address,address,uint256)._to (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#161) is not in mixedCase
+Parameter MNTP.transferFrom(address,address,uint256)._value (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#161) is not in mixedCase
+Parameter MNTP.issueTokens(address,uint256)._who (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#166) is not in mixedCase
+Parameter MNTP.issueTokens(address,uint256)._tokens (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#166) is not in mixedCase
+Parameter MNTP.burnTokens(address,uint256)._who (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#173) is not in mixedCase
+Parameter MNTP.burnTokens(address,uint256)._tokens (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#173) is not in mixedCase
+Parameter MNTP.lockTransfer(bool)._lock (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#178) is not in mixedCase
+Parameter GoldmintUnsold.setIcoContractAddress(address)._icoContractAddress (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#216) is not in mixedCase
+Parameter Goldmint.mintFoundersRewards(address)._whereToMint (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#449) is not in mixedCase
+Parameter Goldmint.setTokenManager(address)._new (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#457) is not in mixedCase
+Parameter Goldmint.setOtherCurrenciesChecker(address)._new (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#461) is not in mixedCase
+Parameter Goldmint.getMntTokenBalance(address)._of (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#473) is not in mixedCase
+Parameter Goldmint.setState(Goldmint.State)._nextState (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#501) is not in mixedCase
+Parameter Goldmint.buyTokens(address)._buyer (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#549) is not in mixedCase
+Parameter Goldmint.issueTokensFromOtherCurrency(address,uint256)._to (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#570) is not in mixedCase
+Parameter Goldmint.issueTokensFromOtherCurrency(address,uint256)._wei_count (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#570) is not in mixedCase
+Parameter Goldmint.issueTokensExternal(address,uint256)._to (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#579) is not in mixedCase
+Parameter Goldmint.issueTokensExternal(address,uint256)._tokens (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#579) is not in mixedCase
+Parameter Goldmint.issueTokensInternal(address,uint256)._to (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#588) is not in mixedCase
+Parameter Goldmint.issueTokensInternal(address,uint256)._tokens (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#588) is not in mixedCase
+Parameter Goldmint.burnTokens(address,uint256)._from (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#598) is not in mixedCase
+Parameter Goldmint.burnTokens(address,uint256)._tokens (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#598) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+MNTP.MNTP() (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#147-152) uses literals with too many digits:
+	- assert(bool)(TOTAL_TOKEN_SUPPLY == (10000000 * (1000000000000000000 / 1))) (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#151)
+MNTP.slitherConstructorConstantVariables() (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#112-186) uses literals with too many digits:
+	- TOTAL_TOKEN_SUPPLY = 10000000 * (1000000000000000000 / 1) (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#123)
+Goldmint.slitherConstructorConstantVariables() (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#289-624) uses literals with too many digits:
+	- BONUS_REWARD = 1000000 * (1000000000000000000 / 1) (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#318)
+Goldmint.slitherConstructorConstantVariables() (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#289-624) uses literals with too many digits:
+	- FOUNDERS_REWARD = 2000000 * (1000000000000000000 / 1) (0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol#320)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+./0x926e81009c2fa4475e1c798a8c43a4f598575c80.sol analyzed (7 contracts with 94 detectors), 88 result(s) found
+
+real	0m2.774s
+user	0m2.499s
+sys	0m0.277s

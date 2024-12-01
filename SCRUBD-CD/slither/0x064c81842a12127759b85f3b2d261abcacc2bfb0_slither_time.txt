@@ -1,0 +1,289 @@
+'solc --version' running
+'solc ./0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+VotingChallenge.checkEndOfChallenge() (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#107-124) sends eth to arbitrary user
+	Dangerous calls:
+	- creator.transfer((teams[loser].fullVotes * creatorFee) / 1000) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#117)
+VotingChallenge.sendReward(address) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#126-168) sends eth to arbitrary user
+	Dangerous calls:
+	- to.transfer(reward + voters[to].fullVotes[winner]) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#135)
+	- forwarder.forward.value(sum)(referrer1,to) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#138)
+	- forwarder.forward.value(sum)(referrer2,to) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#144)
+	- forwarder.forward.value(sum)(referrer1,to) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#155)
+	- forwarder.forward.value(sum)(referrer2,to) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#161)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+VotingChallengeForwarder (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#181-199) contract sets array length with a user-controlled value:
+	- sendersHash[to].push(sender) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#187)
+VotingChallengeForwarder (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#181-199) contract sets array length with a user-controlled value:
+	- sumsHash[to].push(msg.value) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#188)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#array-length-assignment
+
+Reentrancy in VotingChallenge.sendReward(address) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#126-168):
+	External calls:
+	- forwarder.forward.value(sum)(referrer1,to) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#138)
+	- forwarder.forward.value(sum)(referrer2,to) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#144)
+	External calls sending eth:
+	- to.transfer(reward + voters[to].fullVotes[winner]) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#135)
+	- forwarder.forward.value(sum)(referrer1,to) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#138)
+	- forwarder.forward.value(sum)(referrer2,to) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#144)
+	State variables written after the call(s):
+	- cryptoVersusPrize -= sum (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#145)
+	VotingChallenge.cryptoVersusPrize (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#23) can be used in cross function reentrancies:
+	- VotingChallenge.checkEndOfChallenge() (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#107-124)
+	- VotingChallenge.cryptoVersusPrize (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#23)
+	- VotingChallenge.sendCryptoVersusReward() (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#170-178)
+	- VotingChallenge.sendReward(address) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#126-168)
+	- voters[to].fullVotes[winner] = 0 (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#148)
+	VotingChallenge.voters (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#29) can be used in cross function reentrancies:
+	- VotingChallenge.sendReward(address) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#126-168)
+	- VotingChallenge.voteForCandidate(uint256) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#82-95)
+	- VotingChallenge.voteForCandidate(uint256,address) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#97-100)
+	- VotingChallenge.voteForCandidate(uint256,address,address) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#102-105)
+	- voters[to].weightedVotes[winner] = 0 (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#149)
+	VotingChallenge.voters (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#29) can be used in cross function reentrancies:
+	- VotingChallenge.sendReward(address) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#126-168)
+	- VotingChallenge.voteForCandidate(uint256) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#82-95)
+	- VotingChallenge.voteForCandidate(uint256,address) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#97-100)
+	- VotingChallenge.voteForCandidate(uint256,address,address) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#102-105)
+Reentrancy in VotingChallenge.sendReward(address) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#126-168):
+	External calls:
+	- forwarder.forward.value(sum)(referrer1,to) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#138)
+	- forwarder.forward.value(sum)(referrer2,to) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#144)
+	- forwarder.forward.value(sum)(referrer1,to) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#155)
+	External calls sending eth:
+	- to.transfer(reward + voters[to].fullVotes[winner]) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#135)
+	- forwarder.forward.value(sum)(referrer1,to) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#138)
+	- forwarder.forward.value(sum)(referrer2,to) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#144)
+	- forwarder.forward.value(sum)(referrer1,to) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#155)
+	State variables written after the call(s):
+	- cryptoVersusPrize -= sum (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#156)
+	VotingChallenge.cryptoVersusPrize (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#23) can be used in cross function reentrancies:
+	- VotingChallenge.checkEndOfChallenge() (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#107-124)
+	- VotingChallenge.cryptoVersusPrize (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#23)
+	- VotingChallenge.sendCryptoVersusReward() (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#170-178)
+	- VotingChallenge.sendReward(address) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#126-168)
+Reentrancy in VotingChallenge.sendReward(address) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#126-168):
+	External calls:
+	- forwarder.forward.value(sum)(referrer1,to) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#138)
+	- forwarder.forward.value(sum)(referrer2,to) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#144)
+	- forwarder.forward.value(sum)(referrer1,to) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#155)
+	- forwarder.forward.value(sum)(referrer2,to) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#161)
+	External calls sending eth:
+	- to.transfer(reward + voters[to].fullVotes[winner]) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#135)
+	- forwarder.forward.value(sum)(referrer1,to) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#138)
+	- forwarder.forward.value(sum)(referrer2,to) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#144)
+	- forwarder.forward.value(sum)(referrer1,to) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#155)
+	- forwarder.forward.value(sum)(referrer2,to) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#161)
+	State variables written after the call(s):
+	- cryptoVersusPrize -= sum (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#162)
+	VotingChallenge.cryptoVersusPrize (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#23) can be used in cross function reentrancies:
+	- VotingChallenge.checkEndOfChallenge() (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#107-124)
+	- VotingChallenge.cryptoVersusPrize (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#23)
+	- VotingChallenge.sendCryptoVersusReward() (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#170-178)
+	- VotingChallenge.sendReward(address) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#126-168)
+	- voters[to].fullVotes[1 - winner] = 0 (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#165)
+	VotingChallenge.voters (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#29) can be used in cross function reentrancies:
+	- VotingChallenge.sendReward(address) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#126-168)
+	- VotingChallenge.voteForCandidate(uint256) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#82-95)
+	- VotingChallenge.voteForCandidate(uint256,address) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#97-100)
+	- VotingChallenge.voteForCandidate(uint256,address,address) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#102-105)
+	- voters[to].weightedVotes[1 - winner] = 0 (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#166)
+	VotingChallenge.voters (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#29) can be used in cross function reentrancies:
+	- VotingChallenge.sendReward(address) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#126-168)
+	- VotingChallenge.voteForCandidate(uint256) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#82-95)
+	- VotingChallenge.voteForCandidate(uint256,address) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#97-100)
+	- VotingChallenge.voteForCandidate(uint256,address,address) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#102-105)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+VotingChallenge.sendReward(address) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#126-168) performs a multiplication on the result of a division:
+	- sum = loserVotes / 1000 * 1 (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#160)
+VotingChallenge.sendReward(address) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#126-168) performs a multiplication on the result of a division:
+	- sum = loserVotes / 100 * 1 (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#154)
+VotingChallenge.sendReward(address) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#126-168) performs a multiplication on the result of a division:
+	- sum = reward / 1000 * 2 (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#143)
+VotingChallenge.sendReward(address) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#126-168) performs a multiplication on the result of a division:
+	- sum = reward / 100 * 2 (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#137)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+VotingChallenge.voteForCandidate(uint256) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#82-95) contains a tautology or contradiction:
+	- require(bool)(0 <= candidate && candidate < 2) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#83)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#tautology-or-contradiction
+
+VotingChallenge.sendReward(address).to (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#126) lacks a zero-check on :
+		- to.transfer(reward + voters[to].fullVotes[winner]) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#135)
+VotingChallengeForwarder.forward(address,address).to (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#185) lacks a zero-check on :
+		- to.transfer(msg.value) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#186)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in VotingChallenge.sendReward(address) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#126-168):
+	External calls:
+	- forwarder.forward.value(sum)(referrer1,to) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#138)
+	External calls sending eth:
+	- to.transfer(reward + voters[to].fullVotes[winner]) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#135)
+	- forwarder.forward.value(sum)(referrer1,to) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#138)
+	State variables written after the call(s):
+	- cryptoVersusPrize -= sum (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#139)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in VotingChallenge.sendReward(address) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#126-168):
+	External calls:
+	- forwarder.forward.value(sum)(referrer1,to) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#138)
+	External calls sending eth:
+	- to.transfer(reward + voters[to].fullVotes[winner]) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#135)
+	- forwarder.forward.value(sum)(referrer1,to) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#138)
+	Event emitted after the call(s):
+	- ReferrerRewardWasPaid(to,referrer1,sum) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#140)
+Reentrancy in VotingChallenge.sendReward(address) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#126-168):
+	External calls:
+	- forwarder.forward.value(sum)(referrer1,to) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#138)
+	- forwarder.forward.value(sum)(referrer2,to) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#144)
+	External calls sending eth:
+	- to.transfer(reward + voters[to].fullVotes[winner]) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#135)
+	- forwarder.forward.value(sum)(referrer1,to) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#138)
+	- forwarder.forward.value(sum)(referrer2,to) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#144)
+	Event emitted after the call(s):
+	- ReferrerRewardWasPaid(to,referrer2,sum) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#146)
+	- RewardWasPaid(to,reward) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#150)
+Reentrancy in VotingChallenge.sendReward(address) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#126-168):
+	External calls:
+	- forwarder.forward.value(sum)(referrer1,to) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#138)
+	- forwarder.forward.value(sum)(referrer2,to) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#144)
+	- forwarder.forward.value(sum)(referrer1,to) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#155)
+	External calls sending eth:
+	- to.transfer(reward + voters[to].fullVotes[winner]) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#135)
+	- forwarder.forward.value(sum)(referrer1,to) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#138)
+	- forwarder.forward.value(sum)(referrer2,to) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#144)
+	- forwarder.forward.value(sum)(referrer1,to) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#155)
+	Event emitted after the call(s):
+	- ReferrerRewardWasPaid(to,referrer1,sum) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#157)
+Reentrancy in VotingChallenge.sendReward(address) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#126-168):
+	External calls:
+	- forwarder.forward.value(sum)(referrer1,to) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#138)
+	- forwarder.forward.value(sum)(referrer2,to) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#144)
+	- forwarder.forward.value(sum)(referrer1,to) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#155)
+	- forwarder.forward.value(sum)(referrer2,to) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#161)
+	External calls sending eth:
+	- to.transfer(reward + voters[to].fullVotes[winner]) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#135)
+	- forwarder.forward.value(sum)(referrer1,to) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#138)
+	- forwarder.forward.value(sum)(referrer2,to) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#144)
+	- forwarder.forward.value(sum)(referrer1,to) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#155)
+	- forwarder.forward.value(sum)(referrer2,to) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#161)
+	Event emitted after the call(s):
+	- ReferrerRewardWasPaid(to,referrer2,sum) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#163)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+VotingChallenge.timeOver() (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#69-71) uses timestamp for comparisons
+	Dangerous comparisons:
+	- challengeStarted + challengeDuration <= now (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#70)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Version constraint ^0.5.1 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor
+	- IncorrectEventSignatureInLibraries
+	- ABIEncoderV2PackedStorage.
+It is used by:
+	- ^0.5.1 (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#1)
+solc-0.5.1 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Reentrancy in VotingChallenge.checkEndOfChallenge() (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#107-124):
+	External calls:
+	- creator.transfer((teams[loser].fullVotes * creatorFee) / 1000) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#117)
+	State variables written after the call(s):
+	- challengePrize = teams[loser].fullVotes * (1000 - creatorFee - cryptoVersusFee) / 1000 (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#119)
+	- cryptoVersusPrize = (teams[loser].fullVotes * cryptoVersusFee) / 1000 (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#118)
+	- isVotingPeriod = false (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#120)
+	Event emitted after the call(s):
+	- EndOfChallenge(winner,teams[winner].fullVotes,challengePrize) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#122)
+Reentrancy in VotingChallengeForwarder.forward(address,address) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#185-189):
+	External calls:
+	- to.transfer(msg.value) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#186)
+	State variables written after the call(s):
+	- sendersHash[to].push(sender) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#187)
+	- sumsHash[to].push(msg.value) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#188)
+Reentrancy in VotingChallenge.sendCryptoVersusReward() (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#170-178):
+	External calls:
+	- cryptoVersusWallet.transfer(cryptoVersusReward) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#174)
+	Event emitted after the call(s):
+	- CryptoVersusRewardWasPaid(cryptoVersusWallet,cryptoVersusReward) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#176)
+Reentrancy in VotingChallenge.sendReward(address) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#126-168):
+	External calls:
+	- to.transfer(reward + voters[to].fullVotes[winner]) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#135)
+	External calls sending eth:
+	- to.transfer(reward + voters[to].fullVotes[winner]) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#135)
+	- forwarder.forward.value(sum)(referrer1,to) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#138)
+	State variables written after the call(s):
+	- cryptoVersusPrize -= sum (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#139)
+	Event emitted after the call(s):
+	- ReferrerRewardWasPaid(to,referrer1,sum) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#140)
+Reentrancy in VotingChallenge.sendReward(address) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#126-168):
+	External calls:
+	- to.transfer(reward + voters[to].fullVotes[winner]) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#135)
+	External calls sending eth:
+	- to.transfer(reward + voters[to].fullVotes[winner]) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#135)
+	- forwarder.forward.value(sum)(referrer1,to) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#138)
+	- forwarder.forward.value(sum)(referrer2,to) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#144)
+	State variables written after the call(s):
+	- cryptoVersusPrize -= sum (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#145)
+	- voters[to].fullVotes[winner] = 0 (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#148)
+	- voters[to].weightedVotes[winner] = 0 (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#149)
+	Event emitted after the call(s):
+	- ReferrerRewardWasPaid(to,referrer2,sum) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#146)
+	- RewardWasPaid(to,reward) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#150)
+Reentrancy in VotingChallenge.sendReward(address) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#126-168):
+	External calls:
+	- to.transfer(reward + voters[to].fullVotes[winner]) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#135)
+	External calls sending eth:
+	- to.transfer(reward + voters[to].fullVotes[winner]) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#135)
+	- forwarder.forward.value(sum)(referrer1,to) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#138)
+	- forwarder.forward.value(sum)(referrer2,to) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#144)
+	- forwarder.forward.value(sum)(referrer1,to) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#155)
+	State variables written after the call(s):
+	- cryptoVersusPrize -= sum (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#156)
+	Event emitted after the call(s):
+	- ReferrerRewardWasPaid(to,referrer1,sum) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#157)
+Reentrancy in VotingChallenge.sendReward(address) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#126-168):
+	External calls:
+	- to.transfer(reward + voters[to].fullVotes[winner]) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#135)
+	External calls sending eth:
+	- to.transfer(reward + voters[to].fullVotes[winner]) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#135)
+	- forwarder.forward.value(sum)(referrer1,to) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#138)
+	- forwarder.forward.value(sum)(referrer2,to) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#144)
+	- forwarder.forward.value(sum)(referrer1,to) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#155)
+	- forwarder.forward.value(sum)(referrer2,to) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#161)
+	State variables written after the call(s):
+	- cryptoVersusPrize -= sum (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#162)
+	- voters[to].fullVotes[1 - winner] = 0 (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#165)
+	- voters[to].weightedVotes[1 - winner] = 0 (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#166)
+	Event emitted after the call(s):
+	- ReferrerRewardWasPaid(to,referrer2,sum) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#163)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+VotingChallenge.currentCoefficient() (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#65-67) uses literals with too many digits:
+	- 1000000 - 900000 * (now - challengeStarted) / challengeDuration (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#66)
+VotingChallenge.voteForCandidate(uint256) (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#82-95) uses literals with too many digits:
+	- weightedVotes = msg.value * coefficient / 1000000 (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#88)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+VotingChallenge.creatorFee (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#20) should be constant 
+VotingChallenge.cryptoVersusFee (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#22) should be constant 
+VotingChallenge.cryptoVersusWallet (0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol#21) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+./0x064c81842a12127759b85f3b2d261abcacc2bfb0.sol analyzed (2 contracts with 94 detectors), 34 result(s) found
+
+real	0m2.045s
+user	0m1.858s
+sys	0m0.189s

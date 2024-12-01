@@ -1,0 +1,383 @@
+'solc --version' running
+'solc ./0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol:
+Warning: Contract code size exceeds 24576 bytes (a limit introduced in Spurious Dragon). This contract may not be deployable on mainnet. Consider enabling the optimizer (with a low "runs" value!), turning off revert strings, or using libraries.
+   --> ./0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol:311:1:
+    |
+311 | contract IZA is Context, IERC20, Ownable {
+    | ^ (Relevant source part starts here and spans across multiple lines).
+
+
+
+IZA.swapETHForTokens(uint256) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#792-805) sends eth to arbitrary user
+	Dangerous calls:
+	- router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: amount}(0,path,deadAddress,block.timestamp.add(300)) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#799-804)
+IZA.addLiquidity(uint256,uint256) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#834-847) sends eth to arbitrary user
+	Dangerous calls:
+	- router.addLiquidityETH{value: bnbAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#839-846)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+Reentrancy in IZA._transfer(address,address,uint256) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#708-757):
+	External calls:
+	- buyBackTokens(balance.div(100)) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#748)
+		- router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: amount}(0,path,deadAddress,block.timestamp.add(300)) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#799-804)
+	- swapAndLiquify(swapTokensAtAmount) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#751)
+		- router.addLiquidityETH{value: bnbAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#839-846)
+		- router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#858-864)
+	External calls sending eth:
+	- buyBackTokens(balance.div(100)) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#748)
+		- router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: amount}(0,path,deadAddress,block.timestamp.add(300)) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#799-804)
+	- swapAndLiquify(swapTokensAtAmount) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#751)
+		- router.addLiquidityETH{value: bnbAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#839-846)
+		- address(marketingAddress).transfer(marketingAmt) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#829)
+	State variables written after the call(s):
+	- _tokenTransfer(from,to,amount,! (_isExcludedFromFee[from] || _isExcludedFromFee[to]),isSale) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#756)
+		- _rOwned[address(this)] += rmarketing (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#599)
+		- _rOwned[burnAddress] += rburn (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#630)
+		- _rOwned[address(this)] += rLiquidity (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#620)
+		- _rOwned[address(this)] += rBuyback (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#610)
+		- _rOwned[sender] = _rOwned[sender] - s.rAmount (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#772)
+		- _rOwned[recipient] = _rOwned[recipient] + s.rTransferAmount (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#773)
+	IZA._rOwned (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#315) can be used in cross function reentrancies:
+	- IZA._getCurrentSupply() (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#689-699)
+	- IZA._takeBuyback(uint256,uint256) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#603-611)
+	- IZA._takeLiquidity(uint256,uint256) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#613-621)
+	- IZA._takeburn(uint256,uint256) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#623-631)
+	- IZA._takemarketing(uint256,uint256) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#594-601)
+	- IZA._tokenTransfer(address,address,uint256,bool,bool) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#761-784)
+	- IZA.balanceOf(address) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#453-456)
+	- IZA.constructor(address) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#420-435)
+	- IZA.deliver(uint256) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#492-499)
+	- IZA.excludeFromReward(address) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#527-534)
+	- _tokenTransfer(from,to,amount,! (_isExcludedFromFee[from] || _isExcludedFromFee[to]),isSale) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#756)
+		- _rTotal -= rRfi (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#590)
+	IZA._rTotal (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#337) can be used in cross function reentrancies:
+	- IZA._getCurrentSupply() (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#689-699)
+	- IZA._reflectRfi(uint256,uint256) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#589-592)
+	- IZA.constructor(address) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#420-435)
+	- IZA.deliver(uint256) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#492-499)
+	- IZA.tokenFromReflection(uint256) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#520-524)
+	- _tokenTransfer(from,to,amount,! (_isExcludedFromFee[from] || _isExcludedFromFee[to]),isSale) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#756)
+		- _tOwned[address(this)] += tBuyback (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#608)
+		- _tOwned[address(this)] += tmarketing (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#597)
+		- _tOwned[burnAddress] += tburn (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#628)
+		- _tOwned[sender] = _tOwned[sender] - tAmount (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#766)
+		- _tOwned[address(this)] += tLiquidity (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#618)
+		- _tOwned[recipient] = _tOwned[recipient] + s.tTransferAmount (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#769)
+	IZA._tOwned (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#316) can be used in cross function reentrancies:
+	- IZA._getCurrentSupply() (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#689-699)
+	- IZA._takeBuyback(uint256,uint256) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#603-611)
+	- IZA._takeLiquidity(uint256,uint256) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#613-621)
+	- IZA._takeburn(uint256,uint256) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#623-631)
+	- IZA._takemarketing(uint256,uint256) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#594-601)
+	- IZA._tokenTransfer(address,address,uint256,bool,bool) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#761-784)
+	- IZA.balanceOf(address) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#453-456)
+	- IZA.excludeFromReward(address) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#527-534)
+	- IZA.includeInReward(address) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#536-547)
+	- swapAndLiquify(swapTokensAtAmount) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#751)
+		- swapping = true (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#415)
+		- swapping = false (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#417)
+	IZA.swapping (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#328) can be used in cross function reentrancies:
+	- IZA._transfer(address,address,uint256) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#708-757)
+	- IZA.lockTheSwap() (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#414-418)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+IZA.rescueBEP20Tokens(address) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#918-920) ignores return value by IERC20(tokenAddress).transfer(msg.sender,IERC20(tokenAddress).balanceOf(address(this))) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#919)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+IZA.swapAndLiquify(uint256) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#807-831) performs a multiplication on the result of a division:
+	- unitBalance = deltaBalance / (denominator - feeRates.liquidity) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#818)
+	- bnbToAddLiquidityWith = unitBalance * feeRates.liquidity (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#819)
+IZA.swapAndLiquify(uint256) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#807-831) performs a multiplication on the result of a division:
+	- unitBalance = deltaBalance / (denominator - feeRates.liquidity) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#818)
+	- marketingAmt = unitBalance * 2 * feeRates.marketing (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#827)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+Reentrancy in IZA.setRouterAddress(address) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#923-934):
+	External calls:
+	- pair = IFactory(_newRouter.factory()).createPair(address(this),_newRouter.WETH()) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#928)
+	State variables written after the call(s):
+	- router = _newRouter (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#933)
+	IZA.router (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#330) can be used in cross function reentrancies:
+	- IZA.addLiquidity(uint256,uint256) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#834-847)
+	- IZA.constructor(address) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#420-435)
+	- IZA.router (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#330)
+	- IZA.setRouterAddress(address) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#923-934)
+	- IZA.swapETHForTokens(uint256) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#792-805)
+	- IZA.swapTokensForBNB(uint256) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#849-866)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+IZA._transfer(address,address,uint256).isSale (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#753) is a local variable never initialized
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#uninitialized-local-variables
+
+IZA.addLiquidity(uint256,uint256) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#834-847) ignores return value by router.addLiquidityETH{value: bnbAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#839-846)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+IZA.allowance(address,address).owner (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#463) shadows:
+	- Ownable.owner() (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#250-252) (function)
+IZA._approve(address,address,uint256).owner (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#701) shadows:
+	- Ownable.owner() (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#250-252) (function)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#local-variable-shadowing
+
+IZA.setMaxWalletPercent(uint256) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#563-567) should emit an event for: 
+	- _maxWalletSize = _tTotal.mul(maxWallPercent).div(10 ** 2) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#564-566) 
+IZA.setMaxBuyAndSellAmount(uint256,uint256) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#882-885) should emit an event for: 
+	- maxBuyAmount = _maxBuyamount * 10 ** 9 (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#883) 
+	- maxSellAmount = _maxSellAmount * 10 ** 9 (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#884) 
+IZA.updateSwapTokensAtAmount(uint256) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#887-889) should emit an event for: 
+	- swapTokensAtAmount = amount * 10 ** _decimals (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#888) 
+IZA.setBuybackUpperLimit(uint256) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#904-906) should emit an event for: 
+	- buyBackUpperLimit = buyBackLimit * 10 ** 15 (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#905) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+IZA.constructor(address)._pair (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#422-423) lacks a zero-check on :
+		- pair = _pair (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#426)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in IZA._transfer(address,address,uint256) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#708-757):
+	External calls:
+	- buyBackTokens(balance.div(100)) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#748)
+		- router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: amount}(0,path,deadAddress,block.timestamp.add(300)) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#799-804)
+	- swapAndLiquify(swapTokensAtAmount) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#751)
+		- router.addLiquidityETH{value: bnbAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#839-846)
+		- router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#858-864)
+	External calls sending eth:
+	- buyBackTokens(balance.div(100)) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#748)
+		- router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: amount}(0,path,deadAddress,block.timestamp.add(300)) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#799-804)
+	- swapAndLiquify(swapTokensAtAmount) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#751)
+		- router.addLiquidityETH{value: bnbAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#839-846)
+		- address(marketingAddress).transfer(marketingAmt) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#829)
+	State variables written after the call(s):
+	- swapAndLiquify(swapTokensAtAmount) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#751)
+		- _allowances[owner][spender] = amount (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#704)
+	- _tokenTransfer(from,to,amount,! (_isExcludedFromFee[from] || _isExcludedFromFee[to]),isSale) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#756)
+		- totFeesPaid.marketing += tmarketing (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#595)
+		- totFeesPaid.burn += tburn (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#624)
+		- totFeesPaid.liquidity += tLiquidity (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#614)
+		- totFeesPaid.buyBack += tBuyback (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#604)
+		- totFeesPaid.rfi += tRfi (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#591)
+Reentrancy in IZA.swapAndLiquify(uint256) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#807-831):
+	External calls:
+	- swapTokensForBNB(toSwap) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#815)
+		- router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#858-864)
+	- addLiquidity(tokensToAddLiquidityWith,bnbToAddLiquidityWith) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#823)
+		- router.addLiquidityETH{value: bnbAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#839-846)
+	External calls sending eth:
+	- addLiquidity(tokensToAddLiquidityWith,bnbToAddLiquidityWith) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#823)
+		- router.addLiquidityETH{value: bnbAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#839-846)
+	State variables written after the call(s):
+	- addLiquidity(tokensToAddLiquidityWith,bnbToAddLiquidityWith) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#823)
+		- _allowances[owner][spender] = amount (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#704)
+Reentrancy in IZA.transferFrom(address,address,uint256) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#472-476):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#473)
+		- router.addLiquidityETH{value: bnbAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#839-846)
+		- router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: amount}(0,path,deadAddress,block.timestamp.add(300)) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#799-804)
+		- router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#858-864)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#473)
+		- router.addLiquidityETH{value: bnbAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#839-846)
+		- router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: amount}(0,path,deadAddress,block.timestamp.add(300)) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#799-804)
+		- address(marketingAddress).transfer(marketingAmt) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#829)
+	State variables written after the call(s):
+	- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#474)
+		- _allowances[owner][spender] = amount (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#704)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in IZA._transfer(address,address,uint256) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#708-757):
+	External calls:
+	- buyBackTokens(balance.div(100)) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#748)
+		- router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: amount}(0,path,deadAddress,block.timestamp.add(300)) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#799-804)
+	- swapAndLiquify(swapTokensAtAmount) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#751)
+		- router.addLiquidityETH{value: bnbAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#839-846)
+		- router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#858-864)
+	External calls sending eth:
+	- buyBackTokens(balance.div(100)) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#748)
+		- router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: amount}(0,path,deadAddress,block.timestamp.add(300)) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#799-804)
+	- swapAndLiquify(swapTokensAtAmount) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#751)
+		- router.addLiquidityETH{value: bnbAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#839-846)
+		- address(marketingAddress).transfer(marketingAmt) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#829)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#705)
+		- swapAndLiquify(swapTokensAtAmount) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#751)
+	- Transfer(sender,recipient,s.tTransferAmount) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#780)
+		- _tokenTransfer(from,to,amount,! (_isExcludedFromFee[from] || _isExcludedFromFee[to]),isSale) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#756)
+	- Transfer(sender,address(this),s.tLiquidity + s.tmarketing + s.tBuyback) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#781)
+		- _tokenTransfer(from,to,amount,! (_isExcludedFromFee[from] || _isExcludedFromFee[to]),isSale) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#756)
+	- Transfer(sender,burnAddress,s.tburn) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#782)
+		- _tokenTransfer(from,to,amount,! (_isExcludedFromFee[from] || _isExcludedFromFee[to]),isSale) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#756)
+Reentrancy in IZA.swapAndLiquify(uint256) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#807-831):
+	External calls:
+	- swapTokensForBNB(toSwap) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#815)
+		- router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#858-864)
+	- addLiquidity(tokensToAddLiquidityWith,bnbToAddLiquidityWith) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#823)
+		- router.addLiquidityETH{value: bnbAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#839-846)
+	External calls sending eth:
+	- addLiquidity(tokensToAddLiquidityWith,bnbToAddLiquidityWith) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#823)
+		- router.addLiquidityETH{value: bnbAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#839-846)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#705)
+		- addLiquidity(tokensToAddLiquidityWith,bnbToAddLiquidityWith) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#823)
+Reentrancy in IZA.transferFrom(address,address,uint256) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#472-476):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#473)
+		- router.addLiquidityETH{value: bnbAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#839-846)
+		- router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: amount}(0,path,deadAddress,block.timestamp.add(300)) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#799-804)
+		- router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#858-864)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#473)
+		- router.addLiquidityETH{value: bnbAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#839-846)
+		- router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: amount}(0,path,deadAddress,block.timestamp.add(300)) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#799-804)
+		- address(marketingAddress).transfer(marketingAmt) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#829)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#705)
+		- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#474)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+Address.isContract(address) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#138-145) uses assembly
+	- INLINE ASM (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#141-143)
+Address._verifyCallResult(bool,bytes,string) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#217-235) uses assembly
+	- INLINE ASM (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#227-230)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#assembly-usage
+
+IZA.includeInReward(address) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#536-547) has costly operations inside a loop:
+	- _excluded.pop() (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#543)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#costly-operations-inside-a-loop
+
+Context._msgData() (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#129-132) is never used and should be removed
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dead-code
+
+IZA._rTotal (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#337) is set pre-construction with a non-constant function or state variable:
+	- (MAX - (MAX % _tTotal))
+IZA.maxBuyAmount (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#339) is set pre-construction with a non-constant function or state variable:
+	- _tTotal.mul(3).div(100)
+IZA.maxSellAmount (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#340) is set pre-construction with a non-constant function or state variable:
+	- _tTotal.mul(3).div(100)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#function-initializing-state
+
+Version constraint ^0.8.0 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- SignedImmutables
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching.
+It is used by:
+	- ^0.8.0 (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#2)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in Address.sendValue(address,uint256) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#147-152):
+	- (success,None) = recipient.call{value: amount}() (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#150)
+Low level call in Address.functionCallWithValue(address,bytes,uint256,string) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#174-185):
+	- (success,returndata) = target.call{value: value}(data) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#183)
+Low level call in Address.functionStaticCall(address,bytes,string) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#191-200):
+	- (success,returndata) = target.staticcall(data) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#198)
+Low level call in Address.functionDelegateCall(address,bytes,string) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#206-215):
+	- (success,returndata) = target.delegatecall(data) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#213)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Function IRouter.WETH() (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#282) is not in mixedCase
+Struct IZA.feeRatesStruct (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#358-364) is not in CapWords
+Struct IZA.valuesFromGetValues (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#392-408) is not in CapWords
+Parameter IZA.setFeeRates(uint256,uint256,uint256,uint256,uint256)._rfi (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#569) is not in mixedCase
+Parameter IZA.setFeeRates(uint256,uint256,uint256,uint256,uint256)._marketing (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#569) is not in mixedCase
+Parameter IZA.setFeeRates(uint256,uint256,uint256,uint256,uint256)._burn (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#569) is not in mixedCase
+Parameter IZA.setFeeRates(uint256,uint256,uint256,uint256,uint256)._liquidity (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#569) is not in mixedCase
+Parameter IZA.setFeeRates(uint256,uint256,uint256,uint256,uint256)._buyback (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#569) is not in mixedCase
+Parameter IZA.setSellFeeRates(uint256,uint256,uint256,uint256,uint256)._rfi (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#579) is not in mixedCase
+Parameter IZA.setSellFeeRates(uint256,uint256,uint256,uint256,uint256)._marketing (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#579) is not in mixedCase
+Parameter IZA.setSellFeeRates(uint256,uint256,uint256,uint256,uint256)._burn (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#579) is not in mixedCase
+Parameter IZA.setSellFeeRates(uint256,uint256,uint256,uint256,uint256)._liquidity (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#579) is not in mixedCase
+Parameter IZA.setSellFeeRates(uint256,uint256,uint256,uint256,uint256)._buyback (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#579) is not in mixedCase
+Parameter IZA.setMaxBuyAndSellAmount(uint256,uint256)._maxBuyamount (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#882) is not in mixedCase
+Parameter IZA.setMaxBuyAndSellAmount(uint256,uint256)._maxSellAmount (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#882) is not in mixedCase
+Parameter IZA.updateSwapEnabled(bool)._enabled (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#891) is not in mixedCase
+Parameter IZA.updateBuybackEnabled(bool)._enabled (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#895) is not in mixedCase
+Parameter IZA.setAntibot(address,bool)._bot (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#899) is not in mixedCase
+Constant IZA._decimals (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#333) is not in UPPER_CASE_WITH_UNDERSCORES
+Variable IZA._maxWalletSize (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#342) is not in mixedCase
+Constant IZA._name (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#354) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant IZA._symbol (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#355) is not in UPPER_CASE_WITH_UNDERSCORES
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Redundant expression "this (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#130)" inContext (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#124-133)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#redundant-statements
+
+Reentrancy in IZA._transfer(address,address,uint256) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#708-757):
+	External calls:
+	- swapAndLiquify(swapTokensAtAmount) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#751)
+		- address(marketingAddress).transfer(marketingAmt) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#829)
+	External calls sending eth:
+	- buyBackTokens(balance.div(100)) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#748)
+		- router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: amount}(0,path,deadAddress,block.timestamp.add(300)) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#799-804)
+	- swapAndLiquify(swapTokensAtAmount) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#751)
+		- router.addLiquidityETH{value: bnbAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#839-846)
+		- address(marketingAddress).transfer(marketingAmt) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#829)
+	State variables written after the call(s):
+	- _tokenTransfer(from,to,amount,! (_isExcludedFromFee[from] || _isExcludedFromFee[to]),isSale) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#756)
+		- _rOwned[address(this)] += rmarketing (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#599)
+		- _rOwned[burnAddress] += rburn (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#630)
+		- _rOwned[address(this)] += rLiquidity (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#620)
+		- _rOwned[address(this)] += rBuyback (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#610)
+		- _rOwned[sender] = _rOwned[sender] - s.rAmount (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#772)
+		- _rOwned[recipient] = _rOwned[recipient] + s.rTransferAmount (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#773)
+	- _tokenTransfer(from,to,amount,! (_isExcludedFromFee[from] || _isExcludedFromFee[to]),isSale) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#756)
+		- _rTotal -= rRfi (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#590)
+	- _tokenTransfer(from,to,amount,! (_isExcludedFromFee[from] || _isExcludedFromFee[to]),isSale) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#756)
+		- _tOwned[address(this)] += tBuyback (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#608)
+		- _tOwned[address(this)] += tmarketing (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#597)
+		- _tOwned[burnAddress] += tburn (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#628)
+		- _tOwned[sender] = _tOwned[sender] - tAmount (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#766)
+		- _tOwned[address(this)] += tLiquidity (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#618)
+		- _tOwned[recipient] = _tOwned[recipient] + s.tTransferAmount (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#769)
+	- _tokenTransfer(from,to,amount,! (_isExcludedFromFee[from] || _isExcludedFromFee[to]),isSale) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#756)
+		- totFeesPaid.marketing += tmarketing (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#595)
+		- totFeesPaid.burn += tburn (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#624)
+		- totFeesPaid.liquidity += tLiquidity (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#614)
+		- totFeesPaid.buyBack += tBuyback (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#604)
+		- totFeesPaid.rfi += tRfi (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#591)
+	Event emitted after the call(s):
+	- Transfer(sender,recipient,s.tTransferAmount) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#780)
+		- _tokenTransfer(from,to,amount,! (_isExcludedFromFee[from] || _isExcludedFromFee[to]),isSale) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#756)
+	- Transfer(sender,address(this),s.tLiquidity + s.tmarketing + s.tBuyback) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#781)
+		- _tokenTransfer(from,to,amount,! (_isExcludedFromFee[from] || _isExcludedFromFee[to]),isSale) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#756)
+	- Transfer(sender,burnAddress,s.tburn) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#782)
+		- _tokenTransfer(from,to,amount,! (_isExcludedFromFee[from] || _isExcludedFromFee[to]),isSale) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#756)
+Reentrancy in IZA.transferFrom(address,address,uint256) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#472-476):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#473)
+		- address(marketingAddress).transfer(marketingAmt) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#829)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#473)
+		- router.addLiquidityETH{value: bnbAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#839-846)
+		- router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: amount}(0,path,deadAddress,block.timestamp.add(300)) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#799-804)
+		- address(marketingAddress).transfer(marketingAmt) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#829)
+	State variables written after the call(s):
+	- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#474)
+		- _allowances[owner][spender] = amount (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#704)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#705)
+		- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#474)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+IZA.slitherConstructorVariables() (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#311-939) uses literals with too many digits:
+	- _tTotal = 100000000000000 * 10 ** _decimals (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#336)
+IZA.slitherConstructorVariables() (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#311-939) uses literals with too many digits:
+	- swapTokensAtAmount = 50000000000 * 10 ** _decimals (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#341)
+IZA.slitherConstructorVariables() (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#311-939) uses literals with too many digits:
+	- _maxWalletSize = 3000000000000 * 10 ** 9 (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#342)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+Loop condition i < _excluded.length (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#692) should use cached array length instead of referencing `length` member of the storage array.
+ Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#cache-array-length
+
+IZA._tTotal (0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol#336) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+./0x0e50763fbbd9a2474c429041b338624bb2a8b7bd.sol analyzed (8 contracts with 94 detectors), 64 result(s) found
+
+real	0m4.512s
+user	0m4.256s
+sys	0m0.257s

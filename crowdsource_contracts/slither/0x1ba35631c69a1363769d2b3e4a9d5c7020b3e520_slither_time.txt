@@ -1,0 +1,372 @@
+'solc --version' running
+'solc ./0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol:
+./0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol:2:1: Warning: Experimental features are turned on. Do not use experimental features on live deployments.
+pragma experimental ABIEncoderV2;
+^-------------------------------^
+
+
+yUSDC.buyNBurn(uint256) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#519-526) sends eth to arbitrary user
+	Dangerous calls:
+	- amounts = IUniswap(uniswapRouter).swapExactETHForTokens.value(_ethToSwap)(uint256(0),path,address(0),now.add(1800)) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#524)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+Reentrancy in yUSDC.withdraw(uint256) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#568-619):
+	External calls:
+	- _withdrawSome(stablecoinsToWithdraw.sub(b)) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#587)
+		- require(bool,string)(Fulcrum(fulcrum).burn(address(this),amount) > 0,FULCRUM: withdraw failed) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#874)
+		- AToken(aaveToken).redeem(amount) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#871)
+		- require(bool,string)(Compound(compound).redeem(amount) == 0,COMPOUND: withdraw failed) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#877)
+		- DyDx(dydx).operate(infos,args) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#683)
+	- yeldToken.transfer(msg.sender,generatedYelds) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#597)
+	- stakingProfits = usdcToETH(combined) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#600)
+		- IERC20(usdc).safeApprove(uniswapRouter,0) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#507)
+		- IERC20(usdc).safeApprove(uniswapRouter,_amount) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#508)
+		- (success,returndata) = address(token).call(data) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#276)
+		- amounts = IUniswap(uniswapRouter).swapExactTokensForETH(_amount,uint256(0),path,address(this),now.add(1800)) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#516)
+	- buyNBurn(ethToSwap) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#605)
+		- amounts = IUniswap(uniswapRouter).swapExactETHForTokens.value(_ethToSwap)(uint256(0),path,address(0),now.add(1800)) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#524)
+	- (success,None) = devTreasury.call.value(devTreasuryAmount)() (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#612)
+	- IERC20(token).transfer(msg.sender,stablecoinsToWithdraw.sub(combined)) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#614)
+	External calls sending eth:
+	- buyNBurn(ethToSwap) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#605)
+		- amounts = IUniswap(uniswapRouter).swapExactETHForTokens.value(_ethToSwap)(uint256(0),path,address(0),now.add(1800)) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#524)
+	- retirementYeldTreasury.transfer(retirementYeld) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#607)
+	- retirementYeldTreasury.transfer(retirementYeld_scope_0) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#610)
+	- (success,None) = devTreasury.call.value(devTreasuryAmount)() (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#612)
+	State variables written after the call(s):
+	- pool = _calcPoolValueInToken() (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#617)
+	yUSDC.pool (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#421) can be used in cross function reentrancies:
+	- yUSDC.pool (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#421)
+Reentrancy in yUSDC.withdraw(uint256) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#568-619):
+	External calls:
+	- _withdrawSome(stablecoinsToWithdraw.sub(b)) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#587)
+		- require(bool,string)(Fulcrum(fulcrum).burn(address(this),amount) > 0,FULCRUM: withdraw failed) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#874)
+		- AToken(aaveToken).redeem(amount) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#871)
+		- require(bool,string)(Compound(compound).redeem(amount) == 0,COMPOUND: withdraw failed) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#877)
+		- DyDx(dydx).operate(infos,args) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#683)
+	- yeldToken.transfer(msg.sender,generatedYelds) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#597)
+	- stakingProfits = usdcToETH(combined) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#600)
+		- IERC20(usdc).safeApprove(uniswapRouter,0) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#507)
+		- IERC20(usdc).safeApprove(uniswapRouter,_amount) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#508)
+		- (success,returndata) = address(token).call(data) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#276)
+		- amounts = IUniswap(uniswapRouter).swapExactTokensForETH(_amount,uint256(0),path,address(this),now.add(1800)) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#516)
+	- buyNBurn(ethToSwap) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#605)
+		- amounts = IUniswap(uniswapRouter).swapExactETHForTokens.value(_ethToSwap)(uint256(0),path,address(0),now.add(1800)) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#524)
+	- (success,None) = devTreasury.call.value(devTreasuryAmount)() (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#612)
+	- IERC20(token).transfer(msg.sender,stablecoinsToWithdraw.sub(combined)) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#614)
+	- rebalance() (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#618)
+		- require(bool,string)(Fulcrum(fulcrum).burn(address(this),amount) > 0,FULCRUM: withdraw failed) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#874)
+		- Aave(getAave()).deposit(token,amount,0) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#862)
+		- require(bool,string)(Compound(compound).redeem(amount) == 0,COMPOUND: withdraw failed) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#877)
+		- require(bool,string)(Compound(compound).mint(amount) == 0,COMPOUND: supply failed) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#868)
+		- AToken(aaveToken).redeem(amount) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#871)
+		- require(bool,string)(Fulcrum(fulcrum).mint(address(this),amount) > 0,FULCRUM: supply failed) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#865)
+		- DyDx(dydx).operate(infos,args) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#683)
+		- DyDx(dydx).operate(infos,args) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#665)
+	External calls sending eth:
+	- buyNBurn(ethToSwap) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#605)
+		- amounts = IUniswap(uniswapRouter).swapExactETHForTokens.value(_ethToSwap)(uint256(0),path,address(0),now.add(1800)) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#524)
+	- retirementYeldTreasury.transfer(retirementYeld) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#607)
+	- retirementYeldTreasury.transfer(retirementYeld_scope_0) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#610)
+	- (success,None) = devTreasury.call.value(devTreasuryAmount)() (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#612)
+	State variables written after the call(s):
+	- rebalance() (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#618)
+		- provider = newProvider (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#842)
+	yUSDC.provider (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#456) can be used in cross function reentrancies:
+	- yUSDC.provider (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#456)
+	- yUSDC.rebalance() (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#823-843)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+yUSDC.extractTokensIfStuck(address,uint256) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#486-488) ignores return value by IERC20(_token).transfer(msg.sender,_amount) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#487)
+yUSDC.withdraw(uint256) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#568-619) ignores return value by yeldToken.transfer(msg.sender,generatedYelds) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#597)
+yUSDC.withdraw(uint256) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#568-619) ignores return value by IERC20(token).transfer(msg.sender,stablecoinsToWithdraw.sub(combined)) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#614)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+yUSDC.getGeneratedYelds() (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#495-504) performs a multiplication on the result of a division:
+	- generatedYelds = depositAmount[msg.sender].mul(1e12).div(oneMillion).mul(yeldToRewardPerDay).div(1e18).mul(blocksPassed).div(oneDayInBlocks) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#502)
+yUSDC.withdraw(uint256) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#568-619) performs a multiplication on the result of a division:
+	- stablecoinsToWithdraw = (pool.mul(_shares)).div(_totalSupply) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#581)
+	- combined = stablecoinsToWithdraw.mul(totalPercentage).div(1e20) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#594)
+yUSDC.withdraw(uint256) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#568-619) performs a multiplication on the result of a division:
+	- devTreasuryAmount = stakingProfits.mul(uint256(100e18).mul(percentageDevTreasury).div(totalPercentage)).div(100e18) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#602)
+yUSDC.withdraw(uint256) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#568-619) performs a multiplication on the result of a division:
+	- ethToSwap = stakingProfits.mul(uint256(100e18).mul(percentageBuyBurn).div(totalPercentage)).div(100e18) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#604)
+yUSDC.withdraw(uint256) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#568-619) performs a multiplication on the result of a division:
+	- retirementYeld = stakingProfits.mul(uint256(100e18).mul(percentageRetirementYield).div(totalPercentage)).div(100e18) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#606)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+yUSDC._withdrawCompound(uint256) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#876-878) uses a dangerous strict equality:
+	- require(bool,string)(Compound(compound).redeem(amount) == 0,COMPOUND: withdraw failed) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#877)
+yUSDC.deposit(uint256) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#533-565) uses a dangerous strict equality:
+	- pool == 0 (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#556)
+yUSDC.supplyCompound(uint256) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#867-869) uses a dangerous strict equality:
+	- require(bool,string)(Compound(compound).mint(amount) == 0,COMPOUND: supply failed) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#868)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-strict-equalities
+
+Reentrancy in yUSDC.rebalance() (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#823-843):
+	External calls:
+	- _withdrawAll() (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#827)
+		- require(bool,string)(Fulcrum(fulcrum).burn(address(this),amount) > 0,FULCRUM: withdraw failed) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#874)
+		- AToken(aaveToken).redeem(amount) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#871)
+		- require(bool,string)(Compound(compound).redeem(amount) == 0,COMPOUND: withdraw failed) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#877)
+		- DyDx(dydx).operate(infos,args) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#683)
+	- supplyDydx(balance()) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#832)
+		- DyDx(dydx).operate(infos,args) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#665)
+	- supplyFulcrum(balance()) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#834)
+		- require(bool,string)(Fulcrum(fulcrum).mint(address(this),amount) > 0,FULCRUM: supply failed) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#865)
+	- supplyCompound(balance()) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#836)
+		- require(bool,string)(Compound(compound).mint(amount) == 0,COMPOUND: supply failed) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#868)
+	- supplyAave(balance()) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#838)
+		- Aave(getAave()).deposit(token,amount,0) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#862)
+	State variables written after the call(s):
+	- provider = newProvider (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#842)
+	yUSDC.provider (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#456) can be used in cross function reentrancies:
+	- yUSDC.provider (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#456)
+	- yUSDC.rebalance() (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#823-843)
+Reentrancy in yUSDC.redeem(uint256) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#925-963):
+	External calls:
+	- _withdrawAll() (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#951)
+		- AToken(aaveToken).redeem(amount) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#871)
+		- require(bool,string)(Fulcrum(fulcrum).burn(address(this),amount) > 0,FULCRUM: withdraw failed) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#874)
+		- require(bool,string)(Compound(compound).redeem(amount) == 0,COMPOUND: withdraw failed) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#877)
+		- DyDx(dydx).operate(infos,args) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#683)
+	- _withdrawSome(r.sub(b)) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#953)
+		- AToken(aaveToken).redeem(amount) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#871)
+		- require(bool,string)(Fulcrum(fulcrum).burn(address(this),amount) > 0,FULCRUM: withdraw failed) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#874)
+		- require(bool,string)(Compound(compound).redeem(amount) == 0,COMPOUND: withdraw failed) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#877)
+		- DyDx(dydx).operate(infos,args) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#683)
+	- IERC20(token).safeTransfer(msg.sender,r) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#957)
+	- _rebalance(newProvider) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#960)
+		- Aave(getAave()).deposit(token,amount,0) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#862)
+		- require(bool,string)(Compound(compound).mint(amount) == 0,COMPOUND: supply failed) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#868)
+		- require(bool,string)(Fulcrum(fulcrum).mint(address(this),amount) > 0,FULCRUM: supply failed) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#865)
+		- DyDx(dydx).operate(infos,args) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#665)
+	State variables written after the call(s):
+	- _rebalance(newProvider) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#960)
+		- provider = newProvider (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#858)
+	yUSDC.provider (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#456) can be used in cross function reentrancies:
+	- yUSDC.provider (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#456)
+	- yUSDC.rebalance() (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#823-843)
+Reentrancy in yUSDC.redeem(uint256) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#925-963):
+	External calls:
+	- _withdrawAll() (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#951)
+		- require(bool,string)(Fulcrum(fulcrum).burn(address(this),amount) > 0,FULCRUM: withdraw failed) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#874)
+		- AToken(aaveToken).redeem(amount) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#871)
+		- require(bool,string)(Compound(compound).redeem(amount) == 0,COMPOUND: withdraw failed) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#877)
+		- DyDx(dydx).operate(infos,args) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#683)
+	- _withdrawSome(r.sub(b)) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#953)
+		- require(bool,string)(Fulcrum(fulcrum).burn(address(this),amount) > 0,FULCRUM: withdraw failed) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#874)
+		- AToken(aaveToken).redeem(amount) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#871)
+		- require(bool,string)(Compound(compound).redeem(amount) == 0,COMPOUND: withdraw failed) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#877)
+		- DyDx(dydx).operate(infos,args) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#683)
+	- IERC20(token).safeTransfer(msg.sender,r) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#957)
+	- _rebalance(newProvider) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#960)
+		- Aave(getAave()).deposit(token,amount,0) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#862)
+		- require(bool,string)(Compound(compound).mint(amount) == 0,COMPOUND: supply failed) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#868)
+		- require(bool,string)(Fulcrum(fulcrum).mint(address(this),amount) > 0,FULCRUM: supply failed) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#865)
+		- DyDx(dydx).operate(infos,args) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#665)
+	State variables written after the call(s):
+	- pool = calcPoolValueInToken() (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#962)
+	yUSDC.pool (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#421) can be used in cross function reentrancies:
+	- yUSDC.pool (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#421)
+Reentrancy in yUSDC.withdraw(uint256) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#568-619):
+	External calls:
+	- _withdrawSome(stablecoinsToWithdraw.sub(b)) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#587)
+		- AToken(aaveToken).redeem(amount) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#871)
+		- require(bool,string)(Fulcrum(fulcrum).burn(address(this),amount) > 0,FULCRUM: withdraw failed) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#874)
+		- require(bool,string)(Compound(compound).redeem(amount) == 0,COMPOUND: withdraw failed) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#877)
+		- DyDx(dydx).operate(infos,args) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#683)
+	State variables written after the call(s):
+	- depositAmount[msg.sender] = depositAmount[msg.sender].sub(stablecoinsToWithdraw) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#596)
+	yUSDC.depositAmount (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#433) can be used in cross function reentrancies:
+	- yUSDC.depositAmount (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#433)
+	- yUSDC.getGeneratedYelds() (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#495-504)
+	- depositBlockStarts[msg.sender] = block.number (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#595)
+	yUSDC.depositBlockStarts (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#432) can be used in cross function reentrancies:
+	- yUSDC.depositBlockStarts (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#432)
+	- yUSDC.getGeneratedYelds() (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#495-504)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+yUSDC.supplyDydx(uint256).act (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#655) is a local variable never initialized
+yUSDC._withdrawDydx(uint256).act (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#673) is a local variable never initialized
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#uninitialized-local-variables
+
+yUSDC.recommend() (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#621-648) ignores return value by (None,capr,iapr,aapr,dapr) = IIEarnManager(apr).recommend(token) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#622)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+ERC20Detailed.constructor(string,string,uint8).name (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#148) shadows:
+	- ERC20Detailed.name() (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#153-155) (function)
+ERC20Detailed.constructor(string,string,uint8).symbol (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#148) shadows:
+	- ERC20Detailed.symbol() (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#156-158) (function)
+ERC20Detailed.constructor(string,string,uint8).decimals (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#148) shadows:
+	- ERC20Detailed.decimals() (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#159-161) (function)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#local-variable-shadowing
+
+yUSDC.changeYeldToRewardPerDay(uint256) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#492-494) should emit an event for: 
+	- yeldToRewardPerDay = _amount (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#493) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+yUSDC.constructor(address,address,address)._retirementYeldTreasury (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#458) lacks a zero-check on :
+		- retirementYeldTreasury = _retirementYeldTreasury (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#468)
+yUSDC.constructor(address,address,address)._devTreasury (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#458) lacks a zero-check on :
+		- devTreasury = _devTreasury (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#469)
+yUSDC.setRetirementYeldTreasury(address)._treasury (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#476) lacks a zero-check on :
+		- retirementYeldTreasury = _treasury (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#477)
+yUSDC.setUniswapRouter(address)._uniswapRouter (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#480) lacks a zero-check on :
+		- uniswapRouter = _uniswapRouter (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#481)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in yUSDC._rebalance(yUSDC.Lender) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#846-859):
+	External calls:
+	- supplyDydx(_balance()) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#849)
+		- DyDx(dydx).operate(infos,args) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#665)
+	- supplyFulcrum(_balance()) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#851)
+		- require(bool,string)(Fulcrum(fulcrum).mint(address(this),amount) > 0,FULCRUM: supply failed) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#865)
+	- supplyCompound(_balance()) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#853)
+		- require(bool,string)(Compound(compound).mint(amount) == 0,COMPOUND: supply failed) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#868)
+	- supplyAave(_balance()) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#855)
+		- Aave(getAave()).deposit(token,amount,0) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#862)
+	State variables written after the call(s):
+	- provider = newProvider (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#858)
+Reentrancy in yUSDC.deposit(uint256) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#533-565):
+	External calls:
+	- IERC20(token).safeTransferFrom(msg.sender,address(this),_amount) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#547)
+	State variables written after the call(s):
+	- _mint(msg.sender,shares) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#563)
+		- _balances[account] = _balances[account].add(amount) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#120)
+	- _mint(msg.sender,shares) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#563)
+		- _totalSupply = _totalSupply.add(amount) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#119)
+	- depositAmount[msg.sender] = depositAmount[msg.sender].add(_amount) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#551)
+	- depositBlockStarts[msg.sender] = block.number (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#550)
+	- pool = _amount (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#558)
+	- pool = _calcPoolValueInToken() (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#562)
+Reentrancy in yUSDC.invest(uint256) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#880-901):
+	External calls:
+	- IERC20(token).safeTransferFrom(msg.sender,address(this),_amount) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#887)
+	- rebalance() (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#889)
+		- Aave(getAave()).deposit(token,amount,0) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#862)
+		- require(bool,string)(Compound(compound).redeem(amount) == 0,COMPOUND: withdraw failed) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#877)
+		- require(bool,string)(Compound(compound).mint(amount) == 0,COMPOUND: supply failed) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#868)
+		- require(bool,string)(Fulcrum(fulcrum).burn(address(this),amount) > 0,FULCRUM: withdraw failed) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#874)
+		- AToken(aaveToken).redeem(amount) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#871)
+		- require(bool,string)(Fulcrum(fulcrum).mint(address(this),amount) > 0,FULCRUM: supply failed) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#865)
+		- DyDx(dydx).operate(infos,args) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#683)
+		- DyDx(dydx).operate(infos,args) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#665)
+	State variables written after the call(s):
+	- _mint(msg.sender,shares) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#900)
+		- _balances[account] = _balances[account].add(amount) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#120)
+	- _mint(msg.sender,shares) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#900)
+		- _totalSupply = _totalSupply.add(amount) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#119)
+	- pool = _amount (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#895)
+	- pool = calcPoolValueInToken() (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#899)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+yUSDC.withdraw(uint256) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#568-619) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(success,Dev treasury transfer failed) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#613)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Address.isContract(address) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#225-231) uses assembly
+	- INLINE ASM (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#229)
+CommonFunctionality.isContract(address) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#384-393) uses assembly
+	- INLINE ASM (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#391)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#assembly-usage
+
+CommonFunctionality.noContract() (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#395-398) compares to a boolean constant:
+	-require(bool,string)(isContract(msg.sender) == false,Contracts are not allowed to interact with the farm) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#396)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#boolean-equality
+
+Context._msgData() (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#32-35) is never used and should be removed
+ERC20._burn(address,uint256) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#123-129) is never used and should be removed
+ERC20._burnFrom(address,uint256) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#137-140) is never used and should be removed
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dead-code
+
+Version constraint 0.5.17 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- MissingEscapingInFormatting
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow.
+It is used by:
+	- 0.5.17 (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#1)
+solc-0.5.17 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in Address.sendValue(address,uint256) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#235-241):
+	- (success,None) = recipient.call.value(amount)() (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#239)
+Low level call in SafeERC20.callOptionalReturn(IERC20,bytes) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#272-283):
+	- (success,returndata) = address(token).call(data) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#276)
+Low level call in yUSDC.withdraw(uint256) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#568-619):
+	- (success,None) = devTreasury.call.value(devTreasuryAmount)() (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#612)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+yUSDC (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#416-965) should inherit from AToken (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#306-308)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-inheritance
+
+Parameter CommonFunctionality.getYeldPriceInDai(address,address,address,address)._yeld (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#406) is not in mixedCase
+Parameter CommonFunctionality.getYeldPriceInDai(address,address,address,address)._weth (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#406) is not in mixedCase
+Parameter CommonFunctionality.getYeldPriceInDai(address,address,address,address)._dai (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#406) is not in mixedCase
+Parameter CommonFunctionality.getYeldPriceInDai(address,address,address,address)._uniswap (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#406) is not in mixedCase
+Contract yUSDC (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#416-965) is not in CapWords
+Parameter yUSDC.setRetirementYeldTreasury(address)._treasury (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#476) is not in mixedCase
+Parameter yUSDC.setUniswapRouter(address)._uniswapRouter (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#480) is not in mixedCase
+Parameter yUSDC.setYeldToken(address)._yeldToken (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#483) is not in mixedCase
+Parameter yUSDC.extractTokensIfStuck(address,uint256)._token (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#486) is not in mixedCase
+Parameter yUSDC.extractTokensIfStuck(address,uint256)._amount (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#486) is not in mixedCase
+Parameter yUSDC.changeYeldToRewardPerDay(uint256)._amount (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#492) is not in mixedCase
+Parameter yUSDC.usdcToETH(uint256)._amount (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#506) is not in mixedCase
+Parameter yUSDC.buyNBurn(uint256)._ethToSwap (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#519) is not in mixedCase
+Parameter yUSDC.setHoldPercentage(uint256)._holdPercentage (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#528) is not in mixedCase
+Parameter yUSDC.deposit(uint256)._amount (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#533) is not in mixedCase
+Parameter yUSDC.withdraw(uint256)._shares (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#568) is not in mixedCase
+Parameter yUSDC.invest(uint256)._amount (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#880) is not in mixedCase
+Parameter yUSDC.redeem(uint256)._shares (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#925) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Redundant expression "this (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#33)" inContext (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#24-36)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#redundant-statements
+
+Reentrancy in yUSDC.withdraw(uint256) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#568-619):
+	External calls:
+	- retirementYeldTreasury.transfer(retirementYeld) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#607)
+	- retirementYeldTreasury.transfer(retirementYeld_scope_0) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#610)
+	External calls sending eth:
+	- buyNBurn(ethToSwap) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#605)
+		- amounts = IUniswap(uniswapRouter).swapExactETHForTokens.value(_ethToSwap)(uint256(0),path,address(0),now.add(1800)) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#524)
+	- retirementYeldTreasury.transfer(retirementYeld) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#607)
+	- retirementYeldTreasury.transfer(retirementYeld_scope_0) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#610)
+	- (success,None) = devTreasury.call.value(devTreasuryAmount)() (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#612)
+	State variables written after the call(s):
+	- pool = _calcPoolValueInToken() (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#617)
+	- rebalance() (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#618)
+		- provider = newProvider (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#842)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+yUSDC.dai (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#437) should be constant 
+yUSDC.maximumTokensToBurn (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#440) should be constant 
+yUSDC.usdc (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#435) should be constant 
+yUSDC.weth (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#436) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+
+getAccountWei(Structs.Info,uint256) should be declared external:
+	- DyDx.getAccountWei(Structs.Info,uint256) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#368)
+Moreover, the following function parameters should change its data location:
+account location should be calldata
+operate(Structs.Info[],Structs.ActionArgs[]) should be declared external:
+	- DyDx.operate(Structs.Info[],Structs.ActionArgs[]) (0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol#369)
+Moreover, the following function parameters should change its data location:
+ location should be calldata
+ location should be calldata
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#public-function-that-could-be-declared-external
+./0x1ba35631c69a1363769d2b3e4a9d5c7020b3e520.sol analyzed (21 contracts with 94 detectors), 71 result(s) found
+
+real	0m4.892s
+user	0m4.623s
+sys	0m0.271s

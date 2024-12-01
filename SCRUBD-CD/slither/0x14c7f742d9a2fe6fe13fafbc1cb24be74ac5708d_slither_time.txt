@@ -1,0 +1,204 @@
+'solc --version' running
+'solc ./0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+Reentrancy in CharityMiner.withdraw() (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#148-178):
+	External calls:
+	- divs = myDividends() (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#153)
+		- p3d.myDividends(true) (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#209)
+	State variables written after the call(s):
+	- userTokens[msg.sender] = 0 (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#157)
+	CharityMiner.userTokens (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#61) can be used in cross function reentrancies:
+	- CharityMiner.deposit(uint8) (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#96-143)
+	- CharityMiner.userTokens (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#61)
+	- CharityMiner.withdraw() (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#148-178)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+CharityMiner.deposit(uint8) (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#96-143) ignores return value by p3d.buy.value(purchase)(msg.sender) (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#116)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+CharityMiner.constructor(address).powh (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#68) lacks a zero-check on :
+		- P3DAddress = powh (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#70)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in CharityMiner.deposit(uint8) (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#96-143):
+	External calls:
+	- divs = myDividends() (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#101)
+		- p3d.myDividends(true) (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#209)
+	- p3d.withdraw() (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#103)
+	- tokens = myTokens() (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#115)
+		- p3d.myTokens() (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#203)
+	- p3d.buy.value(purchase)(msg.sender) (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#116)
+	- newTokens = myTokens().sub(tokens) (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#117)
+		- p3d.myTokens() (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#203)
+	External calls sending eth:
+	- charityAddress.transfer(donation) (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#112)
+	- p3d.buy.value(purchase)(msg.sender) (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#116)
+	State variables written after the call(s):
+	- currentHolders += 1 (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#123)
+	- donor[msg.sender] = true (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#121)
+	- largestDonation = fee (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#129)
+	- largestDonor = msg.sender (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#130)
+	- lastDonor = msg.sender (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#137)
+	- totalDividends += divs (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#136)
+	- totalDonated += donation (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#135)
+	- totalDonations += 1 (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#134)
+	- totalDonors += 1 (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#122)
+	- userDonations[msg.sender] = userDonations[msg.sender].add(fee) (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#138)
+	- userTokens[msg.sender] = userTokens[msg.sender].add(newTokens) (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#139)
+Reentrancy in CharityMiner.pause() (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#77-82):
+	External calls:
+	- require(bool)(msg.sender == owner && myTokens() == 0) (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#78)
+		- p3d.myTokens() (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#203)
+	State variables written after the call(s):
+	- paused = ! paused (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#79)
+Reentrancy in CharityMiner.sendDividends() (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#182-198):
+	External calls:
+	- divs = myDividends() (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#183)
+		- p3d.myDividends(true) (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#209)
+	- p3d.withdraw() (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#186)
+	External calls sending eth:
+	- charityAddress.transfer(divs) (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#189)
+	State variables written after the call(s):
+	- totalDividends += divs (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#193)
+	- totalDonated += divs (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#192)
+	- totalDonations += 1 (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#194)
+Reentrancy in CharityMiner.withdraw() (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#148-178):
+	External calls:
+	- divs = myDividends() (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#153)
+		- p3d.myDividends(true) (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#209)
+	- p3d.sell(tokens) (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#160)
+	- p3d.withdraw() (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#161)
+	External calls sending eth:
+	- charityAddress.transfer(divs) (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#167)
+	- msg.sender.transfer(tokenValue) (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#168)
+	State variables written after the call(s):
+	- currentHolders -= 1 (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#174)
+	- totalDividends += divs (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#172)
+	- totalDonated += divs (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#171)
+	- totalDonations += 1 (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#173)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in CharityMiner.deposit(uint8) (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#96-143):
+	External calls:
+	- divs = myDividends() (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#101)
+		- p3d.myDividends(true) (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#209)
+	- p3d.withdraw() (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#103)
+	- tokens = myTokens() (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#115)
+		- p3d.myTokens() (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#203)
+	- p3d.buy.value(purchase)(msg.sender) (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#116)
+	- newTokens = myTokens().sub(tokens) (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#117)
+		- p3d.myTokens() (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#203)
+	External calls sending eth:
+	- charityAddress.transfer(donation) (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#112)
+	- p3d.buy.value(purchase)(msg.sender) (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#116)
+	Event emitted after the call(s):
+	- Deposit(purchase,msg.sender,donation) (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#142)
+Reentrancy in CharityMiner.pause() (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#77-82):
+	External calls:
+	- require(bool)(msg.sender == owner && myTokens() == 0) (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#78)
+		- p3d.myTokens() (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#203)
+	Event emitted after the call(s):
+	- Paused(paused) (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#81)
+Reentrancy in CharityMiner.sendDividends() (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#182-198):
+	External calls:
+	- divs = myDividends() (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#183)
+		- p3d.myDividends(true) (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#209)
+	- p3d.withdraw() (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#186)
+	External calls sending eth:
+	- charityAddress.transfer(divs) (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#189)
+	Event emitted after the call(s):
+	- Dividends(divs,msg.sender) (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#197)
+Reentrancy in CharityMiner.withdraw() (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#148-178):
+	External calls:
+	- divs = myDividends() (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#153)
+		- p3d.myDividends(true) (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#209)
+	- p3d.sell(tokens) (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#160)
+	- p3d.withdraw() (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#161)
+	External calls sending eth:
+	- charityAddress.transfer(divs) (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#167)
+	- msg.sender.transfer(tokenValue) (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#168)
+	Event emitted after the call(s):
+	- Withdraw(tokens,msg.sender,tokenValue,divs) (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#177)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+Version constraint ^0.4.23 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ABIEncoderV2PackedStorage_0.4.x
+	- ExpExponentCleanup
+	- EventStructWrongData.
+It is used by:
+	- ^0.4.23 (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#1)
+solc-0.4.23 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Variable CharityMiner.P3DAddress (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#49) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in CharityMiner.deposit(uint8) (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#96-143):
+	External calls:
+	- charityAddress.transfer(donation) (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#112)
+	External calls sending eth:
+	- charityAddress.transfer(donation) (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#112)
+	- p3d.buy.value(purchase)(msg.sender) (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#116)
+	State variables written after the call(s):
+	- currentHolders += 1 (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#123)
+	- donor[msg.sender] = true (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#121)
+	- largestDonation = fee (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#129)
+	- largestDonor = msg.sender (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#130)
+	- lastDonor = msg.sender (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#137)
+	- totalDividends += divs (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#136)
+	- totalDonated += donation (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#135)
+	- totalDonations += 1 (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#134)
+	- totalDonors += 1 (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#122)
+	- userDonations[msg.sender] = userDonations[msg.sender].add(fee) (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#138)
+	- userTokens[msg.sender] = userTokens[msg.sender].add(newTokens) (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#139)
+	Event emitted after the call(s):
+	- Deposit(purchase,msg.sender,donation) (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#142)
+Reentrancy in CharityMiner.sendDividends() (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#182-198):
+	External calls:
+	- charityAddress.transfer(divs) (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#189)
+	State variables written after the call(s):
+	- totalDividends += divs (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#193)
+	- totalDonated += divs (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#192)
+	- totalDonations += 1 (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#194)
+	Event emitted after the call(s):
+	- Dividends(divs,msg.sender) (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#197)
+Reentrancy in CharityMiner.withdraw() (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#148-178):
+	External calls:
+	- charityAddress.transfer(divs) (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#167)
+	- msg.sender.transfer(tokenValue) (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#168)
+	State variables written after the call(s):
+	- currentHolders -= 1 (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#174)
+	- totalDividends += divs (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#172)
+	- totalDonated += divs (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#171)
+	- totalDonations += 1 (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#173)
+	Event emitted after the call(s):
+	- Withdraw(tokens,msg.sender,tokenValue,divs) (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#177)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+CharityMiner.deposit(uint8) (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#96-143) uses literals with too many digits:
+	- require(bool)(msg.value > 100000 && ! paused) (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#97)
+CharityMiner.sendDividends() (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#182-198) uses literals with too many digits:
+	- require(bool)(divs > 100000) (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#185)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+CharityMiner.charityAddress (0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol#47) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+./0x14c7f742d9a2fe6fe13fafbc1cb24be74ac5708d.sol analyzed (4 contracts with 94 detectors), 20 result(s) found
+
+real	0m1.791s
+user	0m1.568s
+sys	0m0.226s

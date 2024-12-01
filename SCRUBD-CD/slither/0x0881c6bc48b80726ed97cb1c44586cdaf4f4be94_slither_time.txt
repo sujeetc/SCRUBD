@@ -1,0 +1,456 @@
+'solc --version' running
+'solc ./0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+ZeroTax.SwapPct(uint256) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1078-1117) sends eth to arbitrary user
+	Dangerous calls:
+	- DevAddress.transfer(devShare) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1094)
+	- MarketingAddress.transfer(mktShare) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1095)
+	- UniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),tokensForLiquidity,0,0,DevAddress,block.timestamp) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1099-1106)
+ZeroTax.swapAndLiquify() (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1430-1467) sends eth to arbitrary user
+	Dangerous calls:
+	- DevAddress.transfer(devShare) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1444)
+	- MarketingAddress.transfer(mktShare) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1445)
+	- UniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),tokensForLiquidity,0,0,DevAddress,block.timestamp) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1449-1456)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+Math.mulDiv(uint256,uint256,uint256) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#399-479) has bitwise-xor operator ^ instead of the exponentiation operator **: 
+	 - inverse = (3 * denominator) ^ 2 (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#461)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-exponentiation
+
+Reentrancy in ZeroTax._transfer(address,address,uint256) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1280-1333):
+	External calls:
+	- swapAndLiquify() (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1329)
+		- UniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1069-1075)
+		- UniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),tokensForLiquidity,0,0,DevAddress,block.timestamp) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1449-1456)
+	External calls sending eth:
+	- swapAndLiquify() (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1329)
+		- DevAddress.transfer(devShare) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1444)
+		- MarketingAddress.transfer(mktShare) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1445)
+		- UniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),tokensForLiquidity,0,0,DevAddress,block.timestamp) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1449-1456)
+	State variables written after the call(s):
+	- _tokenTransfer(from,to,amount,takeFee) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1332)
+		- AccumulatedFeeForDistribution.LiquidityFee += realFees.LiquidityFee (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1420)
+		- AccumulatedFeeForDistribution.DevFee += realFees.DevFee (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1422)
+		- AccumulatedFeeForDistribution.MarketingFee += realFees.MarketingFee (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1424)
+	ZeroTax.AccumulatedFeeForDistribution (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#969-977) can be used in cross function reentrancies:
+	- ZeroTax.AccumulateFee(ZeroTax.TransactionFees,ZeroTax.TransactionFees) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1416-1426)
+	- ZeroTax.SwapPct(uint256) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1078-1117)
+	- ZeroTax.swapAndLiquify() (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1430-1467)
+	- _tokenTransfer(from,to,amount,takeFee) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1332)
+		- BalancesRefraccionarios[address(this)] += refractionaryFees.TransferrableFee (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1418)
+		- BalancesRefraccionarios[sender] -= cantidadBrutaRefracionaria (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1352)
+		- BalancesRefraccionarios[recipient] += cantidadNetaRefracionaria (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1353)
+		- BalancesRefraccionarios[BurnAddress] += feesRefracionarios.BurnFee (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1364)
+	ZeroTax.BalancesRefraccionarios (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#889) can be used in cross function reentrancies:
+	- ZeroTax.AccumulateFee(ZeroTax.TransactionFees,ZeroTax.TransactionFees) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1416-1426)
+	- ZeroTax._tokenTransfer(address,address,uint256,bool) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1336-1372)
+	- ZeroTax.balanceOf(address) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1181-1184)
+	- ZeroTax.constructor(address) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#992-1025)
+	- _tokenTransfer(from,to,amount,takeFee) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1332)
+		- ReflactionaryTotal -= feesRefracionarios.TransactionFee (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1358)
+	ZeroTax.ReflactionaryTotal (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#870) can be used in cross function reentrancies:
+	- ZeroTax.GetConversionRate() (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1475-1478)
+	- ZeroTax._tokenTransfer(address,address,uint256,bool) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1336-1372)
+	- ZeroTax.constructor(address) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#992-1025)
+	- ZeroTax.tokenFromReflection(uint256) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1469-1473)
+Reentrancy in ZeroTax.swapAndLiquify() (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1430-1467):
+	External calls:
+	- swapTokensForETH(AccumulatedFeeForDistribution.DevFee + AccumulatedFeeForDistribution.MarketingFee + tokensToSwap) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1438)
+		- UniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1069-1075)
+	- UniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),tokensForLiquidity,0,0,DevAddress,block.timestamp) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1449-1456)
+	External calls sending eth:
+	- DevAddress.transfer(devShare) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1444)
+	- MarketingAddress.transfer(mktShare) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1445)
+	- UniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),tokensForLiquidity,0,0,DevAddress,block.timestamp) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1449-1456)
+	State variables written after the call(s):
+	- AccumulatedFeeForDistribution.LiquidityFee = 0 (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1458)
+	ZeroTax.AccumulatedFeeForDistribution (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#969-977) can be used in cross function reentrancies:
+	- ZeroTax.AccumulateFee(ZeroTax.TransactionFees,ZeroTax.TransactionFees) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1416-1426)
+	- ZeroTax.SwapPct(uint256) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1078-1117)
+	- ZeroTax.swapAndLiquify() (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1430-1467)
+	- AccumulatedFeeForDistribution.DevFee = 0 (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1459)
+	ZeroTax.AccumulatedFeeForDistribution (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#969-977) can be used in cross function reentrancies:
+	- ZeroTax.AccumulateFee(ZeroTax.TransactionFees,ZeroTax.TransactionFees) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1416-1426)
+	- ZeroTax.SwapPct(uint256) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1078-1117)
+	- ZeroTax.swapAndLiquify() (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1430-1467)
+	- AccumulatedFeeForDistribution.MarketingFee = 0 (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1460)
+	ZeroTax.AccumulatedFeeForDistribution (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#969-977) can be used in cross function reentrancies:
+	- ZeroTax.AccumulateFee(ZeroTax.TransactionFees,ZeroTax.TransactionFees) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1416-1426)
+	- ZeroTax.SwapPct(uint256) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1078-1117)
+	- ZeroTax.swapAndLiquify() (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1430-1467)
+Reentrancy in ZeroTax.transferFrom(address,address,uint256) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1203-1215):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1207)
+		- UniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1069-1075)
+		- UniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),tokensForLiquidity,0,0,DevAddress,block.timestamp) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1449-1456)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1207)
+		- DevAddress.transfer(devShare) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1444)
+		- MarketingAddress.transfer(mktShare) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1445)
+		- UniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),tokensForLiquidity,0,0,DevAddress,block.timestamp) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1449-1456)
+	State variables written after the call(s):
+	- _approve(sender,_msgSender(),currentAllowance - amount) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1211)
+		- Allowances[owner][spender] = amount (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1256)
+	ZeroTax.Allowances (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#891) can be used in cross function reentrancies:
+	- ZeroTax._approve(address,address,uint256) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1252-1258)
+	- ZeroTax.allowance(address,address) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1186-1189)
+	- ZeroTax.decreaseAllowance(address,uint256) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1266-1276)
+	- ZeroTax.increaseAllowance(address,uint256) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1260-1264)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+Math.mulDiv(uint256,uint256,uint256) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#399-479) performs a multiplication on the result of a division:
+	- denominator = denominator / twos (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#446)
+	- inverse = (3 * denominator) ^ 2 (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#461)
+Math.mulDiv(uint256,uint256,uint256) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#399-479) performs a multiplication on the result of a division:
+	- denominator = denominator / twos (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#446)
+	- inverse *= 2 - denominator * inverse (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#465)
+Math.mulDiv(uint256,uint256,uint256) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#399-479) performs a multiplication on the result of a division:
+	- denominator = denominator / twos (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#446)
+	- inverse *= 2 - denominator * inverse (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#466)
+Math.mulDiv(uint256,uint256,uint256) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#399-479) performs a multiplication on the result of a division:
+	- denominator = denominator / twos (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#446)
+	- inverse *= 2 - denominator * inverse (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#467)
+Math.mulDiv(uint256,uint256,uint256) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#399-479) performs a multiplication on the result of a division:
+	- denominator = denominator / twos (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#446)
+	- inverse *= 2 - denominator * inverse (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#468)
+Math.mulDiv(uint256,uint256,uint256) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#399-479) performs a multiplication on the result of a division:
+	- denominator = denominator / twos (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#446)
+	- inverse *= 2 - denominator * inverse (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#469)
+Math.mulDiv(uint256,uint256,uint256) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#399-479) performs a multiplication on the result of a division:
+	- denominator = denominator / twos (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#446)
+	- inverse *= 2 - denominator * inverse (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#470)
+Math.mulDiv(uint256,uint256,uint256) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#399-479) performs a multiplication on the result of a division:
+	- prod0 = prod0 / twos (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#449)
+	- result = prod0 * inverse (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#476)
+ZeroTax.SwapPct(uint256) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1078-1117) performs a multiplication on the result of a division:
+	- balance = (balanceOf(address(this)) * pct) / 100 (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1080)
+	- tokensForLP = (balance * LPDistributionPct) / 100 (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1084)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+ZeroTax.SwapPct(uint256) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1078-1117) ignores return value by UniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),tokensForLiquidity,0,0,DevAddress,block.timestamp) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1099-1106)
+ZeroTax.swapAndLiquify() (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1430-1467) ignores return value by UniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),tokensForLiquidity,0,0,DevAddress,block.timestamp) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1449-1456)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+ZeroTax.allowance(address,address).owner (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1186) shadows:
+	- Ownable.owner() (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#309-311) (function)
+ZeroTax._approve(address,address,uint256).owner (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1252) shadows:
+	- Ownable.owner() (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#309-311) (function)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#local-variable-shadowing
+
+ZeroTax.AdjustMaxHardCap(uint256) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1046-1049) should emit an event for: 
+	- HardCap = newHardCap (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1048) 
+ZeroTax.AdjustMaxTxSell(uint256) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1051-1054) should emit an event for: 
+	- HardCapSell = maxTxSell (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1053) 
+ZeroTax.AdjustMaxTxBuy(uint256) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1056-1059) should emit an event for: 
+	- HardCapBuy = mxTxBuy (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1058) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+ZeroTax.ChangeDevAddress(address).newDevAddress (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1130) lacks a zero-check on :
+		- DevAddress = newDevAddress (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1135)
+ZeroTax.ChangeMarketingAddress(address).marketingAddress (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1139) lacks a zero-check on :
+		- MarketingAddress = marketingAddress (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1144)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in ZeroTax.SwapPct(uint256) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1078-1117):
+	External calls:
+	- swapTokensForETH(tokensToSwap) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1088)
+		- UniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1069-1075)
+	- UniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),tokensForLiquidity,0,0,DevAddress,block.timestamp) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1099-1106)
+	External calls sending eth:
+	- DevAddress.transfer(devShare) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1094)
+	- MarketingAddress.transfer(mktShare) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1095)
+	- UniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),tokensForLiquidity,0,0,DevAddress,block.timestamp) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1099-1106)
+	State variables written after the call(s):
+	- AccumulatedFeeForDistribution.LiquidityFee = 0 (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1109)
+	- AccumulatedFeeForDistribution.DevFee = 0 (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1110)
+	- AccumulatedFeeForDistribution.MarketingFee = 0 (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1111)
+	- TotalSwapped += tokensForLiquidity (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1113)
+Reentrancy in ZeroTax._transfer(address,address,uint256) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1280-1333):
+	External calls:
+	- swapAndLiquify() (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1329)
+		- UniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1069-1075)
+		- UniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),tokensForLiquidity,0,0,DevAddress,block.timestamp) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1449-1456)
+	External calls sending eth:
+	- swapAndLiquify() (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1329)
+		- DevAddress.transfer(devShare) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1444)
+		- MarketingAddress.transfer(mktShare) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1445)
+		- UniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),tokensForLiquidity,0,0,DevAddress,block.timestamp) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1449-1456)
+	State variables written after the call(s):
+	- _tokenTransfer(from,to,amount,takeFee) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1332)
+		- TotalFee += feesReales.TransactionFee (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1359)
+	- _tokenTransfer(from,to,amount,takeFee) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1332)
+		- TotalTokenBurn += feesReales.BurnFee (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1363)
+Reentrancy in ZeroTax.swapAndLiquify() (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1430-1467):
+	External calls:
+	- swapTokensForETH(AccumulatedFeeForDistribution.DevFee + AccumulatedFeeForDistribution.MarketingFee + tokensToSwap) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1438)
+		- UniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1069-1075)
+	- UniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),tokensForLiquidity,0,0,DevAddress,block.timestamp) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1449-1456)
+	External calls sending eth:
+	- DevAddress.transfer(devShare) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1444)
+	- MarketingAddress.transfer(mktShare) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1445)
+	- UniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),tokensForLiquidity,0,0,DevAddress,block.timestamp) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1449-1456)
+	State variables written after the call(s):
+	- TotalSwapped += tokensForLiquidity (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1462)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in ZeroTax.SwapPct(uint256) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1078-1117):
+	External calls:
+	- swapTokensForETH(tokensToSwap) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1088)
+		- UniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1069-1075)
+	- UniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),tokensForLiquidity,0,0,DevAddress,block.timestamp) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1099-1106)
+	External calls sending eth:
+	- DevAddress.transfer(devShare) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1094)
+	- MarketingAddress.transfer(mktShare) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1095)
+	- UniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),tokensForLiquidity,0,0,DevAddress,block.timestamp) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1099-1106)
+	Event emitted after the call(s):
+	- LiquidityAdded(tokensForLiquidity,eth) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1115)
+Reentrancy in ZeroTax._transfer(address,address,uint256) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1280-1333):
+	External calls:
+	- swapAndLiquify() (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1329)
+		- UniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1069-1075)
+		- UniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),tokensForLiquidity,0,0,DevAddress,block.timestamp) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1449-1456)
+	External calls sending eth:
+	- swapAndLiquify() (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1329)
+		- DevAddress.transfer(devShare) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1444)
+		- MarketingAddress.transfer(mktShare) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1445)
+		- UniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),tokensForLiquidity,0,0,DevAddress,block.timestamp) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1449-1456)
+	Event emitted after the call(s):
+	- Transfer(address(this),BurnAddress,feesReales.BurnFee) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1367)
+		- _tokenTransfer(from,to,amount,takeFee) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1332)
+	- Transfer(sender,address(this),feesReales.TransferrableFee) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1368)
+		- _tokenTransfer(from,to,amount,takeFee) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1332)
+	- Transfer(sender,recipient,cantidadNeta) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1371)
+		- _tokenTransfer(from,to,amount,takeFee) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1332)
+Reentrancy in ZeroTax.swapAndLiquify() (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1430-1467):
+	External calls:
+	- swapTokensForETH(AccumulatedFeeForDistribution.DevFee + AccumulatedFeeForDistribution.MarketingFee + tokensToSwap) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1438)
+		- UniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1069-1075)
+	- UniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),tokensForLiquidity,0,0,DevAddress,block.timestamp) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1449-1456)
+	External calls sending eth:
+	- DevAddress.transfer(devShare) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1444)
+	- MarketingAddress.transfer(mktShare) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1445)
+	- UniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),tokensForLiquidity,0,0,DevAddress,block.timestamp) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1449-1456)
+	Event emitted after the call(s):
+	- LiquidityAdded(tokensForLiquidity,eth) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1465)
+Reentrancy in ZeroTax.transferFrom(address,address,uint256) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1203-1215):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1207)
+		- UniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1069-1075)
+		- UniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),tokensForLiquidity,0,0,DevAddress,block.timestamp) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1449-1456)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1207)
+		- DevAddress.transfer(devShare) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1444)
+		- MarketingAddress.transfer(mktShare) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1445)
+		- UniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),tokensForLiquidity,0,0,DevAddress,block.timestamp) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1449-1456)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1257)
+		- _approve(sender,_msgSender(),currentAllowance - amount) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1211)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+Address._revert(bytes,string) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#241-253) uses assembly
+	- INLINE ASM (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#246-249)
+Math.mulDiv(uint256,uint256,uint256) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#399-479) uses assembly
+	- INLINE ASM (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#410-414)
+	- INLINE ASM (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#430-437)
+	- INLINE ASM (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#444-453)
+Strings.toString(uint256) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#701-721) uses assembly
+	- INLINE ASM (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#707-709)
+	- INLINE ASM (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#713-715)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#assembly-usage
+
+Context._msgData() (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#270-272) is never used and should be removed
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dead-code
+
+ZeroTax.ReflactionaryTotal (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#870) is set pre-construction with a non-constant function or state variable:
+	- (MAX - (MAX % TotalSupply))
+ZeroTax.HardCap (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#885) is set pre-construction with a non-constant function or state variable:
+	- TotalSupply / 33
+ZeroTax.HardCapBuy (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#886) is set pre-construction with a non-constant function or state variable:
+	- HardCap
+ZeroTax.HardCapSell (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#887) is set pre-construction with a non-constant function or state variable:
+	- HardCap
+ZeroTax.AppliedRatesPercentage (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#966) is set pre-construction with a non-constant function or state variable:
+	- BuyingTaxes
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#function-initializing-state
+
+Version constraint ^0.8.9 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- VerbatimInvalidDeduplication
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation.
+It is used by:
+	- ^0.8.9 (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#3)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in Address.sendValue(address,uint256) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#70-75):
+	- (success,None) = recipient.call{value: amount}() (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#73)
+Low level call in Address.functionCallWithValue(address,bytes,uint256,string) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#138-147):
+	- (success,returndata) = target.call{value: value}(data) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#145)
+Low level call in Address.functionStaticCall(address,bytes,string) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#165-172):
+	- (success,returndata) = target.staticcall(data) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#170)
+Low level call in Address.functionDelegateCall(address,bytes,string) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#190-197):
+	- (success,returndata) = target.delegatecall(data) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#195)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Function IUniswapV2Router02.WETH() (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#771) is not in mixedCase
+Event ZeroTax.setDevAddress(address,address) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#981) is not in CapWords
+Event ZeroTax.setMktAddress(address,address) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#982) is not in CapWords
+Function ZeroTax.ChangeTaxes(uint256,uint256,uint256,uint256,bool) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1027-1043) is not in mixedCase
+Function ZeroTax.AdjustMaxHardCap(uint256) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1046-1049) is not in mixedCase
+Function ZeroTax.AdjustMaxTxSell(uint256) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1051-1054) is not in mixedCase
+Function ZeroTax.AdjustMaxTxBuy(uint256) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1056-1059) is not in mixedCase
+Function ZeroTax.SwapPct(uint256) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1078-1117) is not in mixedCase
+Function ZeroTax.ChangeExcludeFromFeeToForWallet(address,bool) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1120-1123) is not in mixedCase
+Function ZeroTax.IsWalletExcludedFromFee(address) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1125-1128) is not in mixedCase
+Function ZeroTax.ChangeDevAddress(address) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1130-1137) is not in mixedCase
+Function ZeroTax.ChangeMarketingAddress(address) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1139-1146) is not in mixedCase
+Function ZeroTax.MarkBot(address,bool) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1220-1224) is not in mixedCase
+Function ZeroTax.IsBot(address) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1226-1229) is not in mixedCase
+Function ZeroTax.ChangeExclusionFromHardCap(address,bool) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1231-1235) is not in mixedCase
+Function ZeroTax.IsExcludedFromHardCap(address) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1237-1240) is not in mixedCase
+Parameter ZeroTax.setAutomatedMarketMakerPair(address,bool)._pair (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1243) is not in mixedCase
+Function ZeroTax.GenerarFeesYCantidadesATransferir(uint256,bool) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1374-1385) is not in mixedCase
+Function ZeroTax.CalcularTasasRealesYRefracionarias(uint256,bool) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1388-1414) is not in mixedCase
+Function ZeroTax.AccumulateFee(ZeroTax.TransactionFees,ZeroTax.TransactionFees) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1416-1426) is not in mixedCase
+Function ZeroTax.GetConversionRate() (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1475-1478) is not in mixedCase
+Parameter ZeroTax.setSwapAndLiquifyEnabled(bool)._enabled (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1481) is not in mixedCase
+Constant ZeroTax.Name (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#865) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant ZeroTax.Symbol (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#866) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant ZeroTax.Decimals (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#867) is not in UPPER_CASE_WITH_UNDERSCORES
+Variable ZeroTax.TotalSupply (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#868) is not in mixedCase
+Variable ZeroTax.ReflactionaryTotal (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#870) is not in mixedCase
+Variable ZeroTax.UniswapV2Router (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#873) is not in mixedCase
+Variable ZeroTax.PancakeSwapAddress (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#874) is not in mixedCase
+Variable ZeroTax.DevAddress (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#881) is not in mixedCase
+Variable ZeroTax.MarketingAddress (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#882) is not in mixedCase
+Variable ZeroTax.BurnAddress (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#883) is not in mixedCase
+Variable ZeroTax.HardCap (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#885) is not in mixedCase
+Variable ZeroTax.HardCapBuy (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#886) is not in mixedCase
+Variable ZeroTax.HardCapSell (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#887) is not in mixedCase
+Variable ZeroTax.BalancesRefraccionarios (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#889) is not in mixedCase
+Variable ZeroTax.BalancesReales (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#890) is not in mixedCase
+Variable ZeroTax.Allowances (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#891) is not in mixedCase
+Variable ZeroTax.Bots (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#892) is not in mixedCase
+Variable ZeroTax.WalletsExcludedFromFee (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#895) is not in mixedCase
+Variable ZeroTax.WalletsExcludedFromHardCap (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#896) is not in mixedCase
+Variable ZeroTax.AutomatedMarketMakerPairs (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#897) is not in mixedCase
+Variable ZeroTax.TotalFee (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#900) is not in mixedCase
+Variable ZeroTax.TotalSwapped (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#901) is not in mixedCase
+Variable ZeroTax.TotalTokenBurn (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#902) is not in mixedCase
+Variable ZeroTax.InSwap (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#905) is not in mixedCase
+Variable ZeroTax.SwapEnabled (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#906) is not in mixedCase
+Variable ZeroTax.MarketingDistributionPct (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#917) is not in mixedCase
+Variable ZeroTax.DevDistributionPct (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#918) is not in mixedCase
+Variable ZeroTax.LPDistributionPct (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#919) is not in mixedCase
+Variable ZeroTax.LiquidityThreshold (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#921) is not in mixedCase
+Variable ZeroTax.BuyingTaxes (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#946-954) is not in mixedCase
+Variable ZeroTax.SellTaxes (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#956-964) is not in mixedCase
+Variable ZeroTax.AppliedRatesPercentage (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#966) is not in mixedCase
+Variable ZeroTax.AccumulatedFeeForDistribution (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#969-977) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in ZeroTax.SwapPct(uint256) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1078-1117):
+	External calls:
+	- DevAddress.transfer(devShare) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1094)
+	- MarketingAddress.transfer(mktShare) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1095)
+	External calls sending eth:
+	- DevAddress.transfer(devShare) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1094)
+	- MarketingAddress.transfer(mktShare) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1095)
+	- UniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),tokensForLiquidity,0,0,DevAddress,block.timestamp) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1099-1106)
+	State variables written after the call(s):
+	- AccumulatedFeeForDistribution.LiquidityFee = 0 (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1109)
+	- AccumulatedFeeForDistribution.DevFee = 0 (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1110)
+	- AccumulatedFeeForDistribution.MarketingFee = 0 (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1111)
+	- TotalSwapped += tokensForLiquidity (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1113)
+	Event emitted after the call(s):
+	- LiquidityAdded(tokensForLiquidity,eth) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1115)
+Reentrancy in ZeroTax._transfer(address,address,uint256) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1280-1333):
+	External calls:
+	- swapAndLiquify() (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1329)
+		- DevAddress.transfer(devShare) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1444)
+		- MarketingAddress.transfer(mktShare) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1445)
+	External calls sending eth:
+	- swapAndLiquify() (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1329)
+		- DevAddress.transfer(devShare) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1444)
+		- MarketingAddress.transfer(mktShare) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1445)
+		- UniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),tokensForLiquidity,0,0,DevAddress,block.timestamp) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1449-1456)
+	State variables written after the call(s):
+	- _tokenTransfer(from,to,amount,takeFee) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1332)
+		- AccumulatedFeeForDistribution.LiquidityFee += realFees.LiquidityFee (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1420)
+		- AccumulatedFeeForDistribution.DevFee += realFees.DevFee (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1422)
+		- AccumulatedFeeForDistribution.MarketingFee += realFees.MarketingFee (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1424)
+	- _tokenTransfer(from,to,amount,takeFee) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1332)
+		- BalancesRefraccionarios[address(this)] += refractionaryFees.TransferrableFee (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1418)
+		- BalancesRefraccionarios[sender] -= cantidadBrutaRefracionaria (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1352)
+		- BalancesRefraccionarios[recipient] += cantidadNetaRefracionaria (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1353)
+		- BalancesRefraccionarios[BurnAddress] += feesRefracionarios.BurnFee (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1364)
+	- _tokenTransfer(from,to,amount,takeFee) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1332)
+		- ReflactionaryTotal -= feesRefracionarios.TransactionFee (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1358)
+	- _tokenTransfer(from,to,amount,takeFee) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1332)
+		- TotalFee += feesReales.TransactionFee (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1359)
+	- _tokenTransfer(from,to,amount,takeFee) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1332)
+		- TotalTokenBurn += feesReales.BurnFee (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1363)
+	Event emitted after the call(s):
+	- Transfer(address(this),BurnAddress,feesReales.BurnFee) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1367)
+		- _tokenTransfer(from,to,amount,takeFee) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1332)
+	- Transfer(sender,address(this),feesReales.TransferrableFee) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1368)
+		- _tokenTransfer(from,to,amount,takeFee) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1332)
+	- Transfer(sender,recipient,cantidadNeta) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1371)
+		- _tokenTransfer(from,to,amount,takeFee) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1332)
+Reentrancy in ZeroTax.swapAndLiquify() (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1430-1467):
+	External calls:
+	- DevAddress.transfer(devShare) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1444)
+	- MarketingAddress.transfer(mktShare) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1445)
+	External calls sending eth:
+	- DevAddress.transfer(devShare) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1444)
+	- MarketingAddress.transfer(mktShare) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1445)
+	- UniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),tokensForLiquidity,0,0,DevAddress,block.timestamp) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1449-1456)
+	State variables written after the call(s):
+	- AccumulatedFeeForDistribution.LiquidityFee = 0 (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1458)
+	- AccumulatedFeeForDistribution.DevFee = 0 (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1459)
+	- AccumulatedFeeForDistribution.MarketingFee = 0 (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1460)
+	- TotalSwapped += tokensForLiquidity (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1462)
+	Event emitted after the call(s):
+	- LiquidityAdded(tokensForLiquidity,eth) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1465)
+Reentrancy in ZeroTax.transferFrom(address,address,uint256) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1203-1215):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1207)
+		- DevAddress.transfer(devShare) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1444)
+		- MarketingAddress.transfer(mktShare) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1445)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1207)
+		- DevAddress.transfer(devShare) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1444)
+		- MarketingAddress.transfer(mktShare) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1445)
+		- UniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),tokensForLiquidity,0,0,DevAddress,block.timestamp) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1449-1456)
+	State variables written after the call(s):
+	- _approve(sender,_msgSender(),currentAllowance - amount) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1211)
+		- Allowances[owner][spender] = amount (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1256)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1257)
+		- _approve(sender,_msgSender(),currentAllowance - amount) (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#1211)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+ZeroTax.BalancesReales (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#890) is never used in ZeroTax (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#860-1492)
+ZeroTax.LiquidityThreshold (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#921) is never used in ZeroTax (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#860-1492)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-state-variable
+
+ZeroTax.BurnAddress (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#883) should be constant 
+ZeroTax.DevDistributionPct (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#918) should be constant 
+ZeroTax.LPDistributionPct (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#919) should be constant 
+ZeroTax.LiquidityThreshold (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#921) should be constant 
+ZeroTax.MarketingDistributionPct (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#917) should be constant 
+ZeroTax.TotalSupply (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#868) should be constant 
+ZeroTax.blocksToWait (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#878) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+
+ZeroTax.PancakeSwapAddress (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#874) should be immutable 
+ZeroTax.UniswapV2Router (0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol#873) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+./0x0881c6bc48b80726ed97cb1c44586cdaf4f4be94.sol analyzed (9 contracts with 94 detectors), 115 result(s) found
+
+real	0m4.143s
+user	0m3.904s
+sys	0m0.240s

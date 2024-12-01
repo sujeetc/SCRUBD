@@ -1,0 +1,180 @@
+'solc --version' running
+'solc ./0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol:
+./0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol:300:41: Warning: Unused local variable
+   function claim(uint256 _blockNumber, address forCreditTo)
+                                        ^-----------------^
+
+
+Reentrancy in SharkPool.mine() (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#261-298):
+	External calls:
+	- require(bool)(! base_contract.checkMiningAttempt(_blockNum,this)) (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#265)
+	- base_contract.mine.value(total_attempt)() (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#295)
+	External calls sending eth:
+	- base_contract.mine.value(total_attempt)() (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#295)
+	State variables written after the call(s):
+	- mined_blocks = mined_blocks + 1 (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#296)
+	SharkPool.mined_blocks (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#108) can be used in cross function reentrancies:
+	- SharkPool.fallback() (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#230-257)
+	- SharkPool.find_contribution(address) (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#137-152)
+	- SharkPool.mined_blocks (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#108)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+SharkPool.do_redemption() (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#319-330) ignores return value by base_contract.transfer(owner,owner_cut) (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#325)
+SharkPool.do_redemption() (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#319-330) ignores return value by base_contract.transfer(msg.sender,remainder) (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#327)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+SharkPool.distribute_reward(uint256,uint256) (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#198-213) performs a multiplication on the result of a division:
+	- divided_portion = (proportion * divisible_units) / _totalAttempt (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#204)
+	- payout = (_balance * divided_portion) / divisible_units (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#205)
+SharkPool.calculate_minimum_contribution() (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#225-227) performs a multiplication on the result of a division:
+	- base_contract.currentDifficultyWei() / 10000000 * contract_period (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#226)
+SharkPool.do_redemption() (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#319-330) performs a multiplication on the result of a division:
+	- owner_cut = (balance / 100) * pool_percentage (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#322)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+Reentrancy in SharkPool.do_redemption() (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#319-330):
+	External calls:
+	- base_contract.transfer(owner,owner_cut) (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#325)
+	- base_contract.transfer(msg.sender,remainder) (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#327)
+	State variables written after the call(s):
+	- balances[msg.sender] = 0 (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#328)
+	SharkPool.balances (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#122) can be used in cross function reentrancies:
+	- SharkPool.balanceOf(address) (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#126-128)
+	- SharkPool.do_redemption() (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#319-330)
+Reentrancy in SharkPool.fallback() (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#230-257):
+	External calls:
+	- require(bool)(msg.value >= calculate_minimum_contribution()) (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#231)
+		- base_contract.currentDifficultyWei() / 10000000 * contract_period (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#226)
+	- do_redemption() (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#249)
+		- base_contract.transfer(owner,owner_cut) (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#325)
+		- base_contract.transfer(msg.sender,remainder) (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#327)
+	State variables written after the call(s):
+	- current_user.start_block = mined_blocks (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#255)
+	SharkPool.users (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#120) can be used in cross function reentrancies:
+	- SharkPool.fallback() (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#230-257)
+	- SharkPool.find_contribution(address) (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#137-152)
+	- SharkPool.users (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#120)
+	- current_user.end_block = mined_blocks + contract_period (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#256)
+	SharkPool.users (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#120) can be used in cross function reentrancies:
+	- SharkPool.fallback() (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#230-257)
+	- SharkPool.find_contribution(address) (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#137-152)
+	- SharkPool.users (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#120)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+Ownable.transferOwnership(address) (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#34-38) should emit an event for: 
+	- owner = newOwner (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#36) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-access-control
+
+SharkPool.set_pool_percentage(uint8) (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#130-134) should emit an event for: 
+	- pool_percentage = _percentage (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#133) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+Reentrancy in SharkPool.claim(uint256,address) (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#300-317):
+	External calls:
+	- require(bool)(base_contract.checkWinning(_blockNumber)) (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#305)
+	- initial_balance = base_contract.balanceOf(this) (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#307)
+	- base_contract.claim(_blockNumber,this) (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#310)
+	- balance = base_contract.balanceOf(this) (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#312)
+	State variables written after the call(s):
+	- distribute_reward(total_attempt,balance - initial_balance) (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#315)
+		- balances[user_address] = balances[user_address] + payout (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#209)
+	- claimed_blocks = claimed_blocks + 1 (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#316)
+Reentrancy in SharkPool.fallback() (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#230-257):
+	External calls:
+	- require(bool)(msg.value >= calculate_minimum_contribution()) (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#231)
+		- base_contract.currentDifficultyWei() / 10000000 * contract_period (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#226)
+	State variables written after the call(s):
+	- allocate_slot(msg.sender) (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#253)
+		- active_users[total_users] = _who (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#157)
+		- active_users[location] = _who (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#166)
+	- allocate_slot(msg.sender) (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#253)
+		- delete slots[slots.length - 1] (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#167)
+	- allocate_slot(msg.sender) (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#253)
+		- total_users += 1 (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#158)
+	- current_user.proportional_contribution = amount_remaining (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#243)
+	- current_user.proportional_contribution = msg.value / contract_period (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#245)
+	- current_user.proportional_contribution = msg.value / contract_period (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#252)
+Reentrancy in SharkPool.mine() (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#261-298):
+	External calls:
+	- require(bool)(! base_contract.checkMiningAttempt(_blockNum,this)) (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#265)
+	State variables written after the call(s):
+	- delete active_users[i] (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#281)
+	- attempts[_blockNum] = total_attempt (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#294)
+	- slots.push(i) (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#282)
+	- delete users[active_users[i]] (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#283)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+SharkPool.mine() (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#261-298) has costly operations inside a loop:
+	- delete active_users[i] (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#281)
+SharkPool.mine() (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#261-298) has costly operations inside a loop:
+	- delete users[active_users[i]] (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#283)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#costly-operations-inside-a-loop
+
+Version constraint ^0.4.13 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ExpExponentCleanup
+	- NestedArrayFunctionCallDecoder
+	- ZeroFunctionSelector
+	- DelegateCallReturnValue
+	- ECRecoverMalformedInput.
+It is used by:
+	- ^0.4.13 (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#1)
+solc-0.4.13 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Variable ReentrancyGuard.rentrancy_lock (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#54) is not in mixedCase
+Struct SharkPool.user (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#114-118) is not in CapWords
+Parameter SharkPool.balanceOf(address)._owner (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#126) is not in mixedCase
+Function SharkPool.set_pool_percentage(uint8) (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#130-134) is not in mixedCase
+Parameter SharkPool.set_pool_percentage(uint8)._percentage (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#130) is not in mixedCase
+Function SharkPool.find_contribution(address) (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#137-152) is not in mixedCase
+Parameter SharkPool.find_contribution(address)._who (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#137) is not in mixedCase
+Function SharkPool.allocate_slot(address) (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#154-170) is not in mixedCase
+Parameter SharkPool.allocate_slot(address)._who (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#154) is not in mixedCase
+Function SharkPool.external_to_internal_block_number(uint256) (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#172-175) is not in mixedCase
+Parameter SharkPool.external_to_internal_block_number(uint256)._externalBlockNum (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#172) is not in mixedCase
+Function SharkPool.available_slots() (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#177-183) is not in mixedCase
+Function SharkPool.get_bitcoineum_contract_address() (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#189-193) is not in mixedCase
+Function SharkPool.distribute_reward(uint256,uint256) (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#198-213) is not in mixedCase
+Parameter SharkPool.distribute_reward(uint256,uint256)._totalAttempt (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#198) is not in mixedCase
+Parameter SharkPool.distribute_reward(uint256,uint256)._balance (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#198) is not in mixedCase
+Function SharkPool.current_external_block() (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#220-222) is not in mixedCase
+Function SharkPool.calculate_minimum_contribution() (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#225-227) is not in mixedCase
+Parameter SharkPool.claim(uint256,address)._blockNumber (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#300) is not in mixedCase
+Function SharkPool.do_redemption() (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#319-330) is not in mixedCase
+Parameter SharkPool.checkMiningAttempt(uint256,address)._blockNum (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#337) is not in mixedCase
+Parameter SharkPool.checkMiningAttempt(uint256,address)._sender (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#337) is not in mixedCase
+Parameter SharkPool.checkWinning(uint256)._blockNum (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#341) is not in mixedCase
+Variable SharkPool.pool_percentage (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#95) is not in mixedCase
+Variable SharkPool.total_users (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#102) is not in mixedCase
+Variable SharkPool.contract_period (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#107) is not in mixedCase
+Variable SharkPool.mined_blocks (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#108) is not in mixedCase
+Variable SharkPool.claimed_blocks (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#109) is not in mixedCase
+Variable SharkPool.base_contract (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#112) is not in mixedCase
+Variable SharkPool.active_users (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#124) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+SharkPool.calculate_minimum_contribution() (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#225-227) uses literals with too many digits:
+	- base_contract.currentDifficultyWei() / 10000000 * contract_period (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#226)
+SharkPool.slitherConstructorConstantVariables() (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#90-346) uses literals with too many digits:
+	- divisible_units = 10000000 (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#104)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+SharkPool.contract_period (0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol#107) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+./0x29aa20fb9b23421e310bdb8a7cfb81d7fbb4a1b3.sol analyzed (4 contracts with 94 detectors), 50 result(s) found
+
+real	0m1.930s
+user	0m1.686s
+sys	0m0.246s

@@ -1,0 +1,490 @@
+'solc --version' running
+'solc ./0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol:
+Warning: Contract code size exceeds 24576 bytes (a limit introduced in Spurious Dragon). This contract may not be deployable on mainnet. Consider enabling the optimizer (with a low "runs" value!), turning off revert strings, or using libraries.
+   --> ./0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol:100:1:
+    |
+100 | contract FranceInu is IERC20 {
+    | ^ (Relevant source part starts here and spans across multiple lines).
+
+
+
+FranceInu.contractSwap(uint256) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#538-594) sends eth to arbitrary user
+	Dangerous calls:
+	- dexRouter.addLiquidityETH{value: liquidityBalance}(address(this),toLiquify,0,0,DEAD,block.timestamp) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#569-580)
+	- (success,None) = _taxWallets.marketing.call{gas: 55000,value: marketingBalance}() (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#589)
+	- (success,None) = _taxWallets.pot.call{gas: 55000,value: potBalance}() (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#592)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+Reentrancy in FranceInu._transfer(address,address,uint256) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#492-536):
+	External calls:
+	- contractSwap(contractTokenBalance) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#530)
+		- dexRouter.swapExactTokensForETHSupportingFeeOnTransferTokens(swapAmt,0,path,address(this),block.timestamp) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#555-563)
+		- dexRouter.addLiquidityETH{value: liquidityBalance}(address(this),toLiquify,0,0,DEAD,block.timestamp) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#569-580)
+		- (success,None) = _taxWallets.marketing.call{gas: 55000,value: marketingBalance}() (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#589)
+		- (success,None) = _taxWallets.pot.call{gas: 55000,value: potBalance}() (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#592)
+	- finalizeTransfer(from,to,amount,buy,sell,other) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#535)
+		- check = protections.checkUser(from,to,amount) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#644-645)
+	External calls sending eth:
+	- contractSwap(contractTokenBalance) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#530)
+		- dexRouter.addLiquidityETH{value: liquidityBalance}(address(this),toLiquify,0,0,DEAD,block.timestamp) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#569-580)
+		- (success,None) = _taxWallets.marketing.call{gas: 55000,value: marketingBalance}() (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#589)
+		- (success,None) = _taxWallets.pot.call{gas: 55000,value: potBalance}() (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#592)
+	State variables written after the call(s):
+	- finalizeTransfer(from,to,amount,buy,sell,other) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#535)
+		- _liquidityHolders[from] = true (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#599)
+	FranceInu._liquidityHolders (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#105) can be used in cross function reentrancies:
+	- FranceInu._checkLiquidityAdd(address,address) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#596-608)
+	- FranceInu._hasLimits(address,address) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#479-490)
+	- FranceInu.constructor() (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#187-210)
+	- finalizeTransfer(from,to,amount,buy,sell,other) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#535)
+		- _tOwned[from] -= amount (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#652)
+		- _tOwned[address(this)] += feeAmount (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#680)
+		- _tOwned[to] += amountReceived (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#654)
+	FranceInu._tOwned (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#101) can be used in cross function reentrancies:
+	- FranceInu.balanceOf(address) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#297-299)
+	- FranceInu.finalizeTransfer(address,address,uint256,bool,bool,bool) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#642-663)
+	- FranceInu.intializeContract(address,uint256,uint256,address) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#216-251)
+	- FranceInu.takeTaxes(address,bool,bool,uint256) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#665-685)
+	- finalizeTransfer(from,to,amount,buy,sell,other) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#535)
+		- contractSwapEnabled = true (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#605)
+	FranceInu.contractSwapEnabled (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#164) can be used in cross function reentrancies:
+	- FranceInu._checkLiquidityAdd(address,address) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#596-608)
+	- FranceInu._transfer(address,address,uint256) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#492-536)
+	- FranceInu.contractSwapEnabled (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#164)
+	- FranceInu.setContractSwapEnabled(bool,bool) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#473-477)
+	- finalizeTransfer(from,to,amount,buy,sell,other) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#535)
+		- protections = Protections(address(this)) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#603)
+	FranceInu.protections (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#175) can be used in cross function reentrancies:
+	- FranceInu._checkLiquidityAdd(address,address) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#596-608)
+	- FranceInu._hasLimits(address,address) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#479-490)
+	- FranceInu.enableTrading() (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#610-621)
+	- FranceInu.finalizeTransfer(address,address,uint256,bool,bool,bool) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#642-663)
+	- FranceInu.intializeContract(address,uint256,uint256,address) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#216-251)
+	- FranceInu.removeSniper(address) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#397-399)
+	- FranceInu.setInitializer(address) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#363-367)
+	- FranceInu.setLpPair(address,bool) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#348-361)
+	- FranceInu.setProtectionSettings(bool,bool) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#401-403)
+	- FranceInu.takeTaxes(address,bool,bool,uint256) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#665-685)
+Reentrancy in FranceInu.intializeContract(address,uint256,uint256,address) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#216-251):
+	External calls:
+	- (initName,initSymbol,initStartingSupply,initDecimals) = protections.getInitializers() (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#219-227)
+	- lpPair = IFactoryV2(dexRouter.factory()).createPair(dexRouter.WETH(),address(this)) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#228)
+	- finalizeTransfer(_owner,account,(_tTotal * percent) / divisor,false,false,true) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#238)
+		- check = protections.checkUser(from,to,amount) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#644-645)
+	- finalizeTransfer(_owner,address(this),balanceOf(_owner),false,false,true) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#239)
+		- check = protections.checkUser(from,to,amount) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#644-645)
+	- dexRouter.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,_owner,block.timestamp) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#241-248)
+	- enableTrading() (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#250)
+		- protections.setLaunch(lpPair,uint32(block.number),uint64(block.timestamp),_decimals) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#616)
+	External calls sending eth:
+	- dexRouter.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,_owner,block.timestamp) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#241-248)
+	State variables written after the call(s):
+	- enableTrading() (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#250)
+		- protections = Protections(address(this)) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#614)
+	FranceInu.protections (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#175) can be used in cross function reentrancies:
+	- FranceInu._checkLiquidityAdd(address,address) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#596-608)
+	- FranceInu._hasLimits(address,address) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#479-490)
+	- FranceInu.enableTrading() (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#610-621)
+	- FranceInu.finalizeTransfer(address,address,uint256,bool,bool,bool) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#642-663)
+	- FranceInu.intializeContract(address,uint256,uint256,address) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#216-251)
+	- FranceInu.removeSniper(address) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#397-399)
+	- FranceInu.setInitializer(address) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#363-367)
+	- FranceInu.setLpPair(address,bool) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#348-361)
+	- FranceInu.setProtectionSettings(bool,bool) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#401-403)
+	- FranceInu.takeTaxes(address,bool,bool,uint256) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#665-685)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+FranceInu.sweepExternalTokens(address) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#628-632) ignores return value by TOKEN.transfer(_owner,TOKEN.balanceOf(address(this))) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#631)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+FranceInu.contractSwap(uint256) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#538-594) performs a multiplication on the result of a division:
+	- toLiquify = ((contractTokenBalance * ratios.liquidity) / ratios.totalSwap) / 2 (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#548)
+	- liquidityBalance = (amtBalance * toLiquify) / swapAmt (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#566)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+Reentrancy in FranceInu.enableTrading() (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#610-621):
+	External calls:
+	- protections.setLaunch(lpPair,uint32(block.number),uint64(block.timestamp),_decimals) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#616)
+	State variables written after the call(s):
+	- tradingEnabled = true (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#617)
+	FranceInu.tradingEnabled (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#173) can be used in cross function reentrancies:
+	- FranceInu._transfer(address,address,uint256) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#492-536)
+	- FranceInu.enableTrading() (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#610-621)
+	- FranceInu.setInitializer(address) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#363-367)
+	- FranceInu.tradingEnabled (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#173)
+Reentrancy in FranceInu.finalizeTransfer(address,address,uint256,bool,bool,bool) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#642-663):
+	External calls:
+	- check = protections.checkUser(from,to,amount) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#644-645)
+	State variables written after the call(s):
+	- _checkLiquidityAdd(from,to) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#657)
+		- _liquidityHolders[from] = true (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#599)
+	FranceInu._liquidityHolders (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#105) can be used in cross function reentrancies:
+	- FranceInu._checkLiquidityAdd(address,address) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#596-608)
+	- FranceInu._hasLimits(address,address) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#479-490)
+	- FranceInu.constructor() (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#187-210)
+	- _checkLiquidityAdd(from,to) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#657)
+		- protections = Protections(address(this)) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#603)
+	FranceInu.protections (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#175) can be used in cross function reentrancies:
+	- FranceInu._checkLiquidityAdd(address,address) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#596-608)
+	- FranceInu._hasLimits(address,address) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#479-490)
+	- FranceInu.enableTrading() (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#610-621)
+	- FranceInu.finalizeTransfer(address,address,uint256,bool,bool,bool) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#642-663)
+	- FranceInu.intializeContract(address,uint256,uint256,address) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#216-251)
+	- FranceInu.removeSniper(address) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#397-399)
+	- FranceInu.setInitializer(address) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#363-367)
+	- FranceInu.setLpPair(address,bool) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#348-361)
+	- FranceInu.setProtectionSettings(bool,bool) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#401-403)
+	- FranceInu.takeTaxes(address,bool,bool,uint256) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#665-685)
+Reentrancy in FranceInu.intializeContract(address,uint256,uint256,address) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#216-251):
+	External calls:
+	- (initName,initSymbol,initStartingSupply,initDecimals) = protections.getInitializers() (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#219-227)
+	- lpPair = IFactoryV2(dexRouter.factory()).createPair(dexRouter.WETH(),address(this)) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#228)
+	State variables written after the call(s):
+	- contractInitialized = true (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#232)
+	FranceInu.contractInitialized (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#214) can be used in cross function reentrancies:
+	- FranceInu.intializeContract(address,uint256,uint256,address) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#216-251)
+Reentrancy in FranceInu.intializeContract(address,uint256,uint256,address) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#216-251):
+	External calls:
+	- (initName,initSymbol,initStartingSupply,initDecimals) = protections.getInitializers() (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#219-227)
+	- lpPair = IFactoryV2(dexRouter.factory()).createPair(dexRouter.WETH(),address(this)) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#228)
+	- finalizeTransfer(_owner,account,(_tTotal * percent) / divisor,false,false,true) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#238)
+		- check = protections.checkUser(from,to,amount) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#644-645)
+	State variables written after the call(s):
+	- finalizeTransfer(_owner,account,(_tTotal * percent) / divisor,false,false,true) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#238)
+		- protections = Protections(address(this)) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#603)
+	FranceInu.protections (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#175) can be used in cross function reentrancies:
+	- FranceInu._checkLiquidityAdd(address,address) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#596-608)
+	- FranceInu._hasLimits(address,address) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#479-490)
+	- FranceInu.enableTrading() (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#610-621)
+	- FranceInu.finalizeTransfer(address,address,uint256,bool,bool,bool) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#642-663)
+	- FranceInu.intializeContract(address,uint256,uint256,address) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#216-251)
+	- FranceInu.removeSniper(address) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#397-399)
+	- FranceInu.setInitializer(address) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#363-367)
+	- FranceInu.setLpPair(address,bool) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#348-361)
+	- FranceInu.setProtectionSettings(bool,bool) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#401-403)
+	- FranceInu.takeTaxes(address,bool,bool,uint256) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#665-685)
+Reentrancy in FranceInu.intializeContract(address,uint256,uint256,address) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#216-251):
+	External calls:
+	- (initName,initSymbol,initStartingSupply,initDecimals) = protections.getInitializers() (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#219-227)
+	- lpPair = IFactoryV2(dexRouter.factory()).createPair(dexRouter.WETH(),address(this)) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#228)
+	- finalizeTransfer(_owner,account,(_tTotal * percent) / divisor,false,false,true) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#238)
+		- check = protections.checkUser(from,to,amount) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#644-645)
+	- finalizeTransfer(_owner,address(this),balanceOf(_owner),false,false,true) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#239)
+		- check = protections.checkUser(from,to,amount) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#644-645)
+	State variables written after the call(s):
+	- finalizeTransfer(_owner,address(this),balanceOf(_owner),false,false,true) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#239)
+		- _hasLiqBeenAdded = true (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#601)
+	FranceInu._hasLiqBeenAdded (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#174) can be used in cross function reentrancies:
+	- FranceInu._checkLiquidityAdd(address,address) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#596-608)
+	- FranceInu._hasLiqBeenAdded (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#174)
+	- FranceInu.enableTrading() (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#610-621)
+	- FranceInu.finalizeTransfer(address,address,uint256,bool,bool,bool) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#642-663)
+	- FranceInu.setNewRouter(address) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#332-346)
+	- FranceInu.sweepContingency() (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#623-626)
+	- finalizeTransfer(_owner,address(this),balanceOf(_owner),false,false,true) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#239)
+		- _isExcludedFromFees[from] = true (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#600)
+	FranceInu._isExcludedFromFees (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#107) can be used in cross function reentrancies:
+	- FranceInu._checkLiquidityAdd(address,address) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#596-608)
+	- FranceInu.constructor() (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#187-210)
+	- FranceInu.finalizeTransfer(address,address,uint256,bool,bool,bool) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#642-663)
+	- FranceInu.isExcludedFromFees(address) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#377-379)
+	- FranceInu.setExcludedFromFees(address,bool) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#381-383)
+	- finalizeTransfer(_owner,address(this),balanceOf(_owner),false,false,true) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#239)
+		- _liquidityHolders[from] = true (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#599)
+	FranceInu._liquidityHolders (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#105) can be used in cross function reentrancies:
+	- FranceInu._checkLiquidityAdd(address,address) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#596-608)
+	- FranceInu._hasLimits(address,address) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#479-490)
+	- FranceInu.constructor() (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#187-210)
+	- finalizeTransfer(_owner,address(this),balanceOf(_owner),false,false,true) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#239)
+		- _tOwned[from] -= amount (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#652)
+		- _tOwned[address(this)] += feeAmount (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#680)
+		- _tOwned[to] += amountReceived (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#654)
+	FranceInu._tOwned (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#101) can be used in cross function reentrancies:
+	- FranceInu.balanceOf(address) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#297-299)
+	- FranceInu.finalizeTransfer(address,address,uint256,bool,bool,bool) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#642-663)
+	- FranceInu.intializeContract(address,uint256,uint256,address) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#216-251)
+	- FranceInu.takeTaxes(address,bool,bool,uint256) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#665-685)
+	- finalizeTransfer(_owner,address(this),balanceOf(_owner),false,false,true) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#239)
+		- protections = Protections(address(this)) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#603)
+	FranceInu.protections (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#175) can be used in cross function reentrancies:
+	- FranceInu._checkLiquidityAdd(address,address) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#596-608)
+	- FranceInu._hasLimits(address,address) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#479-490)
+	- FranceInu.enableTrading() (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#610-621)
+	- FranceInu.finalizeTransfer(address,address,uint256,bool,bool,bool) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#642-663)
+	- FranceInu.intializeContract(address,uint256,uint256,address) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#216-251)
+	- FranceInu.removeSniper(address) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#397-399)
+	- FranceInu.setInitializer(address) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#363-367)
+	- FranceInu.setLpPair(address,bool) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#348-361)
+	- FranceInu.setProtectionSettings(bool,bool) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#401-403)
+	- FranceInu.takeTaxes(address,bool,bool,uint256) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#665-685)
+Reentrancy in FranceInu.transferOwner(address) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#264-278):
+	External calls:
+	- finalizeTransfer(_owner,newOwner,balanceOf(_owner),false,false,true) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#271)
+		- check = protections.checkUser(from,to,amount) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#644-645)
+	State variables written after the call(s):
+	- _owner = newOwner (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#275)
+	FranceInu._owner (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#259) can be used in cross function reentrancies:
+	- FranceInu._hasLimits(address,address) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#479-490)
+	- FranceInu.constructor() (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#187-210)
+	- FranceInu.getOwner() (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#295)
+	- FranceInu.intializeContract(address,uint256,uint256,address) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#216-251)
+	- FranceInu.onlyOwner() (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#261)
+	- FranceInu.renounceOwnership() (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#280-285)
+	- FranceInu.sweepContingency() (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#623-626)
+	- FranceInu.sweepExternalTokens(address) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#628-632)
+	- FranceInu.transferOwner(address) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#264-278)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+FranceInu.finalizeTransfer(address,address,uint256,bool,bool,bool).checked (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#643) is a local variable never initialized
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#uninitialized-local-variables
+
+FranceInu.intializeContract(address,uint256,uint256,address) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#216-251) ignores return value by dexRouter.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,_owner,block.timestamp) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#241-248)
+FranceInu.contractSwap(uint256) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#538-594) ignores return value by dexRouter.addLiquidityETH{value: liquidityBalance}(address(this),toLiquify,0,0,DEAD,block.timestamp) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#569-580)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+FranceInu.setMaxTxPercent(uint256,uint256) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#437-440) should emit an event for: 
+	- _maxTxAmount = (_tTotal * percent) / divisor (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#439) 
+FranceInu.setMaxWalletSize(uint256,uint256) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#442-445) should emit an event for: 
+	- _maxWalletSize = (_tTotal * percent) / divisor (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#444) 
+FranceInu.setSwapSettings(uint256,uint256,uint256,uint256) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#459-466) should emit an event for: 
+	- swapThreshold = (_tTotal * thresholdPercent) / thresholdDivisor (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#460) 
+	- swapAmount = (_tTotal * amountPercent) / amountDivisor (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#461) 
+FranceInu.setPriceImpactSwapAmount(uint256) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#468-471) should emit an event for: 
+	- piSwapPercent = priceImpactSwapPercent (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#470) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+FranceInu.finalizeTransfer(address,address,uint256,bool,bool,bool) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#642-663) has external calls inside a loop: check = protections.checkUser(from,to,amount) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#644-645)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation/#calls-inside-a-loop
+
+Reentrancy in FranceInu.enableTrading() (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#610-621):
+	External calls:
+	- protections.setLaunch(lpPair,uint32(block.number),uint64(block.timestamp),_decimals) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#616)
+	State variables written after the call(s):
+	- launchStamp = block.timestamp (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#620)
+	- swapAmount = (balanceOf(lpPair) * 30) / 10000 (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#619)
+	- swapThreshold = (balanceOf(lpPair) * 10) / 10000 (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#618)
+Reentrancy in FranceInu.finalizeTransfer(address,address,uint256,bool,bool,bool) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#642-663):
+	External calls:
+	- check = protections.checkUser(from,to,amount) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#644-645)
+	State variables written after the call(s):
+	- _checkLiquidityAdd(from,to) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#657)
+		- _hasLiqBeenAdded = true (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#601)
+	- _checkLiquidityAdd(from,to) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#657)
+		- _isExcludedFromFees[from] = true (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#600)
+	- _tOwned[from] -= amount (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#652)
+	- _tOwned[to] += amountReceived (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#654)
+	- amountReceived = takeTaxes(from,buy,sell,amount) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#653)
+		- _tOwned[address(this)] += feeAmount (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#680)
+	- _checkLiquidityAdd(from,to) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#657)
+		- contractSwapEnabled = true (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#605)
+Reentrancy in FranceInu.intializeContract(address,uint256,uint256,address) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#216-251):
+	External calls:
+	- (initName,initSymbol,initStartingSupply,initDecimals) = protections.getInitializers() (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#219-227)
+	State variables written after the call(s):
+	- _decimals = initDecimals (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#223)
+	- _name = initName (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#220)
+	- _symbol = initSymbol (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#221)
+	- _tTotal = startingSupply * 10 ** _decimals (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#224)
+	- startingSupply = initStartingSupply (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#222)
+Reentrancy in FranceInu.intializeContract(address,uint256,uint256,address) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#216-251):
+	External calls:
+	- (initName,initSymbol,initStartingSupply,initDecimals) = protections.getInitializers() (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#219-227)
+	- lpPair = IFactoryV2(dexRouter.factory()).createPair(dexRouter.WETH(),address(this)) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#228)
+	State variables written after the call(s):
+	- _approve(address(this),address(dexRouter),type()(uint256).max) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#236)
+		- _allowances[sender][spender] = amount (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#315)
+	- _approve(_owner,address(dexRouter),type()(uint256).max) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#237)
+		- _allowances[sender][spender] = amount (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#315)
+	- _maxTxAmount = (_tTotal * 1) / 100 (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#230)
+	- _maxWalletSize = (_tTotal * 1) / 100 (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#231)
+	- _tOwned[_owner] = _tTotal (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#233)
+	- lpPair = IFactoryV2(dexRouter.factory()).createPair(dexRouter.WETH(),address(this)) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#228)
+	- lpPairs[lpPair] = true (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#229)
+Reentrancy in FranceInu.intializeContract(address,uint256,uint256,address) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#216-251):
+	External calls:
+	- (initName,initSymbol,initStartingSupply,initDecimals) = protections.getInitializers() (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#219-227)
+	- lpPair = IFactoryV2(dexRouter.factory()).createPair(dexRouter.WETH(),address(this)) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#228)
+	- finalizeTransfer(_owner,account,(_tTotal * percent) / divisor,false,false,true) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#238)
+		- check = protections.checkUser(from,to,amount) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#644-645)
+	State variables written after the call(s):
+	- finalizeTransfer(_owner,account,(_tTotal * percent) / divisor,false,false,true) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#238)
+		- contractSwapEnabled = true (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#605)
+Reentrancy in FranceInu.intializeContract(address,uint256,uint256,address) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#216-251):
+	External calls:
+	- (initName,initSymbol,initStartingSupply,initDecimals) = protections.getInitializers() (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#219-227)
+	- lpPair = IFactoryV2(dexRouter.factory()).createPair(dexRouter.WETH(),address(this)) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#228)
+	- finalizeTransfer(_owner,account,(_tTotal * percent) / divisor,false,false,true) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#238)
+		- check = protections.checkUser(from,to,amount) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#644-645)
+	- finalizeTransfer(_owner,address(this),balanceOf(_owner),false,false,true) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#239)
+		- check = protections.checkUser(from,to,amount) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#644-645)
+	State variables written after the call(s):
+	- finalizeTransfer(_owner,address(this),balanceOf(_owner),false,false,true) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#239)
+		- contractSwapEnabled = true (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#605)
+Reentrancy in FranceInu.intializeContract(address,uint256,uint256,address) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#216-251):
+	External calls:
+	- (initName,initSymbol,initStartingSupply,initDecimals) = protections.getInitializers() (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#219-227)
+	- lpPair = IFactoryV2(dexRouter.factory()).createPair(dexRouter.WETH(),address(this)) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#228)
+	- finalizeTransfer(_owner,account,(_tTotal * percent) / divisor,false,false,true) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#238)
+		- check = protections.checkUser(from,to,amount) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#644-645)
+	- finalizeTransfer(_owner,address(this),balanceOf(_owner),false,false,true) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#239)
+		- check = protections.checkUser(from,to,amount) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#644-645)
+	- dexRouter.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,_owner,block.timestamp) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#241-248)
+	- enableTrading() (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#250)
+		- protections.setLaunch(lpPair,uint32(block.number),uint64(block.timestamp),_decimals) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#616)
+	External calls sending eth:
+	- dexRouter.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,_owner,block.timestamp) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#241-248)
+	State variables written after the call(s):
+	- enableTrading() (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#250)
+		- launchStamp = block.timestamp (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#620)
+	- enableTrading() (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#250)
+		- swapAmount = (balanceOf(lpPair) * 30) / 10000 (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#619)
+	- enableTrading() (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#250)
+		- swapThreshold = (balanceOf(lpPair) * 10) / 10000 (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#618)
+Reentrancy in FranceInu.setNewRouter(address) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#332-346):
+	External calls:
+	- lpPair = IFactoryV2(_newRouter.factory()).createPair(address(this),_newRouter.WETH()) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#338)
+	State variables written after the call(s):
+	- _approve(address(this),address(dexRouter),type()(uint256).max) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#345)
+		- _allowances[sender][spender] = amount (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#315)
+	- dexRouter = _newRouter (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#343)
+	- lpPairs[lpPair] = true (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#344)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in FranceInu._transfer(address,address,uint256) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#492-536):
+	External calls:
+	- contractSwap(contractTokenBalance) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#530)
+		- dexRouter.swapExactTokensForETHSupportingFeeOnTransferTokens(swapAmt,0,path,address(this),block.timestamp) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#555-563)
+		- dexRouter.addLiquidityETH{value: liquidityBalance}(address(this),toLiquify,0,0,DEAD,block.timestamp) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#569-580)
+		- (success,None) = _taxWallets.marketing.call{gas: 55000,value: marketingBalance}() (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#589)
+		- (success,None) = _taxWallets.pot.call{gas: 55000,value: potBalance}() (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#592)
+	- finalizeTransfer(from,to,amount,buy,sell,other) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#535)
+		- check = protections.checkUser(from,to,amount) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#644-645)
+	External calls sending eth:
+	- contractSwap(contractTokenBalance) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#530)
+		- dexRouter.addLiquidityETH{value: liquidityBalance}(address(this),toLiquify,0,0,DEAD,block.timestamp) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#569-580)
+		- (success,None) = _taxWallets.marketing.call{gas: 55000,value: marketingBalance}() (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#589)
+		- (success,None) = _taxWallets.pot.call{gas: 55000,value: potBalance}() (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#592)
+	Event emitted after the call(s):
+	- ContractSwapEnabledUpdated(true) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#606)
+		- finalizeTransfer(from,to,amount,buy,sell,other) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#535)
+	- Transfer(from,address(this),feeAmount) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#681)
+		- finalizeTransfer(from,to,amount,buy,sell,other) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#535)
+	- Transfer(from,to,amountReceived) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#655)
+		- finalizeTransfer(from,to,amount,buy,sell,other) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#535)
+Reentrancy in FranceInu.contractSwap(uint256) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#538-594):
+	External calls:
+	- dexRouter.swapExactTokensForETHSupportingFeeOnTransferTokens(swapAmt,0,path,address(this),block.timestamp) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#555-563)
+	- dexRouter.addLiquidityETH{value: liquidityBalance}(address(this),toLiquify,0,0,DEAD,block.timestamp) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#569-580)
+	External calls sending eth:
+	- dexRouter.addLiquidityETH{value: liquidityBalance}(address(this),toLiquify,0,0,DEAD,block.timestamp) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#569-580)
+	Event emitted after the call(s):
+	- AutoLiquify(liquidityBalance,toLiquify) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#577)
+Reentrancy in FranceInu.finalizeTransfer(address,address,uint256,bool,bool,bool) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#642-663):
+	External calls:
+	- check = protections.checkUser(from,to,amount) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#644-645)
+	Event emitted after the call(s):
+	- ContractSwapEnabledUpdated(true) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#606)
+		- _checkLiquidityAdd(from,to) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#657)
+	- Transfer(from,address(this),feeAmount) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#681)
+		- amountReceived = takeTaxes(from,buy,sell,amount) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#653)
+	- Transfer(from,to,amountReceived) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#655)
+Reentrancy in FranceInu.intializeContract(address,uint256,uint256,address) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#216-251):
+	External calls:
+	- (initName,initSymbol,initStartingSupply,initDecimals) = protections.getInitializers() (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#219-227)
+	- lpPair = IFactoryV2(dexRouter.factory()).createPair(dexRouter.WETH(),address(this)) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#228)
+	Event emitted after the call(s):
+	- Approval(sender,spender,amount) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#316)
+		- _approve(_owner,address(dexRouter),type()(uint256).max) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#237)
+	- Approval(sender,spender,amount) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#316)
+		- _approve(address(this),address(dexRouter),type()(uint256).max) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#236)
+	- Transfer(address(0),_owner,_tTotal) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#234)
+Reentrancy in FranceInu.intializeContract(address,uint256,uint256,address) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#216-251):
+	External calls:
+	- (initName,initSymbol,initStartingSupply,initDecimals) = protections.getInitializers() (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#219-227)
+	- lpPair = IFactoryV2(dexRouter.factory()).createPair(dexRouter.WETH(),address(this)) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#228)
+	- finalizeTransfer(_owner,account,(_tTotal * percent) / divisor,false,false,true) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#238)
+		- check = protections.checkUser(from,to,amount) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#644-645)
+	Event emitted after the call(s):
+	- ContractSwapEnabledUpdated(true) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#606)
+		- finalizeTransfer(_owner,account,(_tTotal * percent) / divisor,false,false,true) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#238)
+	- Transfer(from,address(this),feeAmount) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#681)
+		- finalizeTransfer(_owner,account,(_tTotal * percent) / divisor,false,false,true) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#238)
+	- Transfer(from,to,amountReceived) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#655)
+		- finalizeTransfer(_owner,account,(_tTotal * percent) / divisor,false,false,true) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#238)
+Reentrancy in FranceInu.intializeContract(address,uint256,uint256,address) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#216-251):
+	External calls:
+	- (initName,initSymbol,initStartingSupply,initDecimals) = protections.getInitializers() (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#219-227)
+	- lpPair = IFactoryV2(dexRouter.factory()).createPair(dexRouter.WETH(),address(this)) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#228)
+	- finalizeTransfer(_owner,account,(_tTotal * percent) / divisor,false,false,true) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#238)
+		- check = protections.checkUser(from,to,amount) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#644-645)
+	- finalizeTransfer(_owner,address(this),balanceOf(_owner),false,false,true) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#239)
+		- check = protections.checkUser(from,to,amount) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#644-645)
+	Event emitted after the call(s):
+	- ContractSwapEnabledUpdated(true) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#606)
+		- finalizeTransfer(_owner,address(this),balanceOf(_owner),false,false,true) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#239)
+	- Transfer(from,address(this),feeAmount) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#681)
+		- finalizeTransfer(_owner,address(this),balanceOf(_owner),false,false,true) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#239)
+	- Transfer(from,to,amountReceived) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#655)
+		- finalizeTransfer(_owner,address(this),balanceOf(_owner),false,false,true) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#239)
+Reentrancy in FranceInu.setNewRouter(address) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#332-346):
+	External calls:
+	- lpPair = IFactoryV2(_newRouter.factory()).createPair(address(this),_newRouter.WETH()) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#338)
+	Event emitted after the call(s):
+	- Approval(sender,spender,amount) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#316)
+		- _approve(address(this),address(dexRouter),type()(uint256).max) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#345)
+Reentrancy in FranceInu.transferOwner(address) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#264-278):
+	External calls:
+	- finalizeTransfer(_owner,newOwner,balanceOf(_owner),false,false,true) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#271)
+		- check = protections.checkUser(from,to,amount) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#644-645)
+	Event emitted after the call(s):
+	- OwnershipTransferred(oldOwner,newOwner) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#276)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+FranceInu.contractSwap(uint256) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#538-594) tries to limit the gas of an external call that controls implicit decoding
+	(success,None) = _taxWallets.marketing.call{gas: 55000,value: marketingBalance}() (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#589)
+	(success,None) = _taxWallets.pot.call{gas: 55000,value: potBalance}() (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#592)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#return-bomb
+
+FranceInu.setLpPair(address,bool) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#348-361) uses timestamp for comparisons
+	Dangerous comparisons:
+	- timeSinceLastPair != 0 (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#353)
+	- require(bool,string)(block.timestamp - timeSinceLastPair > 259200,3 Day cooldown.) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#354)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+FranceInu._checkLiquidityAdd(address,address) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#596-608) has costly operations inside a loop:
+	- _hasLiqBeenAdded = true (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#601)
+FranceInu._checkLiquidityAdd(address,address) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#596-608) has costly operations inside a loop:
+	- protections = Protections(address(this)) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#603)
+FranceInu._checkLiquidityAdd(address,address) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#596-608) has costly operations inside a loop:
+	- contractSwapEnabled = true (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#605)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#costly-operations-inside-a-loop
+
+FranceInu._transfer(address,address,uint256) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#492-536) has a high cyclomatic complexity (15).
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#cyclomatic-complexity
+
+Version constraint >=0.6.0<0.9.0 is too complex.
+It is used by:
+	- >=0.6.0<0.9.0 (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#2)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in FranceInu.contractSwap(uint256) (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#538-594):
+	- (success,None) = _taxWallets.marketing.call{gas: 55000,value: marketingBalance}() (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#589)
+	- (success,None) = _taxWallets.pot.call{gas: 55000,value: potBalance}() (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#592)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Function IRouter01.WETH() (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#33) is not in mixedCase
+Parameter FranceInu.intializeContract(address,uint256,uint256,address)._protections (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#216) is not in mixedCase
+Parameter FranceInu.setProtectionSettings(bool,bool)._antiSnipe (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#401) is not in mixedCase
+Parameter FranceInu.setProtectionSettings(bool,bool)._antiBlock (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#401) is not in mixedCase
+Variable FranceInu._taxRates (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#129-133) is not in mixedCase
+Variable FranceInu._ratios (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#135-140) is not in mixedCase
+Constant FranceInu.masterTaxDivisor (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#146) is not in UPPER_CASE_WITH_UNDERSCORES
+Variable FranceInu._taxWallets (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#158-161) is not in mixedCase
+Variable FranceInu._hasLiqBeenAdded (0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol#174) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+./0x38ec125e6271b343d84529e9ca8c2481e3b194e5.sol analyzed (7 contracts with 94 detectors), 52 result(s) found
+
+real	0m4.768s
+user	0m4.530s
+sys	0m0.241s

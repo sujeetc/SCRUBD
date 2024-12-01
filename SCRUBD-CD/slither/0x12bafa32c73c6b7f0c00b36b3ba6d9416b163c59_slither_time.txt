@@ -1,0 +1,317 @@
+'solc --version' running
+'solc ./0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+Taxable.payTaxes(uint256,uint256) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#107-118) sends eth to arbitrary user
+	Dangerous calls:
+	- _address.transfer(_amount) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#113)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+Reentrancy in FitCoin._disperseEth() (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#377-392):
+	External calls:
+	- payTaxes(_newEth,_d) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#387)
+		- External.deposit(_amount) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#115)
+	External calls sending eth:
+	- payTaxes(_newEth,_d) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#387)
+		- _address.transfer(_amount) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#113)
+	- m_EthReflectSvcAddress.transfer(m_EthReflectAmount) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#389)
+	State variables written after the call(s):
+	- m_LastEthBal = address(this).balance (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#391)
+	FitCoin.m_LastEthBal (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#214) can be used in cross function reentrancies:
+	- FitCoin._disperseEth() (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#377-392)
+Reentrancy in FitCoin._transfer(address,address,uint256) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#302-323):
+	External calls:
+	- _tax(_sender) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#318)
+		- m_UniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(_amount,0,_path,address(this),block.timestamp) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#363-369)
+		- External.deposit(_amount) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#115)
+	External calls sending eth:
+	- _tax(_sender) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#318)
+		- _address.transfer(_amount) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#113)
+		- m_EthReflectSvcAddress.transfer(m_EthReflectAmount) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#389)
+	State variables written after the call(s):
+	- _updateBalances(_sender,_recipient,_amount,_taxes) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#321)
+		- m_Balances[_sender] = m_Balances[_sender].sub(_amount) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#326)
+		- m_Balances[_recipient] = m_Balances[_recipient].add(_netAmount) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#327)
+		- m_Balances[address(this)] = m_Balances[address(this)].add(_taxes) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#328)
+	FitCoin.m_Balances (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#212) can be used in cross function reentrancies:
+	- FitCoin._updateBalances(address,address,uint256,uint256) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#324-330)
+	- FitCoin.balanceOf(address) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#253-255)
+	- FitCoin.constructor() (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#232-240)
+Reentrancy in FitCoin._transfer(address,address,uint256) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#302-323):
+	External calls:
+	- _tax(_sender) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#318)
+		- m_UniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(_amount,0,_path,address(this),block.timestamp) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#363-369)
+		- External.deposit(_amount) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#115)
+	- _trackEthReflection(_sender,_recipient) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#322)
+		- EthReflect.trackPurchase(_recipient) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#334)
+		- EthReflect.trackSell(_sender,m_EthReflectAmount) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#336)
+	External calls sending eth:
+	- _tax(_sender) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#318)
+		- _address.transfer(_amount) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#113)
+		- m_EthReflectSvcAddress.transfer(m_EthReflectAmount) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#389)
+	State variables written after the call(s):
+	- _trackEthReflection(_sender,_recipient) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#322)
+		- m_EthReflectAmount = 0 (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#337)
+	FitCoin.m_EthReflectAmount (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#207) can be used in cross function reentrancies:
+	- FitCoin._disperseEth() (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#377-392)
+	- FitCoin._trackEthReflection(address,address) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#331-340)
+Reentrancy in FitCoin.addLiquidity() (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#393-405):
+	External calls:
+	- m_UniswapV2Pair = IUniswapV2Factory(_uniswapV2Router.factory()).createPair(address(this),_uniswapV2Router.WETH()) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#399)
+	- m_UniswapV2Router.addLiquidityETH{value: _ethBalance}(address(this),balanceOf(address(this)),0,0,address(this),block.timestamp) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#400)
+	- IERC20(m_UniswapV2Pair).approve(m_LiqLockSvcAddress,type()(uint256).max) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#401)
+	- FTPLiqLock(m_LiqLockSvcAddress).lockTokens(m_UniswapV2Pair,block.timestamp.add(259200),msg.sender) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#402)
+	- EthReflect.init(address(this),1000,m_UniswapV2Pair,_uniswapV2Router.WETH(),_ethBalance,TOTAL_SUPPLY) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#403)
+	External calls sending eth:
+	- m_UniswapV2Router.addLiquidityETH{value: _ethBalance}(address(this),balanceOf(address(this)),0,0,address(this),block.timestamp) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#400)
+	State variables written after the call(s):
+	- m_Liquidity = true (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#404)
+	FitCoin.m_Liquidity (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#201) can be used in cross function reentrancies:
+	- FitCoin.addLiquidity() (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#393-405)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+FitCoin._getTaxes(address,address,uint256) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#341-350) performs a multiplication on the result of a division:
+	- _ret = _ret.add(_amount.div(pMax).mul(totalTaxAlloc())) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#346)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+Reentrancy in FitCoin._trackEthReflection(address,address) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#331-340):
+	External calls:
+	- EthReflect.trackSell(_sender,m_EthReflectAmount) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#336)
+	State variables written after the call(s):
+	- m_EthReflectAmount = 0 (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#337)
+	FitCoin.m_EthReflectAmount (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#207) can be used in cross function reentrancies:
+	- FitCoin._disperseEth() (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#377-392)
+	- FitCoin._trackEthReflection(address,address) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#331-340)
+Reentrancy in FitCoin.setWebThree(address) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#430-432):
+	External calls:
+	- onlyDev() (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#430)
+		- require(bool,string)(_msgSender() == External.owner() || _msgSender() == m_WebThree,Unauthorized) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#226)
+	State variables written after the call(s):
+	- m_WebThree = _address (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#431)
+	Taxable.m_WebThree (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#89) can be used in cross function reentrancies:
+	- FitCoin.onlyDev() (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#225-228)
+	- Taxable.setTaxAlloc(address,uint256) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#119-139)
+	- FitCoin.setWebThree(address) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#430-432)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+FitCoin._transfer(address,address,uint256) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#302-323) uses tx.origin for authorization: require(bool)(! m_Blacklist[_sender] && ! m_Blacklist[_recipient] && ! m_Blacklist[tx.origin]) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#306)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-usage-of-txorigin
+
+FitCoin.addLiquidity() (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#393-405) ignores return value by m_UniswapV2Router.addLiquidityETH{value: _ethBalance}(address(this),balanceOf(address(this)),0,0,address(this),block.timestamp) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#400)
+FitCoin.addLiquidity() (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#393-405) ignores return value by IERC20(m_UniswapV2Pair).approve(m_LiqLockSvcAddress,type()(uint256).max) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#401)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+FitCoin.launch(uint256) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#406-408) should emit an event for: 
+	- m_Launched = block.timestamp.add(_timer) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#407) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+Taxable.updateDevWallet(address,uint256)._address (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#147) lacks a zero-check on :
+		- m_DevAddress = _address (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#149)
+Ownable.transferOwnership(address)._address (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#74) lacks a zero-check on :
+		- m_Owner = _address (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#76)
+FitCoin.setWebThree(address)._address (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#430) lacks a zero-check on :
+		- m_WebThree = _address (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#431)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in FitCoin._disperseEth() (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#377-392):
+	External calls:
+	- payTaxes(_newEth,_d) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#387)
+		- External.deposit(_amount) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#115)
+	External calls sending eth:
+	- payTaxes(_newEth,_d) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#387)
+		- _address.transfer(_amount) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#113)
+	State variables written after the call(s):
+	- m_EthReflectAmount = _newEth.mul(m_EthReflectAlloc).div(_d) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#388)
+Reentrancy in FitCoin.transferFrom(address,address,uint256) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#267-271):
+	External calls:
+	- _transfer(_sender,_recipient,_amount) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#268)
+		- EthReflect.trackPurchase(_recipient) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#334)
+		- EthReflect.trackSell(_sender,m_EthReflectAmount) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#336)
+		- m_UniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(_amount,0,_path,address(this),block.timestamp) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#363-369)
+		- External.deposit(_amount) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#115)
+	External calls sending eth:
+	- _transfer(_sender,_recipient,_amount) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#268)
+		- _address.transfer(_amount) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#113)
+		- m_EthReflectSvcAddress.transfer(m_EthReflectAmount) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#389)
+	State variables written after the call(s):
+	- _approve(_sender,_msgSender(),m_Allowances[_sender][_msgSender()].sub(_amount,ERC20: transfer amount exceeds allowance)) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#269)
+		- m_Allowances[_owner][_spender] = _amount (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#299)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in FitCoin._transfer(address,address,uint256) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#302-323):
+	External calls:
+	- _tax(_sender) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#318)
+		- m_UniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(_amount,0,_path,address(this),block.timestamp) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#363-369)
+		- External.deposit(_amount) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#115)
+	External calls sending eth:
+	- _tax(_sender) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#318)
+		- _address.transfer(_amount) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#113)
+		- m_EthReflectSvcAddress.transfer(m_EthReflectAmount) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#389)
+	Event emitted after the call(s):
+	- Transfer(_sender,_recipient,_netAmount) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#329)
+		- _updateBalances(_sender,_recipient,_amount,_taxes) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#321)
+Reentrancy in FitCoin.transferFrom(address,address,uint256) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#267-271):
+	External calls:
+	- _transfer(_sender,_recipient,_amount) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#268)
+		- EthReflect.trackPurchase(_recipient) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#334)
+		- EthReflect.trackSell(_sender,m_EthReflectAmount) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#336)
+		- m_UniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(_amount,0,_path,address(this),block.timestamp) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#363-369)
+		- External.deposit(_amount) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#115)
+	External calls sending eth:
+	- _transfer(_sender,_recipient,_amount) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#268)
+		- _address.transfer(_amount) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#113)
+		- m_EthReflectSvcAddress.transfer(m_EthReflectAmount) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#389)
+	Event emitted after the call(s):
+	- Approval(_owner,_spender,_amount) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#300)
+		- _approve(_sender,_msgSender(),m_Allowances[_sender][_msgSender()].sub(_amount,ERC20: transfer amount exceeds allowance)) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#269)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+FitCoin._walletCapped(address) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#287-289) uses timestamp for comparisons
+	Dangerous comparisons:
+	- _recipient != m_UniswapV2Pair && _recipient != address(m_UniswapV2Router) && block.timestamp <= m_Launched.add(3600) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#288)
+FitCoin._checkTX() (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#290-295) uses timestamp for comparisons
+	Dangerous comparisons:
+	- block.timestamp <= m_Launched.add(300) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#291)
+FitCoin._transfer(address,address,uint256) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#302-323) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(block.timestamp >= m_Launched) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#313)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+FitCoin._isExchangeTransfer(address,address) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#281-283) is never used and should be removed
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dead-code
+
+Version constraint ^0.8.7 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- VerbatimInvalidDeduplication
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- SignedImmutables.
+It is used by:
+	- ^0.8.7 (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#16)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Parameter Ownable.transferOwnership(address)._address (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#74) is not in mixedCase
+Variable Ownable.m_Owner (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#64) is not in mixedCase
+Parameter Taxable.payTaxes(uint256,uint256)._eth (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#107) is not in mixedCase
+Parameter Taxable.payTaxes(uint256,uint256)._d (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#107) is not in mixedCase
+Parameter Taxable.setTaxAlloc(address,uint256)._address (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#119) is not in mixedCase
+Parameter Taxable.setTaxAlloc(address,uint256)._alloc (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#119) is not in mixedCase
+Parameter Taxable.getTaxAlloc(address)._address (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#143) is not in mixedCase
+Parameter Taxable.updateDevWallet(address,uint256)._address (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#147) is not in mixedCase
+Parameter Taxable.updateDevWallet(address,uint256)._alloc (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#147) is not in mixedCase
+Variable Taxable.External (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#85) is not in mixedCase
+Variable Taxable.m_ExternalServiceAddress (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#86) is not in mixedCase
+Variable Taxable.m_DevAddress (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#87) is not in mixedCase
+Variable Taxable.m_DevAlloc (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#88) is not in mixedCase
+Variable Taxable.m_WebThree (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#89) is not in mixedCase
+Variable Taxable.m_TaxAlloc (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#90) is not in mixedCase
+Variable Taxable.m_TaxAddresses (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#91) is not in mixedCase
+Variable Taxable.m_TaxIdx (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#92) is not in mixedCase
+Variable Taxable.m_TotalAlloc (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#93) is not in mixedCase
+Variable Taxable.m_DidDeploy (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#94) is not in mixedCase
+Function IUniswapV2Router02.WETH() (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#166) is not in mixedCase
+Parameter FitCoin.balanceOf(address)._account (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#253) is not in mixedCase
+Parameter FitCoin.transfer(address,uint256)._recipient (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#256) is not in mixedCase
+Parameter FitCoin.transfer(address,uint256)._amount (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#256) is not in mixedCase
+Parameter FitCoin.allowance(address,address)._owner (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#260) is not in mixedCase
+Parameter FitCoin.allowance(address,address)._spender (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#260) is not in mixedCase
+Parameter FitCoin.approve(address,uint256)._spender (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#263) is not in mixedCase
+Parameter FitCoin.approve(address,uint256)._amount (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#263) is not in mixedCase
+Parameter FitCoin.transferFrom(address,address,uint256)._sender (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#267) is not in mixedCase
+Parameter FitCoin.transferFrom(address,address,uint256)._recipient (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#267) is not in mixedCase
+Parameter FitCoin.transferFrom(address,address,uint256)._amount (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#267) is not in mixedCase
+Parameter FitCoin.launch(uint256)._timer (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#406) is not in mixedCase
+Parameter FitCoin.checkIfBlacklist(address)._address (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#409) is not in mixedCase
+Parameter FitCoin.blacklist(address)._a (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#412) is not in mixedCase
+Parameter FitCoin.rmBlacklist(address)._a (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#415) is not in mixedCase
+Parameter FitCoin.updateTaxAlloc(address,uint256)._address (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#418) is not in mixedCase
+Parameter FitCoin.updateTaxAlloc(address,uint256)._alloc (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#418) is not in mixedCase
+Parameter FitCoin.addTaxWhitelist(address)._address (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#424) is not in mixedCase
+Parameter FitCoin.rmTaxWhitelist(address)._address (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#427) is not in mixedCase
+Parameter FitCoin.setWebThree(address)._address (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#430) is not in mixedCase
+Variable FitCoin.m_Name (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#193) is not in mixedCase
+Variable FitCoin.m_Symbol (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#194) is not in mixedCase
+Variable FitCoin.m_Decimals (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#195) is not in mixedCase
+Variable FitCoin.m_UniswapV2Pair (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#197) is not in mixedCase
+Variable FitCoin.m_UniswapV2Router (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#198) is not in mixedCase
+Variable FitCoin.m_WalletLimit (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#200) is not in mixedCase
+Variable FitCoin.m_Liquidity (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#201) is not in mixedCase
+Variable FitCoin.EthReflect (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#204) is not in mixedCase
+Variable FitCoin.m_EthReflectSvcAddress (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#205) is not in mixedCase
+Variable FitCoin.m_EthReflectAlloc (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#206) is not in mixedCase
+Variable FitCoin.m_EthReflectAmount (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#207) is not in mixedCase
+Variable FitCoin.m_LiqLockSvcAddress (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#209) is not in mixedCase
+Variable FitCoin.m_Blacklist (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#210) is not in mixedCase
+Variable FitCoin.m_ExcludedAddresses (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#211) is not in mixedCase
+Variable FitCoin.m_Balances (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#212) is not in mixedCase
+Variable FitCoin.m_Allowances (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#213) is not in mixedCase
+Variable FitCoin.m_LastEthBal (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#214) is not in mixedCase
+Variable FitCoin.m_Launched (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#215) is not in mixedCase
+Variable FitCoin.m_IsSwap (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#216) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in FitCoin._disperseEth() (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#377-392):
+	External calls:
+	- payTaxes(_newEth,_d) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#387)
+		- _address.transfer(_amount) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#113)
+	State variables written after the call(s):
+	- m_EthReflectAmount = _newEth.mul(m_EthReflectAlloc).div(_d) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#388)
+Reentrancy in FitCoin._disperseEth() (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#377-392):
+	External calls:
+	- payTaxes(_newEth,_d) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#387)
+		- _address.transfer(_amount) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#113)
+	- m_EthReflectSvcAddress.transfer(m_EthReflectAmount) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#389)
+	State variables written after the call(s):
+	- m_LastEthBal = address(this).balance (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#391)
+Reentrancy in FitCoin._transfer(address,address,uint256) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#302-323):
+	External calls:
+	- _tax(_sender) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#318)
+		- _address.transfer(_amount) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#113)
+		- m_EthReflectSvcAddress.transfer(m_EthReflectAmount) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#389)
+	State variables written after the call(s):
+	- _updateBalances(_sender,_recipient,_amount,_taxes) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#321)
+		- m_Balances[_sender] = m_Balances[_sender].sub(_amount) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#326)
+		- m_Balances[_recipient] = m_Balances[_recipient].add(_netAmount) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#327)
+		- m_Balances[address(this)] = m_Balances[address(this)].add(_taxes) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#328)
+	- _trackEthReflection(_sender,_recipient) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#322)
+		- m_EthReflectAmount = 0 (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#337)
+	Event emitted after the call(s):
+	- Transfer(_sender,_recipient,_netAmount) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#329)
+		- _updateBalances(_sender,_recipient,_amount,_taxes) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#321)
+Reentrancy in FitCoin.transferFrom(address,address,uint256) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#267-271):
+	External calls:
+	- _transfer(_sender,_recipient,_amount) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#268)
+		- _address.transfer(_amount) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#113)
+		- m_EthReflectSvcAddress.transfer(m_EthReflectAmount) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#389)
+	State variables written after the call(s):
+	- _approve(_sender,_msgSender(),m_Allowances[_sender][_msgSender()].sub(_amount,ERC20: transfer amount exceeds allowance)) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#269)
+		- m_Allowances[_owner][_spender] = _amount (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#299)
+	Event emitted after the call(s):
+	- Approval(_owner,_spender,_amount) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#300)
+		- _approve(_sender,_msgSender(),m_Allowances[_sender][_msgSender()].sub(_amount,ERC20: transfer amount exceeds allowance)) (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#269)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+FitCoin.slitherConstructorVariables() (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#189-434) uses literals with too many digits:
+	- pMax = 100000 (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#217)
+FitCoin.slitherConstructorConstantVariables() (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#189-434) uses literals with too many digits:
+	- TOTAL_SUPPLY = 1000000 * 10 ** 9 (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#192)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+FitCoin.m_Decimals (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#195) should be constant 
+FitCoin.m_EthReflectSvcAddress (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#205) should be constant 
+FitCoin.m_LiqLockSvcAddress (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#209) should be constant 
+FitCoin.m_Name (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#193) should be constant 
+FitCoin.m_Symbol (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#194) should be constant 
+FitCoin.m_WalletLimit (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#200) should be constant 
+FitCoin.pMax (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#217) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+
+FitCoin.EthReflect (0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol#204) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+./0x12bafa32c73c6b7f0c00b36b3ba6d9416b163c59.sol analyzed (11 contracts with 94 detectors), 96 result(s) found
+
+real	0m2.561s
+user	0m2.307s
+sys	0m0.256s

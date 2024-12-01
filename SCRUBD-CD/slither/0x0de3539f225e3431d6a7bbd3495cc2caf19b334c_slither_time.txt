@@ -1,0 +1,178 @@
+'solc --version' running
+'solc ./0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol:
+Warning: SPDX license identifier not provided in source file. Before publishing, consider adding a comment containing "SPDX-License-Identifier: <SPDX-License>" to each source file. Use "SPDX-License-Identifier: UNLICENSED" for non-open-source code. Please see https://spdx.org for more information.
+--> ./0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol
+
+
+
+Reentrancy in BabyKounotori._transfer(address,address,uint256) (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#222-255):
+	External calls:
+	- swapTokensForEth(contractTokenBalance) (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#246)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#262-268)
+	External calls sending eth:
+	- sendETHToFee(address(this).balance) (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#249)
+		- _feeAddrWallet1.transfer(amount.div(2)) (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#272)
+		- _feeAddrWallet2.transfer(amount.div(2)) (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#273)
+	State variables written after the call(s):
+	- _tokenTransfer(from,to,amount) (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#254)
+		- _rOwned[address(this)] = _rOwned[address(this)].add(rTeam) (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#320)
+		- _rOwned[sender] = _rOwned[sender].sub(rAmount) (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#310)
+		- _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount) (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#311)
+	BabyKounotori._rOwned (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#121) can be used in cross function reentrancies:
+	- BabyKounotori._takeTeam(uint256) (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#317-321)
+	- BabyKounotori._transferStandard(address,address,uint256) (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#308-315)
+	- BabyKounotori.balanceOf(address) (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#181-183)
+	- BabyKounotori.constructor() (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#154-163)
+	- _tokenTransfer(from,to,amount) (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#254)
+		- _rTotal = _rTotal.sub(rFee) (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#324)
+	BabyKounotori._rTotal (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#129) can be used in cross function reentrancies:
+	- BabyKounotori._getCurrentSupply() (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#370-375)
+	- BabyKounotori._reflectFee(uint256,uint256) (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#323-326)
+	- BabyKounotori.constructor() (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#154-163)
+	- BabyKounotori.tokenFromReflection(uint256) (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#209-213)
+Reentrancy in BabyKounotori.gm() (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#276-288):
+	External calls:
+	- uniswapV2Pair = IUniswapV2Factory(_uniswapV2Router.factory()).createPair(address(this),_uniswapV2Router.WETH()) (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#281)
+	- uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#282)
+	External calls sending eth:
+	- uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#282)
+	State variables written after the call(s):
+	- tradingOpen = true (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#286)
+	BabyKounotori.tradingOpen (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#143) can be used in cross function reentrancies:
+	- BabyKounotori.gm() (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#276-288)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+BabyKounotori.gm() (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#276-288) ignores return value by uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#282)
+BabyKounotori.gm() (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#276-288) ignores return value by IERC20(uniswapV2Pair).approve(address(uniswapV2Router),type()(uint256).max) (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#287)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+BabyKounotori.allowance(address,address).owner (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#190) shadows:
+	- Ownable.owner() (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#79-81) (function)
+BabyKounotori._approve(address,address,uint256).owner (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#215) shadows:
+	- Ownable.owner() (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#79-81) (function)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#local-variable-shadowing
+
+Reentrancy in BabyKounotori._transfer(address,address,uint256) (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#222-255):
+	External calls:
+	- swapTokensForEth(contractTokenBalance) (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#246)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#262-268)
+	External calls sending eth:
+	- sendETHToFee(address(this).balance) (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#249)
+		- _feeAddrWallet1.transfer(amount.div(2)) (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#272)
+		- _feeAddrWallet2.transfer(amount.div(2)) (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#273)
+	State variables written after the call(s):
+	- _tokenTransfer(from,to,amount) (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#254)
+		- _tFeeTotal = _tFeeTotal.add(tFee) (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#325)
+Reentrancy in BabyKounotori.gm() (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#276-288):
+	External calls:
+	- uniswapV2Pair = IUniswapV2Factory(_uniswapV2Router.factory()).createPair(address(this),_uniswapV2Router.WETH()) (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#281)
+	- uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#282)
+	External calls sending eth:
+	- uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#282)
+	State variables written after the call(s):
+	- _maxTxAmount = 1e9 * 10 ** 9 (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#285)
+	- cooldownEnabled = true (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#284)
+	- swapEnabled = true (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#283)
+Reentrancy in BabyKounotori.transferFrom(address,address,uint256) (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#199-203):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#200)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#262-268)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#200)
+		- _feeAddrWallet1.transfer(amount.div(2)) (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#272)
+		- _feeAddrWallet2.transfer(amount.div(2)) (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#273)
+	State variables written after the call(s):
+	- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#201)
+		- _allowances[owner][spender] = amount (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#218)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in BabyKounotori._transfer(address,address,uint256) (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#222-255):
+	External calls:
+	- swapTokensForEth(contractTokenBalance) (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#246)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#262-268)
+	External calls sending eth:
+	- sendETHToFee(address(this).balance) (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#249)
+		- _feeAddrWallet1.transfer(amount.div(2)) (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#272)
+		- _feeAddrWallet2.transfer(amount.div(2)) (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#273)
+	Event emitted after the call(s):
+	- Transfer(sender,recipient,tTransferAmount) (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#314)
+		- _tokenTransfer(from,to,amount) (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#254)
+Reentrancy in BabyKounotori.transferFrom(address,address,uint256) (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#199-203):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#200)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#262-268)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#200)
+		- _feeAddrWallet1.transfer(amount.div(2)) (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#272)
+		- _feeAddrWallet2.transfer(amount.div(2)) (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#273)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#219)
+		- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#201)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+BabyKounotori._transfer(address,address,uint256) (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#222-255) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(cooldown[to] < block.timestamp) (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#235)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Version constraint ^0.8.4 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- SignedImmutables.
+It is used by:
+	- ^0.8.4 (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#11)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Function IUniswapV2Router02.WETH() (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#108) is not in mixedCase
+Constant BabyKounotori._tTotal (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#128) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant BabyKounotori._name (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#137) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant BabyKounotori._symbol (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#138) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant BabyKounotori._decimals (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#139) is not in UPPER_CASE_WITH_UNDERSCORES
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in BabyKounotori._transfer(address,address,uint256) (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#222-255):
+	External calls:
+	- sendETHToFee(address(this).balance) (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#249)
+		- _feeAddrWallet1.transfer(amount.div(2)) (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#272)
+		- _feeAddrWallet2.transfer(amount.div(2)) (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#273)
+	State variables written after the call(s):
+	- _tokenTransfer(from,to,amount) (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#254)
+		- _rOwned[address(this)] = _rOwned[address(this)].add(rTeam) (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#320)
+		- _rOwned[sender] = _rOwned[sender].sub(rAmount) (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#310)
+		- _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount) (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#311)
+	- _tokenTransfer(from,to,amount) (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#254)
+		- _rTotal = _rTotal.sub(rFee) (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#324)
+	- _tokenTransfer(from,to,amount) (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#254)
+		- _tFeeTotal = _tFeeTotal.add(tFee) (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#325)
+	Event emitted after the call(s):
+	- Transfer(sender,recipient,tTransferAmount) (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#314)
+		- _tokenTransfer(from,to,amount) (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#254)
+Reentrancy in BabyKounotori.transferFrom(address,address,uint256) (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#199-203):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#200)
+		- _feeAddrWallet1.transfer(amount.div(2)) (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#272)
+		- _feeAddrWallet2.transfer(amount.div(2)) (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#273)
+	State variables written after the call(s):
+	- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#201)
+		- _allowances[owner][spender] = amount (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#218)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#219)
+		- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#201)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+BabyKounotori._tOwned (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#122) is never used in BabyKounotori (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#119-377)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-state-variable
+
+BabyKounotori._feeAddrWallet1 (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#134) should be immutable 
+BabyKounotori._feeAddrWallet2 (0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol#135) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+./0x0de3539f225e3431d6a7bbd3495cc2caf19b334c.sol analyzed (7 contracts with 94 detectors), 23 result(s) found
+
+real	0m2.411s
+user	0m2.207s
+sys	0m0.205s

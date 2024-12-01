@@ -1,0 +1,205 @@
+'solc --version' running
+'solc ./0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+TwinsInu.sendETHToFee(uint256) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#379-382) sends eth to arbitrary user
+	Dangerous calls:
+	- _teamAddress.transfer(amount.mul(4).div(10)) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#380)
+	- _marketingFunds.transfer(amount.mul(6).div(10)) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#381)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+Reentrancy in TwinsInu._transfer(address,address,uint256) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#312-363):
+	External calls:
+	- swapTokensForEth(contractTokenBalance) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#349)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#370-376)
+	External calls sending eth:
+	- sendETHToFee(address(this).balance) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#352)
+		- _teamAddress.transfer(amount.mul(4).div(10)) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#380)
+		- _marketingFunds.transfer(amount.mul(6).div(10)) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#381)
+	State variables written after the call(s):
+	- _tokenTransfer(from,to,amount,takeFee) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#362)
+		- _rOwned[address(this)] = _rOwned[address(this)].add(rTeam) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#466)
+		- _rOwned[sender] = _rOwned[sender].sub(rAmount) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#456)
+		- _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#457)
+	TwinsInu._rOwned (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#167) can be used in cross function reentrancies:
+	- TwinsInu._takeTeam(uint256) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#463-467)
+	- TwinsInu._transferStandard(address,address,uint256) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#443-461)
+	- TwinsInu.balanceOf(address) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#225-227)
+	- TwinsInu.constructor(address,address) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#198-207)
+	- _tokenTransfer(from,to,amount,takeFee) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#362)
+		- _rTotal = _rTotal.sub(rFee) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#470)
+	TwinsInu._rTotal (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#173) can be used in cross function reentrancies:
+	- TwinsInu._getCurrentSupply() (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#541-546)
+	- TwinsInu._reflectFee(uint256,uint256) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#469-472)
+	- TwinsInu.constructor(address,address) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#198-207)
+	- TwinsInu.tokenFromReflection(uint256) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#277-288)
+Reentrancy in TwinsInu.openTrading() (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#384-408):
+	External calls:
+	- uniswapV2Pair = IUniswapV2Factory(_uniswapV2Router.factory()).createPair(address(this),_uniswapV2Router.WETH()) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#390-391)
+	- uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#392-399)
+	External calls sending eth:
+	- uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#392-399)
+	State variables written after the call(s):
+	- tradingOpen = true (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#403)
+	TwinsInu.tradingOpen (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#185) can be used in cross function reentrancies:
+	- TwinsInu.openTrading() (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#384-408)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+TwinsInu.openTrading() (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#384-408) ignores return value by uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#392-399)
+TwinsInu.openTrading() (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#384-408) ignores return value by IERC20(uniswapV2Pair).approve(address(uniswapV2Router),type()(uint256).max) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#404-407)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+TwinsInu.allowance(address,address).owner (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#238) shadows:
+	- Ownable.owner() (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#108-110) (function)
+TwinsInu._approve(address,address,uint256).owner (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#302) shadows:
+	- Ownable.owner() (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#108-110) (function)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#local-variable-shadowing
+
+Ownable.constructor().msgSender (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#103) lacks a zero-check on :
+		- _owner = msgSender (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#104)
+TwinsInu.constructor(address,address).addr1 (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#198) lacks a zero-check on :
+		- _teamAddress = addr1 (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#199)
+TwinsInu.constructor(address,address).addr2 (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#198) lacks a zero-check on :
+		- _marketingFunds = addr2 (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#200)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in TwinsInu._transfer(address,address,uint256) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#312-363):
+	External calls:
+	- swapTokensForEth(contractTokenBalance) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#349)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#370-376)
+	External calls sending eth:
+	- sendETHToFee(address(this).balance) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#352)
+		- _teamAddress.transfer(amount.mul(4).div(10)) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#380)
+		- _marketingFunds.transfer(amount.mul(6).div(10)) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#381)
+	State variables written after the call(s):
+	- _tokenTransfer(from,to,amount,takeFee) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#362)
+		- _tFeeTotal = _tFeeTotal.add(tFee) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#471)
+	- _tokenTransfer(from,to,amount,takeFee) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#362)
+		- _taxFee = 1 (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#297)
+		- _taxFee = 0 (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#292)
+	- _tokenTransfer(from,to,amount,takeFee) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#362)
+		- _teamFee = 2 (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#298)
+		- _teamFee = 0 (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#293)
+Reentrancy in TwinsInu.openTrading() (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#384-408):
+	External calls:
+	- uniswapV2Pair = IUniswapV2Factory(_uniswapV2Router.factory()).createPair(address(this),_uniswapV2Router.WETH()) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#390-391)
+	- uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#392-399)
+	External calls sending eth:
+	- uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#392-399)
+	State variables written after the call(s):
+	- _maxTxAmount = 10000000000 * 10 ** 9 (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#402)
+	- cooldownEnabled = true (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#401)
+	- swapEnabled = true (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#400)
+Reentrancy in TwinsInu.transferFrom(address,address,uint256) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#256-271):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#261)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#370-376)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#261)
+		- _teamAddress.transfer(amount.mul(4).div(10)) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#380)
+		- _marketingFunds.transfer(amount.mul(6).div(10)) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#381)
+	State variables written after the call(s):
+	- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#262-269)
+		- _allowances[owner][spender] = amount (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#308)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in TwinsInu._transfer(address,address,uint256) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#312-363):
+	External calls:
+	- swapTokensForEth(contractTokenBalance) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#349)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#370-376)
+	External calls sending eth:
+	- sendETHToFee(address(this).balance) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#352)
+		- _teamAddress.transfer(amount.mul(4).div(10)) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#380)
+		- _marketingFunds.transfer(amount.mul(6).div(10)) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#381)
+	Event emitted after the call(s):
+	- Transfer(sender,recipient,tTransferAmount) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#460)
+		- _tokenTransfer(from,to,amount,takeFee) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#362)
+Reentrancy in TwinsInu.transferFrom(address,address,uint256) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#256-271):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#261)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#370-376)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#261)
+		- _teamAddress.transfer(amount.mul(4).div(10)) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#380)
+		- _marketingFunds.transfer(amount.mul(6).div(10)) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#381)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#309)
+		- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#262-269)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+TwinsInu._transfer(address,address,uint256) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#312-363) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(cooldown[to] < block.timestamp) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#344)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Version constraint ^0.8.4 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- SignedImmutables.
+It is used by:
+	- ^0.8.4 (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#11)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Function IUniswapV2Router02.WETH() (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#140) is not in mixedCase
+Constant TwinsInu._name (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#162) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant TwinsInu._symbol (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#163) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant TwinsInu._decimals (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#164) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant TwinsInu._tTotal (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#172) is not in UPPER_CASE_WITH_UNDERSCORES
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in TwinsInu._transfer(address,address,uint256) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#312-363):
+	External calls:
+	- sendETHToFee(address(this).balance) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#352)
+		- _teamAddress.transfer(amount.mul(4).div(10)) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#380)
+		- _marketingFunds.transfer(amount.mul(6).div(10)) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#381)
+	State variables written after the call(s):
+	- _tokenTransfer(from,to,amount,takeFee) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#362)
+		- _rOwned[address(this)] = _rOwned[address(this)].add(rTeam) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#466)
+		- _rOwned[sender] = _rOwned[sender].sub(rAmount) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#456)
+		- _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#457)
+	- _tokenTransfer(from,to,amount,takeFee) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#362)
+		- _rTotal = _rTotal.sub(rFee) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#470)
+	- _tokenTransfer(from,to,amount,takeFee) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#362)
+		- _tFeeTotal = _tFeeTotal.add(tFee) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#471)
+	- _tokenTransfer(from,to,amount,takeFee) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#362)
+		- _taxFee = 1 (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#297)
+		- _taxFee = 0 (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#292)
+	- _tokenTransfer(from,to,amount,takeFee) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#362)
+		- _teamFee = 2 (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#298)
+		- _teamFee = 0 (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#293)
+	Event emitted after the call(s):
+	- Transfer(sender,recipient,tTransferAmount) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#460)
+		- _tokenTransfer(from,to,amount,takeFee) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#362)
+Reentrancy in TwinsInu.transferFrom(address,address,uint256) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#256-271):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#261)
+		- _teamAddress.transfer(amount.mul(4).div(10)) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#380)
+		- _marketingFunds.transfer(amount.mul(6).div(10)) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#381)
+	State variables written after the call(s):
+	- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#262-269)
+		- _allowances[owner][spender] = amount (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#308)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#309)
+		- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#262-269)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+TwinsInu.openTrading() (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#384-408) uses literals with too many digits:
+	- _maxTxAmount = 10000000000 * 10 ** 9 (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#402)
+TwinsInu.slitherConstructorConstantVariables() (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#159-554) uses literals with too many digits:
+	- _tTotal = 1000000000000 * 10 ** 9 (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#172)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+TwinsInu._tOwned (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#168) is never used in TwinsInu (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#159-554)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-state-variable
+
+TwinsInu._marketingFunds (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#182) should be immutable 
+TwinsInu._teamAddress (0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol#181) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+./0x01e7e52aba28a0f61cc053c544efe943e5b43954.sol analyzed (7 contracts with 94 detectors), 29 result(s) found
+
+real	0m3.005s
+user	0m2.738s
+sys	0m0.268s

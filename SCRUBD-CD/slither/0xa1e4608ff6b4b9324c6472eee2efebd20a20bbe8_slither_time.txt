@@ -1,0 +1,102 @@
+'solc --version' running
+'solc ./0xa1e4608ff6b4b9324c6472eee2efebd20a20bbe8.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0xa1e4608ff6b4b9324c6472eee2efebd20a20bbe8.sol:
+./0xa1e4608ff6b4b9324c6472eee2efebd20a20bbe8.sol:14:3: Warning: No visibility specified. Defaulting to "public".
+  function Ownable() {
+  ^
+Spanning multiple lines.
+./0xa1e4608ff6b4b9324c6472eee2efebd20a20bbe8.sol:47:5: Warning: No visibility specified. Defaulting to "public".
+    function KittenSelfDrop () {
+    ^
+Spanning multiple lines.
+./0xa1e4608ff6b4b9324c6472eee2efebd20a20bbe8.sol:62:5: Warning: No visibility specified. Defaulting to "public".
+    function() payable {
+    ^
+Spanning multiple lines.
+
+
+KittenSelfDrop.fallback() (0xa1e4608ff6b4b9324c6472eee2efebd20a20bbe8.sol#62-81) ignores return value by kittenContract.transfer(msg.sender,tokensIssued) (0xa1e4608ff6b4b9324c6472eee2efebd20a20bbe8.sol#76)
+KittenSelfDrop.withdrawKittenCoins() (0xa1e4608ff6b4b9324c6472eee2efebd20a20bbe8.sol#117-120) ignores return value by kittenContract.transfer(owner,kittenContract.balanceOf(this)) (0xa1e4608ff6b4b9324c6472eee2efebd20a20bbe8.sol#118)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+Reentrancy in KittenSelfDrop.fallback() (0xa1e4608ff6b4b9324c6472eee2efebd20a20bbe8.sol#62-81):
+	External calls:
+	- kittenContract.balanceOf(msg.sender) >= holderAmount (0xa1e4608ff6b4b9324c6472eee2efebd20a20bbe8.sol#69)
+	- kittenContract.transfer(msg.sender,tokensIssued) (0xa1e4608ff6b4b9324c6472eee2efebd20a20bbe8.sol#76)
+	State variables written after the call(s):
+	- kittensRemainingToDrop -= tokensIssued (0xa1e4608ff6b4b9324c6472eee2efebd20a20bbe8.sol#78)
+	KittenSelfDrop.kittensRemainingToDrop (0xa1e4608ff6b4b9324c6472eee2efebd20a20bbe8.sol#37) can be used in cross function reentrancies:
+	- KittenSelfDrop.KittenSelfDrop() (0xa1e4608ff6b4b9324c6472eee2efebd20a20bbe8.sol#47-58)
+	- KittenSelfDrop.fallback() (0xa1e4608ff6b4b9324c6472eee2efebd20a20bbe8.sol#62-81)
+	- KittenSelfDrop.kittensRemainingToDrop (0xa1e4608ff6b4b9324c6472eee2efebd20a20bbe8.sol#37)
+	- KittenSelfDrop.setDropNumber(uint8) (0xa1e4608ff6b4b9324c6472eee2efebd20a20bbe8.sol#90-93)
+	- KittenSelfDrop.updateKittenCoinsRemainingToDrop() (0xa1e4608ff6b4b9324c6472eee2efebd20a20bbe8.sol#124-126)
+	- KittenSelfDrop.withdrawKittenCoins() (0xa1e4608ff6b4b9324c6472eee2efebd20a20bbe8.sol#117-120)
+	- participants[msg.sender] = dropNumber (0xa1e4608ff6b4b9324c6472eee2efebd20a20bbe8.sol#77)
+	KittenSelfDrop.participants (0xa1e4608ff6b4b9324c6472eee2efebd20a20bbe8.sol#43) can be used in cross function reentrancies:
+	- KittenSelfDrop.fallback() (0xa1e4608ff6b4b9324c6472eee2efebd20a20bbe8.sol#62-81)
+	- KittenSelfDrop.participant(address) (0xa1e4608ff6b4b9324c6472eee2efebd20a20bbe8.sol#84-86)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+KittenSelfDrop.setDropNumber(uint8) (0xa1e4608ff6b4b9324c6472eee2efebd20a20bbe8.sol#90-93) should emit an event for: 
+	- dropNumber = dropN (0xa1e4608ff6b4b9324c6472eee2efebd20a20bbe8.sol#91) 
+KittenSelfDrop.setHolderAmount(uint256) (0xa1e4608ff6b4b9324c6472eee2efebd20a20bbe8.sol#97-99) should emit an event for: 
+	- holderAmount = amount (0xa1e4608ff6b4b9324c6472eee2efebd20a20bbe8.sol#98) 
+KittenSelfDrop.setRewards(uint256,uint256,uint256) (0xa1e4608ff6b4b9324c6472eee2efebd20a20bbe8.sol#103-107) should emit an event for: 
+	- basicReward = basic (0xa1e4608ff6b4b9324c6472eee2efebd20a20bbe8.sol#104) 
+	- donatorReward = donator (0xa1e4608ff6b4b9324c6472eee2efebd20a20bbe8.sol#105) 
+	- holderReward = holder (0xa1e4608ff6b4b9324c6472eee2efebd20a20bbe8.sol#106) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+Reentrancy in KittenSelfDrop.fallback() (0xa1e4608ff6b4b9324c6472eee2efebd20a20bbe8.sol#62-81):
+	External calls:
+	- kittenContract.balanceOf(msg.sender) >= holderAmount (0xa1e4608ff6b4b9324c6472eee2efebd20a20bbe8.sol#69)
+	- kittenContract.transfer(msg.sender,tokensIssued) (0xa1e4608ff6b4b9324c6472eee2efebd20a20bbe8.sol#76)
+	State variables written after the call(s):
+	- kittensDroppedToTheWorld += tokensIssued (0xa1e4608ff6b4b9324c6472eee2efebd20a20bbe8.sol#79)
+	- totalDropTransactions += 1 (0xa1e4608ff6b4b9324c6472eee2efebd20a20bbe8.sol#80)
+Reentrancy in KittenSelfDrop.withdrawKittenCoins() (0xa1e4608ff6b4b9324c6472eee2efebd20a20bbe8.sol#117-120):
+	External calls:
+	- kittenContract.transfer(owner,kittenContract.balanceOf(this)) (0xa1e4608ff6b4b9324c6472eee2efebd20a20bbe8.sol#118)
+	State variables written after the call(s):
+	- kittensRemainingToDrop = 0 (0xa1e4608ff6b4b9324c6472eee2efebd20a20bbe8.sol#119)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Version constraint ^0.4.19 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ABIEncoderV2PackedStorage_0.4.x
+	- ExpExponentCleanup
+	- EventStructWrongData
+	- NestedArrayFunctionCallDecoder.
+It is used by:
+	- ^0.4.19 (0xa1e4608ff6b4b9324c6472eee2efebd20a20bbe8.sol#1)
+solc-0.4.19 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+KittenSelfDrop.KittenSelfDrop() (0xa1e4608ff6b4b9324c6472eee2efebd20a20bbe8.sol#47-58) uses literals with too many digits:
+	- basicReward = 50000000000 (0xa1e4608ff6b4b9324c6472eee2efebd20a20bbe8.sol#53)
+KittenSelfDrop.KittenSelfDrop() (0xa1e4608ff6b4b9324c6472eee2efebd20a20bbe8.sol#47-58) uses literals with too many digits:
+	- donatorReward = 50000000000 (0xa1e4608ff6b4b9324c6472eee2efebd20a20bbe8.sol#54)
+KittenSelfDrop.KittenSelfDrop() (0xa1e4608ff6b4b9324c6472eee2efebd20a20bbe8.sol#47-58) uses literals with too many digits:
+	- holderReward = 50000000000 (0xa1e4608ff6b4b9324c6472eee2efebd20a20bbe8.sol#55)
+KittenSelfDrop.KittenSelfDrop() (0xa1e4608ff6b4b9324c6472eee2efebd20a20bbe8.sol#47-58) uses literals with too many digits:
+	- holderAmount = 5000000000000 (0xa1e4608ff6b4b9324c6472eee2efebd20a20bbe8.sol#56)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+./0xa1e4608ff6b4b9324c6472eee2efebd20a20bbe8.sol analyzed (3 contracts with 94 detectors), 14 result(s) found
+
+real	0m1.523s
+user	0m1.296s
+sys	0m0.229s

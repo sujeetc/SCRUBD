@@ -1,0 +1,62 @@
+'solc --version' running
+'solc ./0xe2a88ab6dc9da8e017c0a529d731558adc4183d5.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0xe2a88ab6dc9da8e017c0a529d731558adc4183d5.sol:
+./0xe2a88ab6dc9da8e017c0a529d731558adc4183d5.sol:35:9: Warning: Return value of low-level calls not used.
+        msg.sender.call.value(address(this).balance)("");
+        ^----------------------------------------------^
+
+
+Receiver.drain() (0xe2a88ab6dc9da8e017c0a529d731558adc4183d5.sol#31-36) ignores return value by msg.sender.call.value(address(this).balance)() (0xe2a88ab6dc9da8e017c0a529d731558adc4183d5.sol#35)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-low-level-calls
+
+Receiver.forward(address,bytes,uint256)._to (0xe2a88ab6dc9da8e017c0a529d731558adc4183d5.sol#38) lacks a zero-check on :
+		- (success,result) = _to.call.value(_value + msg.value)(_data) (0xe2a88ab6dc9da8e017c0a529d731558adc4183d5.sol#44)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in Receiver.forward(address,bytes,uint256) (0xe2a88ab6dc9da8e017c0a529d731558adc4183d5.sol#38-49):
+	External calls:
+	- (success,result) = _to.call.value(_value + msg.value)(_data) (0xe2a88ab6dc9da8e017c0a529d731558adc4183d5.sol#44)
+	Event emitted after the call(s):
+	- LogForwarded(success,result) (0xe2a88ab6dc9da8e017c0a529d731558adc4183d5.sol#45-47)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+Version constraint 0.5.10 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- YulOptimizerRedundantAssignmentBreakContinue0.5
+	- ABIEncoderV2CalldataStructsWithStaticallySizedAndDynamicallyEncodedMembers.
+It is used by:
+	- 0.5.10 (0xe2a88ab6dc9da8e017c0a529d731558adc4183d5.sol#1)
+solc-0.5.10 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in Receiver.drain() (0xe2a88ab6dc9da8e017c0a529d731558adc4183d5.sol#31-36):
+	- msg.sender.call.value(address(this).balance)() (0xe2a88ab6dc9da8e017c0a529d731558adc4183d5.sol#35)
+Low level call in Receiver.forward(address,bytes,uint256) (0xe2a88ab6dc9da8e017c0a529d731558adc4183d5.sol#38-49):
+	- (success,result) = _to.call.value(_value + msg.value)(_data) (0xe2a88ab6dc9da8e017c0a529d731558adc4183d5.sol#44)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Parameter Receiver.forward(address,bytes,uint256)._to (0xe2a88ab6dc9da8e017c0a529d731558adc4183d5.sol#38) is not in mixedCase
+Parameter Receiver.forward(address,bytes,uint256)._data (0xe2a88ab6dc9da8e017c0a529d731558adc4183d5.sol#38) is not in mixedCase
+Parameter Receiver.forward(address,bytes,uint256)._value (0xe2a88ab6dc9da8e017c0a529d731558adc4183d5.sol#38) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+forward(address,bytes,uint256) should be declared external:
+	- Receiver.forward(address,bytes,uint256) (0xe2a88ab6dc9da8e017c0a529d731558adc4183d5.sol#38-49)
+Moreover, the following function parameters should change its data location:
+_data location should be calldata
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#public-function-that-could-be-declared-external
+./0xe2a88ab6dc9da8e017c0a529d731558adc4183d5.sol analyzed (1 contracts with 94 detectors), 11 result(s) found
+
+real	0m1.506s
+user	0m1.281s
+sys	0m0.228s

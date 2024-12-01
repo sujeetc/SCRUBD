@@ -1,0 +1,66 @@
+'solc --version' running
+'solc ./0x595677bac1d68074c4f7b93bb6654156466a66b0.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x595677bac1d68074c4f7b93bb6654156466a66b0.sol:
+./0x595677bac1d68074c4f7b93bb6654156466a66b0.sol:114:13: Warning: Failure condition of 'send' ignored. Consider using 'transfer' instead.
+            _recipients[i].send(_etherAmounts[i]);
+            ^-----------------------------------^
+./0x595677bac1d68074c4f7b93bb6654156466a66b0.sol:118:13: Warning: Failure condition of 'send' ignored. Consider using 'transfer' instead.
+            wallet.send(address(this).balance);
+            ^--------------------------------^
+
+
+EtherPayment.multiTransfer(address[],uint256[]) (0x595677bac1d68074c4f7b93bb6654156466a66b0.sol#108-120) sends eth to arbitrary user
+	Dangerous calls:
+	- _recipients[i].send(_etherAmounts[i]) (0x595677bac1d68074c4f7b93bb6654156466a66b0.sol#114)
+	- wallet.send(address(this).balance) (0x595677bac1d68074c4f7b93bb6654156466a66b0.sol#118)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+EtherPayment.multiTransfer(address[],uint256[]) (0x595677bac1d68074c4f7b93bb6654156466a66b0.sol#108-120) ignores return value by _recipients[i].send(_etherAmounts[i]) (0x595677bac1d68074c4f7b93bb6654156466a66b0.sol#114)
+EtherPayment.multiTransfer(address[],uint256[]) (0x595677bac1d68074c4f7b93bb6654156466a66b0.sol#108-120) ignores return value by wallet.send(address(this).balance) (0x595677bac1d68074c4f7b93bb6654156466a66b0.sol#118)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-send
+
+EtherPayment.constructor(address,address)._owner (0x595677bac1d68074c4f7b93bb6654156466a66b0.sol#98) shadows:
+	- Ownable._owner (0x595677bac1d68074c4f7b93bb6654156466a66b0.sol#10) (state variable)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#local-variable-shadowing
+
+EtherPayment.multiTransfer(address[],uint256[]) (0x595677bac1d68074c4f7b93bb6654156466a66b0.sol#108-120) has external calls inside a loop: _recipients[i].send(_etherAmounts[i]) (0x595677bac1d68074c4f7b93bb6654156466a66b0.sol#114)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation/#calls-inside-a-loop
+
+Version constraint 0.5.10 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- YulOptimizerRedundantAssignmentBreakContinue0.5
+	- ABIEncoderV2CalldataStructsWithStaticallySizedAndDynamicallyEncodedMembers.
+It is used by:
+	- 0.5.10 (0x595677bac1d68074c4f7b93bb6654156466a66b0.sol#1)
+solc-0.5.10 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Parameter EtherPayment.multiTransfer(address[],uint256[])._recipients (0x595677bac1d68074c4f7b93bb6654156466a66b0.sol#108) is not in mixedCase
+Parameter EtherPayment.multiTransfer(address[],uint256[])._etherAmounts (0x595677bac1d68074c4f7b93bb6654156466a66b0.sol#108) is not in mixedCase
+Parameter EtherPayment.changeWallet(address)._newWallet (0x595677bac1d68074c4f7b93bb6654156466a66b0.sol#127) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+EtherPayment._recipientLimit (0x595677bac1d68074c4f7b93bb6654156466a66b0.sol#89) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+
+multiTransfer(address[],uint256[]) should be declared external:
+	- EtherPayment.multiTransfer(address[],uint256[]) (0x595677bac1d68074c4f7b93bb6654156466a66b0.sol#108-120)
+Moreover, the following function parameters should change its data location:
+_recipients location should be calldata
+_etherAmounts location should be calldata
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#public-function-that-could-be-declared-external
+./0x595677bac1d68074c4f7b93bb6654156466a66b0.sol analyzed (3 contracts with 94 detectors), 12 result(s) found
+
+real	0m1.403s
+user	0m1.235s
+sys	0m0.171s

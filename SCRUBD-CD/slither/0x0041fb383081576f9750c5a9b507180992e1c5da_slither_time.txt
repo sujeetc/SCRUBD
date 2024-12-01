@@ -1,0 +1,258 @@
+'solc --version' running
+'solc ./0x0041fb383081576f9750c5a9b507180992e1c5da.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+GMI2.swapAndSendDividends(uint256) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#728-758) sends eth to arbitrary user
+	Dangerous calls:
+	- (successOp1,None) = address(devWallet).call{value: devPayout}() (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#751)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+Reentrancy in GMI2._transfer(address,address,uint256) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#561-673):
+	External calls:
+	- swapAndLiquify(swapTokens) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#647)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#705-712)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#691-697)
+	- swapAndSendDividends(remainingBalance) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#651)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#691-697)
+		- (success,None) = address(marketingWallet).call{value: marketingPayout}() (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#747)
+		- (successOp1,None) = address(devWallet).call{value: devPayout}() (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#751)
+	External calls sending eth:
+	- swapAndLiquify(swapTokens) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#647)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#705-712)
+	- swapAndSendDividends(remainingBalance) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#651)
+		- (success,None) = address(marketingWallet).call{value: marketingPayout}() (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#747)
+		- (successOp1,None) = address(devWallet).call{value: devPayout}() (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#751)
+	State variables written after the call(s):
+	- super._transfer(from,address(this),fees) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#667)
+		- _balances[sender] = _balances[sender].sub(amount,BEP20: transfer amount exceeds balance) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#162)
+		- _balances[recipient] = _balances[recipient].add(amount) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#163)
+	BEP20._balances (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#92) can be used in cross function reentrancies:
+	- BEP20._mint(address,uint256) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#167-175)
+	- BEP20._transfer(address,address,uint256) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#156-165)
+	- BEP20.balanceOf(address) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#119-121)
+	- super._transfer(from,to,amount) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#671)
+		- _balances[sender] = _balances[sender].sub(amount,BEP20: transfer amount exceeds balance) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#162)
+		- _balances[recipient] = _balances[recipient].add(amount) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#163)
+	BEP20._balances (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#92) can be used in cross function reentrancies:
+	- BEP20._mint(address,uint256) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#167-175)
+	- BEP20._transfer(address,address,uint256) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#156-165)
+	- BEP20.balanceOf(address) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#119-121)
+	- buyAmount = 0 (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#652)
+	GMI2.buyAmount (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#366) can be used in cross function reentrancies:
+	- GMI2._transfer(address,address,uint256) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#561-673)
+	- GMI2.buyAmount (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#366)
+	- GMI2.forceSwapAndSendDividends(uint256) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#715-725)
+	- buyAmount = buyAmount.add(fees) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#664)
+	GMI2.buyAmount (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#366) can be used in cross function reentrancies:
+	- GMI2._transfer(address,address,uint256) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#561-673)
+	- GMI2.buyAmount (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#366)
+	- GMI2.forceSwapAndSendDividends(uint256) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#715-725)
+	- sellAmount = 0 (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#653)
+	GMI2.sellAmount (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#365) can be used in cross function reentrancies:
+	- GMI2._transfer(address,address,uint256) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#561-673)
+	- GMI2.forceSwapAndSendDividends(uint256) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#715-725)
+	- GMI2.sellAmount (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#365)
+	- sellAmount = sellAmount.add(fees) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#662)
+	GMI2.sellAmount (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#365) can be used in cross function reentrancies:
+	- GMI2._transfer(address,address,uint256) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#561-673)
+	- GMI2.forceSwapAndSendDividends(uint256) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#715-725)
+	- GMI2.sellAmount (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#365)
+	- swapping = false (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#654)
+	GMI2.swapping (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#362) can be used in cross function reentrancies:
+	- GMI2._transfer(address,address,uint256) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#561-673)
+Reentrancy in GMI2.forceSwapAndSendDividends(uint256) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#715-725):
+	External calls:
+	- swapAndSendDividends(tokens) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#721)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#691-697)
+		- (success,None) = address(marketingWallet).call{value: marketingPayout}() (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#747)
+		- (successOp1,None) = address(devWallet).call{value: devPayout}() (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#751)
+	External calls sending eth:
+	- swapAndSendDividends(tokens) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#721)
+		- (success,None) = address(marketingWallet).call{value: marketingPayout}() (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#747)
+		- (successOp1,None) = address(devWallet).call{value: devPayout}() (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#751)
+	State variables written after the call(s):
+	- buyAmount = buyAmount.sub(fromBuy) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#723)
+	GMI2.buyAmount (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#366) can be used in cross function reentrancies:
+	- GMI2._transfer(address,address,uint256) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#561-673)
+	- GMI2.buyAmount (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#366)
+	- GMI2.forceSwapAndSendDividends(uint256) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#715-725)
+	- sellAmount = sellAmount.sub(fromSell) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#724)
+	GMI2.sellAmount (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#365) can be used in cross function reentrancies:
+	- GMI2._transfer(address,address,uint256) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#561-673)
+	- GMI2.forceSwapAndSendDividends(uint256) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#715-725)
+	- GMI2.sellAmount (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#365)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+GMI2._transfer(address,address,uint256) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#561-673) performs a multiplication on the result of a division:
+	- swapAmountBought = contractTokenBalance.mul(buyAmount).div(totalBuySell) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#630-632)
+	- swapBuyTokens = swapAmountBought.mul(liquidityFee).div(totalBuyFees) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#637-639)
+GMI2._transfer(address,address,uint256) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#561-673) performs a multiplication on the result of a division:
+	- swapAmountSold = contractTokenBalance.mul(sellAmount).div(totalBuySell) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#633-635)
+	- swapSellTokens = swapAmountSold.mul(liquidityFee).div(totalSellFees) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#641-643)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+GMI2._transfer(address,address,uint256) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#561-673) uses tx.origin for authorization: require(bool,string)(block.timestamp >= _holderLastTransferTimestamp[tx.origin] + cooldowntimer,cooldown period active) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#589-590)
+GMI2._transfer(address,address,uint256) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#561-673) uses tx.origin for authorization: require(bool,string)(_holderLastTransferBlock[tx.origin] != block.number,Too many TX in block) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#603)
+GMI2._transfer(address,address,uint256) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#561-673) uses tx.origin for authorization: require(bool,string)(block.timestamp >= _holderLastTransferTimestamp[tx.origin] + cooldowntimer,cooldown period active) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#604-605)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-usage-of-txorigin
+
+GMI2._transfer(address,address,uint256).swapTokens (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#626) is a local variable never initialized
+GMI2.swapAndSendDividends(uint256).feePortions (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#739) is a local variable never initialized
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#uninitialized-local-variables
+
+GMI2.addLiquidity(uint256,uint256) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#700-713) ignores return value by uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#705-712)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+GMI2.constructor()._totalSupply (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#441) shadows:
+	- BEP20._totalSupply (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#94) (state variable)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#local-variable-shadowing
+
+GMI2.setcooldowntimer(uint256) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#492-495) should emit an event for: 
+	- cooldowntimer = value (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#494) 
+GMI2.setmaxWallet(uint256) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#498-502) should emit an event for: 
+	- maxWallet = value (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#501) 
+GMI2.setSwapTriggerAmount(uint256) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#510-512) should emit an event for: 
+	- swapTokensAtAmount = amount * (10 ** 18) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#511) 
+GMI2.forceSwapAndSendDividends(uint256) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#715-725) should emit an event for: 
+	- buyAmount = buyAmount.sub(fromBuy) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#723) 
+	- sellAmount = sellAmount.sub(fromSell) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#724) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+GMI2.setMarketingWallet(address).wallet (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#463) lacks a zero-check on :
+		- marketingWallet = address(wallet) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#465)
+GMI2.setDevWallet(address).wallet (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#469) lacks a zero-check on :
+		- devWallet = address(wallet) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#471)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in GMI2._transfer(address,address,uint256) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#561-673):
+	External calls:
+	- swapAndLiquify(swapTokens) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#647)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#705-712)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#691-697)
+	- swapAndSendDividends(remainingBalance) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#651)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#691-697)
+		- (success,None) = address(marketingWallet).call{value: marketingPayout}() (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#747)
+		- (successOp1,None) = address(devWallet).call{value: devPayout}() (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#751)
+	External calls sending eth:
+	- swapAndLiquify(swapTokens) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#647)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#705-712)
+	- swapAndSendDividends(remainingBalance) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#651)
+		- (success,None) = address(marketingWallet).call{value: marketingPayout}() (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#747)
+		- (successOp1,None) = address(devWallet).call{value: devPayout}() (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#751)
+	State variables written after the call(s):
+	- swapAndSendDividends(remainingBalance) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#651)
+		- _allowances[owner][spender] = amount (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#181)
+Reentrancy in GMI2.swapAndLiquify(uint256) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#676-684):
+	External calls:
+	- swapTokensForEth(half) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#680)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#691-697)
+	- addLiquidity(otherHalf,newBalance) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#682)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#705-712)
+	External calls sending eth:
+	- addLiquidity(otherHalf,newBalance) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#682)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#705-712)
+	State variables written after the call(s):
+	- addLiquidity(otherHalf,newBalance) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#682)
+		- _allowances[owner][spender] = amount (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#181)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in GMI2._transfer(address,address,uint256) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#561-673):
+	External calls:
+	- swapAndLiquify(swapTokens) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#647)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#705-712)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#691-697)
+	- swapAndSendDividends(remainingBalance) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#651)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#691-697)
+		- (success,None) = address(marketingWallet).call{value: marketingPayout}() (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#747)
+		- (successOp1,None) = address(devWallet).call{value: devPayout}() (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#751)
+	External calls sending eth:
+	- swapAndLiquify(swapTokens) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#647)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#705-712)
+	- swapAndSendDividends(remainingBalance) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#651)
+		- (success,None) = address(marketingWallet).call{value: marketingPayout}() (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#747)
+		- (successOp1,None) = address(devWallet).call{value: devPayout}() (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#751)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#182)
+		- swapAndSendDividends(remainingBalance) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#651)
+	- SendDividends(marketingPayout,success && successOp1) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#754-757)
+		- swapAndSendDividends(remainingBalance) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#651)
+	- Transfer(sender,recipient,amount) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#164)
+		- super._transfer(from,to,amount) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#671)
+	- Transfer(sender,recipient,amount) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#164)
+		- super._transfer(from,address(this),fees) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#667)
+Reentrancy in GMI2.swapAndLiquify(uint256) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#676-684):
+	External calls:
+	- swapTokensForEth(half) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#680)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#691-697)
+	- addLiquidity(otherHalf,newBalance) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#682)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#705-712)
+	External calls sending eth:
+	- addLiquidity(otherHalf,newBalance) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#682)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#705-712)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#182)
+		- addLiquidity(otherHalf,newBalance) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#682)
+	- SwapAndLiquify(half,newBalance,otherHalf) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#683)
+Reentrancy in GMI2.swapAndSendDividends(uint256) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#728-758):
+	External calls:
+	- swapTokensForEth(tokens) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#732)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#691-697)
+	- (success,None) = address(marketingWallet).call{value: marketingPayout}() (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#747)
+	- (successOp1,None) = address(devWallet).call{value: devPayout}() (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#751)
+	External calls sending eth:
+	- (success,None) = address(marketingWallet).call{value: marketingPayout}() (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#747)
+	- (successOp1,None) = address(devWallet).call{value: devPayout}() (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#751)
+	Event emitted after the call(s):
+	- SendDividends(marketingPayout,success && successOp1) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#754-757)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+GMI2._transfer(address,address,uint256) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#561-673) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(block.timestamp >= _holderLastTransferTimestamp[tx.origin] + cooldowntimer,cooldown period active) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#589-590)
+	- require(bool,string)(block.timestamp >= _holderLastTransferTimestamp[tx.origin] + cooldowntimer,cooldown period active) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#604-605)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Context._msgData() (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#19-22) is never used and should be removed
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dead-code
+
+Version constraint ^0.8.13 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- VerbatimInvalidDeduplication
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- StorageWriteRemovalBeforeConditionalTermination
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- InlineAssemblyMemorySideEffects
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation.
+It is used by:
+	- ^0.8.13 (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#12)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in GMI2.swapAndSendDividends(uint256) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#728-758):
+	- (success,None) = address(marketingWallet).call{value: marketingPayout}() (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#747)
+	- (successOp1,None) = address(devWallet).call{value: devPayout}() (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#751)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Function IUniswapV2Pair.DOMAIN_SEPARATOR() (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#233) is not in mixedCase
+Function IUniswapV2Pair.PERMIT_TYPEHASH() (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#234) is not in mixedCase
+Function IUniswapV2Pair.MINIMUM_LIQUIDITY() (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#244) is not in mixedCase
+Function IUniswapV2Router01.WETH() (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#268) is not in mixedCase
+Event GMI2.updateMarketingWallet(address) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#400) is not in CapWords
+Event GMI2.updateDevWallet(address) (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#401) is not in CapWords
+Function GMI2.Sweep() (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#505-508) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Redundant expression "this (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#20)" inContext (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#14-23)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#redundant-statements
+
+GMI2.gasPriceLimit (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#391) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+
+GMI2.uniswapV2Pair (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#361) should be immutable 
+GMI2.uniswapV2Router (0x0041fb383081576f9750c5a9b507180992e1c5da.sol#359) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+./0x0041fb383081576f9750c5a9b507180992e1c5da.sol analyzed (11 contracts with 94 detectors), 38 result(s) found
+
+real	0m3.429s
+user	0m3.190s
+sys	0m0.241s

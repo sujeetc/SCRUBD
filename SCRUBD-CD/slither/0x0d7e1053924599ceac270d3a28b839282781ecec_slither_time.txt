@@ -1,0 +1,181 @@
+'solc --version' running
+'solc ./0x0d7e1053924599ceac270d3a28b839282781ecec.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x0d7e1053924599ceac270d3a28b839282781ecec.sol:
+./0x0d7e1053924599ceac270d3a28b839282781ecec.sol:70:5: Warning: No visibility specified. Defaulting to "public". 
+    constructor(address _token,
+    ^ (Relevant source part starts here and spans across multiple lines).
+./0x0d7e1053924599ceac270d3a28b839282781ecec.sol:209:61: Warning: Unused function parameter. Remove or comment out the variable name to silence this warning.
+    function receiveApproval(address _from, uint256 _value, address _token, bytes _extraData) external {
+                                                            ^------------^
+./0x0d7e1053924599ceac270d3a28b839282781ecec.sol:209:77: Warning: Unused function parameter. Remove or comment out the variable name to silence this warning.
+    function receiveApproval(address _from, uint256 _value, address _token, bytes _extraData) external {
+                                                                            ^--------------^
+
+
+ExchangerV4.sellOneStep(uint256,uint256,address) (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#213-231) uses arbitrary from in transferFrom: require(bool)(tokenContract.transferFrom(seller,this,quantity)) (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#225)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#arbitrary-from-in-transferfrom
+
+Reentrancy in ExchangerV4.buy(uint256) (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#165-187):
+	External calls:
+	- amount = formulaContract.calculatePurchaseReturn((tokenContract.totalSupply() - uncirculatedSupplyCount) - tokenContract.balanceOf(this),(address(this).balance + virtualReserveBalance) - msg.value,weight,msg.value) (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#166-170)
+	- require(bool)(tokenContract.balanceOf(this) >= amount) (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#175)
+	External calls sending eth:
+	- creator.transfer(transferToSafeWallet) (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#179)
+	State variables written after the call(s):
+	- virtualReserveBalance += transferToSafeWallet (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#180)
+	ExchangerV4.virtualReserveBalance (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#65) can be used in cross function reentrancies:
+	- ExchangerV4.buy(uint256) (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#165-187)
+	- ExchangerV4.getPurchasePrice(uint256) (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#135-149)
+	- ExchangerV4.getReserveBalances() (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#131-133)
+	- ExchangerV4.getSalePrice(uint256) (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#151-163)
+	- ExchangerV4.sell(uint256,uint256) (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#189-207)
+	- ExchangerV4.sellOneStep(uint256,uint256,address) (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#213-231)
+	- ExchangerV4.setVirtualReserveBalance(uint256) (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#127-129)
+	- ExchangerV4.virtualReserveBalance (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#65)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+ExchangerV4.depositTokens(uint256) (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#83-85) ignores return value by tokenContract.transferFrom(msg.sender,this,amount) (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#84)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+ITradeableAsset (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#7-14) has incorrect ERC20 function interface:ITradeableAsset.transfer(address,uint256) (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#12)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-erc20-interface
+
+ExchangerV4.setFee(uint256) (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#117-120) contains a tautology or contradiction:
+	- require(bool)(ppm >= 0 && ppm <= 1000000) (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#118)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#tautology-or-contradiction
+
+Administered.changeOwner(address) (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#47-49) should emit an event for: 
+	- creator = newOwner (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#48) 
+	- creator = newOwner (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#48) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-access-control
+
+ExchangerV4.setReserveWeight(uint256) (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#112-115) should emit an event for: 
+	- weight = uint32(ppm) (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#114) 
+ExchangerV4.setFee(uint256) (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#117-120) should emit an event for: 
+	- fee = uint32(ppm) (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#119) 
+ExchangerV4.setUncirculatedSupplyCount(uint256) (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#122-125) should emit an event for: 
+	- uncirculatedSupplyCount = uint256(newValue) (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#124) 
+ExchangerV4.setVirtualReserveBalance(uint256) (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#127-129) should emit an event for: 
+	- virtualReserveBalance = amountInWei (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#128) 
+ExchangerV4.setSendToSafeWalletPercentage(uint256) (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#233-236) should emit an event for: 
+	- sendToSafeWalletPercentage = uint256(newValue) (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#235) 
+ExchangerV4.setThresholdSendToSafeWallet(uint256) (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#238-240) should emit an event for: 
+	- thresholdSendToSafeWallet = amountInWei (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#239) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+Administered.changeOwner(address).newOwner (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#47) lacks a zero-check on :
+		- creator = newOwner (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#48)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in ExchangerV4.buy(uint256) (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#165-187):
+	External calls:
+	- amount = formulaContract.calculatePurchaseReturn((tokenContract.totalSupply() - uncirculatedSupplyCount) - tokenContract.balanceOf(this),(address(this).balance + virtualReserveBalance) - msg.value,weight,msg.value) (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#166-170)
+	- require(bool)(tokenContract.balanceOf(this) >= amount) (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#175)
+	External calls sending eth:
+	- creator.transfer(transferToSafeWallet) (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#179)
+	State variables written after the call(s):
+	- collectedFees += (msg.value * fee) / 1000000 (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#183)
+Reentrancy in ExchangerV4.sell(uint256,uint256) (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#189-207):
+	External calls:
+	- amountInWei = formulaContract.calculateSaleReturn((tokenContract.totalSupply() - uncirculatedSupplyCount) - tokenContract.balanceOf(this),address(this).balance + virtualReserveBalance,weight,quantity) (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#190-195)
+	- require(bool)(tokenContract.transferFrom(msg.sender,this,quantity)) (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#201)
+	State variables written after the call(s):
+	- collectedFees += (amountInWei * fee) / 1000000 (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#203)
+Reentrancy in ExchangerV4.sellOneStep(uint256,uint256,address) (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#213-231):
+	External calls:
+	- amountInWei = formulaContract.calculateSaleReturn((tokenContract.totalSupply() - uncirculatedSupplyCount) - tokenContract.balanceOf(this),address(this).balance + virtualReserveBalance,weight,quantity) (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#214-219)
+	- require(bool)(tokenContract.transferFrom(seller,this,quantity)) (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#225)
+	State variables written after the call(s):
+	- collectedFees += (amountInWei * fee) / 1000000 (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#227)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in ExchangerV4.buy(uint256) (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#165-187):
+	External calls:
+	- amount = formulaContract.calculatePurchaseReturn((tokenContract.totalSupply() - uncirculatedSupplyCount) - tokenContract.balanceOf(this),(address(this).balance + virtualReserveBalance) - msg.value,weight,msg.value) (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#166-170)
+	- require(bool)(tokenContract.balanceOf(this) >= amount) (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#175)
+	External calls sending eth:
+	- creator.transfer(transferToSafeWallet) (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#179)
+	Event emitted after the call(s):
+	- Buy(msg.sender,msg.value,amount) (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#185)
+Reentrancy in ExchangerV4.sell(uint256,uint256) (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#189-207):
+	External calls:
+	- amountInWei = formulaContract.calculateSaleReturn((tokenContract.totalSupply() - uncirculatedSupplyCount) - tokenContract.balanceOf(this),address(this).balance + virtualReserveBalance,weight,quantity) (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#190-195)
+	- require(bool)(tokenContract.transferFrom(msg.sender,this,quantity)) (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#201)
+	Event emitted after the call(s):
+	- Sell(msg.sender,quantity,amountInWei) (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#205)
+Reentrancy in ExchangerV4.sellOneStep(uint256,uint256,address) (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#213-231):
+	External calls:
+	- amountInWei = formulaContract.calculateSaleReturn((tokenContract.totalSupply() - uncirculatedSupplyCount) - tokenContract.balanceOf(this),address(this).balance + virtualReserveBalance,weight,quantity) (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#214-219)
+	- require(bool)(tokenContract.transferFrom(seller,this,quantity)) (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#225)
+	Event emitted after the call(s):
+	- Sell(seller,quantity,amountInWei) (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#229)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+Version constraint ^0.4.24 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ABIEncoderV2PackedStorage_0.4.x
+	- ExpExponentCleanup
+	- EventStructWrongData.
+It is used by:
+	- ^0.4.24 (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#1)
+solc-0.4.24 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Contract tokenRecipient (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#16) is not in CapWords
+Parameter ExchangerV4.receiveApproval(address,uint256,address,bytes)._from (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#209) is not in mixedCase
+Parameter ExchangerV4.receiveApproval(address,uint256,address,bytes)._value (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#209) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in ExchangerV4.buy(uint256) (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#165-187):
+	External calls:
+	- creator.transfer(transferToSafeWallet) (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#179)
+	State variables written after the call(s):
+	- collectedFees += (msg.value * fee) / 1000000 (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#183)
+	- virtualReserveBalance += transferToSafeWallet (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#180)
+	Event emitted after the call(s):
+	- Buy(msg.sender,msg.value,amount) (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#185)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+ExchangerV4.constructor(address,uint32,address) (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#70-78) uses literals with too many digits:
+	- require(bool)(_weight > 0 && weight <= 1000000) (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#73)
+ExchangerV4.setReserveWeight(uint256) (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#112-115) uses literals with too many digits:
+	- require(bool)(ppm > 0 && ppm <= 1000000) (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#113)
+ExchangerV4.setFee(uint256) (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#117-120) uses literals with too many digits:
+	- require(bool)(ppm >= 0 && ppm <= 1000000) (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#118)
+ExchangerV4.getPurchasePrice(uint256) (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#135-149) uses literals with too many digits:
+	- purchaseReturn = (purchaseReturn - ((purchaseReturn * fee) / 1000000)) (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#143)
+ExchangerV4.getSalePrice(uint256) (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#151-163) uses literals with too many digits:
+	- saleReturn = (saleReturn - ((saleReturn * fee) / 1000000)) (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#158)
+ExchangerV4.buy(uint256) (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#165-187) uses literals with too many digits:
+	- amount = (amount - ((amount * fee) / 1000000)) (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#171)
+ExchangerV4.buy(uint256) (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#165-187) uses literals with too many digits:
+	- collectedFees += (msg.value * fee) / 1000000 (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#183)
+ExchangerV4.sell(uint256,uint256) (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#189-207) uses literals with too many digits:
+	- amountInWei = (amountInWei - ((amountInWei * fee) / 1000000)) (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#196)
+ExchangerV4.sell(uint256,uint256) (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#189-207) uses literals with too many digits:
+	- collectedFees += (amountInWei * fee) / 1000000 (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#203)
+ExchangerV4.sellOneStep(uint256,uint256,address) (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#213-231) uses literals with too many digits:
+	- amountInWei = (amountInWei - ((amountInWei * fee) / 1000000)) (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#220)
+ExchangerV4.sellOneStep(uint256,uint256,address) (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#213-231) uses literals with too many digits:
+	- collectedFees += (amountInWei * fee) / 1000000 (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#227)
+ExchangerV4.slitherConstructorVariables() (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#56-243) uses literals with too many digits:
+	- thresholdSendToSafeWallet = 100000000000000000 (0x0d7e1053924599ceac270d3a28b839282781ecec.sol#67)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+./0x0d7e1053924599ceac270d3a28b839282781ecec.sol analyzed (5 contracts with 94 detectors), 37 result(s) found
+
+real	0m2.284s
+user	0m2.024s
+sys	0m0.262s

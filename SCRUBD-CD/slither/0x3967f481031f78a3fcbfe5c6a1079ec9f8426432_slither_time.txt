@@ -1,0 +1,71 @@
+'solc --version' running
+'solc ./0x3967f481031f78a3fcbfe5c6a1079ec9f8426432.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x3967f481031f78a3fcbfe5c6a1079ec9f8426432.sol:
+./0x3967f481031f78a3fcbfe5c6a1079ec9f8426432.sol:53:13: Warning: Return value of low-level calls not used.
+            caddress.call(id,from,_tos[i],v);
+            ^------------------------------^
+
+
+Kongtou.transferETH(address) (0x3967f481031f78a3fcbfe5c6a1079ec9f8426432.sol#27-32) sends eth to arbitrary user
+	Dangerous calls:
+	- _to.transfer(address(this).balance) (0x3967f481031f78a3fcbfe5c6a1079ec9f8426432.sol#30)
+Kongtou.transferETH(address[],uint256) (0x3967f481031f78a3fcbfe5c6a1079ec9f8426432.sol#35-41) sends eth to arbitrary user
+	Dangerous calls:
+	- _tos[i].transfer(amount) (0x3967f481031f78a3fcbfe5c6a1079ec9f8426432.sol#38)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+Kongtou.transferToken(address,address,address[],uint256) (0x3967f481031f78a3fcbfe5c6a1079ec9f8426432.sol#49-56) ignores return value by caddress.call(id,from,_tos[i],v) (0x3967f481031f78a3fcbfe5c6a1079ec9f8426432.sol#53)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-low-level-calls
+
+Kongtou.transferToken(address,address,address[],uint256).from (0x3967f481031f78a3fcbfe5c6a1079ec9f8426432.sol#49) lacks a zero-check on :
+		- caddress.call(id,from,_tos[i],v) (0x3967f481031f78a3fcbfe5c6a1079ec9f8426432.sol#53)
+Kongtou.transferToken(address,address,address[],uint256).caddress (0x3967f481031f78a3fcbfe5c6a1079ec9f8426432.sol#49) lacks a zero-check on :
+		- caddress.call(id,from,_tos[i],v) (0x3967f481031f78a3fcbfe5c6a1079ec9f8426432.sol#53)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Kongtou.transferETH(address[],uint256) (0x3967f481031f78a3fcbfe5c6a1079ec9f8426432.sol#35-41) has external calls inside a loop: _tos[i].transfer(amount) (0x3967f481031f78a3fcbfe5c6a1079ec9f8426432.sol#38)
+Kongtou.transferToken(address,address,address[],uint256) (0x3967f481031f78a3fcbfe5c6a1079ec9f8426432.sol#49-56) has external calls inside a loop: caddress.call(id,from,_tos[i],v) (0x3967f481031f78a3fcbfe5c6a1079ec9f8426432.sol#53)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation/#calls-inside-a-loop
+
+Version constraint ^0.4.24 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ABIEncoderV2PackedStorage_0.4.x
+	- ExpExponentCleanup
+	- EventStructWrongData.
+It is used by:
+	- ^0.4.24 (0x3967f481031f78a3fcbfe5c6a1079ec9f8426432.sol#1)
+solc-0.4.24 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in Kongtou.transferToken(address,address,address[],uint256) (0x3967f481031f78a3fcbfe5c6a1079ec9f8426432.sol#49-56):
+	- caddress.call(id,from,_tos[i],v) (0x3967f481031f78a3fcbfe5c6a1079ec9f8426432.sol#53)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Parameter Kongtou.transferETH(address)._to (0x3967f481031f78a3fcbfe5c6a1079ec9f8426432.sol#27) is not in mixedCase
+Parameter Kongtou.transferETH(address[],uint256)._tos (0x3967f481031f78a3fcbfe5c6a1079ec9f8426432.sol#35) is not in mixedCase
+Parameter Kongtou.transferToken(address,address,address[],uint256)._tos (0x3967f481031f78a3fcbfe5c6a1079ec9f8426432.sol#49) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+transferETH(address[],uint256) should be declared external:
+	- Kongtou.transferETH(address[],uint256) (0x3967f481031f78a3fcbfe5c6a1079ec9f8426432.sol#35-41)
+transferToken(address,address,address[],uint256) should be declared external:
+	- Kongtou.transferToken(address,address,address[],uint256) (0x3967f481031f78a3fcbfe5c6a1079ec9f8426432.sol#49-56)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#public-function-that-could-be-declared-external
+./0x3967f481031f78a3fcbfe5c6a1079ec9f8426432.sol analyzed (1 contracts with 94 detectors), 15 result(s) found
+
+real	0m1.338s
+user	0m1.124s
+sys	0m0.219s

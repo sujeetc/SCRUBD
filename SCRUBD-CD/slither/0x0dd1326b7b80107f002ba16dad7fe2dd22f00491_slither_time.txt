@@ -1,0 +1,110 @@
+'solc --version' running
+'solc ./0x0dd1326b7b80107f002ba16dad7fe2dd22f00491.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x0dd1326b7b80107f002ba16dad7fe2dd22f00491.sol:
+./0x0dd1326b7b80107f002ba16dad7fe2dd22f00491.sol:73:9: Warning: Failure condition of 'send' ignored. Consider using 'transfer' instead.
+        _recipient.send(1);
+        ^----------------^
+./0x0dd1326b7b80107f002ba16dad7fe2dd22f00491.sol:36:16: Warning: "block.blockhash()" has been deprecated in favor of "blockhash()"
+        return block.blockhash(_blockNumber);
+               ^-------------^
+./0x0dd1326b7b80107f002ba16dad7fe2dd22f00491.sol:47:25: Warning: "msg.gas" has been deprecated in favor of "gasleft()"
+        emit gasDetails(msg.gas, tx.gasprice, block.gaslimit);
+                        ^-----^
+./0x0dd1326b7b80107f002ba16dad7fe2dd22f00491.sol:42:14: Warning: Function declared as view, but this expression (potentially) modifies the state and thus requires non-payable (the default) or payable.
+        emit txSenderDetails(msg.sender, tx.origin);
+             ^------------------------------------^
+./0x0dd1326b7b80107f002ba16dad7fe2dd22f00491.sol:47:14: Warning: Function declared as view, but this expression (potentially) modifies the state and thus requires non-payable (the default) or payable.
+        emit gasDetails(msg.gas, tx.gasprice, block.gaslimit);
+             ^----------------------------------------------^
+./0x0dd1326b7b80107f002ba16dad7fe2dd22f00491.sol:53:14: Warning: Function declared as view, but this expression (potentially) modifies the state and thus requires non-payable (the default) or payable.
+        emit blockDetails(block.coinbase, block.difficulty, block.number, block.timestamp);
+             ^---------------------------------------------------------------------------^
+./0x0dd1326b7b80107f002ba16dad7fe2dd22f00491.sol:97:5: Warning: Function state mutability can be restricted to view
+    function verifyBlockHash(string memory _hash, uint _blockNumber) public returns (bytes32, bytes32) {
+    ^ (Relevant source part starts here and spans across multiple lines).
+
+
+LetsBreakThings.checkBalanceSendEth(address) (0x0dd1326b7b80107f002ba16dad7fe2dd22f00491.sol#57-86) ignores return value by _recipient.send(1) (0x0dd1326b7b80107f002ba16dad7fe2dd22f00491.sol#73)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-send
+
+LetsBreakThings.constructor(address)._proxy (0x0dd1326b7b80107f002ba16dad7fe2dd22f00491.sol#16) lacks a zero-check on :
+		- creatorproxy = _proxy (0x0dd1326b7b80107f002ba16dad7fe2dd22f00491.sol#18)
+LetsBreakThings.checkBalanceSendEth(address)._recipient (0x0dd1326b7b80107f002ba16dad7fe2dd22f00491.sol#57) lacks a zero-check on :
+		- _recipient.transfer(1) (0x0dd1326b7b80107f002ba16dad7fe2dd22f00491.sol#67)
+		- _recipient.send(1) (0x0dd1326b7b80107f002ba16dad7fe2dd22f00491.sol#73)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Deprecated standard detected block.blockhash(_blockNumber) (0x0dd1326b7b80107f002ba16dad7fe2dd22f00491.sol#36):
+	- Usage of "block.blockhash()" should be replaced with "blockhash()"
+Deprecated standard detected gasDetails(msg.gas,tx.gasprice,block.gaslimit) (0x0dd1326b7b80107f002ba16dad7fe2dd22f00491.sol#47):
+	- Usage of "msg.gas" should be replaced with "gasleft()"
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#deprecated-standards
+
+Version constraint ^0.4.23 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ABIEncoderV2PackedStorage_0.4.x
+	- ExpExponentCleanup
+	- EventStructWrongData.
+It is used by:
+	- ^0.4.23 (0x0dd1326b7b80107f002ba16dad7fe2dd22f00491.sol#1)
+solc-0.4.23 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Event LetsBreakThings.txSenderDetails(address,address) (0x0dd1326b7b80107f002ba16dad7fe2dd22f00491.sol#23) is not in CapWords
+Event LetsBreakThings.gasDetails(uint256,uint256,uint256) (0x0dd1326b7b80107f002ba16dad7fe2dd22f00491.sol#24) is not in CapWords
+Event LetsBreakThings.balanceLog(address,uint256) (0x0dd1326b7b80107f002ba16dad7fe2dd22f00491.sol#25) is not in CapWords
+Event LetsBreakThings.blockDetails(address,uint256,uint256,uint256) (0x0dd1326b7b80107f002ba16dad7fe2dd22f00491.sol#26) is not in CapWords
+Parameter LetsBreakThings.getBlockHash(uint256)._blockNumber (0x0dd1326b7b80107f002ba16dad7fe2dd22f00491.sol#30) is not in mixedCase
+Parameter LetsBreakThings.checkBalanceSendEth(address)._recipient (0x0dd1326b7b80107f002ba16dad7fe2dd22f00491.sol#57) is not in mixedCase
+Parameter LetsBreakThings.checkBalance(address)._target (0x0dd1326b7b80107f002ba16dad7fe2dd22f00491.sol#89) is not in mixedCase
+Parameter LetsBreakThings.verifyBlockHash(string,uint256)._hash (0x0dd1326b7b80107f002ba16dad7fe2dd22f00491.sol#97) is not in mixedCase
+Parameter LetsBreakThings.verifyBlockHash(string,uint256)._blockNumber (0x0dd1326b7b80107f002ba16dad7fe2dd22f00491.sol#97) is not in mixedCase
+Contract creatorProxy (0x0dd1326b7b80107f002ba16dad7fe2dd22f00491.sol#109-114) is not in CapWords
+Parameter creatorProxy.proxyCall(address,address)._target (0x0dd1326b7b80107f002ba16dad7fe2dd22f00491.sol#110) is not in mixedCase
+Parameter creatorProxy.proxyCall(address,address)._contract (0x0dd1326b7b80107f002ba16dad7fe2dd22f00491.sol#110) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in LetsBreakThings.checkBalanceSendEth(address) (0x0dd1326b7b80107f002ba16dad7fe2dd22f00491.sol#57-86):
+	External calls:
+	- _recipient.transfer(1) (0x0dd1326b7b80107f002ba16dad7fe2dd22f00491.sol#67)
+	Event emitted after the call(s):
+	- balanceLog(_target,balance) (0x0dd1326b7b80107f002ba16dad7fe2dd22f00491.sol#91)
+		- checkBalance(_recipient) (0x0dd1326b7b80107f002ba16dad7fe2dd22f00491.sol#70)
+Reentrancy in LetsBreakThings.checkBalanceSendEth(address) (0x0dd1326b7b80107f002ba16dad7fe2dd22f00491.sol#57-86):
+	External calls:
+	- _recipient.transfer(1) (0x0dd1326b7b80107f002ba16dad7fe2dd22f00491.sol#67)
+	- _recipient.send(1) (0x0dd1326b7b80107f002ba16dad7fe2dd22f00491.sol#73)
+	Event emitted after the call(s):
+	- balanceLog(_target,balance) (0x0dd1326b7b80107f002ba16dad7fe2dd22f00491.sol#91)
+		- checkBalance(_recipient) (0x0dd1326b7b80107f002ba16dad7fe2dd22f00491.sol#76)
+	- blockDetails(block.coinbase,block.difficulty,block.number,block.timestamp) (0x0dd1326b7b80107f002ba16dad7fe2dd22f00491.sol#53)
+		- logBlockDetails() (0x0dd1326b7b80107f002ba16dad7fe2dd22f00491.sol#79)
+	- gasDetails(msg.gas,tx.gasprice,block.gaslimit) (0x0dd1326b7b80107f002ba16dad7fe2dd22f00491.sol#47)
+		- logGasDetails() (0x0dd1326b7b80107f002ba16dad7fe2dd22f00491.sol#81)
+	- gasDetails(msg.gas,tx.gasprice,block.gaslimit) (0x0dd1326b7b80107f002ba16dad7fe2dd22f00491.sol#47)
+		- logGasDetails() (0x0dd1326b7b80107f002ba16dad7fe2dd22f00491.sol#80)
+	- txSenderDetails(msg.sender,tx.origin) (0x0dd1326b7b80107f002ba16dad7fe2dd22f00491.sol#42)
+		- logSenderDetails() (0x0dd1326b7b80107f002ba16dad7fe2dd22f00491.sol#82)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+verifyBlockHash(string,uint256) should be declared external:
+	- LetsBreakThings.verifyBlockHash(string,uint256) (0x0dd1326b7b80107f002ba16dad7fe2dd22f00491.sol#97-101)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#public-function-that-could-be-declared-external
+./0x0dd1326b7b80107f002ba16dad7fe2dd22f00491.sol analyzed (2 contracts with 94 detectors), 22 result(s) found
+
+real	0m1.512s
+user	0m1.279s
+sys	0m0.236s

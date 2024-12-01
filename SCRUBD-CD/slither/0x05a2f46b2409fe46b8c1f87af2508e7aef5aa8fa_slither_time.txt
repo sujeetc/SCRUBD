@@ -1,0 +1,71 @@
+'solc --version' running
+'solc ./0x05a2f46b2409fe46b8c1f87af2508e7aef5aa8fa.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x05a2f46b2409fe46b8c1f87af2508e7aef5aa8fa.sol:
+./0x05a2f46b2409fe46b8c1f87af2508e7aef5aa8fa.sol:3:5: Warning: No visibility specified. Defaulting to "public".
+    function transfer(address _to, uint _value) returns (bool success);
+    ^-----------------------------------------------------------------^
+./0x05a2f46b2409fe46b8c1f87af2508e7aef5aa8fa.sol:4:5: Warning: No visibility specified. Defaulting to "public".
+    function balanceOf(address _owner) constant returns (uint balance);
+    ^-----------------------------------------------------------------^
+./0x05a2f46b2409fe46b8c1f87af2508e7aef5aa8fa.sol:8:5: Warning: No visibility specified. Defaulting to "public".
+    function EtherGet() {
+    ^
+Spanning multiple lines.
+./0x05a2f46b2409fe46b8c1f87af2508e7aef5aa8fa.sol:20:13: Warning: Return value of low-level calls not used.
+            addr.call.value(0 wei)();
+            ^----------------------^
+
+
+EtherGet.withdrawEther() (0x05a2f46b2409fe46b8c1f87af2508e7aef5aa8fa.sol#15-17) sends eth to arbitrary user
+	Dangerous calls:
+	- owner.transfer(this.balance) (0x05a2f46b2409fe46b8c1f87af2508e7aef5aa8fa.sol#16)
+EtherGet.getTokens(uint256,address) (0x05a2f46b2409fe46b8c1f87af2508e7aef5aa8fa.sol#18-22) sends eth to arbitrary user
+	Dangerous calls:
+	- addr.call.value(0)() (0x05a2f46b2409fe46b8c1f87af2508e7aef5aa8fa.sol#20)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+EtherGet.withdrawTokens(address) (0x05a2f46b2409fe46b8c1f87af2508e7aef5aa8fa.sol#11-14) ignores return value by tc.transfer(owner,tc.balanceOf(this)) (0x05a2f46b2409fe46b8c1f87af2508e7aef5aa8fa.sol#13)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+EtherGet.getTokens(uint256,address) (0x05a2f46b2409fe46b8c1f87af2508e7aef5aa8fa.sol#18-22) ignores return value by addr.call.value(0)() (0x05a2f46b2409fe46b8c1f87af2508e7aef5aa8fa.sol#20)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-low-level-calls
+
+EtherGet.getTokens(uint256,address).addr (0x05a2f46b2409fe46b8c1f87af2508e7aef5aa8fa.sol#18) lacks a zero-check on :
+		- addr.call.value(0)() (0x05a2f46b2409fe46b8c1f87af2508e7aef5aa8fa.sol#20)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+EtherGet.getTokens(uint256,address) (0x05a2f46b2409fe46b8c1f87af2508e7aef5aa8fa.sol#18-22) has external calls inside a loop: addr.call.value(0)() (0x05a2f46b2409fe46b8c1f87af2508e7aef5aa8fa.sol#20)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation/#calls-inside-a-loop
+
+Version constraint ^0.4.19 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ABIEncoderV2PackedStorage_0.4.x
+	- ExpExponentCleanup
+	- EventStructWrongData
+	- NestedArrayFunctionCallDecoder.
+It is used by:
+	- ^0.4.19 (0x05a2f46b2409fe46b8c1f87af2508e7aef5aa8fa.sol#1)
+solc-0.4.19 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in EtherGet.getTokens(uint256,address) (0x05a2f46b2409fe46b8c1f87af2508e7aef5aa8fa.sol#18-22):
+	- addr.call.value(0)() (0x05a2f46b2409fe46b8c1f87af2508e7aef5aa8fa.sol#20)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+./0x05a2f46b2409fe46b8c1f87af2508e7aef5aa8fa.sol analyzed (2 contracts with 94 detectors), 9 result(s) found
+
+real	0m1.352s
+user	0m1.138s
+sys	0m0.217s

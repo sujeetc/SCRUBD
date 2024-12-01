@@ -1,0 +1,94 @@
+'solc --version' running
+'solc ./0xb620cee6b52f96f3c6b253e6eea556aa2d214a99.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0xb620cee6b52f96f3c6b253e6eea556aa2d214a99.sol:
+./0xb620cee6b52f96f3c6b253e6eea556aa2d214a99.sol:81:5: Warning: This declaration shadows an existing declaration.
+    uint256 secret = uint256(hash);
+    ^------------^
+./0xb620cee6b52f96f3c6b253e6eea556aa2d214a99.sol:20:1: The shadowed declaration is here:
+uint256 public secret;
+^-------------------^
+
+./0xb620cee6b52f96f3c6b253e6eea556aa2d214a99.sol:93:2: Warning: Return value of low-level calls not used.
+	firstTarget.call.value(msg.value)();
+	^---------------------------------^
+./0xb620cee6b52f96f3c6b253e6eea556aa2d214a99.sol:98:2: Warning: Return value of low-level calls not used.
+	secondTarget.call.value(msg.value)();
+	^----------------------------------^
+./0xb620cee6b52f96f3c6b253e6eea556aa2d214a99.sol:124:2: Warning: Return value of low-level calls not used.
+	owner.call.value(1 wei)();
+	^-----------------------^
+
+
+DrainMe (0xb620cee6b52f96f3c6b253e6eea556aa2d214a99.sol#8-136) contract sets array length with a user-controlled value:
+	- players.push(msg.sender) (0xb620cee6b52f96f3c6b253e6eea556aa2d214a99.sol#67)
+DrainMe (0xb620cee6b52f96f3c6b253e6eea556aa2d214a99.sol#8-136) contract sets array length with a user-controlled value:
+	- seed.length = _add (0xb620cee6b52f96f3c6b253e6eea556aa2d214a99.sol#106)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#array-length-assignment
+
+DrainMe.unlockSecret() (0xb620cee6b52f96f3c6b253e6eea556aa2d214a99.sol#79-89) uses a weak PRNG: "secret % 5 == 0 (0xb620cee6b52f96f3c6b253e6eea556aa2d214a99.sol#82)" 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#weak-PRNG
+
+DrainMe.unlockSecret() (0xb620cee6b52f96f3c6b253e6eea556aa2d214a99.sol#79-89) uses a dangerous strict equality:
+	- secret % 5 == 0 (0xb620cee6b52f96f3c6b253e6eea556aa2d214a99.sol#82)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-strict-equalities
+
+DrainMe.callFirstTarget() (0xb620cee6b52f96f3c6b253e6eea556aa2d214a99.sol#91-94) ignores return value by firstTarget.call.value(msg.value)() (0xb620cee6b52f96f3c6b253e6eea556aa2d214a99.sol#93)
+DrainMe.callSecondTarget() (0xb620cee6b52f96f3c6b253e6eea556aa2d214a99.sol#96-99) ignores return value by secondTarget.call.value(msg.value)() (0xb620cee6b52f96f3c6b253e6eea556aa2d214a99.sol#98)
+DrainMe.winPrize() (0xb620cee6b52f96f3c6b253e6eea556aa2d214a99.sol#123-125) ignores return value by owner.call.value(1)() (0xb620cee6b52f96f3c6b253e6eea556aa2d214a99.sol#124)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-low-level-calls
+
+DrainMe.unlockSecret().secret (0xb620cee6b52f96f3c6b253e6eea556aa2d214a99.sol#81) shadows:
+	- DrainMe.secret (0xb620cee6b52f96f3c6b253e6eea556aa2d214a99.sol#20) (state variable)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#local-variable-shadowing
+
+DrainMe.setSecret(uint256) (0xb620cee6b52f96f3c6b253e6eea556aa2d214a99.sol#53-55) should emit an event for: 
+	- secret = _secret (0xb620cee6b52f96f3c6b253e6eea556aa2d214a99.sol#54) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+Version constraint ^0.4.23 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ABIEncoderV2PackedStorage_0.4.x
+	- ExpExponentCleanup
+	- EventStructWrongData.
+It is used by:
+	- ^0.4.23 (0xb620cee6b52f96f3c6b253e6eea556aa2d214a99.sol#6)
+solc-0.4.23 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in DrainMe.callFirstTarget() (0xb620cee6b52f96f3c6b253e6eea556aa2d214a99.sol#91-94):
+	- firstTarget.call.value(msg.value)() (0xb620cee6b52f96f3c6b253e6eea556aa2d214a99.sol#93)
+Low level call in DrainMe.callSecondTarget() (0xb620cee6b52f96f3c6b253e6eea556aa2d214a99.sol#96-99):
+	- secondTarget.call.value(msg.value)() (0xb620cee6b52f96f3c6b253e6eea556aa2d214a99.sol#98)
+Low level call in DrainMe.winPrize() (0xb620cee6b52f96f3c6b253e6eea556aa2d214a99.sol#123-125):
+	- owner.call.value(1)() (0xb620cee6b52f96f3c6b253e6eea556aa2d214a99.sol#124)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Function DrainMe.DranMe() (0xb620cee6b52f96f3c6b253e6eea556aa2d214a99.sol#26-28) is not in mixedCase
+Parameter DrainMe.setSecret(uint256)._secret (0xb620cee6b52f96f3c6b253e6eea556aa2d214a99.sol#53) is not in mixedCase
+Parameter DrainMe.setSeed(uint256,uint256)._index (0xb620cee6b52f96f3c6b253e6eea556aa2d214a99.sol#101) is not in mixedCase
+Parameter DrainMe.setSeed(uint256,uint256)._value (0xb620cee6b52f96f3c6b253e6eea556aa2d214a99.sol#101) is not in mixedCase
+Parameter DrainMe.addSeed(uint256)._add (0xb620cee6b52f96f3c6b253e6eea556aa2d214a99.sol#105) is not in mixedCase
+Parameter DrainMe.guessSeed(uint256)._seed (0xb620cee6b52f96f3c6b253e6eea556aa2d214a99.sol#109) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+DrainMe.firstTarget (0xb620cee6b52f96f3c6b253e6eea556aa2d214a99.sol#14) should be constant 
+DrainMe.secondTarget (0xb620cee6b52f96f3c6b253e6eea556aa2d214a99.sol#15) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+./0xb620cee6b52f96f3c6b253e6eea556aa2d214a99.sol analyzed (1 contracts with 94 detectors), 22 result(s) found
+
+real	0m1.650s
+user	0m1.399s
+sys	0m0.253s

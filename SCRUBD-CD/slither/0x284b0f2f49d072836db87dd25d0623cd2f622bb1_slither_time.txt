@@ -1,0 +1,166 @@
+'solc --version' running
+'solc ./0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+DesToken (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#226-241) has incorrect ERC20 function interface:StandardToken.transferFrom(address,address,uint256) (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#179-189)
+DesToken (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#226-241) has incorrect ERC20 function interface:StandardToken.approve(address,uint256) (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#196-206)
+DesToken (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#226-241) has incorrect ERC20 function interface:ERC20.transferFrom(address,address,uint256) (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#51)
+DesToken (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#226-241) has incorrect ERC20 function interface:ERC20.approve(address,uint256) (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#52)
+DesToken (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#226-241) has incorrect ERC20 function interface:ERC20Basic.transfer(address,uint256) (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#41)
+DesToken (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#226-241) has incorrect ERC20 function interface:BasicToken.transfer(address,uint256) (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#144-148)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-erc20-interface
+
+DesTokenSale.doPurchase(address) (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#334-363) uses a dangerous strict equality:
+	- token.balanceOf(_sender) == 0 (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#353)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-strict-equalities
+
+Reentrancy in DesTokenSale.doPurchase(address) (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#334-363):
+	External calls:
+	- require(bool)(token.balanceOf(_sender).add(tokens) <= purchaseLimit) (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#345)
+	State variables written after the call(s):
+	- tokensSelling = tokensSelling.sub(tokens) (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#349)
+	DesTokenSale.tokensSelling (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#288) can be used in cross function reentrancies:
+	- DesTokenSale.doPurchase(address) (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#334-363)
+	- DesTokenSale.finishPhase() (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#320-324)
+	- DesTokenSale.startPhase(uint256,uint256,uint256) (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#306-316)
+	- DesTokenSale.tokensSelling (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#288)
+Reentrancy in DesTokenSale.finishPhase() (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#320-324):
+	External calls:
+	- token.transfer(beneficiary,tokensSelling) (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#322)
+	State variables written after the call(s):
+	- tokensSelling = 0 (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#323)
+	DesTokenSale.tokensSelling (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#288) can be used in cross function reentrancies:
+	- DesTokenSale.doPurchase(address) (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#334-363)
+	- DesTokenSale.finishPhase() (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#320-324)
+	- DesTokenSale.startPhase(uint256,uint256,uint256) (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#306-316)
+	- DesTokenSale.tokensSelling (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#288)
+Reentrancy in DesTokenSale.startPhase(uint256,uint256,uint256) (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#306-316):
+	External calls:
+	- require(bool)(_tokens <= token.balanceOf(this)) (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#312)
+	State variables written after the call(s):
+	- tokensSelling = _tokens * 1000000000000000000 (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#313)
+	DesTokenSale.tokensSelling (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#288) can be used in cross function reentrancies:
+	- DesTokenSale.doPurchase(address) (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#334-363)
+	- DesTokenSale.finishPhase() (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#320-324)
+	- DesTokenSale.startPhase(uint256,uint256,uint256) (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#306-316)
+	- DesTokenSale.tokensSelling (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#288)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+Ownable.transferOwnership(address) (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#74-78) should emit an event for: 
+	- owner = newOwner (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#76) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-access-control
+
+DesTokenSale.startPhase(uint256,uint256,uint256) (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#306-316) should emit an event for: 
+	- tokensSelling = _tokens * 1000000000000000000 (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#313) 
+	- tokenPrice = _price (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#314) 
+	- purchaseLimit = _limit * 1000000000000000000 (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#315) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+DesTokenSale.DesTokenSale(address,address)._beneficiary (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#296) lacks a zero-check on :
+		- beneficiary = _beneficiary (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#299)
+DesTokenSale.changeBeneficiary(address)._beneficiary (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#302) lacks a zero-check on :
+		- beneficiary = _beneficiary (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#303)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in DesTokenSale.doPurchase(address) (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#334-363):
+	External calls:
+	- require(bool)(token.balanceOf(_sender).add(tokens) <= purchaseLimit) (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#345)
+	State variables written after the call(s):
+	- tokensSoldTotal = tokensSoldTotal.add(tokens) (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#352)
+Reentrancy in DesTokenSale.doPurchase(address) (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#334-363):
+	External calls:
+	- require(bool)(token.balanceOf(_sender).add(tokens) <= purchaseLimit) (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#345)
+	- token.balanceOf(_sender) == 0 (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#353)
+	State variables written after the call(s):
+	- investorCount ++ (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#353)
+	- weiRaisedTotal = weiRaisedTotal.add(msg.value) (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#354)
+Reentrancy in DesTokenSale.startPhase(uint256,uint256,uint256) (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#306-316):
+	External calls:
+	- require(bool)(_tokens <= token.balanceOf(this)) (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#312)
+	State variables written after the call(s):
+	- purchaseLimit = _limit * 1000000000000000000 (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#315)
+	- tokenPrice = _price (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#314)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in DesTokenSale.doPurchase(address) (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#334-363):
+	External calls:
+	- require(bool)(token.balanceOf(_sender).add(tokens) <= purchaseLimit) (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#345)
+	- token.balanceOf(_sender) == 0 (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#353)
+	- token.transfer(_sender,tokens) (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#357)
+	External calls sending eth:
+	- beneficiary.transfer(msg.value) (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#360)
+	Event emitted after the call(s):
+	- NewContribution(_sender,tokens,msg.value) (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#362)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+Transferable.transfersAllowedTo(address) (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#116-118) compares to a boolean constant:
+	-(transfersAllowed == true || allowedTransfersTo[_owner] == true) (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#117)
+Transferable.onlyIfTransfersAllowed() (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#95-98) compares to a boolean constant:
+	-require(bool)(transfersAllowed == true || allowedTransfersTo[msg.sender] == true) (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#96)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#boolean-equality
+
+Version constraint ^0.4.13 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ExpExponentCleanup
+	- NestedArrayFunctionCallDecoder
+	- ZeroFunctionSelector
+	- DelegateCallReturnValue
+	- ECRecoverMalformedInput.
+It is used by:
+	- ^0.4.13 (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#1)
+solc-0.4.13 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Parameter Transferable.allowTransfersTo(address)._owner (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#108) is not in mixedCase
+Parameter Transferable.disallowTransfersTo(address)._owner (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#112) is not in mixedCase
+Parameter Transferable.transfersAllowedTo(address)._owner (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#116) is not in mixedCase
+Parameter BasicToken.transfer(address,uint256)._to (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#144) is not in mixedCase
+Parameter BasicToken.transfer(address,uint256)._value (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#144) is not in mixedCase
+Parameter BasicToken.balanceOf(address)._owner (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#155) is not in mixedCase
+Parameter StandardToken.transferFrom(address,address,uint256)._from (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#179) is not in mixedCase
+Parameter StandardToken.transferFrom(address,address,uint256)._to (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#179) is not in mixedCase
+Parameter StandardToken.transferFrom(address,address,uint256)._value (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#179) is not in mixedCase
+Parameter StandardToken.approve(address,uint256)._spender (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#196) is not in mixedCase
+Parameter StandardToken.approve(address,uint256)._value (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#196) is not in mixedCase
+Parameter StandardToken.allowance(address,address)._owner (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#214) is not in mixedCase
+Parameter StandardToken.allowance(address,address)._spender (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#214) is not in mixedCase
+Variable DesToken.INITIAL_SUPPLY (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#231) is not in mixedCase
+Parameter DesTokenSale.changeBeneficiary(address)._beneficiary (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#302) is not in mixedCase
+Parameter DesTokenSale.startPhase(uint256,uint256,uint256)._tokens (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#307) is not in mixedCase
+Parameter DesTokenSale.startPhase(uint256,uint256,uint256)._price (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#308) is not in mixedCase
+Parameter DesTokenSale.startPhase(uint256,uint256,uint256)._limit (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#309) is not in mixedCase
+Parameter DesTokenSale.doPurchaseFor(address)._sender (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#330) is not in mixedCase
+Parameter DesTokenSale.doPurchase(address)._sender (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#334) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in DesTokenSale.doPurchase(address) (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#334-363):
+	External calls:
+	- beneficiary.transfer(msg.value) (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#360)
+	Event emitted after the call(s):
+	- NewContribution(_sender,tokens,msg.value) (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#362)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+DesToken.slitherConstructorVariables() (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#226-241) uses literals with too many digits:
+	- INITIAL_SUPPLY = 35000000 * 1000000000000000000 (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#231)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+DesToken.INITIAL_SUPPLY (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#231) should be constant 
+DesToken.decimals (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#230) should be constant 
+DesToken.name (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#228) should be constant 
+DesToken.symbol (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#229) should be constant 
+DesTokenSale.name (0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol#280) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+./0x284b0f2f49d072836db87dd25d0623cd2f622bb1.sol analyzed (10 contracts with 94 detectors), 49 result(s) found
+
+real	0m1.947s
+user	0m1.741s
+sys	0m0.207s

@@ -1,0 +1,219 @@
+'solc --version' running
+'solc ./test.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/manual_dataset' running
+Compilation warnings/errors on ./test.sol:
+./test.sol:17:7: Warning: Return value of low-level calls not used.
+		    msg.sender.call.value(a)();
+		    ^------------------------^
+./test.sol:26:3: Warning: Return value of low-level calls not used.
+		msg.sender.call.value(a)();
+		^------------------------^
+./test.sol:33:5: Warning: Return value of low-level calls not used.
+				msg.sender.call.value(a)();
+				^------------------------^
+./test.sol:42:13: Warning: Return value of low-level calls not used.
+            msg.sender.call.value(a)();
+            ^------------------------^
+./test.sol:52:13: Warning: Return value of low-level calls not used.
+            msg.sender.call.value(a)();
+            ^------------------------^
+./test.sol:62:13: Warning: Return value of low-level calls not used.
+            msg.sender.call.value(a)();
+            ^------------------------^
+./test.sol:71:17: Warning: Return value of low-level calls not used.
+                msg.sender.call.value(a)();
+                ^------------------------^
+./test.sol:81:14: Warning: Return value of low-level calls not used.
+        else msg.sender.call.value(a)();
+             ^------------------------^
+
+
+test.buggy() (test.sol#12-19) sends eth to arbitrary user
+	Dangerous calls:
+	- msg.sender.call.value(a)() (test.sol#17)
+test.non_buggy_2() (test.sol#21-28) sends eth to arbitrary user
+	Dangerous calls:
+	- msg.sender.call.value(a)() (test.sol#26)
+test.end_if_counter_example() (test.sol#30-36) sends eth to arbitrary user
+	Dangerous calls:
+	- msg.sender.call.value(a)() (test.sol#33)
+test.non_buggy4() (test.sol#38-44) sends eth to arbitrary user
+	Dangerous calls:
+	- msg.sender.call.value(a)() (test.sol#42)
+test.non_buggy5() (test.sol#46-54) sends eth to arbitrary user
+	Dangerous calls:
+	- msg.sender.call.value(a)() (test.sol#52)
+test.buggy6() (test.sol#56-64) sends eth to arbitrary user
+	Dangerous calls:
+	- msg.sender.call.value(a)() (test.sol#62)
+test.buggy7() (test.sol#66-74) sends eth to arbitrary user
+	Dangerous calls:
+	- msg.sender.call.value(a)() (test.sol#71)
+test.buggy9() (test.sol#76-83) sends eth to arbitrary user
+	Dangerous calls:
+	- msg.sender.call.value(a)() (test.sol#81)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+Reentrancy in test.buggy() (test.sol#12-19):
+	External calls:
+	- msg.sender.call.value(a)() (test.sol#17)
+	State variables written after the call(s):
+	- b ++ (test.sol#18)
+	test.b (test.sol#4) can be used in cross function reentrancies:
+	- test.b (test.sol#4)
+	- test.buggy() (test.sol#12-19)
+	- test.buggy6() (test.sol#56-64)
+	- test.buggy7() (test.sol#66-74)
+	- test.buggy9() (test.sol#76-83)
+	- test.non_buggy4() (test.sol#38-44)
+	- test.non_buggy5() (test.sol#46-54)
+	- test.non_buggy_2() (test.sol#21-28)
+Reentrancy in test.buggy6() (test.sol#56-64):
+	External calls:
+	- msg.sender.call.value(a)() (test.sol#62)
+	State variables written after the call(s):
+	- d ++ (test.sol#63)
+	test.d (test.sol#5) can be used in cross function reentrancies:
+	- test.buggy() (test.sol#12-19)
+	- test.buggy6() (test.sol#56-64)
+	- test.buggy7() (test.sol#66-74)
+	- test.buggy9() (test.sol#76-83)
+	- test.d (test.sol#5)
+	- test.end_if_counter_example() (test.sol#30-36)
+	- test.non_buggy4() (test.sol#38-44)
+	- test.non_buggy5() (test.sol#46-54)
+	- test.non_buggy_2() (test.sol#21-28)
+Reentrancy in test.buggy7() (test.sol#66-74):
+	External calls:
+	- msg.sender.call.value(a)() (test.sol#71)
+	State variables written after the call(s):
+	- e = e + 10 (test.sol#73)
+	test.e (test.sol#11) can be used in cross function reentrancies:
+	- test.buggy7() (test.sol#66-74)
+	- test.e (test.sol#11)
+Reentrancy in test.buggy9() (test.sol#76-83):
+	External calls:
+	- msg.sender.call.value(a)() (test.sol#81)
+	State variables written after the call(s):
+	- b ++ (test.sol#82)
+	test.b (test.sol#4) can be used in cross function reentrancies:
+	- test.b (test.sol#4)
+	- test.buggy() (test.sol#12-19)
+	- test.buggy6() (test.sol#56-64)
+	- test.buggy7() (test.sol#66-74)
+	- test.buggy9() (test.sol#76-83)
+	- test.non_buggy4() (test.sol#38-44)
+	- test.non_buggy5() (test.sol#46-54)
+	- test.non_buggy_2() (test.sol#21-28)
+Reentrancy in test.non_buggy4() (test.sol#38-44):
+	External calls:
+	- msg.sender.call.value(a)() (test.sol#42)
+	State variables written after the call(s):
+	- b ++ (test.sol#43)
+	test.b (test.sol#4) can be used in cross function reentrancies:
+	- test.b (test.sol#4)
+	- test.buggy() (test.sol#12-19)
+	- test.buggy6() (test.sol#56-64)
+	- test.buggy7() (test.sol#66-74)
+	- test.buggy9() (test.sol#76-83)
+	- test.non_buggy4() (test.sol#38-44)
+	- test.non_buggy5() (test.sol#46-54)
+	- test.non_buggy_2() (test.sol#21-28)
+Reentrancy in test.non_buggy_2() (test.sol#21-28):
+	External calls:
+	- msg.sender.call.value(a)() (test.sol#26)
+	State variables written after the call(s):
+	- d ++ (test.sol#27)
+	test.d (test.sol#5) can be used in cross function reentrancies:
+	- test.buggy() (test.sol#12-19)
+	- test.buggy6() (test.sol#56-64)
+	- test.buggy7() (test.sol#66-74)
+	- test.buggy9() (test.sol#76-83)
+	- test.d (test.sol#5)
+	- test.end_if_counter_example() (test.sol#30-36)
+	- test.non_buggy4() (test.sol#38-44)
+	- test.non_buggy5() (test.sol#46-54)
+	- test.non_buggy_2() (test.sol#21-28)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+test.c (test.sol#7) is never initialized. It is used in:
+	- test.buggy() (test.sol#12-19)
+	- test.buggy6() (test.sol#56-64)
+	- test.buggy7() (test.sol#66-74)
+	- test.buggy9() (test.sol#76-83)
+test.g (test.sol#10) is never initialized. It is used in:
+	- test.buggy9() (test.sol#76-83)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#uninitialized-state-variables
+
+test.buggy() (test.sol#12-19) ignores return value by msg.sender.call.value(a)() (test.sol#17)
+test.non_buggy_2() (test.sol#21-28) ignores return value by msg.sender.call.value(a)() (test.sol#26)
+test.end_if_counter_example() (test.sol#30-36) ignores return value by msg.sender.call.value(a)() (test.sol#33)
+test.non_buggy4() (test.sol#38-44) ignores return value by msg.sender.call.value(a)() (test.sol#42)
+test.non_buggy5() (test.sol#46-54) ignores return value by msg.sender.call.value(a)() (test.sol#52)
+test.buggy6() (test.sol#56-64) ignores return value by msg.sender.call.value(a)() (test.sol#62)
+test.buggy7() (test.sol#66-74) ignores return value by msg.sender.call.value(a)() (test.sol#71)
+test.buggy9() (test.sol#76-83) ignores return value by msg.sender.call.value(a)() (test.sol#81)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-low-level-calls
+
+Reentrancy in test.non_buggy5() (test.sol#46-54):
+	External calls:
+	- msg.sender.call.value(a)() (test.sol#52)
+	State variables written after the call(s):
+	- d ++ (test.sol#53)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Version constraint ^0.4.24 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ABIEncoderV2PackedStorage_0.4.x
+	- ExpExponentCleanup
+	- EventStructWrongData.
+It is used by:
+	- ^0.4.24 (test.sol#1)
+solc-0.4.24 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in test.buggy() (test.sol#12-19):
+	- msg.sender.call.value(a)() (test.sol#17)
+Low level call in test.non_buggy_2() (test.sol#21-28):
+	- msg.sender.call.value(a)() (test.sol#26)
+Low level call in test.end_if_counter_example() (test.sol#30-36):
+	- msg.sender.call.value(a)() (test.sol#33)
+Low level call in test.non_buggy4() (test.sol#38-44):
+	- msg.sender.call.value(a)() (test.sol#42)
+Low level call in test.non_buggy5() (test.sol#46-54):
+	- msg.sender.call.value(a)() (test.sol#52)
+Low level call in test.buggy6() (test.sol#56-64):
+	- msg.sender.call.value(a)() (test.sol#62)
+Low level call in test.buggy7() (test.sol#66-74):
+	- msg.sender.call.value(a)() (test.sol#71)
+Low level call in test.buggy9() (test.sol#76-83):
+	- msg.sender.call.value(a)() (test.sol#81)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Contract test (test.sol#2-85) is not in CapWords
+Function test.non_buggy_2() (test.sol#21-28) is not in mixedCase
+Function test.end_if_counter_example() (test.sol#30-36) is not in mixedCase
+Function test.non_buggy4() (test.sol#38-44) is not in mixedCase
+Function test.non_buggy5() (test.sol#46-54) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+test.c (test.sol#7) should be constant 
+test.g (test.sol#10) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+./test.sol analyzed (1 contracts with 94 detectors), 42 result(s) found
+
+real	0m1.197s
+user	0m1.084s
+sys	0m0.115s

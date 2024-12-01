@@ -1,0 +1,86 @@
+'solc --version' running
+'solc ./0x380e0f015c0a830dc5d25e5f99570ad0be275350.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x380e0f015c0a830dc5d25e5f99570ad0be275350.sol:
+./0x380e0f015c0a830dc5d25e5f99570ad0be275350.sol:61:5: Warning: Variable is declared as a storage pointer. Use an explicit "storage" keyword to silence this warning.
+    Presser p = pressers[msg.sender];
+    ^-------^
+
+
+Button.close() (0x380e0f015c0a830dc5d25e5f99570ad0be275350.sol#110-124) allows anyone to destruct the contract
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#suicidal
+
+ButtonFactory.setCreationFee(uint256) (0x380e0f015c0a830dc5d25e5f99570ad0be275350.sol#152-155) should emit an event for: 
+	- creationFee = _fee (0x380e0f015c0a830dc5d25e5f99570ad0be275350.sol#154) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+Button.constructor(uint64,uint64,uint64,uint64,uint64,address)._sender (0x380e0f015c0a830dc5d25e5f99570ad0be275350.sol#36) lacks a zero-check on :
+		- lastPresser = _sender (0x380e0f015c0a830dc5d25e5f99570ad0be275350.sol#43)
+		- owner = _sender (0x380e0f015c0a830dc5d25e5f99570ad0be275350.sol#45)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in Button.close() (0x380e0f015c0a830dc5d25e5f99570ad0be275350.sol#110-124):
+	External calls:
+	- f.announceWinner.value(rake)(lastPresser,address(this).balance) (0x380e0f015c0a830dc5d25e5f99570ad0be275350.sol#117)
+	- f.announceWinner.value(rake / 4)(lastPresser,address(this).balance) (0x380e0f015c0a830dc5d25e5f99570ad0be275350.sol#119)
+	External calls sending eth:
+	- ! owner.send(3 * rake / 4) (0x380e0f015c0a830dc5d25e5f99570ad0be275350.sol#115)
+	- f.announceWinner.value(rake)(lastPresser,address(this).balance) (0x380e0f015c0a830dc5d25e5f99570ad0be275350.sol#117)
+	- f.announceWinner.value(rake / 4)(lastPresser,address(this).balance) (0x380e0f015c0a830dc5d25e5f99570ad0be275350.sol#119)
+	Event emitted after the call(s):
+	- Winner(lastPresser,address(this).balance) (0x380e0f015c0a830dc5d25e5f99570ad0be275350.sol#122)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+Version constraint ^0.4.19 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ABIEncoderV2PackedStorage_0.4.x
+	- ExpExponentCleanup
+	- EventStructWrongData
+	- NestedArrayFunctionCallDecoder.
+It is used by:
+	- ^0.4.19 (0x380e0f015c0a830dc5d25e5f99570ad0be275350.sol#1)
+solc-0.4.22 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Parameter ButtonFactory.setCreationFee(uint256)._fee (0x380e0f015c0a830dc5d25e5f99570ad0be275350.sol#152) is not in mixedCase
+Parameter ButtonFactory.createButton(uint64,uint64,uint64,uint64,uint64)._countdown (0x380e0f015c0a830dc5d25e5f99570ad0be275350.sol#158) is not in mixedCase
+Parameter ButtonFactory.createButton(uint64,uint64,uint64,uint64,uint64)._countdownDecrement (0x380e0f015c0a830dc5d25e5f99570ad0be275350.sol#159) is not in mixedCase
+Parameter ButtonFactory.createButton(uint64,uint64,uint64,uint64,uint64)._cooloffIncrement (0x380e0f015c0a830dc5d25e5f99570ad0be275350.sol#160) is not in mixedCase
+Parameter ButtonFactory.createButton(uint64,uint64,uint64,uint64,uint64)._pressFee (0x380e0f015c0a830dc5d25e5f99570ad0be275350.sol#161) is not in mixedCase
+Parameter ButtonFactory.createButton(uint64,uint64,uint64,uint64,uint64)._signupFee (0x380e0f015c0a830dc5d25e5f99570ad0be275350.sol#162) is not in mixedCase
+Parameter ButtonFactory.announceWinner(address,uint256)._winner (0x380e0f015c0a830dc5d25e5f99570ad0be275350.sol#173) is not in mixedCase
+Parameter ButtonFactory.announceWinner(address,uint256)._pot (0x380e0f015c0a830dc5d25e5f99570ad0be275350.sol#173) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in Button.close() (0x380e0f015c0a830dc5d25e5f99570ad0be275350.sol#110-124):
+	External calls:
+	- ! owner.send(3 * rake / 4) (0x380e0f015c0a830dc5d25e5f99570ad0be275350.sol#115)
+	External calls sending eth:
+	- ! owner.send(3 * rake / 4) (0x380e0f015c0a830dc5d25e5f99570ad0be275350.sol#115)
+	- f.announceWinner.value(rake)(lastPresser,address(this).balance) (0x380e0f015c0a830dc5d25e5f99570ad0be275350.sol#117)
+	- f.announceWinner.value(rake / 4)(lastPresser,address(this).balance) (0x380e0f015c0a830dc5d25e5f99570ad0be275350.sol#119)
+	Event emitted after the call(s):
+	- Winner(lastPresser,address(this).balance) (0x380e0f015c0a830dc5d25e5f99570ad0be275350.sol#122)
+Reentrancy in Button.press() (0x380e0f015c0a830dc5d25e5f99570ad0be275350.sol#76-108):
+	External calls:
+	- msg.sender.transfer(change) (0x380e0f015c0a830dc5d25e5f99570ad0be275350.sol#104)
+	Event emitted after the call(s):
+	- Pressed(msg.sender,endBlock) (0x380e0f015c0a830dc5d25e5f99570ad0be275350.sol#107)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+./0x380e0f015c0a830dc5d25e5f99570ad0be275350.sol analyzed (2 contracts with 94 detectors), 16 result(s) found
+
+real	0m1.450s
+user	0m1.215s
+sys	0m0.239s

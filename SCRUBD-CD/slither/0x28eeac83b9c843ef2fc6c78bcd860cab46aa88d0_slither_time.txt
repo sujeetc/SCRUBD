@@ -1,0 +1,412 @@
+'solc --version' running
+'solc ./0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+PepeBonk.swapBack() (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#603-645) sends eth to arbitrary user
+	Dangerous calls:
+	- distributor.deposit{value: amountETHReflection}() (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#629)
+	- address(marketingFeeReceiver).transfer(amountETHMarketing) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#630)
+	- router.addLiquidityETH{value: amountETHLiquidity}(address(this),amountToLiquify,0,0,autoLiquidityReceiver,block.timestamp) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#635-642)
+PepeBonk.buyTokens(uint256,address) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#674-685) sends eth to arbitrary user
+	Dangerous calls:
+	- router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: amount}(0,path,to,block.timestamp) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#679-684)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+Reentrancy in PepeBonk._transferFrom(address,address,uint256) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#528-551):
+	External calls:
+	- swapBack() (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#533)
+		- router.swapExactTokensForETHSupportingFeeOnTransferTokens(amountToSwap,0,path,address(this),block.timestamp) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#613-619)
+		- distributor.deposit{value: amountETHReflection}() (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#629)
+		- router.addLiquidityETH{value: amountETHLiquidity}(address(this),amountToLiquify,0,0,autoLiquidityReceiver,block.timestamp) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#635-642)
+	- triggerAutoBuyback() (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#534)
+		- router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: amount}(0,path,to,block.timestamp) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#679-684)
+	External calls sending eth:
+	- swapBack() (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#533)
+		- distributor.deposit{value: amountETHReflection}() (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#629)
+		- address(marketingFeeReceiver).transfer(amountETHMarketing) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#630)
+		- router.addLiquidityETH{value: amountETHLiquidity}(address(this),amountToLiquify,0,0,autoLiquidityReceiver,block.timestamp) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#635-642)
+	- triggerAutoBuyback() (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#534)
+		- router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: amount}(0,path,to,block.timestamp) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#679-684)
+	State variables written after the call(s):
+	- _balances[sender] = _balances[sender].sub(amount,Insufficient Balance) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#538)
+	PepeBonk._balances (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#420) can be used in cross function reentrancies:
+	- PepeBonk._basicTransfer(address,address,uint256) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#553-558)
+	- PepeBonk._transferFrom(address,address,uint256) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#528-551)
+	- PepeBonk.balanceOf(address) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#503)
+	- PepeBonk.constructor(address) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#469-493)
+	- PepeBonk.setIsDividendExempt(address,bool) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#718-726)
+	- PepeBonk.shouldSwapBack() (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#596-601)
+	- PepeBonk.takeFee(address,address,uint256) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#587-594)
+	- _balances[recipient] = _balances[recipient].add(amountReceived) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#542)
+	PepeBonk._balances (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#420) can be used in cross function reentrancies:
+	- PepeBonk._basicTransfer(address,address,uint256) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#553-558)
+	- PepeBonk._transferFrom(address,address,uint256) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#528-551)
+	- PepeBonk.balanceOf(address) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#503)
+	- PepeBonk.constructor(address) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#469-493)
+	- PepeBonk.setIsDividendExempt(address,bool) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#718-726)
+	- PepeBonk.shouldSwapBack() (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#596-601)
+	- PepeBonk.takeFee(address,address,uint256) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#587-594)
+	- amountReceived = takeFee(sender,recipient,amount) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#540)
+		- _balances[address(this)] = _balances[address(this)].add(feeAmount) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#590)
+	PepeBonk._balances (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#420) can be used in cross function reentrancies:
+	- PepeBonk._basicTransfer(address,address,uint256) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#553-558)
+	- PepeBonk._transferFrom(address,address,uint256) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#528-551)
+	- PepeBonk.balanceOf(address) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#503)
+	- PepeBonk.constructor(address) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#469-493)
+	- PepeBonk.setIsDividendExempt(address,bool) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#718-726)
+	- PepeBonk.shouldSwapBack() (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#596-601)
+	- PepeBonk.takeFee(address,address,uint256) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#587-594)
+	- triggerAutoBuyback() (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#534)
+		- inSwap = true (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#467)
+		- inSwap = false (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#467)
+	PepeBonk.inSwap (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#466) can be used in cross function reentrancies:
+	- PepeBonk._transferFrom(address,address,uint256) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#528-551)
+	- PepeBonk.shouldAutoBuyback() (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#647-653)
+	- PepeBonk.shouldSwapBack() (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#596-601)
+	- PepeBonk.swapping() (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#467)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+DividendDistributor.distributeDividend(address) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#359-370) ignores return value by USDT.transfer(shareholder,amount) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#365)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+Reentrancy in DividendDistributor.distributeDividend(address) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#359-370):
+	External calls:
+	- USDT.transfer(shareholder,amount) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#365)
+	State variables written after the call(s):
+	- shares[shareholder].totalRealised = shares[shareholder].totalRealised.add(amount) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#367)
+	DividendDistributor.shares (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#256) can be used in cross function reentrancies:
+	- DividendDistributor.distributeDividend(address) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#359-370)
+	- DividendDistributor.getUnpaidEarnings(address) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#376-385)
+	- DividendDistributor.setShare(address,uint256) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#292-306)
+	- DividendDistributor.shares (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#256)
+	- shares[shareholder].totalExcluded = getCumulativeDividends(shares[shareholder].amount) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#368)
+	DividendDistributor.shares (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#256) can be used in cross function reentrancies:
+	- DividendDistributor.distributeDividend(address) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#359-370)
+	- DividendDistributor.getUnpaidEarnings(address) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#376-385)
+	- DividendDistributor.setShare(address,uint256) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#292-306)
+	- DividendDistributor.shares (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#256)
+Reentrancy in DividendDistributor.process(uint256) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#328-352):
+	External calls:
+	- distributeDividend(shareholders[currentIndex]) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#344)
+		- USDT.transfer(shareholder,amount) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#365)
+	State variables written after the call(s):
+	- currentIndex = 0 (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#340)
+	DividendDistributor.currentIndex (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#267) can be used in cross function reentrancies:
+	- DividendDistributor.process(uint256) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#328-352)
+	- currentIndex ++ (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#349)
+	DividendDistributor.currentIndex (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#267) can be used in cross function reentrancies:
+	- DividendDistributor.process(uint256) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#328-352)
+Reentrancy in DividendDistributor.setShare(address,uint256) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#292-306):
+	External calls:
+	- distributeDividend(shareholder) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#294)
+		- USDT.transfer(shareholder,amount) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#365)
+	State variables written after the call(s):
+	- shares[shareholder].amount = amount (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#304)
+	DividendDistributor.shares (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#256) can be used in cross function reentrancies:
+	- DividendDistributor.distributeDividend(address) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#359-370)
+	- DividendDistributor.getUnpaidEarnings(address) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#376-385)
+	- DividendDistributor.setShare(address,uint256) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#292-306)
+	- DividendDistributor.shares (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#256)
+	- shares[shareholder].totalExcluded = getCumulativeDividends(shares[shareholder].amount) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#305)
+	DividendDistributor.shares (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#256) can be used in cross function reentrancies:
+	- DividendDistributor.distributeDividend(address) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#359-370)
+	- DividendDistributor.getUnpaidEarnings(address) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#376-385)
+	- DividendDistributor.setShare(address,uint256) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#292-306)
+	- DividendDistributor.shares (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#256)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+PepeBonk.swapBack() (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#603-645) ignores return value by router.addLiquidityETH{value: amountETHLiquidity}(address(this),amountToLiquify,0,0,autoLiquidityReceiver,block.timestamp) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#635-642)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+DividendDistributor.setDistributionCriteria(uint256,uint256) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#287-290) should emit an event for: 
+	- minPeriod = _minPeriod (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#288) 
+	- minDistribution = _minDistribution (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#289) 
+PepeBonk.setAutoBuybackSettings(bool,uint256,uint256,uint256) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#687-694) should emit an event for: 
+	- autoBuybackCap = _cap (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#689) 
+	- autoBuybackAmount = _amount (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#691) 
+PepeBonk.setBuybackMultiplierSettings(uint256,uint256,uint256) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#696-701) should emit an event for: 
+	- buybackMultiplierNumerator = numerator (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#698) 
+	- buybackMultiplierDenominator = denominator (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#699) 
+	- buybackMultiplierLength = length (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#700) 
+PepeBonk.setTxLimit(uint256) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#713-716) should emit an event for: 
+	- _maxTxAmount = amount (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#715) 
+PepeBonk.setFees(uint256,uint256,uint256,uint256,uint256) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#736-744) should emit an event for: 
+	- liquidityFee = _liquidityFee (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#737) 
+	- reflectionFee = _reflectionFee (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#739) 
+	- marketingFee = _marketingFee (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#740) 
+	- totalFee = _liquidityFee.add(_buybackFee).add(_reflectionFee).add(_marketingFee) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#741) 
+	- feeDenominator = _feeDenominator (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#742) 
+PepeBonk.setSwapBackSettings(bool,uint256) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#751-754) should emit an event for: 
+	- swapThreshold = _amount (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#753) 
+PepeBonk.setTargetLiquidity(uint256,uint256) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#756-759) should emit an event for: 
+	- targetLiquidity = _target (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#757) 
+	- targetLiquidityDenominator = _denominator (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#758) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+Auth.transferOwnership(address).adr (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#169) lacks a zero-check on :
+		- owner = adr (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#170)
+PepeBonk.setFeeReceivers(address,address)._autoLiquidityReceiver (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#746) lacks a zero-check on :
+		- autoLiquidityReceiver = _autoLiquidityReceiver (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#747)
+PepeBonk.setFeeReceivers(address,address)._marketingFeeReceiver (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#746) lacks a zero-check on :
+		- marketingFeeReceiver = _marketingFeeReceiver (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#748)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+DividendDistributor.distributeDividend(address) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#359-370) has external calls inside a loop: USDT.transfer(shareholder,amount) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#365)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation/#calls-inside-a-loop
+
+Reentrancy in PepeBonk.BONK(uint256,bool) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#655-661):
+	External calls:
+	- buyTokens(amount,DEAD) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#656)
+		- router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: amount}(0,path,to,block.timestamp) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#679-684)
+	State variables written after the call(s):
+	- buybackMultiplierTriggeredAt = block.timestamp (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#658)
+Reentrancy in DividendDistributor.deposit() (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#308-326):
+	External calls:
+	- router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: msg.value}(0,path,address(this),block.timestamp) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#315-320)
+	State variables written after the call(s):
+	- dividendsPerShare = dividendsPerShare.add(dividendsPerShareAccuracyFactor.mul(amount).div(totalShares)) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#325)
+	- totalDividends = totalDividends.add(amount) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#324)
+Reentrancy in DividendDistributor.distributeDividend(address) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#359-370):
+	External calls:
+	- USDT.transfer(shareholder,amount) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#365)
+	State variables written after the call(s):
+	- shareholderClaims[shareholder] = block.timestamp (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#366)
+Reentrancy in DividendDistributor.setShare(address,uint256) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#292-306):
+	External calls:
+	- distributeDividend(shareholder) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#294)
+		- USDT.transfer(shareholder,amount) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#365)
+	State variables written after the call(s):
+	- addShareholder(shareholder) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#298)
+		- shareholderIndexes[shareholder] = shareholders.length (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#392)
+	- removeShareholder(shareholder) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#300)
+		- shareholderIndexes[shareholders[shareholders.length - 1]] = shareholderIndexes[shareholder] (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#398)
+	- addShareholder(shareholder) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#298)
+		- shareholders.push(shareholder) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#393)
+	- removeShareholder(shareholder) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#300)
+		- shareholders[shareholderIndexes[shareholder]] = shareholders[shareholders.length - 1] (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#397)
+		- shareholders.pop() (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#399)
+	- totalShares = totalShares.sub(shares[shareholder].amount).add(amount) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#303)
+Reentrancy in PepeBonk.triggerAutoBuyback() (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#667-672):
+	External calls:
+	- buyTokens(autoBuybackAmount,DEAD) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#668)
+		- router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: amount}(0,path,to,block.timestamp) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#679-684)
+	State variables written after the call(s):
+	- autoBuybackAccumulator = autoBuybackAccumulator.add(autoBuybackAmount) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#670)
+	- autoBuybackBlockLast = block.number (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#669)
+	- autoBuybackEnabled = false (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#671)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in PepeBonk.BONK(uint256,bool) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#655-661):
+	External calls:
+	- buyTokens(amount,DEAD) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#656)
+		- router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: amount}(0,path,to,block.timestamp) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#679-684)
+	Event emitted after the call(s):
+	- BuybackMultiplierActive(buybackMultiplierLength) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#659)
+Reentrancy in PepeBonk._transferFrom(address,address,uint256) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#528-551):
+	External calls:
+	- swapBack() (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#533)
+		- router.swapExactTokensForETHSupportingFeeOnTransferTokens(amountToSwap,0,path,address(this),block.timestamp) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#613-619)
+		- distributor.deposit{value: amountETHReflection}() (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#629)
+		- router.addLiquidityETH{value: amountETHLiquidity}(address(this),amountToLiquify,0,0,autoLiquidityReceiver,block.timestamp) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#635-642)
+	- triggerAutoBuyback() (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#534)
+		- router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: amount}(0,path,to,block.timestamp) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#679-684)
+	- distributor.setShare(sender,_balances[sender]) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#544)
+	- distributor.setShare(recipient,_balances[recipient]) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#545)
+	- distributor.process(distributorGas) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#547)
+	External calls sending eth:
+	- swapBack() (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#533)
+		- distributor.deposit{value: amountETHReflection}() (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#629)
+		- address(marketingFeeReceiver).transfer(amountETHMarketing) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#630)
+		- router.addLiquidityETH{value: amountETHLiquidity}(address(this),amountToLiquify,0,0,autoLiquidityReceiver,block.timestamp) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#635-642)
+	- triggerAutoBuyback() (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#534)
+		- router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: amount}(0,path,to,block.timestamp) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#679-684)
+	Event emitted after the call(s):
+	- Transfer(sender,recipient,amountReceived) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#549)
+Reentrancy in PepeBonk._transferFrom(address,address,uint256) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#528-551):
+	External calls:
+	- swapBack() (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#533)
+		- router.swapExactTokensForETHSupportingFeeOnTransferTokens(amountToSwap,0,path,address(this),block.timestamp) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#613-619)
+		- distributor.deposit{value: amountETHReflection}() (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#629)
+		- router.addLiquidityETH{value: amountETHLiquidity}(address(this),amountToLiquify,0,0,autoLiquidityReceiver,block.timestamp) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#635-642)
+	- triggerAutoBuyback() (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#534)
+		- router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: amount}(0,path,to,block.timestamp) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#679-684)
+	External calls sending eth:
+	- swapBack() (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#533)
+		- distributor.deposit{value: amountETHReflection}() (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#629)
+		- address(marketingFeeReceiver).transfer(amountETHMarketing) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#630)
+		- router.addLiquidityETH{value: amountETHLiquidity}(address(this),amountToLiquify,0,0,autoLiquidityReceiver,block.timestamp) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#635-642)
+	- triggerAutoBuyback() (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#534)
+		- router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: amount}(0,path,to,block.timestamp) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#679-684)
+	Event emitted after the call(s):
+	- Transfer(sender,address(this),feeAmount) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#591)
+		- amountReceived = takeFee(sender,recipient,amount) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#540)
+Reentrancy in PepeBonk.swapBack() (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#603-645):
+	External calls:
+	- router.swapExactTokensForETHSupportingFeeOnTransferTokens(amountToSwap,0,path,address(this),block.timestamp) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#613-619)
+	- distributor.deposit{value: amountETHReflection}() (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#629)
+	- router.addLiquidityETH{value: amountETHLiquidity}(address(this),amountToLiquify,0,0,autoLiquidityReceiver,block.timestamp) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#635-642)
+	External calls sending eth:
+	- distributor.deposit{value: amountETHReflection}() (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#629)
+	- address(marketingFeeReceiver).transfer(amountETHMarketing) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#630)
+	- router.addLiquidityETH{value: amountETHLiquidity}(address(this),amountToLiquify,0,0,autoLiquidityReceiver,block.timestamp) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#635-642)
+	Event emitted after the call(s):
+	- AutoLiquify(amountETHLiquidity,amountToLiquify) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#643)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+DividendDistributor.shouldDistribute(address) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#354-357) uses timestamp for comparisons
+	Dangerous comparisons:
+	- shareholderClaims[shareholder] + minPeriod < block.timestamp && getUnpaidEarnings(shareholder) > minDistribution (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#355-356)
+PepeBonk.getMultipliedFee() (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#576-585) uses timestamp for comparisons
+	Dangerous comparisons:
+	- launchedAtTimestamp + 86400 > block.timestamp (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#577)
+	- buybackMultiplierTriggeredAt.add(buybackMultiplierLength) > block.timestamp (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#579)
+PepeBonk.shouldSwapBack() (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#596-601) uses timestamp for comparisons
+	Dangerous comparisons:
+	- msg.sender != pair && ! inSwap && swapEnabled && _balances[address(this)] >= swapThreshold (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#597-600)
+PepeBonk.isOverLiquified(uint256,uint256) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#778-780) uses timestamp for comparisons
+	Dangerous comparisons:
+	- getLiquidityBacking(accuracy) > target (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#779)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+PepeBonk.onlyBuybacker() (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#502) compares to a boolean constant:
+	-require(bool,string)(buyBacker[msg.sender] == true,) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#502)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#boolean-equality
+
+DividendDistributor.process(uint256) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#328-352) has costly operations inside a loop:
+	- currentIndex = 0 (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#340)
+DividendDistributor.distributeDividend(address) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#359-370) has costly operations inside a loop:
+	- totalDistributed = totalDistributed.add(amount) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#364)
+DividendDistributor.process(uint256) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#328-352) has costly operations inside a loop:
+	- currentIndex ++ (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#349)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#costly-operations-inside-a-loop
+
+PepeBonk._transferFrom(address,address,uint256) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#528-551) has a high cyclomatic complexity (12).
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#cyclomatic-complexity
+
+PepeBonk.launched() (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#703-705) is never used and should be removed
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dead-code
+
+PepeBonk._maxTxAmount (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#418) is set pre-construction with a non-constant function or state variable:
+	- _totalSupply.div(200)
+PepeBonk.swapThreshold (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#465) is set pre-construction with a non-constant function or state variable:
+	- _totalSupply / 2000
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#function-initializing-state
+
+Version constraint ^0.8.0 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- SignedImmutables
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching.
+It is used by:
+	- ^0.8.0 (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#8)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Function IDEXRouter.WETH() (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#184) is not in mixedCase
+Parameter DividendDistributor.setDistributionCriteria(uint256,uint256)._minPeriod (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#287) is not in mixedCase
+Parameter DividendDistributor.setDistributionCriteria(uint256,uint256)._minDistribution (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#287) is not in mixedCase
+Variable DividendDistributor.USDT (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#248) is not in mixedCase
+Variable DividendDistributor.WETH (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#249) is not in mixedCase
+Function PepeBonk.BONK(uint256,bool) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#655-661) is not in mixedCase
+Parameter PepeBonk.setAutoBuybackSettings(bool,uint256,uint256,uint256)._enabled (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#687) is not in mixedCase
+Parameter PepeBonk.setAutoBuybackSettings(bool,uint256,uint256,uint256)._cap (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#687) is not in mixedCase
+Parameter PepeBonk.setAutoBuybackSettings(bool,uint256,uint256,uint256)._amount (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#687) is not in mixedCase
+Parameter PepeBonk.setAutoBuybackSettings(bool,uint256,uint256,uint256)._period (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#687) is not in mixedCase
+Parameter PepeBonk.setFees(uint256,uint256,uint256,uint256,uint256)._liquidityFee (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#736) is not in mixedCase
+Parameter PepeBonk.setFees(uint256,uint256,uint256,uint256,uint256)._buybackFee (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#736) is not in mixedCase
+Parameter PepeBonk.setFees(uint256,uint256,uint256,uint256,uint256)._reflectionFee (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#736) is not in mixedCase
+Parameter PepeBonk.setFees(uint256,uint256,uint256,uint256,uint256)._marketingFee (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#736) is not in mixedCase
+Parameter PepeBonk.setFees(uint256,uint256,uint256,uint256,uint256)._feeDenominator (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#736) is not in mixedCase
+Parameter PepeBonk.setFeeReceivers(address,address)._autoLiquidityReceiver (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#746) is not in mixedCase
+Parameter PepeBonk.setFeeReceivers(address,address)._marketingFeeReceiver (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#746) is not in mixedCase
+Parameter PepeBonk.setSwapBackSettings(bool,uint256)._enabled (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#751) is not in mixedCase
+Parameter PepeBonk.setSwapBackSettings(bool,uint256)._amount (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#751) is not in mixedCase
+Parameter PepeBonk.setTargetLiquidity(uint256,uint256)._target (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#756) is not in mixedCase
+Parameter PepeBonk.setTargetLiquidity(uint256,uint256)._denominator (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#756) is not in mixedCase
+Parameter PepeBonk.setDistributionCriteria(uint256,uint256)._minPeriod (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#761) is not in mixedCase
+Parameter PepeBonk.setDistributionCriteria(uint256,uint256)._minDistribution (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#761) is not in mixedCase
+Variable PepeBonk.USDT (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#407) is not in mixedCase
+Variable PepeBonk.WETH (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#408) is not in mixedCase
+Variable PepeBonk.DEAD (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#409) is not in mixedCase
+Variable PepeBonk.ZERO (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#410) is not in mixedCase
+Variable PepeBonk.DEAD_NON_CHECKSUM (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#411) is not in mixedCase
+Constant PepeBonk._name (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#413) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant PepeBonk._symbol (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#414) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant PepeBonk._decimals (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#415) is not in UPPER_CASE_WITH_UNDERSCORES
+Variable PepeBonk._maxTxAmount (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#418) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in PepeBonk._transferFrom(address,address,uint256) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#528-551):
+	External calls:
+	- swapBack() (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#533)
+		- address(marketingFeeReceiver).transfer(amountETHMarketing) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#630)
+	External calls sending eth:
+	- swapBack() (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#533)
+		- distributor.deposit{value: amountETHReflection}() (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#629)
+		- address(marketingFeeReceiver).transfer(amountETHMarketing) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#630)
+		- router.addLiquidityETH{value: amountETHLiquidity}(address(this),amountToLiquify,0,0,autoLiquidityReceiver,block.timestamp) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#635-642)
+	- triggerAutoBuyback() (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#534)
+		- router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: amount}(0,path,to,block.timestamp) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#679-684)
+	State variables written after the call(s):
+	- _balances[sender] = _balances[sender].sub(amount,Insufficient Balance) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#538)
+	- _balances[recipient] = _balances[recipient].add(amountReceived) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#542)
+	- amountReceived = takeFee(sender,recipient,amount) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#540)
+		- _balances[address(this)] = _balances[address(this)].add(feeAmount) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#590)
+	- triggerAutoBuyback() (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#534)
+		- autoBuybackAccumulator = autoBuybackAccumulator.add(autoBuybackAmount) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#670)
+	- triggerAutoBuyback() (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#534)
+		- autoBuybackBlockLast = block.number (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#669)
+	- triggerAutoBuyback() (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#534)
+		- autoBuybackEnabled = false (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#671)
+	- triggerAutoBuyback() (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#534)
+		- inSwap = true (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#467)
+		- inSwap = false (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#467)
+	Event emitted after the call(s):
+	- Transfer(sender,address(this),feeAmount) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#591)
+		- amountReceived = takeFee(sender,recipient,amount) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#540)
+	- Transfer(sender,recipient,amountReceived) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#549)
+Reentrancy in PepeBonk.swapBack() (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#603-645):
+	External calls:
+	- address(marketingFeeReceiver).transfer(amountETHMarketing) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#630)
+	External calls sending eth:
+	- distributor.deposit{value: amountETHReflection}() (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#629)
+	- address(marketingFeeReceiver).transfer(amountETHMarketing) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#630)
+	- router.addLiquidityETH{value: amountETHLiquidity}(address(this),amountToLiquify,0,0,autoLiquidityReceiver,block.timestamp) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#635-642)
+	Event emitted after the call(s):
+	- AutoLiquify(amountETHLiquidity,amountToLiquify) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#643)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+PepeBonk.setDistributorSettings(uint256) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#765-768) uses literals with too many digits:
+	- require(bool)(gas < 17500000) (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#766)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+PepeBonk.USDT (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#407) is never used in PepeBonk (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#403-785)
+PepeBonk.DEAD_NON_CHECKSUM (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#411) is never used in PepeBonk (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#403-785)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-state-variable
+
+DividendDistributor.USDT (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#248) should be constant 
+DividendDistributor.WETH (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#249) should be constant 
+DividendDistributor.dividendsPerShareAccuracyFactor (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#262) should be constant 
+PepeBonk.DEAD (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#409) should be constant 
+PepeBonk.DEAD_NON_CHECKSUM (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#411) should be constant 
+PepeBonk.USDT (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#407) should be constant 
+PepeBonk.ZERO (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#410) should be constant 
+PepeBonk._totalSupply (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#417) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+
+DividendDistributor._token (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#240) should be immutable 
+DividendDistributor.router (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#250) should be immutable 
+PepeBonk.WETH (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#408) should be immutable 
+PepeBonk.distributor (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#459) should be immutable 
+PepeBonk.distributorAddress (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#460) should be immutable 
+PepeBonk.pair (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#441) should be immutable 
+PepeBonk.router (0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol#440) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+./0x28eeac83b9c843ef2fc6c78bcd860cab46aa88d0.sol analyzed (8 contracts with 94 detectors), 93 result(s) found
+
+real	0m3.481s
+user	0m3.227s
+sys	0m0.256s

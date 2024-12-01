@@ -1,0 +1,132 @@
+'solc --version' running
+'solc ./0x356598a62aed83950e724db6e62b10b1027e33e2.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+Reentrancy in RuneLock.lockTokens(address,uint256,uint256) (0x356598a62aed83950e724db6e62b10b1027e33e2.sol#150-190):
+	External calls:
+	- (success,None) = address(fee1Address).call{value: lockCost * 98 / 100}() (0x356598a62aed83950e724db6e62b10b1027e33e2.sol#177)
+	- (success,None) = address(fee2Address).call{value: lockCost * 2 / 100}() (0x356598a62aed83950e724db6e62b10b1027e33e2.sol#178)
+	- token.transferFrom(msg.sender,address(this),_amountToLock) (0x356598a62aed83950e724db6e62b10b1027e33e2.sol#181)
+	External calls sending eth:
+	- (success,None) = address(fee1Address).call{value: lockCost * 98 / 100}() (0x356598a62aed83950e724db6e62b10b1027e33e2.sol#177)
+	- (success,None) = address(fee2Address).call{value: lockCost * 2 / 100}() (0x356598a62aed83950e724db6e62b10b1027e33e2.sol#178)
+	State variables written after the call(s):
+	- _lockTokens(_tokenAddress,_amountToLock,_releaseTime) (0x356598a62aed83950e724db6e62b10b1027e33e2.sol#182)
+		- beneficiaryToReleaseTime[msg.sender][_tokenAddress] = _releaseTime (0x356598a62aed83950e724db6e62b10b1027e33e2.sol#128)
+	RuneLock.beneficiaryToReleaseTime (0x356598a62aed83950e724db6e62b10b1027e33e2.sol#111) can be used in cross function reentrancies:
+	- RuneLock._lockTokens(address,uint256,uint256) (0x356598a62aed83950e724db6e62b10b1027e33e2.sol#122-129)
+	- RuneLock.lockTokens(address,uint256,uint256) (0x356598a62aed83950e724db6e62b10b1027e33e2.sol#150-190)
+	- RuneLock.release(address) (0x356598a62aed83950e724db6e62b10b1027e33e2.sol#192-213)
+	- RuneLock.releaseTime(address,address) (0x356598a62aed83950e724db6e62b10b1027e33e2.sol#215-221)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+RuneLock._releaseTokens(address) (0x356598a62aed83950e724db6e62b10b1027e33e2.sol#131-135) ignores return value by IERC20(_tokenAddress).transfer(msg.sender,_amount) (0x356598a62aed83950e724db6e62b10b1027e33e2.sol#133)
+RuneLock.lockTokens(address,uint256,uint256) (0x356598a62aed83950e724db6e62b10b1027e33e2.sol#150-190) ignores return value by token.transferFrom(msg.sender,address(this),_amountToLock) (0x356598a62aed83950e724db6e62b10b1027e33e2.sol#181)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+Reentrancy in RuneLock._releaseTokens(address) (0x356598a62aed83950e724db6e62b10b1027e33e2.sol#131-135):
+	External calls:
+	- IERC20(_tokenAddress).transfer(msg.sender,_amount) (0x356598a62aed83950e724db6e62b10b1027e33e2.sol#133)
+	State variables written after the call(s):
+	- beneficiaryToLockedTokens[msg.sender][_tokenAddress] = 0 (0x356598a62aed83950e724db6e62b10b1027e33e2.sol#134)
+	RuneLock.beneficiaryToLockedTokens (0x356598a62aed83950e724db6e62b10b1027e33e2.sol#110) can be used in cross function reentrancies:
+	- RuneLock._lockTokens(address,uint256,uint256) (0x356598a62aed83950e724db6e62b10b1027e33e2.sol#122-129)
+	- RuneLock._releaseTokens(address) (0x356598a62aed83950e724db6e62b10b1027e33e2.sol#131-135)
+	- RuneLock.lockedTokenAmount(address,address) (0x356598a62aed83950e724db6e62b10b1027e33e2.sol#223-229)
+	- RuneLock.release(address) (0x356598a62aed83950e724db6e62b10b1027e33e2.sol#192-213)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+RuneLock.lockTokens(address,uint256,uint256).success (0x356598a62aed83950e724db6e62b10b1027e33e2.sol#176) is written in both
+	(success,None) = address(fee1Address).call{value: lockCost * 98 / 100}() (0x356598a62aed83950e724db6e62b10b1027e33e2.sol#177)
+	(success,None) = address(fee2Address).call{value: lockCost * 2 / 100}() (0x356598a62aed83950e724db6e62b10b1027e33e2.sol#178)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#write-after-write
+
+RuneLock.updateOwner(address) (0x356598a62aed83950e724db6e62b10b1027e33e2.sol#137-139) should emit an event for: 
+	- owner = _newOwner (0x356598a62aed83950e724db6e62b10b1027e33e2.sol#138) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-access-control
+
+RuneLock.updateOwner(address)._newOwner (0x356598a62aed83950e724db6e62b10b1027e33e2.sol#137) lacks a zero-check on :
+		- owner = _newOwner (0x356598a62aed83950e724db6e62b10b1027e33e2.sol#138)
+RuneLock.updateFeeAddress(address)._newFeeAddress (0x356598a62aed83950e724db6e62b10b1027e33e2.sol#141) lacks a zero-check on :
+		- fee1Address = _newFeeAddress (0x356598a62aed83950e724db6e62b10b1027e33e2.sol#142)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in RuneLock.lockTokens(address,uint256,uint256) (0x356598a62aed83950e724db6e62b10b1027e33e2.sol#150-190):
+	External calls:
+	- (success,None) = address(fee1Address).call{value: lockCost * 98 / 100}() (0x356598a62aed83950e724db6e62b10b1027e33e2.sol#177)
+	- (success,None) = address(fee2Address).call{value: lockCost * 2 / 100}() (0x356598a62aed83950e724db6e62b10b1027e33e2.sol#178)
+	- token.transferFrom(msg.sender,address(this),_amountToLock) (0x356598a62aed83950e724db6e62b10b1027e33e2.sol#181)
+	External calls sending eth:
+	- (success,None) = address(fee1Address).call{value: lockCost * 98 / 100}() (0x356598a62aed83950e724db6e62b10b1027e33e2.sol#177)
+	- (success,None) = address(fee2Address).call{value: lockCost * 2 / 100}() (0x356598a62aed83950e724db6e62b10b1027e33e2.sol#178)
+	State variables written after the call(s):
+	- _lockTokens(_tokenAddress,_amountToLock,_releaseTime) (0x356598a62aed83950e724db6e62b10b1027e33e2.sol#182)
+		- beneficiaryToLockedTokens[msg.sender][_tokenAddress] += _amountToLock (0x356598a62aed83950e724db6e62b10b1027e33e2.sol#127)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in RuneLock.lockTokens(address,uint256,uint256) (0x356598a62aed83950e724db6e62b10b1027e33e2.sol#150-190):
+	External calls:
+	- (success,None) = address(fee1Address).call{value: lockCost * 98 / 100}() (0x356598a62aed83950e724db6e62b10b1027e33e2.sol#177)
+	- (success,None) = address(fee2Address).call{value: lockCost * 2 / 100}() (0x356598a62aed83950e724db6e62b10b1027e33e2.sol#178)
+	- token.transferFrom(msg.sender,address(this),_amountToLock) (0x356598a62aed83950e724db6e62b10b1027e33e2.sol#181)
+	External calls sending eth:
+	- (success,None) = address(fee1Address).call{value: lockCost * 98 / 100}() (0x356598a62aed83950e724db6e62b10b1027e33e2.sol#177)
+	- (success,None) = address(fee2Address).call{value: lockCost * 2 / 100}() (0x356598a62aed83950e724db6e62b10b1027e33e2.sol#178)
+	Event emitted after the call(s):
+	- TokensLocked(_tokenAddress,msg.sender,_releaseTime,_amountToLock) (0x356598a62aed83950e724db6e62b10b1027e33e2.sol#183-188)
+Reentrancy in RuneLock.release(address) (0x356598a62aed83950e724db6e62b10b1027e33e2.sol#192-213):
+	External calls:
+	- _releaseTokens(_tokenAddress) (0x356598a62aed83950e724db6e62b10b1027e33e2.sol#210)
+		- IERC20(_tokenAddress).transfer(msg.sender,_amount) (0x356598a62aed83950e724db6e62b10b1027e33e2.sol#133)
+	Event emitted after the call(s):
+	- TokensReleased(_tokenAddress,msg.sender,_amountToUnlock) (0x356598a62aed83950e724db6e62b10b1027e33e2.sol#211)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+RuneLock.lockTokens(address,uint256,uint256) (0x356598a62aed83950e724db6e62b10b1027e33e2.sol#150-190) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(_releaseTime > block.timestamp,TokenLock: release time is before current time) (0x356598a62aed83950e724db6e62b10b1027e33e2.sol#155-158)
+RuneLock.release(address) (0x356598a62aed83950e724db6e62b10b1027e33e2.sol#192-213) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(beneficiaryToReleaseTime[msg.sender][_tokenAddress] <= block.timestamp,TokenLock: Tokens not yet available for release) (0x356598a62aed83950e724db6e62b10b1027e33e2.sol#205-209)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Version constraint ^0.8.0 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- SignedImmutables
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching.
+It is used by:
+	- ^0.8.0 (0x356598a62aed83950e724db6e62b10b1027e33e2.sol#2)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in RuneLock.lockTokens(address,uint256,uint256) (0x356598a62aed83950e724db6e62b10b1027e33e2.sol#150-190):
+	- (success,None) = address(fee1Address).call{value: lockCost * 98 / 100}() (0x356598a62aed83950e724db6e62b10b1027e33e2.sol#177)
+	- (success,None) = address(fee2Address).call{value: lockCost * 2 / 100}() (0x356598a62aed83950e724db6e62b10b1027e33e2.sol#178)
+Low level call in RuneLock.withdraw() (0x356598a62aed83950e724db6e62b10b1027e33e2.sol#231-233):
+	- (success,None) = address(owner).call{value: address(this).balance}() (0x356598a62aed83950e724db6e62b10b1027e33e2.sol#232)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Parameter RuneLock.updateOwner(address)._newOwner (0x356598a62aed83950e724db6e62b10b1027e33e2.sol#137) is not in mixedCase
+Parameter RuneLock.updateFeeAddress(address)._newFeeAddress (0x356598a62aed83950e724db6e62b10b1027e33e2.sol#141) is not in mixedCase
+Parameter RuneLock.updateLockCost(uint256)._newCost (0x356598a62aed83950e724db6e62b10b1027e33e2.sol#145) is not in mixedCase
+Parameter RuneLock.lockTokens(address,uint256,uint256)._tokenAddress (0x356598a62aed83950e724db6e62b10b1027e33e2.sol#151) is not in mixedCase
+Parameter RuneLock.lockTokens(address,uint256,uint256)._amountToLock (0x356598a62aed83950e724db6e62b10b1027e33e2.sol#152) is not in mixedCase
+Parameter RuneLock.lockTokens(address,uint256,uint256)._releaseTime (0x356598a62aed83950e724db6e62b10b1027e33e2.sol#153) is not in mixedCase
+Parameter RuneLock.release(address)._tokenAddress (0x356598a62aed83950e724db6e62b10b1027e33e2.sol#192) is not in mixedCase
+Parameter RuneLock.releaseTime(address,address)._beneficiary (0x356598a62aed83950e724db6e62b10b1027e33e2.sol#215) is not in mixedCase
+Parameter RuneLock.releaseTime(address,address)._tokenAddress (0x356598a62aed83950e724db6e62b10b1027e33e2.sol#215) is not in mixedCase
+Parameter RuneLock.lockedTokenAmount(address,address)._beneficiary (0x356598a62aed83950e724db6e62b10b1027e33e2.sol#223) is not in mixedCase
+Parameter RuneLock.lockedTokenAmount(address,address)._tokenAddress (0x356598a62aed83950e724db6e62b10b1027e33e2.sol#223) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+RuneLock.fee2Address (0x356598a62aed83950e724db6e62b10b1027e33e2.sol#94) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+./0x356598a62aed83950e724db6e62b10b1027e33e2.sol analyzed (2 contracts with 94 detectors), 28 result(s) found
+
+real	0m2.139s
+user	0m1.873s
+sys	0m0.268s

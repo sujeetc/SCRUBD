@@ -1,0 +1,426 @@
+'solc --version' running
+'solc ./0x2e09a70dca6ab05505b26382003912783e588f9c.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x2e09a70dca6ab05505b26382003912783e588f9c.sol:
+Warning: Return value of low-level calls not used.
+   --> ./0x2e09a70dca6ab05505b26382003912783e588f9c.sol:704:67:
+    |
+704 |         if (devBalance > 0 && devBalance < address(this).balance) dev.call{ value: devBalance }("");
+    |                                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: Return value of low-level calls not used.
+   --> ./0x2e09a70dca6ab05505b26382003912783e588f9c.sol:705:40:
+    |
+705 |         if (address(this).balance > 0) marketing.call{ value: address(this).balance }("");
+    |                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: Unused function parameter. Remove or comment out the variable name to silence this warning.
+   --> ./0x2e09a70dca6ab05505b26382003912783e588f9c.sol:767:84:
+    |
+767 |  ... ddress recipient, uint256 rAmount, uint256 tAmount, uint256 tTransferAmount, uint256  ...
+    |                                         ^^^^^^^^^^^^^^^
+
+Warning: Unused function parameter. Remove or comment out the variable name to silence this warning.
+   --> ./0x2e09a70dca6ab05505b26382003912783e588f9c.sol:767:101:
+    |
+767 |  ...  uint256 rAmount, uint256 tAmount, uint256 tTransferAmount, uint256 rTransferAmount) private  ...
+    |                                         ^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: Unused function parameter. Remove or comment out the variable name to silence this warning.
+   --> ./0x2e09a70dca6ab05505b26382003912783e588f9c.sol:772:86:
+    |
+772 |  ... ddress recipient, uint256 rAmount, uint256 tAmount, uint256 tTransferAmount, uint256  ...
+    |                                         ^^^^^^^^^^^^^^^
+
+Warning: Unused function parameter. Remove or comment out the variable name to silence this warning.
+   --> ./0x2e09a70dca6ab05505b26382003912783e588f9c.sol:778:105:
+    |
+778 |  ...  uint256 rAmount, uint256 tAmount, uint256 tTransferAmount, uint256 rTransferAmount) private  ...
+    |                                         ^^^^^^^^^^^^^^^^^^^^^^^
+
+Warning: Contract code size exceeds 24576 bytes (a limit introduced in Spurious Dragon). This contract may not be deployable on mainnet. Consider enabling the optimizer (with a low "runs" value!), turning off revert strings, or using libraries.
+   --> ./0x2e09a70dca6ab05505b26382003912783e588f9c.sol:270:1:
+    |
+270 | contract PhantomProject is Ownable {
+    | ^ (Relevant source part starts here and spans across multiple lines).
+
+
+
+PhantomProject.swapAndLiquify(uint256) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#685-709) sends eth to arbitrary user
+	Dangerous calls:
+	- dev.call{value: devBalance}() (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#704)
+	- marketing.call{value: address(this).balance}() (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#705)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+Reentrancy in PhantomProject._transfer(address,address,uint256) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#631-683):
+	External calls:
+	- swapAndLiquify(contractTokenBalance) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#644)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,marketing,block.timestamp) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#734-741)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#720-726)
+		- dev.call{value: devBalance}() (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#704)
+		- marketing.call{value: address(this).balance}() (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#705)
+	- sale_output_estimate = uniswapV2Router.getAmountsOut(amount,path) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#672)
+	External calls sending eth:
+	- swapAndLiquify(contractTokenBalance) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#644)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,marketing,block.timestamp) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#734-741)
+		- dev.call{value: devBalance}() (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#704)
+		- marketing.call{value: address(this).balance}() (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#705)
+	State variables written after the call(s):
+	- _tokenTransfer(from,to,amount,feeType,feeMultiplicator) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#682)
+		- _pendingDevelopmentFees = _pendingDevelopmentFees.add(tDevelopment) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#595)
+	PhantomProject._pendingDevelopmentFees (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#318) can be used in cross function reentrancies:
+	- PhantomProject._pendingDevelopmentFees (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#318)
+	- PhantomProject._takeOperations(uint256,uint256,uint256) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#585-613)
+	- PhantomProject.swapAndLiquify(uint256) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#685-709)
+	- _tokenTransfer(from,to,amount,feeType,feeMultiplicator) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#682)
+		- _pendingLiquidityFees = _pendingLiquidityFees.add(tLiquidity) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#596)
+	PhantomProject._pendingLiquidityFees (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#319) can be used in cross function reentrancies:
+	- PhantomProject._pendingLiquidityFees (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#319)
+	- PhantomProject._takeOperations(uint256,uint256,uint256) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#585-613)
+	- PhantomProject.swapAndLiquify(uint256) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#685-709)
+	- _tokenTransfer(from,to,amount,feeType,feeMultiplicator) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#682)
+		- _rOwned[sender] = _rOwned[sender].sub(rAmount) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#768)
+		- _rOwned[sender] = _rOwned[sender].sub(rAmount) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#773)
+		- _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#769)
+		- _rOwned[sender] = _rOwned[sender].sub(rAmount) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#786)
+		- _rOwned[sender] = _rOwned[sender].sub(rAmount) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#780)
+		- _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#781)
+		- _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#775)
+		- _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#788)
+		- _rOwned[address(this)] = _rOwned[address(this)].add(tTaxes.mul(currentRate)) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#603)
+		- _rOwned[_burnPool] = _rOwned[_burnPool].add(tBurn.mul(currentRate)) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#608)
+	PhantomProject._rOwned (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#273) can be used in cross function reentrancies:
+	- PhantomProject._getCurrentSupply() (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#573-583)
+	- PhantomProject._takeOperations(uint256,uint256,uint256) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#585-613)
+	- PhantomProject._transferBothExcluded(address,address,uint256,uint256,uint256,uint256) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#784-789)
+	- PhantomProject._transferFromExcluded(address,address,uint256,uint256,uint256,uint256) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#778-782)
+	- PhantomProject._transferStandard(address,address,uint256,uint256,uint256,uint256) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#767-770)
+	- PhantomProject._transferToExcluded(address,address,uint256,uint256,uint256,uint256) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#772-776)
+	- PhantomProject.airdrop(address[],uint256[]) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#433-446)
+	- PhantomProject.balanceOf(address) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#390-393)
+	- PhantomProject.constructor(address,address,uint256[],uint256[]) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#344-372)
+	- PhantomProject.excludeFromReward(address) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#471-478)
+	- PhantomProject.initialBurn(uint256) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#459-469)
+	- _tokenTransfer(from,to,amount,feeType,feeMultiplicator) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#682)
+		- _rTotal = _rTotal.sub(rFee) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#564)
+	PhantomProject._rTotal (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#291) can be used in cross function reentrancies:
+	- PhantomProject._getCurrentSupply() (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#573-583)
+	- PhantomProject._reflectFee(uint256,uint256) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#563-566)
+	- PhantomProject.constructor(address,address,uint256[],uint256[]) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#344-372)
+	- PhantomProject.tokenFromReflection(uint256) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#448-452)
+	- _tokenTransfer(from,to,amount,feeType,feeMultiplicator) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#682)
+		- _tOwned[sender] = _tOwned[sender].sub(tAmount) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#779)
+		- _tOwned[sender] = _tOwned[sender].sub(tAmount) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#785)
+		- _tOwned[recipient] = _tOwned[recipient].add(tTransferAmount) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#774)
+		- _tOwned[recipient] = _tOwned[recipient].add(tTransferAmount) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#787)
+		- _tOwned[address(this)] = _tOwned[address(this)].add(tTaxes) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#604)
+		- _tOwned[_burnPool] = _tOwned[_burnPool].add(tBurn) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#609)
+	PhantomProject._tOwned (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#274) can be used in cross function reentrancies:
+	- PhantomProject._getCurrentSupply() (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#573-583)
+	- PhantomProject._takeOperations(uint256,uint256,uint256) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#585-613)
+	- PhantomProject._transferBothExcluded(address,address,uint256,uint256,uint256,uint256) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#784-789)
+	- PhantomProject._transferFromExcluded(address,address,uint256,uint256,uint256,uint256) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#778-782)
+	- PhantomProject._transferToExcluded(address,address,uint256,uint256,uint256,uint256) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#772-776)
+	- PhantomProject.balanceOf(address) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#390-393)
+	- PhantomProject.excludeFromReward(address) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#471-478)
+	- PhantomProject.includeInReward(address) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#484-495)
+	- PhantomProject.initialBurn(uint256) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#459-469)
+Reentrancy in PhantomProject.swapAndLiquify(uint256) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#685-709):
+	External calls:
+	- swapTokensForEth(totalETHSwap) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#696)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#720-726)
+	- addLiquidity(liquidityHalfTokenPart,liquidityBalance) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#702)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,marketing,block.timestamp) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#734-741)
+	- dev.call{value: devBalance}() (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#704)
+	- marketing.call{value: address(this).balance}() (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#705)
+	External calls sending eth:
+	- addLiquidity(liquidityHalfTokenPart,liquidityBalance) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#702)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,marketing,block.timestamp) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#734-741)
+	- dev.call{value: devBalance}() (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#704)
+	- marketing.call{value: address(this).balance}() (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#705)
+	State variables written after the call(s):
+	- _pendingDevelopmentFees = 0 (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#707)
+	PhantomProject._pendingDevelopmentFees (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#318) can be used in cross function reentrancies:
+	- PhantomProject._pendingDevelopmentFees (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#318)
+	- PhantomProject._takeOperations(uint256,uint256,uint256) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#585-613)
+	- PhantomProject.swapAndLiquify(uint256) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#685-709)
+	- _pendingLiquidityFees = 0 (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#708)
+	PhantomProject._pendingLiquidityFees (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#319) can be used in cross function reentrancies:
+	- PhantomProject._pendingLiquidityFees (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#319)
+	- PhantomProject._takeOperations(uint256,uint256,uint256) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#585-613)
+	- PhantomProject.swapAndLiquify(uint256) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#685-709)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+PhantomProject.calculateFee(uint256,uint256,uint256) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#615-617) performs a multiplication on the result of a division:
+	- _amount.mul(_taxRate).div(10 ** 4).mul(_feeMultiplicator).div(10) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#616)
+PhantomProject.swapAndLiquify(uint256) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#685-709) performs a multiplication on the result of a division:
+	- liquidityHalfPart = liquidityPart.div(2) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#690)
+	- liquidityBalance = liquidityHalfPart.mul(newBalance).div(totalETHSwap) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#700)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+PhantomProject.swapAndLiquify(uint256) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#685-709) ignores return value by dev.call{value: devBalance}() (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#704)
+PhantomProject.swapAndLiquify(uint256) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#685-709) ignores return value by marketing.call{value: address(this).balance}() (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#705)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-low-level-calls
+
+PhantomProject.addLiquidity(uint256,uint256) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#729-742) ignores return value by uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,marketing,block.timestamp) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#734-741)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+PhantomProject.allowance(address,address).owner (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#400) shadows:
+	- Ownable.owner() (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#189-191) (function)
+PhantomProject._approve(address,address,uint256).owner (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#623) shadows:
+	- Ownable.owner() (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#189-191) (function)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#local-variable-shadowing
+
+PhantomProject.setTaxes(uint256[],uint256[]) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#505-543) should emit an event for: 
+	- _taxFeeSell = _taxSize (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#513) 
+	- _taxFeeBuy = _taxSize (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#516) 
+	- _marketingFeeBuy = _taxSize (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#519) 
+	- _marketingFeeSell = _taxSize (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#522) 
+	- _burnFeeBuy = _taxSize (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#525) 
+	- _burnFeeSell = _taxSize (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#528) 
+	- _liquidityFeeBuy = _taxSize (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#531) 
+	- _liquidityFeeSell = _taxSize (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#534) 
+	- _cooldownPeriod = _taxSize (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#540) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+PhantomProject.constructor(address,address,uint256[],uint256[])._devWallet (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#344) lacks a zero-check on :
+		- dev = _devWallet (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#345)
+PhantomProject.constructor(address,address,uint256[],uint256[])._marketingWallet (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#344) lacks a zero-check on :
+		- marketing = _marketingWallet (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#346)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in PhantomProject._transfer(address,address,uint256) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#631-683):
+	External calls:
+	- swapAndLiquify(contractTokenBalance) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#644)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,marketing,block.timestamp) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#734-741)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#720-726)
+		- dev.call{value: devBalance}() (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#704)
+		- marketing.call{value: address(this).balance}() (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#705)
+	External calls sending eth:
+	- swapAndLiquify(contractTokenBalance) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#644)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,marketing,block.timestamp) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#734-741)
+		- dev.call{value: devBalance}() (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#704)
+		- marketing.call{value: address(this).balance}() (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#705)
+	State variables written after the call(s):
+	- _lastTX[from] = block.timestamp (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#666)
+	- _lastTX[to] = block.timestamp (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#678)
+Reentrancy in PhantomProject._transfer(address,address,uint256) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#631-683):
+	External calls:
+	- swapAndLiquify(contractTokenBalance) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#644)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,marketing,block.timestamp) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#734-741)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#720-726)
+		- dev.call{value: devBalance}() (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#704)
+		- marketing.call{value: address(this).balance}() (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#705)
+	- sale_output_estimate = uniswapV2Router.getAmountsOut(amount,path) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#672)
+	External calls sending eth:
+	- swapAndLiquify(contractTokenBalance) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#644)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,marketing,block.timestamp) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#734-741)
+		- dev.call{value: devBalance}() (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#704)
+		- marketing.call{value: address(this).balance}() (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#705)
+	State variables written after the call(s):
+	- _tokenTransfer(from,to,amount,feeType,feeMultiplicator) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#682)
+		- _tFeeTotal = _tFeeTotal.add(tFee) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#565)
+Reentrancy in PhantomProject.swapAndLiquify(uint256) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#685-709):
+	External calls:
+	- swapTokensForEth(totalETHSwap) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#696)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#720-726)
+	- addLiquidity(liquidityHalfTokenPart,liquidityBalance) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#702)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,marketing,block.timestamp) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#734-741)
+	External calls sending eth:
+	- addLiquidity(liquidityHalfTokenPart,liquidityBalance) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#702)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,marketing,block.timestamp) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#734-741)
+	State variables written after the call(s):
+	- addLiquidity(liquidityHalfTokenPart,liquidityBalance) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#702)
+		- _allowances[owner][spender] = amount (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#627)
+Reentrancy in PhantomProject.transferFrom(address,address,uint256) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#409-413):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#410)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,marketing,block.timestamp) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#734-741)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#720-726)
+		- dev.call{value: devBalance}() (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#704)
+		- marketing.call{value: address(this).balance}() (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#705)
+		- sale_output_estimate = uniswapV2Router.getAmountsOut(amount,path) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#672)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#410)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,marketing,block.timestamp) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#734-741)
+		- dev.call{value: devBalance}() (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#704)
+		- marketing.call{value: address(this).balance}() (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#705)
+	State variables written after the call(s):
+	- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#411)
+		- _allowances[owner][spender] = amount (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#627)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in PhantomProject._transfer(address,address,uint256) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#631-683):
+	External calls:
+	- swapAndLiquify(contractTokenBalance) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#644)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,marketing,block.timestamp) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#734-741)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#720-726)
+		- dev.call{value: devBalance}() (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#704)
+		- marketing.call{value: address(this).balance}() (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#705)
+	- sale_output_estimate = uniswapV2Router.getAmountsOut(amount,path) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#672)
+	External calls sending eth:
+	- swapAndLiquify(contractTokenBalance) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#644)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,marketing,block.timestamp) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#734-741)
+		- dev.call{value: devBalance}() (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#704)
+		- marketing.call{value: address(this).balance}() (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#705)
+	Event emitted after the call(s):
+	- Transfer(address(this),_burnPool,tBurn) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#610)
+		- _tokenTransfer(from,to,amount,feeType,feeMultiplicator) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#682)
+	- Transfer(sender,recipient,tTransferAmount) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#764)
+		- _tokenTransfer(from,to,amount,feeType,feeMultiplicator) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#682)
+Reentrancy in PhantomProject.swapAndLiquify(uint256) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#685-709):
+	External calls:
+	- swapTokensForEth(totalETHSwap) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#696)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#720-726)
+	- addLiquidity(liquidityHalfTokenPart,liquidityBalance) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#702)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,marketing,block.timestamp) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#734-741)
+	External calls sending eth:
+	- addLiquidity(liquidityHalfTokenPart,liquidityBalance) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#702)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,marketing,block.timestamp) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#734-741)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#628)
+		- addLiquidity(liquidityHalfTokenPart,liquidityBalance) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#702)
+Reentrancy in PhantomProject.transferFrom(address,address,uint256) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#409-413):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#410)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,marketing,block.timestamp) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#734-741)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#720-726)
+		- dev.call{value: devBalance}() (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#704)
+		- marketing.call{value: address(this).balance}() (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#705)
+		- sale_output_estimate = uniswapV2Router.getAmountsOut(amount,path) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#672)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#410)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,marketing,block.timestamp) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#734-741)
+		- dev.call{value: devBalance}() (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#704)
+		- marketing.call{value: address(this).balance}() (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#705)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#628)
+		- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#411)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+Ownable.unlock() (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#236-241) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(now > _lockTime,Contract is locked until 7 days) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#238)
+PhantomProject._transfer(address,address,uint256) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#631-683) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)((_lastTX[from] + _cooldownPeriod) <= block.timestamp,Cooldown) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#659)
+	- require(bool,string)((_lastTX[from] + _cooldownPeriod) <= block.timestamp,Cooldown) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#665)
+	- require(bool,string)((_lastTX[to] + _cooldownPeriod) <= block.timestamp,Cooldown) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#677)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+PhantomProject.includeInReward(address) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#484-495) has costly operations inside a loop:
+	- _excluded.pop() (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#491)
+PhantomProject.setTaxes(uint256[],uint256[]) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#505-543) has costly operations inside a loop:
+	- _taxFeeSell = _taxSize (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#513)
+PhantomProject.setTaxes(uint256[],uint256[]) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#505-543) has costly operations inside a loop:
+	- _taxFeeBuy = _taxSize (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#516)
+PhantomProject.setTaxes(uint256[],uint256[]) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#505-543) has costly operations inside a loop:
+	- _marketingFeeBuy = _taxSize (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#519)
+PhantomProject.setTaxes(uint256[],uint256[]) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#505-543) has costly operations inside a loop:
+	- _marketingFeeSell = _taxSize (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#522)
+PhantomProject.setTaxes(uint256[],uint256[]) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#505-543) has costly operations inside a loop:
+	- _burnFeeBuy = _taxSize (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#525)
+PhantomProject.setTaxes(uint256[],uint256[]) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#505-543) has costly operations inside a loop:
+	- _burnFeeSell = _taxSize (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#528)
+PhantomProject.setTaxes(uint256[],uint256[]) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#505-543) has costly operations inside a loop:
+	- _liquidityFeeBuy = _taxSize (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#531)
+PhantomProject.setTaxes(uint256[],uint256[]) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#505-543) has costly operations inside a loop:
+	- _liquidityFeeSell = _taxSize (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#534)
+PhantomProject.setTaxes(uint256[],uint256[]) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#505-543) has costly operations inside a loop:
+	- transfersTaxed = _taxSize == 1 (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#537)
+PhantomProject.setTaxes(uint256[],uint256[]) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#505-543) has costly operations inside a loop:
+	- _cooldownPeriod = _taxSize (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#540)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#costly-operations-inside-a-loop
+
+PhantomProject.setTaxes(uint256[],uint256[]) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#505-543) has a high cyclomatic complexity (12).
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#cyclomatic-complexity
+
+Context._msgData() (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#152-155) is never used and should be removed
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dead-code
+
+PhantomProject._rTotal (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#291) is set pre-construction with a non-constant function or state variable:
+	- (MAX - (MAX % _tTotal))
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#function-initializing-state
+
+Version constraint ^0.6.12 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- SignedImmutables
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup.
+It is used by:
+	- ^0.6.12 (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#2)
+solc-0.6.12 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in PhantomProject.swapAndLiquify(uint256) (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#685-709):
+	- dev.call{value: devBalance}() (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#704)
+	- marketing.call{value: address(this).balance}() (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#705)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Function IUniswapV2Router02.WETH() (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#256) is not in mixedCase
+Parameter PhantomProject.initialBurn(uint256)._burn (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#459) is not in mixedCase
+Parameter PhantomProject.setBlockedWallet(address,bool)._account (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#480) is not in mixedCase
+Parameter PhantomProject.setBlockedWallet(address,bool)._blocked (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#480) is not in mixedCase
+Parameter PhantomProject.setTaxes(uint256[],uint256[])._taxTypes (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#505) is not in mixedCase
+Parameter PhantomProject.setTaxes(uint256[],uint256[])._taxSizes (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#505) is not in mixedCase
+Parameter PhantomProject.setAntiWhaleTaxes(uint256[],uint256[])._thresholds (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#545) is not in mixedCase
+Parameter PhantomProject.setAntiWhaleTaxes(uint256[],uint256[])._multiplicators (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#545) is not in mixedCase
+Parameter PhantomProject.setSwapAndLiquifyEnabled(bool,uint256)._enabled (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#551) is not in mixedCase
+Parameter PhantomProject.setSwapAndLiquifyEnabled(bool,uint256)._numTokensMin (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#551) is not in mixedCase
+Parameter PhantomProject.calculateFee(uint256,uint256,uint256)._amount (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#615) is not in mixedCase
+Parameter PhantomProject.calculateFee(uint256,uint256,uint256)._taxRate (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#615) is not in mixedCase
+Parameter PhantomProject.calculateFee(uint256,uint256,uint256)._feeMultiplicator (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#615) is not in mixedCase
+Parameter PhantomProject.setPairs(address[])._pairs (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#791) is not in mixedCase
+Parameter PhantomProject.whaleSellMultiplicator(uint256)._saleOutputEstimate (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#805) is not in mixedCase
+Variable PhantomProject._burnPool (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#286) is not in mixedCase
+Variable PhantomProject._taxFeeBuy (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#298) is not in mixedCase
+Variable PhantomProject._taxFeeSell (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#299) is not in mixedCase
+Variable PhantomProject._marketingFeeBuy (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#301) is not in mixedCase
+Variable PhantomProject._marketingFeeSell (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#302) is not in mixedCase
+Variable PhantomProject._burnFeeBuy (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#304) is not in mixedCase
+Variable PhantomProject._burnFeeSell (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#305) is not in mixedCase
+Variable PhantomProject._liquidityFeeBuy (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#307) is not in mixedCase
+Variable PhantomProject._liquidityFeeSell (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#308) is not in mixedCase
+Variable PhantomProject._devFeeBuy (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#310) is not in mixedCase
+Variable PhantomProject._devFeeSell (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#311) is not in mixedCase
+Variable PhantomProject._cooldownPeriod (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#313) is not in mixedCase
+Variable PhantomProject._pendingDevelopmentFees (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#318) is not in mixedCase
+Variable PhantomProject._pendingLiquidityFees (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#319) is not in mixedCase
+Variable PhantomProject._initialBurnCompleted (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#320) is not in mixedCase
+Variable PhantomProject._antiWhaleSellThresholds (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#330) is not in mixedCase
+Variable PhantomProject._antiWhaleSellMultiplicators (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#331) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Redundant expression "this (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#153)" inContext (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#147-156)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#redundant-statements
+
+Loop condition i < _excluded.length (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#576) should use cached array length instead of referencing `length` member of the storage array.
+ Loop condition i < pairs.length (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#793) should use cached array length instead of referencing `length` member of the storage array.
+ Loop condition i < pairs.length (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#799) should use cached array length instead of referencing `length` member of the storage array.
+ Loop condition i < _antiWhaleSellThresholds.length (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#808) should use cached array length instead of referencing `length` member of the storage array.
+ Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#cache-array-length
+
+PhantomProject._burnPool (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#286) should be constant 
+PhantomProject._decimals (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#296) should be constant 
+PhantomProject._devFeeBuy (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#310) should be constant 
+PhantomProject._devFeeSell (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#311) should be constant 
+PhantomProject._name (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#294) should be constant 
+PhantomProject._symbol (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#295) should be constant 
+PhantomProject._tTotal (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#289) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+
+PhantomProject.dev (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#284) should be immutable 
+PhantomProject.marketing (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#285) should be immutable 
+PhantomProject.uniswapV2Router (0x2e09a70dca6ab05505b26382003912783e588f9c.sol#323) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+./0x2e09a70dca6ab05505b26382003912783e588f9c.sol analyzed (6 contracts with 94 detectors), 86 result(s) found
+
+real	0m4.705s
+user	0m4.368s
+sys	0m0.337s

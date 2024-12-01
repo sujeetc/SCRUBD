@@ -1,0 +1,80 @@
+'solc --version' running
+'solc ./0x5f38c57b268664015de387229bc9d3822b53ec32.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+Reentrancy in v1Migration.migrate(IPackFour,uint256) (0x5f38c57b268664015de387229bc9d3822b53ec32.sol#285-352):
+	External calls:
+	- startID = cards.mintCards(user,sdl.protos,sdl.qualities) (0x5f38c57b268664015de387229bc9d3822b53ec32.sol#345)
+	State variables written after the call(s):
+	- v1Migrated[address(pack)][id] = true (0x5f38c57b268664015de387229bc9d3822b53ec32.sol#347)
+	v1Migration.v1Migrated (0x5f38c57b268664015de387229bc9d3822b53ec32.sol#258) can be used in cross function reentrancies:
+	- v1Migration.migrate(IPackFour,uint256) (0x5f38c57b268664015de387229bc9d3822b53ec32.sol#285-352)
+	- v1Migration.v1Migrated (0x5f38c57b268664015de387229bc9d3822b53ec32.sol#258)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+v1Migration.migrate(IPackFour,uint256).sdl (0x5f38c57b268664015de387229bc9d3822b53ec32.sol#325) is a local variable never initialized
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#uninitialized-local-variables
+
+v1Migration.migrate(IPackFour,uint256) (0x5f38c57b268664015de387229bc9d3822b53ec32.sol#285-352) ignores return value by (current,count,user,randomness,None) = pack.purchases(id) (0x5f38c57b268664015de387229bc9d3822b53ec32.sol#302-307)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+v1Migration.migrate(IPackFour,uint256) (0x5f38c57b268664015de387229bc9d3822b53ec32.sol#285-352) has external calls inside a loop: (current,count,user,randomness,None) = pack.purchases(id) (0x5f38c57b268664015de387229bc9d3822b53ec32.sol#302-307)
+v1Migration.migrate(IPackFour,uint256) (0x5f38c57b268664015de387229bc9d3822b53ec32.sol#285-352) has external calls inside a loop: (sdl.oldProtos,sdl.purities) = pack.predictPacks(id) (0x5f38c57b268664015de387229bc9d3822b53ec32.sol#331)
+v1Migration.migrate(IPackFour,uint256) (0x5f38c57b268664015de387229bc9d3822b53ec32.sol#285-352) has external calls inside a loop: startID = cards.mintCards(user,sdl.protos,sdl.qualities) (0x5f38c57b268664015de387229bc9d3822b53ec32.sol#345)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation/#calls-inside-a-loop
+
+Reentrancy in v1Migration.migrate(IPackFour,uint256) (0x5f38c57b268664015de387229bc9d3822b53ec32.sol#285-352):
+	External calls:
+	- startID = cards.mintCards(user,sdl.protos,sdl.qualities) (0x5f38c57b268664015de387229bc9d3822b53ec32.sol#345)
+	Event emitted after the call(s):
+	- Migrated(user,address(pack),id,loopStart,loopEnd,startID) (0x5f38c57b268664015de387229bc9d3822b53ec32.sol#351)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+Version constraint 0.5.11 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- YulOptimizerRedundantAssignmentBreakContinue0.5.
+It is used by:
+	- 0.5.11 (0x5f38c57b268664015de387229bc9d3822b53ec32.sol#1)
+solc-0.5.11 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in CanBeV1Migrated.canBeMigrated(IPackFour,uint256) (0x5f38c57b268664015de387229bc9d3822b53ec32.sol#365-368):
+	- (success,None) = address(migration).call(abi.encodeWithSignature(migrate(address,uint),_factory,_id)) (0x5f38c57b268664015de387229bc9d3822b53ec32.sol#366)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Contract v1Migration (0x5f38c57b268664015de387229bc9d3822b53ec32.sol#237-354) is not in CapWords
+Parameter CanBeV1Migrated.canBeMigrated(IPackFour,uint256)._factory (0x5f38c57b268664015de387229bc9d3822b53ec32.sol#365) is not in mixedCase
+Parameter CanBeV1Migrated.canBeMigrated(IPackFour,uint256)._id (0x5f38c57b268664015de387229bc9d3822b53ec32.sol#365) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Loop condition i < ebs.length (0x5f38c57b268664015de387229bc9d3822b53ec32.sol#103) should use cached array length instead of referencing `length` member of the storage array.
+ Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#cache-array-length
+
+safeTransferFrom(address,address,uint256,bytes) should be declared external:
+	- IERC721.safeTransferFrom(address,address,uint256,bytes) (0x5f38c57b268664015de387229bc9d3822b53ec32.sol#182)
+Moreover, the following function parameters should change its data location:
+data location should be calldata
+mintCards(address,uint16[],uint8[]) should be declared external:
+	- ICards.mintCards(address,uint16[],uint8[]) (0x5f38c57b268664015de387229bc9d3822b53ec32.sol#212-218)
+Moreover, the following function parameters should change its data location:
+_protos location should be calldata
+_qualities location should be calldata
+migrate(IPackFour,uint256[]) should be declared external:
+	- v1Migration.migrate(IPackFour,uint256[]) (0x5f38c57b268664015de387229bc9d3822b53ec32.sol#276-283)
+Moreover, the following function parameters should change its data location:
+ids location should be calldata
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#public-function-that-could-be-declared-external
+./0x5f38c57b268664015de387229bc9d3822b53ec32.sol analyzed (7 contracts with 94 detectors), 17 result(s) found
+
+real	0m1.751s
+user	0m1.494s
+sys	0m0.258s

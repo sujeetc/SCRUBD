@@ -1,0 +1,466 @@
+'solc --version' running
+'solc ./0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol:
+Warning: Contract code size exceeds 24576 bytes (a limit introduced in Spurious Dragon). This contract may not be deployable on mainnet. Consider enabling the optimizer (with a low "runs" value!), turning off revert strings, or using libraries.
+   --> ./0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol:975:1:
+    |
+975 | contract Keetsu is Context, IERC20, Ownable, ReentrancyGuard {
+    | ^ (Relevant source part starts here and spans across multiple lines).
+
+
+
+Reentrancy in Keetsu._transfer(address,address,uint256) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1371-1430):
+	External calls:
+	- swapAndLiquify() (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1417)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1509-1516)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1495-1501)
+	External calls sending eth:
+	- swapAndLiquify() (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1417)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1509-1516)
+		- address(marketingWallet).transfer(ethMarketing) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1474)
+		- address(devWallet).transfer(ethDev) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1478)
+	State variables written after the call(s):
+	- _tokenTransfer(from,to,amount,takeFee) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1429)
+		- _rOwned[to] = _rOwned[to].add(rAmount) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1294)
+		- _rOwned[sender] = _rOwned[sender].sub(rAmount) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1551)
+		- _rOwned[sender] = _rOwned[sender].sub(rAmount) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1542)
+		- _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1543)
+		- _rOwned[sender] = _rOwned[sender].sub(rAmount) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1572)
+		- _rOwned[sender] = _rOwned[sender].sub(rAmount) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1562)
+		- _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1563)
+		- _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1553)
+		- _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1574)
+	Keetsu._rOwned (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#978) can be used in cross function reentrancies:
+	- Keetsu._getCurrentSupply() (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1262-1272)
+	- Keetsu._sendFee(address,address,uint256) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1291-1299)
+	- Keetsu._transferBothExcluded(address,address,uint256) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1569-1578)
+	- Keetsu._transferFromExcluded(address,address,uint256) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1559-1567)
+	- Keetsu._transferStandard(address,address,uint256) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1540-1547)
+	- Keetsu._transferToExcluded(address,address,uint256) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1549-1557)
+	- Keetsu.balanceOf(address) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1091-1094)
+	- Keetsu.constructor() (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1053-1073)
+	- Keetsu.excludeFromReward(address) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1140-1147)
+	- _tokenTransfer(from,to,amount,takeFee) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1429)
+		- _rTotal = _rTotal.sub(rFee) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1232)
+	Keetsu._rTotal (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#994) can be used in cross function reentrancies:
+	- Keetsu._getCurrentSupply() (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1262-1272)
+	- Keetsu._reflectFee(uint256,uint256) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1231-1234)
+	- Keetsu.constructor() (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1053-1073)
+	- Keetsu.tokenFromReflection(uint256) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1134-1138)
+	- _tokenTransfer(from,to,amount,takeFee) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1429)
+		- _tOwned[to] = _tOwned[to].add(amount) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1296)
+		- _tOwned[sender] = _tOwned[sender].sub(tAmount) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1571)
+		- _tOwned[sender] = _tOwned[sender].sub(tAmount) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1561)
+		- _tOwned[recipient] = _tOwned[recipient].add(tTransferAmount) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1552)
+		- _tOwned[recipient] = _tOwned[recipient].add(tTransferAmount) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1573)
+	Keetsu._tOwned (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#979) can be used in cross function reentrancies:
+	- Keetsu._getCurrentSupply() (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1262-1272)
+	- Keetsu._sendFee(address,address,uint256) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1291-1299)
+	- Keetsu._transferBothExcluded(address,address,uint256) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1569-1578)
+	- Keetsu._transferFromExcluded(address,address,uint256) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1559-1567)
+	- Keetsu._transferToExcluded(address,address,uint256) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1549-1557)
+	- Keetsu.balanceOf(address) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1091-1094)
+	- Keetsu.excludeFromReward(address) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1140-1147)
+	- Keetsu.includeInReward(address) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1149-1160)
+	- _tokenTransfer(from,to,amount,takeFee) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1429)
+		- accumulatedForDev = accumulatedForDev.add(tDev) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1287)
+	Keetsu.accumulatedForDev (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1017) can be used in cross function reentrancies:
+	- Keetsu._takeMarketingDevLiquidBurnFee(uint256,address) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1274-1289)
+	- Keetsu._transfer(address,address,uint256) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1371-1430)
+	- Keetsu.swapAndLiquify() (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1432-1484)
+	- _tokenTransfer(from,to,amount,takeFee) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1429)
+		- accumulatedForLiquid = accumulatedForLiquid.add(tLiquid) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1285)
+	Keetsu.accumulatedForLiquid (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1015) can be used in cross function reentrancies:
+	- Keetsu._takeMarketingDevLiquidBurnFee(uint256,address) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1274-1289)
+	- Keetsu._transfer(address,address,uint256) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1371-1430)
+	- Keetsu.swapAndLiquify() (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1432-1484)
+	- _tokenTransfer(from,to,amount,takeFee) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1429)
+		- accumulatedForMarketing = accumulatedForMarketing.add(tMarketing) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1286)
+	Keetsu.accumulatedForMarketing (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1016) can be used in cross function reentrancies:
+	- Keetsu._takeMarketingDevLiquidBurnFee(uint256,address) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1274-1289)
+	- Keetsu._transfer(address,address,uint256) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1371-1430)
+	- Keetsu.swapAndLiquify() (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1432-1484)
+Reentrancy in Keetsu.swapAndLiquify() (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1432-1484):
+	External calls:
+	- swapTokensForEth(swapAmount) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1458)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1495-1501)
+	- addLiquidity(otherHalf,ethLiquid) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1469)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1509-1516)
+	External calls sending eth:
+	- addLiquidity(otherHalf,ethLiquid) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1469)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1509-1516)
+	- address(marketingWallet).transfer(ethMarketing) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1474)
+	- address(devWallet).transfer(ethDev) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1478)
+	State variables written after the call(s):
+	- accumulatedForDev = remainForDev (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1483)
+	Keetsu.accumulatedForDev (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1017) can be used in cross function reentrancies:
+	- Keetsu._takeMarketingDevLiquidBurnFee(uint256,address) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1274-1289)
+	- Keetsu._transfer(address,address,uint256) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1371-1430)
+	- Keetsu.swapAndLiquify() (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1432-1484)
+	- accumulatedForLiquid = remainForLiq (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1481)
+	Keetsu.accumulatedForLiquid (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1015) can be used in cross function reentrancies:
+	- Keetsu._takeMarketingDevLiquidBurnFee(uint256,address) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1274-1289)
+	- Keetsu._transfer(address,address,uint256) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1371-1430)
+	- Keetsu.swapAndLiquify() (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1432-1484)
+	- accumulatedForMarketing = remainForMarketing (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1482)
+	Keetsu.accumulatedForMarketing (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1016) can be used in cross function reentrancies:
+	- Keetsu._takeMarketingDevLiquidBurnFee(uint256,address) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1274-1289)
+	- Keetsu._transfer(address,address,uint256) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1371-1430)
+	- Keetsu.swapAndLiquify() (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1432-1484)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+Keetsu.isExcludedFromMax (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#985) is never initialized. It is used in:
+	- Keetsu._transfer(address,address,uint256) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1371-1430)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#uninitialized-state-variables
+
+Keetsu.setMaxBuyLimit(uint256) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1220-1222) performs a multiplication on the result of a division:
+	- maxBuyLimit = _tTotal.div(10 ** 4).mul(percentage) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1221)
+Keetsu.setMaxWallet(uint256) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1223-1226) performs a multiplication on the result of a division:
+	- maxWallet = _tTotal.div(10000).mul(percentage) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1225)
+Keetsu.manualswapcustom(uint256) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1353-1357) performs a multiplication on the result of a division:
+	- swapbalance = contractBalance.div(10 ** 5).mul(percentage) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1355)
+Keetsu.swapAndLiquify() (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1432-1484) performs a multiplication on the result of a division:
+	- half = accumulatedForLiquid.div(2) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1447)
+	- ethLiquid = delta.mul(half).div(swapAmount) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1463)
+Keetsu.swapAndLiquify() (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1432-1484) performs a multiplication on the result of a division:
+	- remainForDev = accumulatedForDev.div(20).mul(19) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1439)
+Keetsu.swapAndLiquify() (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1432-1484) performs a multiplication on the result of a division:
+	- remainForMarketing = accumulatedForMarketing.div(20).mul(19) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1441)
+Keetsu.swapAndLiquify() (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1432-1484) performs a multiplication on the result of a division:
+	- remainForLiq = accumulatedForLiquid.div(20).mul(19) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1443)
+Keetsu.slitherConstructorVariables() (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#975-1580) performs a multiplication on the result of a division:
+	- maxWallet = _tTotal.div(10000).mul(105) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#998)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+Keetsu._transfer(address,address,uint256) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1371-1430) uses tx.origin for authorization: require(bool,string)(_holderLastTransferTimestamp[tx.origin] < block.number,_transfer:: Transfer Delay enabled.  Only one purchase per block allowed.) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1401)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-usage-of-txorigin
+
+Keetsu.addLiquidity(uint256,uint256) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1504-1517) ignores return value by uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1509-1516)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+Keetsu.allowance(address,address).owner (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1101) shadows:
+	- Ownable.owner() (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#734-736) (function)
+Keetsu._approve(address,address,uint256).owner (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1363) shadows:
+	- Ownable.owner() (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#734-736) (function)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#local-variable-shadowing
+
+Keetsu.setFeesPercent(uint256,uint256,uint256,uint256,uint256) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1183-1192) should emit an event for: 
+	- _taxFee = distributionFee (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1185) 
+	- _liquidityFee = liquidityFee (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1186) 
+	- _marketingFee = marketingFee (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1187) 
+	- _burnFee = burnFee (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1188) 
+	- _devFee = devFee (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1189) 
+	- _marketingDevLiquidNBurnFee = _liquidityFee + _marketingFee + _burnFee + _devFee (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1191) 
+Keetsu.setThresoldToSwap(uint256) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1214-1216) should emit an event for: 
+	- numTokensSellToAddToLiquidity = amount (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1215) 
+Keetsu.setMaxBuyLimit(uint256) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1220-1222) should emit an event for: 
+	- maxBuyLimit = _tTotal.div(10 ** 4).mul(percentage) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1221) 
+Keetsu.setMaxWallet(uint256) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1223-1226) should emit an event for: 
+	- maxWallet = _tTotal.div(10000).mul(percentage) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1225) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+Keetsu.setMarketingWallet(address).account (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1171) lacks a zero-check on :
+		- marketingWallet = account (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1172)
+Keetsu.setDevWallet(address).account (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1175) lacks a zero-check on :
+		- devWallet = account (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1176)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in Keetsu._transfer(address,address,uint256) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1371-1430):
+	External calls:
+	- swapAndLiquify() (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1417)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1509-1516)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1495-1501)
+	External calls sending eth:
+	- swapAndLiquify() (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1417)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1509-1516)
+		- address(marketingWallet).transfer(ethMarketing) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1474)
+		- address(devWallet).transfer(ethDev) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1478)
+	State variables written after the call(s):
+	- _tokenTransfer(from,to,amount,takeFee) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1429)
+		- _marketingDevLiquidNBurnFee = _previousMarketingDevLiquidNBurnFee (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1325)
+		- _marketingDevLiquidNBurnFee = 0 (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1320)
+	- _tokenTransfer(from,to,amount,takeFee) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1429)
+		- _previousMarketingDevLiquidNBurnFee = _marketingDevLiquidNBurnFee (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1317)
+	- _tokenTransfer(from,to,amount,takeFee) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1429)
+		- _previousTaxFee = _taxFee (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1316)
+	- _tokenTransfer(from,to,amount,takeFee) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1429)
+		- _tTotalDistributedToken = _tTotalDistributedToken.add(tFee) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1233)
+	- _tokenTransfer(from,to,amount,takeFee) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1429)
+		- _taxFee = _previousTaxFee (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1324)
+		- _taxFee = 0 (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1319)
+Reentrancy in Keetsu.swapAndLiquify() (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1432-1484):
+	External calls:
+	- swapTokensForEth(swapAmount) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1458)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1495-1501)
+	- addLiquidity(otherHalf,ethLiquid) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1469)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1509-1516)
+	External calls sending eth:
+	- addLiquidity(otherHalf,ethLiquid) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1469)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1509-1516)
+	State variables written after the call(s):
+	- addLiquidity(otherHalf,ethLiquid) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1469)
+		- _allowances[owner][spender] = amount (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1367)
+Reentrancy in Keetsu.transferFrom(address,address,uint256) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1110-1114):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1111)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1509-1516)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1495-1501)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1111)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1509-1516)
+		- address(marketingWallet).transfer(ethMarketing) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1474)
+		- address(devWallet).transfer(ethDev) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1478)
+	State variables written after the call(s):
+	- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1112)
+		- _allowances[owner][spender] = amount (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1367)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in Keetsu._transfer(address,address,uint256) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1371-1430):
+	External calls:
+	- swapAndLiquify() (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1417)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1509-1516)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1495-1501)
+	External calls sending eth:
+	- swapAndLiquify() (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1417)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1509-1516)
+		- address(marketingWallet).transfer(ethMarketing) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1474)
+		- address(devWallet).transfer(ethDev) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1478)
+	Event emitted after the call(s):
+	- Transfer(from,to,amount) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1298)
+		- _tokenTransfer(from,to,amount,takeFee) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1429)
+	- Transfer(sender,recipient,tTransferAmount) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1546)
+		- _tokenTransfer(from,to,amount,takeFee) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1429)
+	- Transfer(sender,recipient,tTransferAmount) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1556)
+		- _tokenTransfer(from,to,amount,takeFee) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1429)
+	- Transfer(sender,recipient,tTransferAmount) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1566)
+		- _tokenTransfer(from,to,amount,takeFee) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1429)
+	- Transfer(sender,recipient,tTransferAmount) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1577)
+		- _tokenTransfer(from,to,amount,takeFee) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1429)
+Reentrancy in Keetsu.swapAndLiquify() (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1432-1484):
+	External calls:
+	- swapTokensForEth(swapAmount) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1458)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1495-1501)
+	- addLiquidity(otherHalf,ethLiquid) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1469)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1509-1516)
+	External calls sending eth:
+	- addLiquidity(otherHalf,ethLiquid) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1469)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1509-1516)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1368)
+		- addLiquidity(otherHalf,ethLiquid) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1469)
+	- SwapAndLiquify(half,ethLiquid,otherHalf) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1470)
+Reentrancy in Keetsu.transferFrom(address,address,uint256) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1110-1114):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1111)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1509-1516)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1495-1501)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1111)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1509-1516)
+		- address(marketingWallet).transfer(ethMarketing) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1474)
+		- address(devWallet).transfer(ethDev) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1478)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1368)
+		- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1112)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+Keetsu._transfer(address,address,uint256) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1371-1430) compares to a boolean constant:
+	-require(bool,string)(_isBlacklistWallet[from] == false,You're in blacklist) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1379)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#boolean-equality
+
+2 different versions of Solidity are used:
+	- Version constraint ^0.6.2 is used by:
+		-^0.6.2 (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#5)
+	- Version constraint >=0.6.0<0.8.0 is used by:
+		->=0.6.0<0.8.0 (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#914)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#different-pragma-directives-are-used
+
+Keetsu.includeInReward(address) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1149-1160) has costly operations inside a loop:
+	- _excluded.pop() (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1156)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#costly-operations-inside-a-loop
+
+Context._msgData() (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#22-25) is never used and should be removed
+ERC20._burn(address,uint256) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#454-462) is never used and should be removed
+ERC20._mint(address,uint256) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#433-441) is never used and should be removed
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dead-code
+
+Keetsu._rTotal (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#994) is set pre-construction with a non-constant function or state variable:
+	- (MAX - (MAX % _tTotal))
+Keetsu.maxWallet (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#998) is set pre-construction with a non-constant function or state variable:
+	- _tTotal.div(10000).mul(105)
+Keetsu._previousTaxFee (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1005) is set pre-construction with a non-constant function or state variable:
+	- _taxFee
+Keetsu._marketingDevLiquidNBurnFee (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1012) is set pre-construction with a non-constant function or state variable:
+	- _marketingFee + _burnFee + _liquidityFee + _devFee
+Keetsu._previousMarketingDevLiquidNBurnFee (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1013) is set pre-construction with a non-constant function or state variable:
+	- _marketingDevLiquidNBurnFee
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#function-initializing-state
+
+Version constraint ^0.6.2 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- MissingEscapingInFormatting
+	- ArraySliceDynamicallyEncodedBaseType
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow.
+It is used by:
+	- ^0.6.2 (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#5)
+Version constraint >=0.6.0<0.8.0 is too complex.
+It is used by:
+	- >=0.6.0<0.8.0 (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#914)
+solc-0.6.9 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Keetsu (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#975-1580) should inherit from IERC20Metadata (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#113-128)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-inheritance
+
+Function IUniswapV2Router01.WETH() (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#513) is not in mixedCase
+Function IUniswapV2Pair.DOMAIN_SEPARATOR() (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#680) is not in mixedCase
+Function IUniswapV2Pair.PERMIT_TYPEHASH() (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#681) is not in mixedCase
+Function IUniswapV2Pair.MINIMUM_LIQUIDITY() (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#698) is not in mixedCase
+Parameter Keetsu.setSwapAndLiquifyEnabled(bool)._enabled (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1194) is not in mixedCase
+Parameter Keetsu.setLimitsEnabled(bool)._enabled (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1199) is not in mixedCase
+Parameter Keetsu.setTradingEnabled(bool)._enabled (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1203) is not in mixedCase
+Function Keetsu.RouterSellLimitEnabled(bool) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1207-1209) is not in mixedCase
+Parameter Keetsu.RouterSellLimitEnabled(bool)._enabled (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1207) is not in mixedCase
+Parameter Keetsu.setTransferDelay(bool)._enabled (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1211) is not in mixedCase
+Parameter Keetsu.calculateTaxFee(uint256)._amount (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1301) is not in mixedCase
+Parameter Keetsu.calculateMarketingDevLiquidNBurnFee(uint256)._amount (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1307) is not in mixedCase
+Variable Keetsu._isBlacklistWallet (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#983) is not in mixedCase
+Variable Keetsu._taxFee (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1004) is not in mixedCase
+Variable Keetsu._marketingFee (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1007) is not in mixedCase
+Variable Keetsu._burnFee (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1008) is not in mixedCase
+Variable Keetsu._liquidityFee (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1009) is not in mixedCase
+Variable Keetsu._devFee (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1010) is not in mixedCase
+Variable Keetsu.CEX (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1029) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Redundant expression "this (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#23)" inContext (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#17-26)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#redundant-statements
+
+Reentrancy in Keetsu._transfer(address,address,uint256) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1371-1430):
+	External calls:
+	- swapAndLiquify() (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1417)
+		- address(marketingWallet).transfer(ethMarketing) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1474)
+		- address(devWallet).transfer(ethDev) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1478)
+	External calls sending eth:
+	- swapAndLiquify() (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1417)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1509-1516)
+		- address(marketingWallet).transfer(ethMarketing) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1474)
+		- address(devWallet).transfer(ethDev) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1478)
+	State variables written after the call(s):
+	- _tokenTransfer(from,to,amount,takeFee) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1429)
+		- _marketingDevLiquidNBurnFee = _previousMarketingDevLiquidNBurnFee (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1325)
+		- _marketingDevLiquidNBurnFee = 0 (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1320)
+	- _tokenTransfer(from,to,amount,takeFee) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1429)
+		- _previousMarketingDevLiquidNBurnFee = _marketingDevLiquidNBurnFee (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1317)
+	- _tokenTransfer(from,to,amount,takeFee) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1429)
+		- _previousTaxFee = _taxFee (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1316)
+	- _tokenTransfer(from,to,amount,takeFee) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1429)
+		- _rOwned[to] = _rOwned[to].add(rAmount) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1294)
+		- _rOwned[sender] = _rOwned[sender].sub(rAmount) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1551)
+		- _rOwned[sender] = _rOwned[sender].sub(rAmount) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1542)
+		- _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1543)
+		- _rOwned[sender] = _rOwned[sender].sub(rAmount) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1572)
+		- _rOwned[sender] = _rOwned[sender].sub(rAmount) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1562)
+		- _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1563)
+		- _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1553)
+		- _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1574)
+	- _tokenTransfer(from,to,amount,takeFee) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1429)
+		- _rTotal = _rTotal.sub(rFee) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1232)
+	- _tokenTransfer(from,to,amount,takeFee) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1429)
+		- _tOwned[to] = _tOwned[to].add(amount) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1296)
+		- _tOwned[sender] = _tOwned[sender].sub(tAmount) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1571)
+		- _tOwned[sender] = _tOwned[sender].sub(tAmount) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1561)
+		- _tOwned[recipient] = _tOwned[recipient].add(tTransferAmount) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1552)
+		- _tOwned[recipient] = _tOwned[recipient].add(tTransferAmount) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1573)
+	- _tokenTransfer(from,to,amount,takeFee) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1429)
+		- _tTotalDistributedToken = _tTotalDistributedToken.add(tFee) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1233)
+	- _tokenTransfer(from,to,amount,takeFee) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1429)
+		- _taxFee = _previousTaxFee (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1324)
+		- _taxFee = 0 (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1319)
+	- _tokenTransfer(from,to,amount,takeFee) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1429)
+		- accumulatedForDev = accumulatedForDev.add(tDev) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1287)
+	- _tokenTransfer(from,to,amount,takeFee) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1429)
+		- accumulatedForLiquid = accumulatedForLiquid.add(tLiquid) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1285)
+	- _tokenTransfer(from,to,amount,takeFee) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1429)
+		- accumulatedForMarketing = accumulatedForMarketing.add(tMarketing) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1286)
+	Event emitted after the call(s):
+	- Transfer(from,to,amount) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1298)
+		- _tokenTransfer(from,to,amount,takeFee) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1429)
+	- Transfer(sender,recipient,tTransferAmount) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1546)
+		- _tokenTransfer(from,to,amount,takeFee) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1429)
+	- Transfer(sender,recipient,tTransferAmount) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1566)
+		- _tokenTransfer(from,to,amount,takeFee) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1429)
+	- Transfer(sender,recipient,tTransferAmount) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1556)
+		- _tokenTransfer(from,to,amount,takeFee) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1429)
+	- Transfer(sender,recipient,tTransferAmount) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1577)
+		- _tokenTransfer(from,to,amount,takeFee) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1429)
+Reentrancy in Keetsu.swapAndLiquify() (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1432-1484):
+	External calls:
+	- address(marketingWallet).transfer(ethMarketing) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1474)
+	- address(devWallet).transfer(ethDev) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1478)
+	External calls sending eth:
+	- addLiquidity(otherHalf,ethLiquid) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1469)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1509-1516)
+	- address(marketingWallet).transfer(ethMarketing) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1474)
+	- address(devWallet).transfer(ethDev) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1478)
+	State variables written after the call(s):
+	- accumulatedForDev = remainForDev (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1483)
+	- accumulatedForLiquid = remainForLiq (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1481)
+	- accumulatedForMarketing = remainForMarketing (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1482)
+Reentrancy in Keetsu.transferFrom(address,address,uint256) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1110-1114):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1111)
+		- address(marketingWallet).transfer(ethMarketing) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1474)
+		- address(devWallet).transfer(ethDev) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1478)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1111)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,owner(),block.timestamp) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1509-1516)
+		- address(marketingWallet).transfer(ethMarketing) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1474)
+		- address(devWallet).transfer(ethDev) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1478)
+	State variables written after the call(s):
+	- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1112)
+		- _allowances[owner][spender] = amount (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1367)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1368)
+		- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1112)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+Keetsu.slitherConstructorVariables() (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#975-1580) uses literals with too many digits:
+	- _tTotal = 1000000000000000 * 10 ** 18 (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#993)
+Keetsu.slitherConstructorVariables() (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#975-1580) uses literals with too many digits:
+	- maxBuyLimit = 7000000000000 * (10 ** 18) (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#997)
+Keetsu.slitherConstructorVariables() (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#975-1580) uses literals with too many digits:
+	- numTokensSellToAddToLiquidity = 10000000 * 10 ** 18 (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1034)
+Keetsu.slitherConstructorVariables() (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#975-1580) uses literals with too many digits:
+	- routerselllimittokens = 100000000000 * 10 ** 18 (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1035)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+Loop condition i < _excluded.length (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1265) should use cached array length instead of referencing `length` member of the storage array.
+ Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#cache-array-length
+
+Keetsu.CEX (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1029) should be constant 
+Keetsu._decimals (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1002) should be constant 
+Keetsu._name (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1000) should be constant 
+Keetsu._symbol (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1001) should be constant 
+Keetsu._tTotal (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#993) should be constant 
+Keetsu.deadWallet (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1020) should be constant 
+Keetsu.stakeRewardSupply (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1018) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+
+Keetsu.uniswapV2Pair (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1025) should be immutable 
+Keetsu.uniswapV2Router (0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol#1024) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+./0x105923fa70412c82452ff75f5e775fb0383ee2fc.sol analyzed (14 contracts with 94 detectors), 79 result(s) found
+
+real	0m5.708s
+user	0m5.423s
+sys	0m0.287s

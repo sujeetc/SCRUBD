@@ -1,0 +1,113 @@
+'solc --version' running
+'solc ./0x3a2fd07ec2ad6f355f93af695a7cf858f5967b78.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+MTVote.onTokenReceived(address,uint256,bytes) (0x3a2fd07ec2ad6f355f93af695a7cf858f5967b78.sol#122-144) ignores return value by TVToken(TVTokenAddress).transfer(wallet,_value) (0x3a2fd07ec2ad6f355f93af695a7cf858f5967b78.sol#127)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+MTVote.convertBytesToBytes32(bytes) (0x3a2fd07ec2ad6f355f93af695a7cf858f5967b78.sol#166-174) is declared view but contains assembly code
+MTVote.toBytes(uint256) (0x3a2fd07ec2ad6f355f93af695a7cf858f5967b78.sol#182-185) is declared view but contains assembly code
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#constant-functions-using-assembly-code
+
+MTVote.setManager(address) (0x3a2fd07ec2ad6f355f93af695a7cf858f5967b78.sol#162-164) should emit an event for: 
+	- manager = _manager (0x3a2fd07ec2ad6f355f93af695a7cf858f5967b78.sol#163) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-access-control
+
+MTVote.constructor(address,address,address,address)._manager (0x3a2fd07ec2ad6f355f93af695a7cf858f5967b78.sol#101) lacks a zero-check on :
+		- manager = _manager (0x3a2fd07ec2ad6f355f93af695a7cf858f5967b78.sol#104)
+MTVote.constructor(address,address,address,address)._wallet (0x3a2fd07ec2ad6f355f93af695a7cf858f5967b78.sol#102) lacks a zero-check on :
+		- wallet = _wallet (0x3a2fd07ec2ad6f355f93af695a7cf858f5967b78.sol#105)
+MTVote.constructor(address,address,address,address)._TVTokenAddress (0x3a2fd07ec2ad6f355f93af695a7cf858f5967b78.sol#99) lacks a zero-check on :
+		- TVTokenAddress = _TVTokenAddress (0x3a2fd07ec2ad6f355f93af695a7cf858f5967b78.sol#106)
+MTVote.constructor(address,address,address,address)._TVCrowdsaleAddress (0x3a2fd07ec2ad6f355f93af695a7cf858f5967b78.sol#100) lacks a zero-check on :
+		- TVCrowdsaleAddress = _TVCrowdsaleAddress (0x3a2fd07ec2ad6f355f93af695a7cf858f5967b78.sol#107)
+MTVote.changeTVTokenAddress(address).newAddress (0x3a2fd07ec2ad6f355f93af695a7cf858f5967b78.sol#154) lacks a zero-check on :
+		- TVTokenAddress = newAddress (0x3a2fd07ec2ad6f355f93af695a7cf858f5967b78.sol#155)
+MTVote.changeTVCrowdsaleAddress(address).newAddress (0x3a2fd07ec2ad6f355f93af695a7cf858f5967b78.sol#158) lacks a zero-check on :
+		- TVCrowdsaleAddress = newAddress (0x3a2fd07ec2ad6f355f93af695a7cf858f5967b78.sol#159)
+MTVote.setManager(address)._manager (0x3a2fd07ec2ad6f355f93af695a7cf858f5967b78.sol#162) lacks a zero-check on :
+		- manager = _manager (0x3a2fd07ec2ad6f355f93af695a7cf858f5967b78.sol#163)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in MTVote.changeAndVote(uint256) (0x3a2fd07ec2ad6f355f93af695a7cf858f5967b78.sol#110-120):
+	External calls:
+	- rate = TVCrowdsale(TVCrowdsaleAddress).currentRate() (0x3a2fd07ec2ad6f355f93af695a7cf858f5967b78.sol#112)
+	- TVCrowdsale(TVCrowdsaleAddress).buyTokens.value(msg.value)(this) (0x3a2fd07ec2ad6f355f93af695a7cf858f5967b78.sol#114)
+	External calls sending eth:
+	- TVCrowdsale(TVCrowdsaleAddress).buyTokens.value(msg.value)(this) (0x3a2fd07ec2ad6f355f93af695a7cf858f5967b78.sol#114)
+	State variables written after the call(s):
+	- checkAndBuySender = msg.sender (0x3a2fd07ec2ad6f355f93af695a7cf858f5967b78.sol#116)
+Reentrancy in MTVote.onTokenReceived(address,uint256,bytes) (0x3a2fd07ec2ad6f355f93af695a7cf858f5967b78.sol#122-144):
+	External calls:
+	- TVToken(TVTokenAddress).transfer(wallet,_value) (0x3a2fd07ec2ad6f355f93af695a7cf858f5967b78.sol#127)
+	State variables written after the call(s):
+	- checkAndBuySender = address(0) (0x3a2fd07ec2ad6f355f93af695a7cf858f5967b78.sol#129)
+	- targetIds.push(targetId) (0x3a2fd07ec2ad6f355f93af695a7cf858f5967b78.sol#138)
+	- targetIdsSize ++ (0x3a2fd07ec2ad6f355f93af695a7cf858f5967b78.sol#139)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in MTVote.changeAndVote(uint256) (0x3a2fd07ec2ad6f355f93af695a7cf858f5967b78.sol#110-120):
+	External calls:
+	- rate = TVCrowdsale(TVCrowdsaleAddress).currentRate() (0x3a2fd07ec2ad6f355f93af695a7cf858f5967b78.sol#112)
+	- TVCrowdsale(TVCrowdsaleAddress).buyTokens.value(msg.value)(this) (0x3a2fd07ec2ad6f355f93af695a7cf858f5967b78.sol#114)
+	- TVToken(TVTokenAddress).safeTransfer(this,msg.value * rate,data) (0x3a2fd07ec2ad6f355f93af695a7cf858f5967b78.sol#117)
+	External calls sending eth:
+	- TVCrowdsale(TVCrowdsaleAddress).buyTokens.value(msg.value)(this) (0x3a2fd07ec2ad6f355f93af695a7cf858f5967b78.sol#114)
+	Event emitted after the call(s):
+	- changeAndVoteEvent(msg.sender,rate,msg.value,targetId) (0x3a2fd07ec2ad6f355f93af695a7cf858f5967b78.sol#119)
+Reentrancy in MTVote.onTokenReceived(address,uint256,bytes) (0x3a2fd07ec2ad6f355f93af695a7cf858f5967b78.sol#122-144):
+	External calls:
+	- TVToken(TVTokenAddress).transfer(wallet,_value) (0x3a2fd07ec2ad6f355f93af695a7cf858f5967b78.sol#127)
+	Event emitted after the call(s):
+	- TokenReceived(_from,_value,targetId) (0x3a2fd07ec2ad6f355f93af695a7cf858f5967b78.sol#142)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+MTVote.convertBytesToBytes32(bytes) (0x3a2fd07ec2ad6f355f93af695a7cf858f5967b78.sol#166-174) uses assembly
+	- INLINE ASM (0x3a2fd07ec2ad6f355f93af695a7cf858f5967b78.sol#171-174)
+MTVote.toBytes(uint256) (0x3a2fd07ec2ad6f355f93af695a7cf858f5967b78.sol#182-185) uses assembly
+	- INLINE ASM (0x3a2fd07ec2ad6f355f93af695a7cf858f5967b78.sol#184-185)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#assembly-usage
+
+MTVote.bytesToUint(bytes32) (0x3a2fd07ec2ad6f355f93af695a7cf858f5967b78.sol#176-180) is never used and should be removed
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dead-code
+
+Version constraint ^0.4.24 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ABIEncoderV2PackedStorage_0.4.x
+	- ExpExponentCleanup
+	- EventStructWrongData.
+It is used by:
+	- ^0.4.24 (0x3a2fd07ec2ad6f355f93af695a7cf858f5967b78.sol#1)
+solc-0.4.24 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Parameter Ownable.transferOwnership(address)._newOwner (0x3a2fd07ec2ad6f355f93af695a7cf858f5967b78.sol#49) is not in mixedCase
+Event MTVote.changeAndVoteEvent(address,uint256,uint256,uint256) (0x3a2fd07ec2ad6f355f93af695a7cf858f5967b78.sol#96) is not in CapWords
+Parameter MTVote.onTokenReceived(address,uint256,bytes)._from (0x3a2fd07ec2ad6f355f93af695a7cf858f5967b78.sol#122) is not in mixedCase
+Parameter MTVote.onTokenReceived(address,uint256,bytes)._value (0x3a2fd07ec2ad6f355f93af695a7cf858f5967b78.sol#122) is not in mixedCase
+Parameter MTVote.onTokenReceived(address,uint256,bytes)._data (0x3a2fd07ec2ad6f355f93af695a7cf858f5967b78.sol#122) is not in mixedCase
+Parameter MTVote.setManager(address)._manager (0x3a2fd07ec2ad6f355f93af695a7cf858f5967b78.sol#162) is not in mixedCase
+Variable MTVote.TVTokenAddress (0x3a2fd07ec2ad6f355f93af695a7cf858f5967b78.sol#78) is not in mixedCase
+Variable MTVote.TVCrowdsaleAddress (0x3a2fd07ec2ad6f355f93af695a7cf858f5967b78.sol#79) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+safeTransfer(address,uint256,bytes) should be declared external:
+	- TVToken.safeTransfer(address,uint256,bytes) (0x3a2fd07ec2ad6f355f93af695a7cf858f5967b78.sol#73)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#public-function-that-could-be-declared-external
+./0x3a2fd07ec2ad6f355f93af695a7cf858f5967b78.sol analyzed (4 contracts with 94 detectors), 29 result(s) found
+
+real	0m1.563s
+user	0m1.383s
+sys	0m0.183s

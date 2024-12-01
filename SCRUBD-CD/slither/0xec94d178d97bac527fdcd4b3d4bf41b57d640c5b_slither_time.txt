@@ -1,0 +1,130 @@
+'solc --version' running
+'solc ./0xec94d178d97bac527fdcd4b3d4bf41b57d640c5b.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0xec94d178d97bac527fdcd4b3d4bf41b57d640c5b.sol:
+./0xec94d178d97bac527fdcd4b3d4bf41b57d640c5b.sol:4:35: Warning: Unused local variable
+contract token {function transfer(address receiver, uint amount){ }}
+                                  ^--------------^
+./0xec94d178d97bac527fdcd4b3d4bf41b57d640c5b.sol:4:53: Warning: Unused local variable
+contract token {function transfer(address receiver, uint amount){ }}
+                                                    ^---------^
+
+
+Reentrancy in Crowdsale.fallback() (0xec94d178d97bac527fdcd4b3d4bf41b57d640c5b.sol#24-46):
+	External calls:
+	- tokenReward.transfer(msg.sender,amount / price) (0xec94d178d97bac527fdcd4b3d4bf41b57d640c5b.sol#31)
+	External calls sending eth:
+	- beneficiary.send(amount) (0xec94d178d97bac527fdcd4b3d4bf41b57d640c5b.sol#41)
+	State variables written after the call(s):
+	- resAmount -= amount (0xec94d178d97bac527fdcd4b3d4bf41b57d640c5b.sol#43)
+	Crowdsale.resAmount (0xec94d178d97bac527fdcd4b3d4bf41b57d640c5b.sol#7) can be used in cross function reentrancies:
+	- Crowdsale.devResWithdrawal() (0xec94d178d97bac527fdcd4b3d4bf41b57d640c5b.sol#58-64)
+	- Crowdsale.fallback() (0xec94d178d97bac527fdcd4b3d4bf41b57d640c5b.sol#24-46)
+	- Crowdsale.resAmount (0xec94d178d97bac527fdcd4b3d4bf41b57d640c5b.sol#7)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+token (0xec94d178d97bac527fdcd4b3d4bf41b57d640c5b.sol#4) has incorrect ERC20 function interface:token.transfer(address,uint256) (0xec94d178d97bac527fdcd4b3d4bf41b57d640c5b.sol#4)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-erc20-interface
+
+Modifier Crowdsale.afterDeadline() (0xec94d178d97bac527fdcd4b3d4bf41b57d640c5b.sol#74) does not always execute _; or revert
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-modifier
+
+Reentrancy in Crowdsale.fallback() (0xec94d178d97bac527fdcd4b3d4bf41b57d640c5b.sol#24-46):
+	External calls:
+	- tokenReward.transfer(msg.sender,amount / price) (0xec94d178d97bac527fdcd4b3d4bf41b57d640c5b.sol#31)
+	State variables written after the call(s):
+	- minimumTargetReached = true (0xec94d178d97bac527fdcd4b3d4bf41b57d640c5b.sol#35)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in Crowdsale.fallback() (0xec94d178d97bac527fdcd4b3d4bf41b57d640c5b.sol#24-46):
+	External calls:
+	- tokenReward.transfer(msg.sender,amount / price) (0xec94d178d97bac527fdcd4b3d4bf41b57d640c5b.sol#31)
+	Event emitted after the call(s):
+	- FundTransfer(msg.sender,amount,true) (0xec94d178d97bac527fdcd4b3d4bf41b57d640c5b.sol#32)
+	- GoalReached(beneficiary,minimumTarget) (0xec94d178d97bac527fdcd4b3d4bf41b57d640c5b.sol#36)
+Reentrancy in Crowdsale.fallback() (0xec94d178d97bac527fdcd4b3d4bf41b57d640c5b.sol#24-46):
+	External calls:
+	- tokenReward.transfer(msg.sender,amount / price) (0xec94d178d97bac527fdcd4b3d4bf41b57d640c5b.sol#31)
+	External calls sending eth:
+	- beneficiary.send(amount) (0xec94d178d97bac527fdcd4b3d4bf41b57d640c5b.sol#41)
+	Event emitted after the call(s):
+	- FundTransfer(beneficiary,amount,false) (0xec94d178d97bac527fdcd4b3d4bf41b57d640c5b.sol#42)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+Deprecated standard detected THROW (0xec94d178d97bac527fdcd4b3d4bf41b57d640c5b.sol#25):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0xec94d178d97bac527fdcd4b3d4bf41b57d640c5b.sol#50):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0xec94d178d97bac527fdcd4b3d4bf41b57d640c5b.sol#59):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0xec94d178d97bac527fdcd4b3d4bf41b57d640c5b.sol#85):
+	- Usage of "throw" should be replaced with "revert()"
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#deprecated-standards
+
+Crowdsale.minimumTarget (0xec94d178d97bac527fdcd4b3d4bf41b57d640c5b.sol#17) is set pre-construction with a non-constant function or state variable:
+	- 3 * price
+Crowdsale.maximumTarget (0xec94d178d97bac527fdcd4b3d4bf41b57d640c5b.sol#18) is set pre-construction with a non-constant function or state variable:
+	- 10 * price
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#function-initializing-state
+
+Version constraint ^0.4.8 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ExpExponentCleanup
+	- NestedArrayFunctionCallDecoder
+	- ZeroFunctionSelector
+	- DelegateCallReturnValue
+	- ECRecoverMalformedInput
+	- SkipEmptyStringLiteral
+	- ConstantOptimizerSubtraction.
+It is used by:
+	- ^0.4.8 (0xec94d178d97bac527fdcd4b3d4bf41b57d640c5b.sol#1)
+solc-0.4.11 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Contract token (0xec94d178d97bac527fdcd4b3d4bf41b57d640c5b.sol#4) is not in CapWords
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in Crowdsale.devResWithdrawal() (0xec94d178d97bac527fdcd4b3d4bf41b57d640c5b.sol#58-64):
+	External calls:
+	- beneficiary.send(resAmount) (0xec94d178d97bac527fdcd4b3d4bf41b57d640c5b.sol#60)
+	State variables written after the call(s):
+	- resAmount = 0 (0xec94d178d97bac527fdcd4b3d4bf41b57d640c5b.sol#62)
+	Event emitted after the call(s):
+	- FundTransfer(beneficiary,resAmount,false) (0xec94d178d97bac527fdcd4b3d4bf41b57d640c5b.sol#61)
+Reentrancy in Crowdsale.devWithdrawal(uint256,uint256) (0xec94d178d97bac527fdcd4b3d4bf41b57d640c5b.sol#49-55):
+	External calls:
+	- beneficiary.send(wAmount) (0xec94d178d97bac527fdcd4b3d4bf41b57d640c5b.sol#52)
+	Event emitted after the call(s):
+	- FundTransfer(beneficiary,wAmount,false) (0xec94d178d97bac527fdcd4b3d4bf41b57d640c5b.sol#53)
+Reentrancy in Crowdsale.fallback() (0xec94d178d97bac527fdcd4b3d4bf41b57d640c5b.sol#24-46):
+	External calls:
+	- beneficiary.send(amount) (0xec94d178d97bac527fdcd4b3d4bf41b57d640c5b.sol#41)
+	State variables written after the call(s):
+	- resAmount -= amount (0xec94d178d97bac527fdcd4b3d4bf41b57d640c5b.sol#43)
+	Event emitted after the call(s):
+	- FundTransfer(beneficiary,amount,false) (0xec94d178d97bac527fdcd4b3d4bf41b57d640c5b.sol#42)
+Reentrancy in Crowdsale.safeWithdrawal() (0xec94d178d97bac527fdcd4b3d4bf41b57d640c5b.sol#92-104):
+	External calls:
+	- msg.sender.send(amount) (0xec94d178d97bac527fdcd4b3d4bf41b57d640c5b.sol#97)
+	Event emitted after the call(s):
+	- FundTransfer(msg.sender,amount,false) (0xec94d178d97bac527fdcd4b3d4bf41b57d640c5b.sol#98)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+Crowdsale.beneficiary (0xec94d178d97bac527fdcd4b3d4bf41b57d640c5b.sol#15) should be constant 
+Crowdsale.price (0xec94d178d97bac527fdcd4b3d4bf41b57d640c5b.sol#16) should be constant 
+Crowdsale.tokenReward (0xec94d178d97bac527fdcd4b3d4bf41b57d640c5b.sol#20) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+./0xec94d178d97bac527fdcd4b3d4bf41b57d640c5b.sol analyzed (2 contracts with 94 detectors), 22 result(s) found
+
+real	0m1.481s
+user	0m1.295s
+sys	0m0.189s

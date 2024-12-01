@@ -1,0 +1,302 @@
+'solc --version' running
+'solc ./0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol:
+Warning: Contract code size is 25111 bytes and exceeds 24576 bytes (a limit introduced in Spurious Dragon). This contract may not be deployable on Mainnet. Consider enabling the optimizer (with a low "runs" value!), turning off revert strings, or using libraries.
+   --> 0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol:325:1:
+    |
+325 | contract Venify is Context, IERC20, Ownable {
+    | ^ (Relevant source part starts here and spans across multiple lines).
+
+
+
+Reentrancy in Venify._transfer(address,address,uint256) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#653-690):
+	External calls:
+	- swapTokensForETH(contractTokenBalance) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#675)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#702-708)
+	- sendETH(address(buyBackWallet),(newBalance * buyBackFee) / taxForSwap) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#678)
+		- (success,None) = recipient.call{value: amount}() (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#523)
+	- sendETH(address(marketingWallet),(newBalance * marketingFee) / taxForSwap) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#682)
+		- (success,None) = recipient.call{value: amount}() (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#523)
+	External calls sending eth:
+	- sendETH(address(buyBackWallet),(newBalance * buyBackFee) / taxForSwap) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#678)
+		- (success,None) = recipient.call{value: amount}() (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#523)
+	- sendETH(address(marketingWallet),(newBalance * marketingFee) / taxForSwap) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#682)
+		- (success,None) = recipient.call{value: amount}() (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#523)
+	State variables written after the call(s):
+	- _tokenTransfer(from,to,amount) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#689)
+		- _rOwned[address(this)] = _rOwned[address(this)] + rBuyback (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#576)
+		- _rOwned[address(this)] = _rOwned[address(this)] + rMarketing (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#586)
+		- _rOwned[DEAD] = _rOwned[DEAD] + rBurn (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#598)
+		- _rOwned[sender] = _rOwned[sender] - rAmount (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#751)
+		- _rOwned[sender] = _rOwned[sender] - rAmount (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#762)
+		- _rOwned[sender] = _rOwned[sender] - rAmount (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#775)
+		- _rOwned[sender] = _rOwned[sender] - rAmount (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#787)
+		- _rOwned[recipient] = _rOwned[recipient] + rTransferAmount (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#752)
+		- _rOwned[recipient] = _rOwned[recipient] + rTransferAmount (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#764)
+		- _rOwned[recipient] = _rOwned[recipient] + rTransferAmount (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#776)
+		- _rOwned[recipient] = _rOwned[recipient] + rTransferAmount (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#789)
+	Venify._rOwned (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#328) can be used in cross function reentrancies:
+	- Venify._getCurrentSupply() (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#560-570)
+	- Venify._takeBurn(address,uint256,uint256,uint256) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#592-601)
+	- Venify._takeBuyback(uint256) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#572-580)
+	- Venify._takeMarketing(uint256) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#582-590)
+	- Venify._transferBothExcluded(address,address,uint256) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#783-794)
+	- Venify._transferFromExcluded(address,address,uint256) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#771-781)
+	- Venify._transferStandard(address,address,uint256) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#748-757)
+	- Venify._transferToExcluded(address,address,uint256) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#759-769)
+	- Venify.balanceOf(address) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#412-415)
+	- Venify.constructor() (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#378-394)
+	- Venify.deliver(uint256) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#455-462)
+	- Venify.excludeFromReward(address) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#481-488)
+	- _tokenTransfer(from,to,amount) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#689)
+		- _rTotal = _rTotal - rFee (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#528)
+	Venify._rTotal (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#342) can be used in cross function reentrancies:
+	- Venify._getCurrentSupply() (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#560-570)
+	- Venify._reflectFee(uint256,uint256) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#527-530)
+	- Venify.constructor() (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#378-394)
+	- Venify.deliver(uint256) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#455-462)
+	- Venify.tokenFromReflection(uint256) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#475-479)
+	- _tokenTransfer(from,to,amount) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#689)
+		- _tOwned[address(this)] = _tOwned[address(this)] + tBuyback (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#578)
+		- _tOwned[address(this)] = _tOwned[address(this)] + tMarketing (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#588)
+		- _tOwned[sender] = _tOwned[sender] - tAmount (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#774)
+		- _tOwned[sender] = _tOwned[sender] - tAmount (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#786)
+		- _tOwned[recipient] = _tOwned[recipient] + tTransferAmount (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#763)
+		- _tOwned[recipient] = _tOwned[recipient] + tTransferAmount (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#788)
+	Venify._tOwned (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#329) can be used in cross function reentrancies:
+	- Venify._getCurrentSupply() (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#560-570)
+	- Venify._takeBuyback(uint256) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#572-580)
+	- Venify._takeMarketing(uint256) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#582-590)
+	- Venify._transferBothExcluded(address,address,uint256) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#783-794)
+	- Venify._transferFromExcluded(address,address,uint256) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#771-781)
+	- Venify._transferToExcluded(address,address,uint256) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#759-769)
+	- Venify.balanceOf(address) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#412-415)
+	- Venify.excludeFromReward(address) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#481-488)
+	- Venify.includeInReward(address) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#490-501)
+	- _tokenTransfer(from,to,amount) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#689)
+		- buyBackFee = _previousBuyBackFee (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#636)
+		- buyBackFee = 0 (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#629)
+	Venify.buyBackFee (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#351) can be used in cross function reentrancies:
+	- Venify._transfer(address,address,uint256) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#653-690)
+	- Venify.buyBackFee (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#351)
+	- Venify.calculateBuyBackFee(uint256) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#607-609)
+	- Venify.removeAllFee() (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#620-632)
+	- Venify.restoreAllFee() (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#634-639)
+	- Venify.setBurnFeePercent(uint256) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#836-840)
+	- Venify.setBuyBackFeePercent(uint256) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#830-834)
+	- Venify.setMarketingFeePercent(uint256) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#824-828)
+	- Venify.setTaxFeePercent(uint256) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#818-822)
+	- inSwapAndLiquify = false (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#685)
+	Venify.inSwapAndLiquify (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#369) can be used in cross function reentrancies:
+	- Venify._transfer(address,address,uint256) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#653-690)
+	- _tokenTransfer(from,to,amount) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#689)
+		- marketingFee = _previousMarketingFee (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#637)
+		- marketingFee = 0 (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#630)
+	Venify.marketingFee (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#345) can be used in cross function reentrancies:
+	- Venify._transfer(address,address,uint256) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#653-690)
+	- Venify.calculateMarketingFee(uint256) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#611-613)
+	- Venify.marketingFee (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#345)
+	- Venify.removeAllFee() (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#620-632)
+	- Venify.restoreAllFee() (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#634-639)
+	- Venify.setBurnFeePercent(uint256) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#836-840)
+	- Venify.setBuyBackFeePercent(uint256) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#830-834)
+	- Venify.setMarketingFeePercent(uint256) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#824-828)
+	- Venify.setTaxFeePercent(uint256) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#818-822)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+Venify.claimStuckTokens(address) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#505-514) ignores return value by ERC20token.transfer(msg.sender,balance) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#513)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+Venify._takeBurn(address,uint256,uint256,uint256) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#592-601) performs a multiplication on the result of a division:
+	- tBurn = (tAmount / 100) * burnFee (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#594)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+Venify.allowance(address,address).owner (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#422) shadows:
+	- Ownable.owner() (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#27-29) (function)
+Venify._approve(address,address,uint256).owner (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#645) shadows:
+	- Ownable.owner() (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#27-29) (function)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#local-variable-shadowing
+
+Venify.setSwapTokensAtAmount(uint256) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#711-714) should emit an event for: 
+	- swapTokensAtAmount = newAmount (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#713) 
+Venify.setTaxFeePercent(uint256) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#818-822) should emit an event for: 
+	- taxFee = _taxFee (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#819) 
+Venify.setMarketingFeePercent(uint256) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#824-828) should emit an event for: 
+	- marketingFee = _marketing (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#825) 
+Venify.setBuyBackFeePercent(uint256) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#830-834) should emit an event for: 
+	- buyBackFee = _buyBackFee (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#831) 
+Venify.setBurnFeePercent(uint256) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#836-840) should emit an event for: 
+	- burnFee = _burnFee (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#837) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+Reentrancy in Venify._transfer(address,address,uint256) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#653-690):
+	External calls:
+	- swapTokensForETH(contractTokenBalance) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#675)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#702-708)
+	- sendETH(address(buyBackWallet),(newBalance * buyBackFee) / taxForSwap) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#678)
+		- (success,None) = recipient.call{value: amount}() (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#523)
+	- sendETH(address(marketingWallet),(newBalance * marketingFee) / taxForSwap) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#682)
+		- (success,None) = recipient.call{value: amount}() (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#523)
+	External calls sending eth:
+	- sendETH(address(buyBackWallet),(newBalance * buyBackFee) / taxForSwap) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#678)
+		- (success,None) = recipient.call{value: amount}() (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#523)
+	- sendETH(address(marketingWallet),(newBalance * marketingFee) / taxForSwap) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#682)
+		- (success,None) = recipient.call{value: amount}() (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#523)
+	State variables written after the call(s):
+	- _tokenTransfer(from,to,amount) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#689)
+		- _previousBurnFee = burnFee (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#626)
+	- _tokenTransfer(from,to,amount) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#689)
+		- _previousBuyBackFee = buyBackFee (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#624)
+	- _tokenTransfer(from,to,amount) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#689)
+		- _previousMarketingFee = marketingFee (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#625)
+	- _tokenTransfer(from,to,amount) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#689)
+		- _previousTaxFee = taxFee (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#623)
+	- _tokenTransfer(from,to,amount) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#689)
+		- _tFeeTotal = _tFeeTotal + tFee (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#529)
+	- _tokenTransfer(from,to,amount) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#689)
+		- burnFee = _previousBurnFee (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#638)
+		- burnFee = 0 (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#631)
+	- _tokenTransfer(from,to,amount) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#689)
+		- taxFee = _previousTaxFee (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#635)
+		- taxFee = 0 (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#628)
+Reentrancy in Venify.transferFrom(address,address,uint256) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#431-435):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#432)
+		- (success,None) = recipient.call{value: amount}() (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#523)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#702-708)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#432)
+		- (success,None) = recipient.call{value: amount}() (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#523)
+	State variables written after the call(s):
+	- _approve(sender,_msgSender(),_allowances[sender][_msgSender()] - amount) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#433)
+		- _allowances[owner][spender] = amount (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#649)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in Venify._transfer(address,address,uint256) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#653-690):
+	External calls:
+	- swapTokensForETH(contractTokenBalance) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#675)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#702-708)
+	- sendETH(address(buyBackWallet),(newBalance * buyBackFee) / taxForSwap) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#678)
+		- (success,None) = recipient.call{value: amount}() (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#523)
+	- sendETH(address(marketingWallet),(newBalance * marketingFee) / taxForSwap) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#682)
+		- (success,None) = recipient.call{value: amount}() (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#523)
+	External calls sending eth:
+	- sendETH(address(buyBackWallet),(newBalance * buyBackFee) / taxForSwap) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#678)
+		- (success,None) = recipient.call{value: amount}() (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#523)
+	- sendETH(address(marketingWallet),(newBalance * marketingFee) / taxForSwap) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#682)
+		- (success,None) = recipient.call{value: amount}() (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#523)
+	Event emitted after the call(s):
+	- Transfer(sender,DEAD,tBurn) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#599)
+		- _tokenTransfer(from,to,amount) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#689)
+	- Transfer(sender,recipient,tTransferAmount) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#756)
+		- _tokenTransfer(from,to,amount) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#689)
+	- Transfer(sender,recipient,tTransferAmount) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#768)
+		- _tokenTransfer(from,to,amount) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#689)
+	- Transfer(sender,recipient,tTransferAmount) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#780)
+		- _tokenTransfer(from,to,amount) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#689)
+	- Transfer(sender,recipient,tTransferAmount) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#793)
+		- _tokenTransfer(from,to,amount) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#689)
+Reentrancy in Venify.transferFrom(address,address,uint256) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#431-435):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#432)
+		- (success,None) = recipient.call{value: amount}() (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#523)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#702-708)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#432)
+		- (success,None) = recipient.call{value: amount}() (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#523)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#650)
+		- _approve(sender,_msgSender(),_allowances[sender][_msgSender()] - amount) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#433)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+Address.isContract(address) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#65-74) uses assembly
+	- INLINE ASM (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#72)
+Address._functionCallWithValue(address,bytes,uint256,string) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#101-122) uses assembly
+	- INLINE ASM (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#114-117)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#assembly-usage
+
+Venify.includeInReward(address) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#490-501) has costly operations inside a loop:
+	- _excluded.pop() (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#497)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#costly-operations-inside-a-loop
+
+Context._msgData() (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#10-13) is never used and should be removed
+Venify.calculateBurnFee(uint256) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#615-617) is never used and should be removed
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dead-code
+
+Venify._tTotal (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#341) is set pre-construction with a non-constant function or state variable:
+	- 1_000_000 * (10 ** _decimals)
+Venify._rTotal (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#342) is set pre-construction with a non-constant function or state variable:
+	- (MAX - (MAX % _tTotal))
+Venify._previousMarketingFee (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#346) is set pre-construction with a non-constant function or state variable:
+	- marketingFee
+Venify._previousTaxFee (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#349) is set pre-construction with a non-constant function or state variable:
+	- taxFee
+Venify._previousBuyBackFee (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#352) is set pre-construction with a non-constant function or state variable:
+	- buyBackFee
+Venify._previousBurnFee (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#355) is set pre-construction with a non-constant function or state variable:
+	- burnFee
+Venify.totalFees (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#357) is set pre-construction with a non-constant function or state variable:
+	- marketingFee + taxFee + buyBackFee + burnFee
+Venify.swapTokensAtAmount (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#371) is set pre-construction with a non-constant function or state variable:
+	- _tTotal / 5000
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#function-initializing-state
+
+Version constraint 0.8.17 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- VerbatimInvalidDeduplication
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess.
+It is used by:
+	- 0.8.17 (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#3)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in Address.sendValue(address,uint256) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#76-82):
+	- (success,None) = recipient.call{value: amount}() (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#80)
+Low level call in Address._functionCallWithValue(address,bytes,uint256,string) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#101-122):
+	- (success,returndata) = target.call{value: weiValue}(data) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#105)
+Low level call in Venify.sendETH(address,uint256) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#520-525):
+	- (success,None) = recipient.call{value: amount}() (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#523)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Function IUniswapV2Pair.DOMAIN_SEPARATOR() (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#156) is not in mixedCase
+Function IUniswapV2Pair.PERMIT_TYPEHASH() (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#157) is not in mixedCase
+Function IUniswapV2Pair.MINIMUM_LIQUIDITY() (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#173) is not in mixedCase
+Function IUniswapV2Router01.WETH() (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#192) is not in mixedCase
+Parameter Venify.calculateTaxFee(uint256)._amount (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#603) is not in mixedCase
+Parameter Venify.calculateBuyBackFee(uint256)._amount (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#607) is not in mixedCase
+Parameter Venify.calculateMarketingFee(uint256)._amount (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#611) is not in mixedCase
+Parameter Venify.calculateBurnFee(uint256)._amount (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#615) is not in mixedCase
+Parameter Venify.setSwapEnabled(bool)._enabled (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#716) is not in mixedCase
+Parameter Venify.changeMarketingWallet(address)._marketingWallet (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#804) is not in mixedCase
+Parameter Venify.changeBuyBackWallet(address)._buyBackWallet (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#811) is not in mixedCase
+Parameter Venify.setTaxFeePercent(uint256)._taxFee (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#818) is not in mixedCase
+Parameter Venify.setMarketingFeePercent(uint256)._marketing (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#824) is not in mixedCase
+Parameter Venify.setBuyBackFeePercent(uint256)._buyBackFee (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#830) is not in mixedCase
+Parameter Venify.setBurnFeePercent(uint256)._burnFee (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#836) is not in mixedCase
+Variable Venify.DEAD (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#364) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Redundant expression "this (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#11)" inContext (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#5-14)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#redundant-statements
+
+Venify.setSwapTokensAtAmount(uint256) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#711-714) uses literals with too many digits:
+	- require(bool,string)(newAmount > totalSupply() / 100000,SwapTokensAtAmount must be greater than 0.001% of total supply) (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#712)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+Loop condition i < _excluded.length (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#563) should use cached array length instead of referencing `length` member of the storage array.
+ Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#cache-array-length
+
+Venify.DEAD (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#364) should be constant 
+Venify._decimals (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#338) should be constant 
+Venify._name (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#336) should be constant 
+Venify._symbol (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#337) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+
+Venify._tTotal (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#341) should be immutable 
+Venify.uniswapV2Pair (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#367) should be immutable 
+Venify.uniswapV2Router (0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol#366) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+./0x00dd5ad8f5d9c5118bceeb526c55ea6b2c07e922.sol analyzed (9 contracts with 94 detectors), 57 result(s) found
+
+real	0m4.827s
+user	0m4.537s
+sys	0m0.291s

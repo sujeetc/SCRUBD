@@ -1,0 +1,327 @@
+'solc --version' running
+'solc ./0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol:
+./0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol:4:20: Warning: Unused function parameter. Remove or comment out the variable name to silence this warning.
+	function validate(address _from, address _to, uint256 _amount) public returns (bool allowed) {
+	                  ^-----------^
+./0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol:4:35: Warning: Unused function parameter. Remove or comment out the variable name to silence this warning.
+	function validate(address _from, address _to, uint256 _amount) public returns (bool allowed) {
+	                                 ^---------^
+./0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol:4:48: Warning: Unused function parameter. Remove or comment out the variable name to silence this warning.
+	function validate(address _from, address _to, uint256 _amount) public returns (bool allowed) {
+	                                              ^-------------^
+./0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol:110:2: Warning: Function state mutability can be restricted to pure
+	function error(string _error) internal {
+ ^ (Relevant source part starts here and spans across multiple lines).
+./0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol:4:2: Warning: Function state mutability can be restricted to pure
+	function validate(address _from, address _to, uint256 _amount) public returns (bool allowed) {
+ ^ (Relevant source part starts here and spans across multiple lines).
+
+
+ICO.buyTokensLowLevel(address,uint256) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#530-584) performs a multiplication on the result of a division:
+	- tokenAmount = _weisAmount.mul(weisPerEther).div(weisPerBigToken) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#567)
+	- tokenAmount = tokenAmount.mul(100).div(discountedPricePercentage) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#570)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+RefundVault.setMyICOContract(address) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#388-391) uses a dangerous strict equality:
+	- require(bool)(address(this).balance == 0) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#389)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-strict-equalities
+
+Reentrancy in ICO.finalize(bool) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#607-645):
+	External calls:
+	- ! SCRefundVault.close() (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#614)
+	- ! SCRefundVault.enableRefunds() (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#619)
+	- balanceAmount = SCTokens.balanceOf(this) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#629)
+	- ! SCTokens.transfer(address(SCEscrow),balanceAmount) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#630)
+	- ! SCEscrow.deposit(balanceAmount) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#635)
+	State variables written after the call(s):
+	- isFinalized = true (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#640)
+	ICO.isFinalized (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#459) can be used in cross function reentrancies:
+	- ICO.buyTokensLowLevel(address,uint256) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#530-584)
+	- ICO.claimRefund() (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#650-675)
+	- ICO.finalize(bool) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#607-645)
+	- ICO.isFinalized (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#459)
+Reentrancy in Escrow.fundICO(uint256,uint8) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#208-229):
+	External calls:
+	- success = SCTokens.transfer(addressSCICO,_amount) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#222)
+	State variables written after the call(s):
+	- deposited[this] = deposited[this].sub(_amount) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#224)
+	Escrow.deposited (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#155) can be used in cross function reentrancies:
+	- Escrow.balanceOf(address) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#249-251)
+	- Escrow.constructor() (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#171-181)
+	- Escrow.deposit(uint256) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#183-191)
+	- Escrow.deposited (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#155)
+	- Escrow.fundICO(uint256,uint8) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#208-229)
+	- Escrow.withdraw(address,uint256) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#196-203)
+	- nextStage ++ (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#225)
+	Escrow.nextStage (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#156) can be used in cross function reentrancies:
+	- Escrow.fundICO(uint256,uint8) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#208-229)
+Reentrancy in Tokens.refundTokens(address,uint256) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#963-989):
+	External calls:
+	- ! SCComplianceService.validate(_from,addressSCICO,_amount) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#979)
+	State variables written after the call(s):
+	- balances[_from] = balances[_from].sub(_amount) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#984)
+	Tokens.balances (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#778) can be used in cross function reentrancies:
+	- Tokens.balanceOf(address) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#849-851)
+	- Tokens.constructor(address,address) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#817-835)
+	- Tokens.refundTokens(address,uint256) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#963-989)
+	- Tokens.totalSupply() (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#840-844)
+	- Tokens.transfer(address,uint256) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#856-872)
+	- Tokens.transferFrom(address,address,uint256) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#881-902)
+	- balances[addressSCICO] = balances[addressSCICO].add(_amount) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#985)
+	Tokens.balances (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#778) can be used in cross function reentrancies:
+	- Tokens.balanceOf(address) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#849-851)
+	- Tokens.constructor(address,address) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#817-835)
+	- Tokens.refundTokens(address,uint256) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#963-989)
+	- Tokens.totalSupply() (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#840-844)
+	- Tokens.transfer(address,uint256) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#856-872)
+	- Tokens.transferFrom(address,address,uint256) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#881-902)
+Reentrancy in Tokens.transfer(address,uint256) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#856-872):
+	External calls:
+	- ! SCComplianceService.validate(msg.sender,_to,_amount) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#862)
+	State variables written after the call(s):
+	- balances[msg.sender] = balances[msg.sender].sub(_amount) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#867)
+	Tokens.balances (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#778) can be used in cross function reentrancies:
+	- Tokens.balanceOf(address) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#849-851)
+	- Tokens.constructor(address,address) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#817-835)
+	- Tokens.refundTokens(address,uint256) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#963-989)
+	- Tokens.totalSupply() (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#840-844)
+	- Tokens.transfer(address,uint256) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#856-872)
+	- Tokens.transferFrom(address,address,uint256) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#881-902)
+	- balances[_to] = balances[_to].add(_amount) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#868)
+	Tokens.balances (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#778) can be used in cross function reentrancies:
+	- Tokens.balanceOf(address) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#849-851)
+	- Tokens.constructor(address,address) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#817-835)
+	- Tokens.refundTokens(address,uint256) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#963-989)
+	- Tokens.totalSupply() (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#840-844)
+	- Tokens.transfer(address,uint256) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#856-872)
+	- Tokens.transferFrom(address,address,uint256) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#881-902)
+Reentrancy in Tokens.transferFrom(address,address,uint256) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#881-902):
+	External calls:
+	- ! SCComplianceService.validate(_from,_to,_amount) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#891)
+	State variables written after the call(s):
+	- allowed[_from][msg.sender] = allowed[_from][msg.sender].sub(_amount) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#898)
+	Tokens.allowed (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#779) can be used in cross function reentrancies:
+	- Tokens.allowance(address,address) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#918-920)
+	- Tokens.approve(address,uint256) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#908-913)
+	- Tokens.decreaseApproval(address,uint256) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#948-957)
+	- Tokens.increaseApproval(address,uint256) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#932-936)
+	- Tokens.transferFrom(address,address,uint256) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#881-902)
+	- balances[_from] = balances[_from].sub(_amount) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#896)
+	Tokens.balances (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#778) can be used in cross function reentrancies:
+	- Tokens.balanceOf(address) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#849-851)
+	- Tokens.constructor(address,address) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#817-835)
+	- Tokens.refundTokens(address,uint256) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#963-989)
+	- Tokens.totalSupply() (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#840-844)
+	- Tokens.transfer(address,uint256) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#856-872)
+	- Tokens.transferFrom(address,address,uint256) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#881-902)
+	- balances[_to] = balances[_to].add(_amount) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#897)
+	Tokens.balances (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#778) can be used in cross function reentrancies:
+	- Tokens.balanceOf(address) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#849-851)
+	- Tokens.constructor(address,address) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#817-835)
+	- Tokens.refundTokens(address,uint256) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#963-989)
+	- Tokens.totalSupply() (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#840-844)
+	- Tokens.transfer(address,uint256) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#856-872)
+	- Tokens.transferFrom(address,address,uint256) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#881-902)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+Tokens.refundTokens(address,uint256) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#963-989) uses tx.origin for authorization: tx.origin != _from (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#964)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-usage-of-txorigin
+
+RefundVault.setMyICOContract(address) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#388-391) should emit an event for: 
+	- addressSCICO = _SCICO (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#390) 
+Tokens.setMyICOContract(address) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#994-996) should emit an event for: 
+	- addressSCICO = _SCICO (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#995) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-access-control
+
+Escrow.setMyICOContract(address)._SCICO (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#234) lacks a zero-check on :
+		- addressSCICO = _SCICO (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#235)
+Escrow.setTokensContract(address)._addressSCTokens (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#241) lacks a zero-check on :
+		- addressSCTokens = _addressSCTokens (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#242)
+RefundVault.setMyICOContract(address)._SCICO (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#388) lacks a zero-check on :
+		- addressSCICO = _SCICO (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#390)
+Tokens.constructor(address,address)._addressSCEscrow (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#817) lacks a zero-check on :
+		- addressSCEscrow = _addressSCEscrow (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#827)
+Tokens.constructor(address,address)._addressSCComplianceService (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#817) lacks a zero-check on :
+		- addressSCComplianceService = _addressSCComplianceService (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#828)
+Tokens.setMyICOContract(address)._SCICO (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#994) lacks a zero-check on :
+		- addressSCICO = _SCICO (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#995)
+Tokens.setComplianceService(address)._addressSCComplianceService (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#998) lacks a zero-check on :
+		- addressSCComplianceService = _addressSCComplianceService (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#999)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Modifier Whitelist.isManager() (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#1054-1060) does not always execute _; or revert
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-modifier
+
+Reentrancy in ICO.buyTokensLowLevel(address,uint256) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#530-584):
+	External calls:
+	- ! SCWhitelist.isInvestor(_beneficiary) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#541)
+	State variables written after the call(s):
+	- weisRaised = weisRaised.add(_weisAmount) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#573)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in ICO.buyTokens() (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#495-513):
+	External calls:
+	- tokenAmount = buyTokensLowLevel(msg.sender,msg.value) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#501)
+		- ! SCWhitelist.isInvestor(_beneficiary) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#541)
+		- ! SCTokens.transfer(_beneficiary,tokenAmount) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#576)
+	- ! SCRefundVault.deposit.value(msg.value)(msg.sender,tokenAmount) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#504)
+	External calls sending eth:
+	- ! SCRefundVault.deposit.value(msg.value)(msg.sender,tokenAmount) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#504)
+	Event emitted after the call(s):
+	- BuyTokens(msg.sender,msg.value,tokenAmount) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#510)
+Reentrancy in ICO.buyTokensLowLevel(address,uint256) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#530-584):
+	External calls:
+	- ! SCWhitelist.isInvestor(_beneficiary) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#541)
+	- ! SCTokens.transfer(_beneficiary,tokenAmount) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#576)
+	Event emitted after the call(s):
+	- BuyTokensLowLevel(msg.sender,_beneficiary,_weisAmount,tokenAmount) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#581)
+Reentrancy in ICO.claimRefund() (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#650-675):
+	External calls:
+	- ! SCRefundVault.isRefunding() (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#656)
+	- tokenAmount = SCRefundVault.getTokensAcquired(msg.sender) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#662)
+	Event emitted after the call(s):
+	- GetBackTokensOnRefund(msg.sender,this,tokenAmount) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#663)
+Reentrancy in ICO.finalize(bool) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#607-645):
+	External calls:
+	- ! SCRefundVault.enableRefunds() (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#619)
+	Event emitted after the call(s):
+	- ForceRefund() (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#624)
+Reentrancy in ICO.finalize(bool) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#607-645):
+	External calls:
+	- ! SCRefundVault.close() (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#614)
+	- ! SCRefundVault.enableRefunds() (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#619)
+	- balanceAmount = SCTokens.balanceOf(this) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#629)
+	- ! SCTokens.transfer(address(SCEscrow),balanceAmount) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#630)
+	- ! SCEscrow.deposit(balanceAmount) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#635)
+	Event emitted after the call(s):
+	- Finalized() (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#642)
+Reentrancy in Escrow.fundICO(uint256,uint8) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#208-229):
+	External calls:
+	- success = SCTokens.transfer(addressSCICO,_amount) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#222)
+	Event emitted after the call(s):
+	- FundICO(addressSCICO,_amount) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#226)
+Reentrancy in Tokens.refundTokens(address,uint256) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#963-989):
+	External calls:
+	- ! SCComplianceService.validate(_from,addressSCICO,_amount) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#979)
+	Event emitted after the call(s):
+	- Transfer(_from,addressSCICO,_amount) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#986)
+Reentrancy in Tokens.transfer(address,uint256) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#856-872):
+	External calls:
+	- ! SCComplianceService.validate(msg.sender,_to,_amount) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#862)
+	Event emitted after the call(s):
+	- Transfer(msg.sender,_to,_amount) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#869)
+Reentrancy in Tokens.transferFrom(address,address,uint256) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#881-902):
+	External calls:
+	- ! SCComplianceService.validate(_from,_to,_amount) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#891)
+	Event emitted after the call(s):
+	- Transfer(_from,_to,_amount) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#899)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+ICO.buyTokensLowLevel(address,uint256) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#530-584) uses timestamp for comparisons
+	Dangerous comparisons:
+	- timestamp() < startTime || timestamp() > endTime (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#536)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Version constraint ^0.4.13 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ExpExponentCleanup
+	- NestedArrayFunctionCallDecoder
+	- ZeroFunctionSelector
+	- DelegateCallReturnValue
+	- ECRecoverMalformedInput.
+It is used by:
+	- ^0.4.13 (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#1)
+solc-0.4.24 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Parameter System.error(string)._error (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#110) is not in mixedCase
+Parameter Escrow.deposit(uint256)._amount (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#183) is not in mixedCase
+Parameter Escrow.withdraw(address,uint256)._address (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#196) is not in mixedCase
+Parameter Escrow.withdraw(address,uint256)._amount (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#196) is not in mixedCase
+Parameter Escrow.fundICO(uint256,uint8)._amount (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#208) is not in mixedCase
+Parameter Escrow.fundICO(uint256,uint8)._stage (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#208) is not in mixedCase
+Parameter Escrow.setMyICOContract(address)._SCICO (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#234) is not in mixedCase
+Parameter Escrow.setTokensContract(address)._addressSCTokens (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#241) is not in mixedCase
+Parameter Escrow.balanceOf(address)._address (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#249) is not in mixedCase
+Variable Escrow.SCTokens (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#163) is not in mixedCase
+Parameter RefundVault.weisDeposited(address)._investor (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#300) is not in mixedCase
+Parameter RefundVault.getTokensAcquired(address)._investor (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#304) is not in mixedCase
+Parameter RefundVault.deposit(address,uint256)._investor (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#311) is not in mixedCase
+Parameter RefundVault.deposit(address,uint256)._tokenAmount (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#311) is not in mixedCase
+Parameter RefundVault.refund(address)._investor (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#359) is not in mixedCase
+Parameter RefundVault.setMyICOContract(address)._SCICO (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#388) is not in mixedCase
+Parameter ICO.buyTokensLowLevel(address,uint256)._beneficiary (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#530) is not in mixedCase
+Parameter ICO.buyTokensLowLevel(address,uint256)._weisAmount (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#530) is not in mixedCase
+Parameter ICO.updateEndTime(uint256)._endTime (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#597) is not in mixedCase
+Parameter ICO.finalize(bool)._forceRefund (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#607) is not in mixedCase
+Variable ICO.SCTokens (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#451) is not in mixedCase
+Variable ICO.SCRefundVault (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#452) is not in mixedCase
+Variable ICO.SCWhitelist (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#453) is not in mixedCase
+Variable ICO.SCEscrow (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#454) is not in mixedCase
+Variable ICO.ICOStage (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#477) is not in mixedCase
+Parameter Tokens.balanceOf(address)._owner (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#849) is not in mixedCase
+Parameter Tokens.transfer(address,uint256)._to (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#856) is not in mixedCase
+Parameter Tokens.transfer(address,uint256)._amount (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#856) is not in mixedCase
+Parameter Tokens.transferFrom(address,address,uint256)._from (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#881) is not in mixedCase
+Parameter Tokens.transferFrom(address,address,uint256)._to (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#881) is not in mixedCase
+Parameter Tokens.transferFrom(address,address,uint256)._amount (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#881) is not in mixedCase
+Parameter Tokens.approve(address,uint256)._spender (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#908) is not in mixedCase
+Parameter Tokens.approve(address,uint256)._amount (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#908) is not in mixedCase
+Parameter Tokens.allowance(address,address)._owner (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#918) is not in mixedCase
+Parameter Tokens.allowance(address,address)._spender (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#918) is not in mixedCase
+Parameter Tokens.increaseApproval(address,uint256)._spender (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#932) is not in mixedCase
+Parameter Tokens.increaseApproval(address,uint256)._addedValue (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#932) is not in mixedCase
+Parameter Tokens.decreaseApproval(address,uint256)._spender (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#948) is not in mixedCase
+Parameter Tokens.decreaseApproval(address,uint256)._subtractedValue (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#948) is not in mixedCase
+Parameter Tokens.refundTokens(address,uint256)._from (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#963) is not in mixedCase
+Parameter Tokens.refundTokens(address,uint256)._amount (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#963) is not in mixedCase
+Parameter Tokens.setMyICOContract(address)._SCICO (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#994) is not in mixedCase
+Parameter Tokens.setComplianceService(address)._addressSCComplianceService (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#998) is not in mixedCase
+Parameter Tokens.updateTimeLock(uint256)._timelockEndTime (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#1006) is not in mixedCase
+Variable Tokens._totalSupply (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#780) is not in mixedCase
+Variable Tokens.SCComplianceService (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#799) is not in mixedCase
+Parameter Whitelist.isInvestor(address)._wallet (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#1034) is not in mixedCase
+Parameter Whitelist.addInvestor(address)._wallet (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#1041) is not in mixedCase
+Parameter Whitelist.addManager(address)._managerAddr (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#1063) is not in mixedCase
+Parameter Whitelist.delManager(address)._managerAddr (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#1075) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in RefundVault.close() (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#325-339):
+	External calls:
+	- walletFounder1.transfer(address(this).balance.mul(33).div(100)) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#332)
+	- walletFounder2.transfer(address(this).balance.mul(50).div(100)) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#333)
+	- walletFounder3.transfer(address(this).balance) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#334)
+	Event emitted after the call(s):
+	- Closed() (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#336)
+Reentrancy in RefundVault.refund(address) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#359-376):
+	External calls:
+	- _investor.transfer(depositedValue) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#371)
+	Event emitted after the call(s):
+	- Refunded(_investor,depositedValue) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#373)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+Escrow.constructor() (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#171-181) uses literals with too many digits:
+	- totalSupply = 1350000000000000000000000000 (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#173)
+Tokens.constructor(address,address) (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#817-835) uses literals with too many digits:
+	- _totalSupply = 1350000000000000000000000000 (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#823)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+ICO.tokensSoftCap (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#472) should be constant 
+Tokens.standard (0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol#786) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+./0x2cc6ca9c3023a6a876fd54a03f68281c7aad0e8b.sol analyzed (12 contracts with 94 detectors), 87 result(s) found
+
+real	0m3.034s
+user	0m2.784s
+sys	0m0.252s

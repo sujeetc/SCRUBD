@@ -1,0 +1,70 @@
+'solc --version' running
+'solc ./0xf847b0052b9d369401b0d71465f28392ea7e3304.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0xf847b0052b9d369401b0d71465f28392ea7e3304.sol:
+./0xf847b0052b9d369401b0d71465f28392ea7e3304.sol:128:13: Warning: Failure condition of 'send' ignored. Consider using 'transfer' instead.
+            MARKETING.send(msg.value / 10); 
+            ^----------------------------^
+./0xf847b0052b9d369401b0d71465f28392ea7e3304.sol:130:13: Warning: Failure condition of 'send' ignored. Consider using 'transfer' instead.
+            MARKETING.send(msg.value / 20); 
+            ^----------------------------^
+./0xf847b0052b9d369401b0d71465f28392ea7e3304.sol:131:13: Warning: Failure condition of 'send' ignored. Consider using 'transfer' instead.
+            referral.send(msg.value / 20); 
+            ^---------------------------^
+
+
+Pandora.bytesToAddress(bytes) (0xf847b0052b9d369401b0d71465f28392ea7e3304.sol#136-140) is declared view but contains assembly code
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#constant-functions-using-assembly-code
+
+Pandora.payReward() (0xf847b0052b9d369401b0d71465f28392ea7e3304.sol#77-104) performs a multiplication on the result of a division:
+	- getPay = investor.invested * DAY_PERC / 100 * (block.number - investor.lastBlockReward) / 5900 (0xf847b0052b9d369401b0d71465f28392ea7e3304.sol#82)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+Pandora.fallback() (0xf847b0052b9d369401b0d71465f28392ea7e3304.sol#30-48) uses a dangerous strict equality:
+	- investors[msg.sender].invested == 0 (0xf847b0052b9d369401b0d71465f28392ea7e3304.sol#40)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-strict-equalities
+
+Pandora.payToMarketingReferral() (0xf847b0052b9d369401b0d71465f28392ea7e3304.sol#123-134) ignores return value by MARKETING.send(msg.value / 10) (0xf847b0052b9d369401b0d71465f28392ea7e3304.sol#128)
+Pandora.payToMarketingReferral() (0xf847b0052b9d369401b0d71465f28392ea7e3304.sol#123-134) ignores return value by MARKETING.send(msg.value / 20) (0xf847b0052b9d369401b0d71465f28392ea7e3304.sol#130)
+Pandora.payToMarketingReferral() (0xf847b0052b9d369401b0d71465f28392ea7e3304.sol#123-134) ignores return value by referral.send(msg.value / 20) (0xf847b0052b9d369401b0d71465f28392ea7e3304.sol#131)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-send
+
+Variable 'Pandora.addInvestor().referrer (0xf847b0052b9d369401b0d71465f28392ea7e3304.sol#55)' in Pandora.addInvestor() (0xf847b0052b9d369401b0d71465f28392ea7e3304.sol#50-75) potentially used before declaration: investors[referrer].invested > 0 (0xf847b0052b9d369401b0d71465f28392ea7e3304.sol#58)
+Variable 'Pandora.addInvestor().referrer (0xf847b0052b9d369401b0d71465f28392ea7e3304.sol#55)' in Pandora.addInvestor() (0xf847b0052b9d369401b0d71465f28392ea7e3304.sol#50-75) potentially used before declaration: ref = referrer (0xf847b0052b9d369401b0d71465f28392ea7e3304.sol#59)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#pre-declaration-usage-of-local-variables
+
+Pandora.bytesToAddress(bytes) (0xf847b0052b9d369401b0d71465f28392ea7e3304.sol#136-140) uses assembly
+	- INLINE ASM (0xf847b0052b9d369401b0d71465f28392ea7e3304.sol#137-140)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#assembly-usage
+
+Version constraint ^0.4.25 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ABIEncoderV2PackedStorage_0.4.x.
+It is used by:
+	- ^0.4.25 (0xf847b0052b9d369401b0d71465f28392ea7e3304.sol#1)
+solc-0.4.25 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Reentrancy in Pandora.returnDeposit() (0xf847b0052b9d369401b0d71465f28392ea7e3304.sol#106-121):
+	External calls:
+	- msg.sender.transfer(getPay) (0xf847b0052b9d369401b0d71465f28392ea7e3304.sol#115)
+	State variables written after the call(s):
+	- investors[msg.sender] = investor (0xf847b0052b9d369401b0d71465f28392ea7e3304.sol#118)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+./0xf847b0052b9d369401b0d71465f28392ea7e3304.sol analyzed (2 contracts with 94 detectors), 12 result(s) found
+
+real	0m1.497s
+user	0m1.284s
+sys	0m0.215s

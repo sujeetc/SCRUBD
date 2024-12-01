@@ -1,0 +1,113 @@
+'solc --version' running
+'solc ./0x6a3f85f8a86e7b3de0269c20e9ab066dd57b8e21.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+AccRegCenter (0x6a3f85f8a86e7b3de0269c20e9ab066dd57b8e21.sol#42-125) has incorrect ERC20 function interface:AccRegCenter.transfer(address,uint256) (0x6a3f85f8a86e7b3de0269c20e9ab066dd57b8e21.sol#111-115)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-erc20-interface
+
+Reentrancy in AccRegCenter.TransferToAllAccounts() (0x6a3f85f8a86e7b3de0269c20e9ab066dd57b8e21.sol#89-102):
+	External calls:
+	- require(bool)(ERC20Basic(token).transfer(to,val)) (0x6a3f85f8a86e7b3de0269c20e9ab066dd57b8e21.sol#97)
+	State variables written after the call(s):
+	- recievermap[recieverList[i]].lastTransfer = false (0x6a3f85f8a86e7b3de0269c20e9ab066dd57b8e21.sol#92)
+	AccRegCenter.recievermap (0x6a3f85f8a86e7b3de0269c20e9ab066dd57b8e21.sol#55) can be used in cross function reentrancies:
+	- AccRegCenter.AddUser(string,address,uint256) (0x6a3f85f8a86e7b3de0269c20e9ab066dd57b8e21.sol#64-69)
+	- AccRegCenter.GetUser(string) (0x6a3f85f8a86e7b3de0269c20e9ab066dd57b8e21.sol#82-87)
+	- AccRegCenter.ResetAllAmount() (0x6a3f85f8a86e7b3de0269c20e9ab066dd57b8e21.sol#104-109)
+	- AccRegCenter.SetAddress(string,address) (0x6a3f85f8a86e7b3de0269c20e9ab066dd57b8e21.sol#71-74)
+	- AccRegCenter.SetAmount(string,uint256) (0x6a3f85f8a86e7b3de0269c20e9ab066dd57b8e21.sol#76-80)
+	- AccRegCenter.TransferToAllAccounts() (0x6a3f85f8a86e7b3de0269c20e9ab066dd57b8e21.sol#89-102)
+	- AccRegCenter.transfertoacc(string,uint256) (0x6a3f85f8a86e7b3de0269c20e9ab066dd57b8e21.sol#117-123)
+	- recievermap[recieverList[i]].lastTransfer = true (0x6a3f85f8a86e7b3de0269c20e9ab066dd57b8e21.sol#99)
+	AccRegCenter.recievermap (0x6a3f85f8a86e7b3de0269c20e9ab066dd57b8e21.sol#55) can be used in cross function reentrancies:
+	- AccRegCenter.AddUser(string,address,uint256) (0x6a3f85f8a86e7b3de0269c20e9ab066dd57b8e21.sol#64-69)
+	- AccRegCenter.GetUser(string) (0x6a3f85f8a86e7b3de0269c20e9ab066dd57b8e21.sol#82-87)
+	- AccRegCenter.ResetAllAmount() (0x6a3f85f8a86e7b3de0269c20e9ab066dd57b8e21.sol#104-109)
+	- AccRegCenter.SetAddress(string,address) (0x6a3f85f8a86e7b3de0269c20e9ab066dd57b8e21.sol#71-74)
+	- AccRegCenter.SetAmount(string,uint256) (0x6a3f85f8a86e7b3de0269c20e9ab066dd57b8e21.sol#76-80)
+	- AccRegCenter.TransferToAllAccounts() (0x6a3f85f8a86e7b3de0269c20e9ab066dd57b8e21.sol#89-102)
+	- AccRegCenter.transfertoacc(string,uint256) (0x6a3f85f8a86e7b3de0269c20e9ab066dd57b8e21.sol#117-123)
+Reentrancy in AccRegCenter.transfertoacc(string,uint256) (0x6a3f85f8a86e7b3de0269c20e9ab066dd57b8e21.sol#117-123):
+	External calls:
+	- require(bool)(ERC20Basic(token).transfer(to,val)) (0x6a3f85f8a86e7b3de0269c20e9ab066dd57b8e21.sol#120)
+	State variables written after the call(s):
+	- recievermap[key].lastTransfer = true (0x6a3f85f8a86e7b3de0269c20e9ab066dd57b8e21.sol#122)
+	AccRegCenter.recievermap (0x6a3f85f8a86e7b3de0269c20e9ab066dd57b8e21.sol#55) can be used in cross function reentrancies:
+	- AccRegCenter.AddUser(string,address,uint256) (0x6a3f85f8a86e7b3de0269c20e9ab066dd57b8e21.sol#64-69)
+	- AccRegCenter.GetUser(string) (0x6a3f85f8a86e7b3de0269c20e9ab066dd57b8e21.sol#82-87)
+	- AccRegCenter.ResetAllAmount() (0x6a3f85f8a86e7b3de0269c20e9ab066dd57b8e21.sol#104-109)
+	- AccRegCenter.SetAddress(string,address) (0x6a3f85f8a86e7b3de0269c20e9ab066dd57b8e21.sol#71-74)
+	- AccRegCenter.SetAmount(string,uint256) (0x6a3f85f8a86e7b3de0269c20e9ab066dd57b8e21.sol#76-80)
+	- AccRegCenter.TransferToAllAccounts() (0x6a3f85f8a86e7b3de0269c20e9ab066dd57b8e21.sol#89-102)
+	- AccRegCenter.transfertoacc(string,uint256) (0x6a3f85f8a86e7b3de0269c20e9ab066dd57b8e21.sol#117-123)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+AccRegCenter.TransferToAllAccounts() (0x6a3f85f8a86e7b3de0269c20e9ab066dd57b8e21.sol#89-102) has external calls inside a loop: require(bool)(ERC20Basic(token).transfer(to,val)) (0x6a3f85f8a86e7b3de0269c20e9ab066dd57b8e21.sol#97)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation/#calls-inside-a-loop
+
+Reentrancy in AccRegCenter.TransferToAllAccounts() (0x6a3f85f8a86e7b3de0269c20e9ab066dd57b8e21.sol#89-102):
+	External calls:
+	- require(bool)(ERC20Basic(token).transfer(to,val)) (0x6a3f85f8a86e7b3de0269c20e9ab066dd57b8e21.sol#97)
+	Event emitted after the call(s):
+	- TransferTo(to,val) (0x6a3f85f8a86e7b3de0269c20e9ab066dd57b8e21.sol#98)
+Reentrancy in AccRegCenter.transfer(address,uint256) (0x6a3f85f8a86e7b3de0269c20e9ab066dd57b8e21.sol#111-115):
+	External calls:
+	- require(bool)(ERC20Basic(token).transfer(to,val)) (0x6a3f85f8a86e7b3de0269c20e9ab066dd57b8e21.sol#112)
+	Event emitted after the call(s):
+	- TransferTo(to,val) (0x6a3f85f8a86e7b3de0269c20e9ab066dd57b8e21.sol#113)
+Reentrancy in AccRegCenter.transfertoacc(string,uint256) (0x6a3f85f8a86e7b3de0269c20e9ab066dd57b8e21.sol#117-123):
+	External calls:
+	- require(bool)(ERC20Basic(token).transfer(to,val)) (0x6a3f85f8a86e7b3de0269c20e9ab066dd57b8e21.sol#120)
+	Event emitted after the call(s):
+	- TransferToName(to,key,val) (0x6a3f85f8a86e7b3de0269c20e9ab066dd57b8e21.sol#121)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+Version constraint ^0.4.23 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ABIEncoderV2PackedStorage_0.4.x
+	- ExpExponentCleanup
+	- EventStructWrongData.
+It is used by:
+	- ^0.4.23 (0x6a3f85f8a86e7b3de0269c20e9ab066dd57b8e21.sol#1)
+solc-0.4.23 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Function AccRegCenter.AddUser(string,address,uint256) (0x6a3f85f8a86e7b3de0269c20e9ab066dd57b8e21.sol#64-69) is not in mixedCase
+Function AccRegCenter.SetAddress(string,address) (0x6a3f85f8a86e7b3de0269c20e9ab066dd57b8e21.sol#71-74) is not in mixedCase
+Function AccRegCenter.SetAmount(string,uint256) (0x6a3f85f8a86e7b3de0269c20e9ab066dd57b8e21.sol#76-80) is not in mixedCase
+Function AccRegCenter.GetUser(string) (0x6a3f85f8a86e7b3de0269c20e9ab066dd57b8e21.sol#82-87) is not in mixedCase
+Function AccRegCenter.TransferToAllAccounts() (0x6a3f85f8a86e7b3de0269c20e9ab066dd57b8e21.sol#89-102) is not in mixedCase
+Function AccRegCenter.ResetAllAmount() (0x6a3f85f8a86e7b3de0269c20e9ab066dd57b8e21.sol#104-109) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Loop condition i < recieverList.length (0x6a3f85f8a86e7b3de0269c20e9ab066dd57b8e21.sol#105) should use cached array length instead of referencing `length` member of the storage array.
+ Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#cache-array-length
+
+AddUser(string,address,uint256) should be declared external:
+	- AccRegCenter.AddUser(string,address,uint256) (0x6a3f85f8a86e7b3de0269c20e9ab066dd57b8e21.sol#64-69)
+SetAddress(string,address) should be declared external:
+	- AccRegCenter.SetAddress(string,address) (0x6a3f85f8a86e7b3de0269c20e9ab066dd57b8e21.sol#71-74)
+SetAmount(string,uint256) should be declared external:
+	- AccRegCenter.SetAmount(string,uint256) (0x6a3f85f8a86e7b3de0269c20e9ab066dd57b8e21.sol#76-80)
+GetUser(string) should be declared external:
+	- AccRegCenter.GetUser(string) (0x6a3f85f8a86e7b3de0269c20e9ab066dd57b8e21.sol#82-87)
+transfertoacc(string,uint256) should be declared external:
+	- AccRegCenter.transfertoacc(string,uint256) (0x6a3f85f8a86e7b3de0269c20e9ab066dd57b8e21.sol#117-123)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#public-function-that-could-be-declared-external
+./0x6a3f85f8a86e7b3de0269c20e9ab066dd57b8e21.sol analyzed (3 contracts with 94 detectors), 21 result(s) found
+
+real	0m1.506s
+user	0m1.323s
+sys	0m0.187s

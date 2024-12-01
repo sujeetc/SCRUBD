@@ -1,0 +1,411 @@
+'solc --version' running
+'solc ./0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol:
+Warning: This function is named "receive" but is not the receive function of the contract. If you intend this to be a receive function, use "receive(...) { ... }" without the "function" keyword to define it.
+    --> ./0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol:1528:14:
+     |
+1528 |     function receive(uint256 fromChainId, address to, uint256 nonce, uint256 volume, Signature[] memory signatures) virtual external payable {
+     |              ^^^^^^^
+
+Warning: Contract code size exceeds 24576 bytes (a limit introduced in Spurious Dragon). This contract may not be deployable on mainnet. Consider enabling the optimizer (with a low "runs" value!), turning off revert strings, or using libraries.
+    --> ./0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol:1717:1:
+     |
+1717 | contract MappingTokenFactory is ContextUpgradeSafe, Configurable, Constants {
+     | ^ (Relevant source part starts here and spans across multiple lines).
+
+
+
+InitializableUpgradeabilityProxy.initialize(address,bytes) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#328-336) uses delegatecall to a input-controlled function id
+	- (success,None) = _logic.delegatecall(_data) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#333)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#controlled-delegatecall
+
+BaseAdminUpgradeabilityProxy.admin() (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#176-178) calls BaseAdminUpgradeabilityProxy.ifAdmin() (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#165-171) which halt the execution return(uint256,uint256)(0,returndatasize()()) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#54)
+BaseAdminUpgradeabilityProxy.implementation() (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#183-185) calls BaseAdminUpgradeabilityProxy.ifAdmin() (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#165-171) which halt the execution return(uint256,uint256)(0,returndatasize()()) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#54)
+BaseAdminUpgradeabilityProxy.changeAdmin(address) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#192-196) calls BaseAdminUpgradeabilityProxy.ifAdmin() (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#165-171) which halt the execution return(uint256,uint256)(0,returndatasize()()) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#54)
+BaseAdminUpgradeabilityProxy.upgradeTo(address) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#203-205) calls BaseAdminUpgradeabilityProxy.ifAdmin() (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#165-171) which halt the execution return(uint256,uint256)(0,returndatasize()()) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#54)
+BaseAdminUpgradeabilityProxy.upgradeToAndCall(address,bytes) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#216-220) calls BaseAdminUpgradeabilityProxy.ifAdmin() (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#165-171) which halt the execution return(uint256,uint256)(0,returndatasize()()) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#54)
+BaseAdminUpgradeabilityProxy.ifAdmin() (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#165-171) calls Proxy._fallback() (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#71-76) which halt the execution return(uint256,uint256)(0,returndatasize()()) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#54)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-return-in-assembly
+
+Reentrancy in MappingTokenFactory._createMappingToken(uint256,address,address,string,string,uint8,uint256) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1982-1997):
+	External calls:
+	- InitializableProductProxy(address(mappingToken)).__InitializableProductProxy_init(address(this),_MappingToken_,abi.encodeWithSignature(__MappingToken_init(address,uint256,address,address,string,string,uint8,uint256),address(this),mainChainId,token,creator,name,symbol,decimals,cap)) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1993)
+	External calls sending eth:
+	- _chargeFee() (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1983)
+		- feeTo.transfer(msg.value) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#2027)
+	State variables written after the call(s):
+	- mappingTokens[mainChainId][tokenOrCreator] = mappingToken (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1995)
+	MappingTokenFactory.mappingTokens (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1729) can be used in cross function reentrancies:
+	- MappingTokenFactory._createMappingToken(uint256,address,address,string,string,uint8,uint256) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1982-1997)
+	- MappingTokenFactory.mappingTokens (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1729)
+Reentrancy in MappingTokenFactory.createMappableToken(string,string,uint8,uint256) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1965-1979):
+	External calls:
+	- InitializableProductProxy(address(mappableToken)).__InitializableProductProxy_init(address(this),_MappableToken_,abi.encodeWithSignature(__MappableToken_init(address,address,string,string,uint8,uint256),address(this),_msgSender(),name,symbol,decimals,totalSupply)) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1975)
+	External calls sending eth:
+	- _chargeFee() (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1966)
+		- feeTo.transfer(msg.value) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#2027)
+	State variables written after the call(s):
+	- mappableTokens[_msgSender()] = mappableToken (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1977)
+	MappingTokenFactory.mappableTokens (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1728) can be used in cross function reentrancies:
+	- MappingTokenFactory.createMappableToken(string,string,uint8,uint256) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1965-1979)
+	- MappingTokenFactory.mappableTokens (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1728)
+Reentrancy in MappingTokenFactory.createTokenMapped(address) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1947-1962):
+	External calls:
+	- InitializableProductProxy(address(tokenMapped)).__InitializableProductProxy_init(address(this),_TokenMapped_,abi.encodeWithSignature(__TokenMapped_init(address,address),address(this),token)) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1958)
+	External calls sending eth:
+	- _chargeFee() (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1948)
+		- feeTo.transfer(msg.value) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#2027)
+	State variables written after the call(s):
+	- tokenMappeds[token] = tokenMapped (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1960)
+	MappingTokenFactory.tokenMappeds (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1727) can be used in cross function reentrancies:
+	- MappingTokenFactory.createTokenMapped(address) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1947-1962)
+	- MappingTokenFactory.tokenMappeds (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1727)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+MappingTokenFactory.createTokenMapped(address) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1947-1962) ignores return value by IERC20(token).totalSupply() (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1949)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+MappingBase.receive(uint256,address,uint256,uint256,Signature[]) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1528-1547) (function) shadows built-in symbol"
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#builtin-symbol-shadowing
+
+AdminUpgradeabilityProxy.constructor(address,address,bytes)._admin (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#303) shadows:
+	- BaseAdminUpgradeabilityProxy._admin() (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#225-230) (function)
+InitializableAdminUpgradeabilityProxy.initialize(address,address,bytes)._admin (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#355) shadows:
+	- BaseAdminUpgradeabilityProxy._admin() (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#225-230) (function)
+ERC20UpgradeSafe.__ERC20_init(string,string).name (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#956) shadows:
+	- ERC20UpgradeSafe.name() (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#974-976) (function)
+ERC20UpgradeSafe.__ERC20_init(string,string).symbol (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#956) shadows:
+	- ERC20UpgradeSafe.symbol() (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#982-984) (function)
+ERC20UpgradeSafe.__ERC20_init_unchained(string,string).name (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#961) shadows:
+	- ERC20UpgradeSafe.name() (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#974-976) (function)
+ERC20UpgradeSafe.__ERC20_init_unchained(string,string).symbol (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#961) shadows:
+	- ERC20UpgradeSafe.symbol() (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#982-984) (function)
+ERC20CappedUpgradeSafe.__ERC20Capped_init(uint256).cap (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1232) shadows:
+	- ERC20CappedUpgradeSafe.cap() (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1249-1251) (function)
+ERC20CappedUpgradeSafe.__ERC20Capped_init_unchained(uint256).cap (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1237) shadows:
+	- ERC20CappedUpgradeSafe.cap() (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1249-1251) (function)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#local-variable-shadowing
+
+UpgradeabilityProxy.constructor(address,bytes)._logic (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#273) lacks a zero-check on :
+		- (success,None) = _logic.delegatecall(_data) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#277)
+BaseAdminUpgradeabilityProxy.upgradeToAndCall(address,bytes).newImplementation (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#216) lacks a zero-check on :
+		- (success,None) = newImplementation.delegatecall(data) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#218)
+InitializableUpgradeabilityProxy.initialize(address,bytes)._logic (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#328) lacks a zero-check on :
+		- (success,None) = _logic.delegatecall(_data) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#333)
+TokenMapped.__TokenMapped_init_unchained(address,address).factory_ (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1575) lacks a zero-check on :
+		- factory = factory_ (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1576)
+TokenMapped.__TokenMapped_init_unchained(address,address).token_ (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1575) lacks a zero-check on :
+		- token = token_ (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1578)
+MappableToken.__MappableToken_init_unchained(address,address).factory_ (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1638) lacks a zero-check on :
+		- factory = factory_ (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1639)
+MappableToken.__MappableToken_init_unchained(address,address).creator_ (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1638) lacks a zero-check on :
+		- creator = creator_ (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1642)
+MappingToken.__MappingToken_init_unchained(address,uint256,address,address).factory_ (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1683) lacks a zero-check on :
+		- factory = factory_ (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1684)
+MappingToken.__MappingToken_init_unchained(address,uint256,address,address).token_ (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1683) lacks a zero-check on :
+		- token = token_ (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1686)
+MappingToken.__MappingToken_init_unchained(address,uint256,address,address).creator_ (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1683) lacks a zero-check on :
+		- creator = creator_ (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1687)
+Governable.__Governable_init_unchained(address).governor_ (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1352) lacks a zero-check on :
+		- governor = governor_ (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1353)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Modifier BaseAdminUpgradeabilityProxy.ifAdmin() (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#165-171) does not always execute _; or revert
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-modifier
+
+Reentrancy in MappingTokenFactory._createMappingToken(uint256,address,address,string,string,uint8,uint256) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1982-1997):
+	External calls:
+	- InitializableProductProxy(address(mappingToken)).__InitializableProductProxy_init(address(this),_MappingToken_,abi.encodeWithSignature(__MappingToken_init(address,uint256,address,address,string,string,uint8,uint256),address(this),mainChainId,token,creator,name,symbol,decimals,cap)) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1993)
+	External calls sending eth:
+	- _chargeFee() (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1983)
+		- feeTo.transfer(msg.value) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#2027)
+	Event emitted after the call(s):
+	- CreateMappingToken(mainChainId,token,creator,name,symbol,decimals,cap,mappingToken) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1996)
+Reentrancy in MappingTokenFactory.createMappableToken(string,string,uint8,uint256) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1965-1979):
+	External calls:
+	- InitializableProductProxy(address(mappableToken)).__InitializableProductProxy_init(address(this),_MappableToken_,abi.encodeWithSignature(__MappableToken_init(address,address,string,string,uint8,uint256),address(this),_msgSender(),name,symbol,decimals,totalSupply)) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1975)
+	External calls sending eth:
+	- _chargeFee() (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1966)
+		- feeTo.transfer(msg.value) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#2027)
+	Event emitted after the call(s):
+	- CreateMappableToken(_msgSender(),name,symbol,decimals,totalSupply,mappableToken) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1978)
+Reentrancy in MappingTokenFactory.createTokenMapped(address) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1947-1962):
+	External calls:
+	- InitializableProductProxy(address(tokenMapped)).__InitializableProductProxy_init(address(this),_TokenMapped_,abi.encodeWithSignature(__TokenMapped_init(address,address),address(this),token)) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1958)
+	External calls sending eth:
+	- _chargeFee() (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1948)
+		- feeTo.transfer(msg.value) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#2027)
+	Event emitted after the call(s):
+	- CreateTokenMapped(_msgSender(),token,tokenMapped) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1961)
+Reentrancy in MappingTokenFactory.decreaseAuthQuota(address,address,uint256) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1791-1794):
+	External calls:
+	- quota = MappingBase(mappingTokenMapped).decreaseAuthQuota(signatory,decrement) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1792)
+	Event emitted after the call(s):
+	- DecreaseAuthQuota(_msgSender(),mappingTokenMapped,signatory,decrement,quota) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1793)
+Reentrancy in MappingTokenFactory.decreaseAuthQuotas(address,address[],uint256[]) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1785-1789):
+	External calls:
+	- quotas = MappingBase(mappingTokenMapped).decreaseAuthQuotas(signatorys,decrements) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1786)
+	Event emitted after the call(s):
+	- DecreaseAuthQuota(_msgSender(),mappingTokenMapped,signatorys[i],decrements[i],quotas[i]) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1788)
+Reentrancy in MappingTokenFactory.increaseAuthQuota(address,address,uint256) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1779-1782):
+	External calls:
+	- quota = MappingBase(mappingTokenMapped).increaseAuthQuota(signatory,increment) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1780)
+	Event emitted after the call(s):
+	- IncreaseAuthQuota(_msgSender(),mappingTokenMapped,signatory,increment,quota) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1781)
+Reentrancy in MappingTokenFactory.increaseAuthQuotas(address,address[],uint256[]) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1773-1777):
+	External calls:
+	- quotas = MappingBase(mappingTokenMapped).increaseAuthQuotas(signatorys,increments) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1774)
+	Event emitted after the call(s):
+	- IncreaseAuthQuota(_msgSender(),mappingTokenMapped,signatorys[i],increments[i],quotas[i]) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1776)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+Permit.permit(address,address,uint256,uint256,uint8,bytes32,bytes32) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1610-1622) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(deadline >= block.timestamp,permit EXPIRED) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1611)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Proxy._delegate(address) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#37-56) uses assembly
+	- INLINE ASM (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#38-55)
+BaseUpgradeabilityProxy._implementation() (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#104-109) uses assembly
+	- INLINE ASM (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#106-108)
+BaseUpgradeabilityProxy._setImplementation(address) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#124-132) uses assembly
+	- INLINE ASM (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#129-131)
+BaseAdminUpgradeabilityProxy._admin() (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#225-230) uses assembly
+	- INLINE ASM (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#227-229)
+BaseAdminUpgradeabilityProxy._setAdmin(address) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#236-242) uses assembly
+	- INLINE ASM (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#239-241)
+ProductProxy._name() (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#391-394) uses assembly
+	- INLINE ASM (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#393)
+ProductProxy._setName(bytes32) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#396-399) uses assembly
+	- INLINE ASM (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#398)
+ProductProxy._setFactory(address) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#405-413) uses assembly
+	- INLINE ASM (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#410-412)
+ProductProxy._factory() (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#419-424) uses assembly
+	- INLINE ASM (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#421-423)
+Initializable.isConstructor() (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#513-523) uses assembly
+	- INLINE ASM (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#521)
+OpenZeppelinUpgradesAddress.isContract(address) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#763-774) uses assembly
+	- INLINE ASM (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#772)
+Address.isContract(address) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#798-807) uses assembly
+	- INLINE ASM (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#805)
+Constants._chainId() (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1440-1442) uses assembly
+	- INLINE ASM (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1441)
+MappingTokenFactory.createTokenMapped(address) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1947-1962) uses assembly
+	- INLINE ASM (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1955-1957)
+MappingTokenFactory.createMappableToken(string,string,uint8,uint256) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1965-1979) uses assembly
+	- INLINE ASM (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1972-1974)
+MappingTokenFactory._createMappingToken(uint256,address,address,string,string,uint8,uint256) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1982-1997) uses assembly
+	- INLINE ASM (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1990-1992)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#assembly-usage
+
+Configurable._setConfig(bytes32,address,uint256) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1414-1416) is never used and should be removed
+Configurable._setConfig(bytes32,uint256,uint256) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1411-1413) is never used and should be removed
+ContextUpgradeSafe.__Context_init() (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#544-546) is never used and should be removed
+ContextUpgradeSafe._msgData() (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#558-561) is never used and should be removed
+ERC20CappedUpgradeSafe.__ERC20Capped_init(uint256) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1232-1235) is never used and should be removed
+ERC20UpgradeSafe.__ERC20_init(string,string) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#956-959) is never used and should be removed
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dead-code
+
+Version constraint ^0.6.0 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- MissingEscapingInFormatting
+	- ArraySliceDynamicallyEncodedBaseType
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- YulOptimizerRedundantAssignmentBreakContinue.
+It is used by:
+	- ^0.6.0 (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#3)
+solc-0.6.9 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in BaseAdminUpgradeabilityProxy.upgradeToAndCall(address,bytes) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#216-220):
+	- (success,None) = newImplementation.delegatecall(data) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#218)
+Low level call in UpgradeabilityProxy.constructor(address,bytes) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#273-280):
+	- (success,None) = _logic.delegatecall(_data) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#277)
+Low level call in InitializableUpgradeabilityProxy.initialize(address,bytes) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#328-336):
+	- (success,None) = _logic.delegatecall(_data) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#333)
+Low level call in InitializableProductProxy.__InitializableProductProxy_init(address,bytes32,bytes) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#455-465):
+	- (success,None) = _implementation().delegatecall(data_) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#462)
+Low level call in Address.sendValue(address,uint256) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#825-831):
+	- (success,None) = recipient.call{value: amount}() (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#829)
+Low level call in SafeERC20._callOptionalReturn(IERC20,bytes) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1320-1339):
+	- (success,returndata) = address(token).call(data) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1332)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Parameter InitializableUpgradeabilityProxy.initialize(address,bytes)._logic (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#328) is not in mixedCase
+Parameter InitializableUpgradeabilityProxy.initialize(address,bytes)._data (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#328) is not in mixedCase
+Parameter InitializableAdminUpgradeabilityProxy.initialize(address,address,bytes)._admin (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#355) is not in mixedCase
+Parameter InitializableAdminUpgradeabilityProxy.initialize(address,address,bytes)._logic (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#355) is not in mixedCase
+Parameter InitializableAdminUpgradeabilityProxy.initialize(address,address,bytes)._data (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#355) is not in mixedCase
+Function InitializableProductProxy.__InitializableProductProxy_init(address,bytes32,bytes) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#455-465) is not in mixedCase
+Variable Initializable.______gap (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#526) is not in mixedCase
+Function ContextUpgradeSafe.__Context_init() (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#544-546) is not in mixedCase
+Function ContextUpgradeSafe.__Context_init_unchained() (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#548-551) is not in mixedCase
+Variable ContextUpgradeSafe.__gap (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#563) is not in mixedCase
+Function ERC20UpgradeSafe.__ERC20_init(string,string) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#956-959) is not in mixedCase
+Function ERC20UpgradeSafe.__ERC20_init_unchained(string,string) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#961-968) is not in mixedCase
+Variable ERC20UpgradeSafe.__gap (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1217) is not in mixedCase
+Function ERC20CappedUpgradeSafe.__ERC20Capped_init(uint256) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1232-1235) is not in mixedCase
+Function ERC20CappedUpgradeSafe.__ERC20Capped_init_unchained(uint256) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1237-1243) is not in mixedCase
+Variable ERC20CappedUpgradeSafe.__gap (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1268) is not in mixedCase
+Function Governable.__Governable_init_unchained(address) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1352-1355) is not in mixedCase
+Constant Constants._TokenMapped_ (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1431) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant Constants._MappableToken_ (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1432) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant Constants._MappingToken_ (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1433) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant Constants._fee_ (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1434) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant Constants._feeCreate_ (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1435) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant Constants._feeTo_ (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1436) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant Constants._minSignatures_ (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1437) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant Constants._uniswapRounter_ (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1438) is not in UPPER_CASE_WITH_UNDERSCORES
+Function MappingBase.DOMAIN_SEPARATOR() (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1458) is not in mixedCase
+Variable MappingBase._DOMAIN_SEPARATOR (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1457) is not in mixedCase
+Variable MappingBase.__gap (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1563) is not in mixedCase
+Function TokenMapped.__TokenMapped_init(address,address) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1570-1573) is not in mixedCase
+Function TokenMapped.__TokenMapped_init_unchained(address,address) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1575-1581) is not in mixedCase
+Variable TokenMapped.__gap (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1599) is not in mixedCase
+Function Permit.DOMAIN_SEPARATOR() (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1606) is not in mixedCase
+Variable Permit.__gap (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1626) is not in mixedCase
+Function MappableToken.__MappableToken_init(address,address,string,string,uint8,uint256) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1630-1636) is not in mixedCase
+Function MappableToken.__MappableToken_init_unchained(address,address) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1638-1644) is not in mixedCase
+Function MappableToken.DOMAIN_SEPARATOR() (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1646-1648) is not in mixedCase
+Variable MappableToken.__gap (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1670) is not in mixedCase
+Function MappingToken.__MappingToken_init(address,uint256,address,address,string,string,uint8,uint256) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1675-1681) is not in mixedCase
+Function MappingToken.__MappingToken_init_unchained(address,uint256,address,address) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1683-1689) is not in mixedCase
+Function MappingToken.DOMAIN_SEPARATOR() (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1691-1693) is not in mixedCase
+Variable MappingToken.__gap (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1713) is not in mixedCase
+Function MappingTokenFactory.__MappingTokenFactory_init(address,address,address,address,address) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1740-1743) is not in mixedCase
+Parameter MappingTokenFactory.__MappingTokenFactory_init(address,address,address,address,address)._governor (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1740) is not in mixedCase
+Parameter MappingTokenFactory.__MappingTokenFactory_init(address,address,address,address,address)._implTokenMapped (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1740) is not in mixedCase
+Parameter MappingTokenFactory.__MappingTokenFactory_init(address,address,address,address,address)._implMappableToken (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1740) is not in mixedCase
+Parameter MappingTokenFactory.__MappingTokenFactory_init(address,address,address,address,address)._implMappingToken (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1740) is not in mixedCase
+Parameter MappingTokenFactory.__MappingTokenFactory_init(address,address,address,address,address)._feeTo (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1740) is not in mixedCase
+Function MappingTokenFactory.__MappingTokenFactory_init_unchained(address,address,address,address) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1745-1754) is not in mixedCase
+Parameter MappingTokenFactory.__MappingTokenFactory_init_unchained(address,address,address,address)._implTokenMapped (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1745) is not in mixedCase
+Parameter MappingTokenFactory.__MappingTokenFactory_init_unchained(address,address,address,address)._implMappableToken (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1745) is not in mixedCase
+Parameter MappingTokenFactory.__MappingTokenFactory_init_unchained(address,address,address,address)._implMappingToken (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1745) is not in mixedCase
+Parameter MappingTokenFactory.__MappingTokenFactory_init_unchained(address,address,address,address)._feeTo (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1745) is not in mixedCase
+Parameter MappingTokenFactory.upgradeProductImplementationsTo(address,address,address)._implTokenMapped (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1756) is not in mixedCase
+Parameter MappingTokenFactory.upgradeProductImplementationsTo(address,address,address)._implMappableToken (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1756) is not in mixedCase
+Parameter MappingTokenFactory.upgradeProductImplementationsTo(address,address,address)._implMappingToken (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1756) is not in mixedCase
+Variable MappingTokenFactory.DOMAIN_SEPARATOR (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1724) is not in mixedCase
+Variable MappingTokenFactory.__gap (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#2032) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Redundant expression "this (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#559)" inContextUpgradeSafe (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#540-564)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#redundant-statements
+
+Reentrancy in MappingBase._chargeFee() (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1553-1560):
+	External calls:
+	- feeTo.transfer(msg.value) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1558)
+	Event emitted after the call(s):
+	- ChargeFee(_msgSender(),feeTo,msg.value) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1559)
+Reentrancy in MappingTokenFactory._chargeFee() (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#2022-2029):
+	External calls:
+	- feeTo.transfer(msg.value) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#2027)
+	Event emitted after the call(s):
+	- ChargeFee(_msgSender(),feeTo,msg.value) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#2028)
+Reentrancy in MappingTokenFactory._createMappingToken(uint256,address,address,string,string,uint8,uint256) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1982-1997):
+	External calls:
+	- _chargeFee() (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1983)
+		- feeTo.transfer(msg.value) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#2027)
+	State variables written after the call(s):
+	- mappingTokens[mainChainId][tokenOrCreator] = mappingToken (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1995)
+	Event emitted after the call(s):
+	- CreateMappingToken(mainChainId,token,creator,name,symbol,decimals,cap,mappingToken) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1996)
+Reentrancy in MappingTokenFactory.createMappableToken(string,string,uint8,uint256) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1965-1979):
+	External calls:
+	- _chargeFee() (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1966)
+		- feeTo.transfer(msg.value) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#2027)
+	State variables written after the call(s):
+	- mappableTokens[_msgSender()] = mappableToken (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1977)
+	Event emitted after the call(s):
+	- CreateMappableToken(_msgSender(),name,symbol,decimals,totalSupply,mappableToken) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1978)
+Reentrancy in MappingTokenFactory.createTokenMapped(address) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1947-1962):
+	External calls:
+	- _chargeFee() (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1948)
+		- feeTo.transfer(msg.value) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#2027)
+	State variables written after the call(s):
+	- tokenMappeds[token] = tokenMapped (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1960)
+	Event emitted after the call(s):
+	- CreateTokenMapped(_msgSender(),token,tokenMapped) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1961)
+Reentrancy in MappingBase.receive(uint256,address,uint256,uint256,Signature[]) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1528-1547):
+	External calls:
+	- _chargeFee() (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1529)
+		- feeTo.transfer(msg.value) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1558)
+	State variables written after the call(s):
+	- _decreaseAuthQuota(signatures[i].signatory,volume) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1541)
+		- authQuotaOf[signatory] = quota (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1505)
+	- received[fromChainId][to][nonce] = volume (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1544)
+	Event emitted after the call(s):
+	- Authorize(fromChainId,to,nonce,volume,signatory) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1542)
+	- DecreaseAuthQuota(signatory,decrement,quota) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1506)
+		- _decreaseAuthQuota(signatures[i].signatory,volume) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1541)
+	- Receive(fromChainId,to,nonce,volume) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1546)
+Reentrancy in MappingTokenFactory.registerMapping(uint256,address,uint256[],address[],Signature[]) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1897-1913):
+	External calls:
+	- _chargeFee() (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1898)
+		- feeTo.transfer(msg.value) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#2027)
+	State variables written after the call(s):
+	- _registerMapping(mainChainId,token,chainIds,mappingTokenMappeds_) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1912)
+		- _mainChainIdTokens[mappingTokenMappeds_[i]] = (mainChainId << 160) | uint256(token) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1886)
+	- _decreaseAuthCount(signatures[i].signatory,1) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1909)
+		- authCountOf[signatory] = count (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1827)
+	- _registerMapping(mainChainId,token,chainIds,mappingTokenMappeds_) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1912)
+		- mappingTokenMappeds[token][chainIds[i]] = mappingTokenMappeds_[i] (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1887)
+	Event emitted after the call(s):
+	- AuthorizeRegister(mainChainId,token,signatory) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1910)
+	- DecreaseAuthCount(_msgSender(),signatory,decrement,count) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1828)
+		- _decreaseAuthCount(signatures[i].signatory,1) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1909)
+	- RegisterMapping(mainChainId,token,chainIds[i],mappingTokenMappeds_[i]) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1888)
+		- _registerMapping(mainChainId,token,chainIds,mappingTokenMappeds_) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1912)
+Reentrancy in MappingBase.sendFrom(address,uint256,address,uint256) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1517-1523):
+	External calls:
+	- _chargeFee() (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1518)
+		- feeTo.transfer(msg.value) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1558)
+	State variables written after the call(s):
+	- sent[toChainId][to][nonce] = volume (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1521)
+	- nonce = sentCount[toChainId][to] ++ (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1520)
+	Event emitted after the call(s):
+	- Send(from,toChainId,to,nonce,volume) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1522)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+MappingTokenFactory.createTokenMapped(address) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1947-1962) uses literals with too many digits:
+	- bytecode = type()(InitializableProductProxy).creationCode (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1954)
+MappingTokenFactory.createMappableToken(string,string,uint8,uint256) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1965-1979) uses literals with too many digits:
+	- bytecode = type()(InitializableProductProxy).creationCode (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1971)
+MappingTokenFactory._createMappingToken(uint256,address,address,string,string,uint8,uint256) (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1982-1997) uses literals with too many digits:
+	- bytecode = type()(InitializableProductProxy).creationCode (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1989)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+Constants._TokenMapped_ (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1431) is never used in TokenMapped (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1567-1600)
+Constants._MappableToken_ (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1432) is never used in TokenMapped (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1567-1600)
+Constants._MappingToken_ (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1433) is never used in TokenMapped (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1567-1600)
+Constants._feeCreate_ (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1435) is never used in TokenMapped (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1567-1600)
+Constants._uniswapRounter_ (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1438) is never used in TokenMapped (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1567-1600)
+TokenMapped.__gap (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1599) is never used in TokenMapped (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1567-1600)
+Constants._TokenMapped_ (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1431) is never used in MappableToken (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1629-1671)
+Constants._MappableToken_ (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1432) is never used in MappableToken (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1629-1671)
+Constants._MappingToken_ (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1433) is never used in MappableToken (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1629-1671)
+Constants._feeCreate_ (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1435) is never used in MappableToken (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1629-1671)
+Constants._uniswapRounter_ (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1438) is never used in MappableToken (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1629-1671)
+MappableToken.__gap (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1670) is never used in MappableToken (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1629-1671)
+Constants._TokenMapped_ (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1431) is never used in MappingToken (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1674-1714)
+Constants._MappableToken_ (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1432) is never used in MappingToken (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1674-1714)
+Constants._MappingToken_ (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1433) is never used in MappingToken (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1674-1714)
+Constants._feeCreate_ (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1435) is never used in MappingToken (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1674-1714)
+Constants._uniswapRounter_ (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1438) is never used in MappingToken (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1674-1714)
+MappingToken.__gap (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1713) is never used in MappingToken (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1674-1714)
+MappingTokenFactory.__gap (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#2032) is never used in MappingTokenFactory (0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol#1717-2034)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-state-variable
+./0x10bbbebacd34509b1388a528003dbb77c20b22ba.sol analyzed (30 contracts with 94 detectors), 158 result(s) found
+
+real	0m6.091s
+user	0m5.820s
+sys	0m0.273s

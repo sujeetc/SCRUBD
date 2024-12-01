@@ -1,0 +1,336 @@
+'solc --version' running
+'solc ./0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+Caishen.swapBack() (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#604-650) sends eth to arbitrary user
+	Dangerous calls:
+	- (tmpSuccess,None) = address(marketingFeeReceiver).call{gas: 30000,value: amountETHMarketing}() (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#633)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+Reentrancy in Caishen._transferFrom(address,address,uint256) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#476-530):
+	External calls:
+	- swapBack() (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#509)
+		- router.swapExactTokensForETHSupportingFeeOnTransferTokens(amountToSwap,0,path,address(this),block.timestamp) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#615-621)
+		- distributor.deposit{value: amountETHReflection}() (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#632)
+		- (tmpSuccess,None) = address(marketingFeeReceiver).call{gas: 30000,value: amountETHMarketing}() (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#633)
+		- (tmpSuccess,None) = address(devFeeReceiver).call{gas: 30000,value: amountETHDev}() (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#634)
+		- router.addLiquidityETH{value: amountETHLiquidity}(address(this),amountToLiquify,0,0,autoLiquidityReceiver,block.timestamp) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#640-647)
+	External calls sending eth:
+	- swapBack() (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#509)
+		- distributor.deposit{value: amountETHReflection}() (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#632)
+		- (tmpSuccess,None) = address(marketingFeeReceiver).call{gas: 30000,value: amountETHMarketing}() (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#633)
+		- (tmpSuccess,None) = address(devFeeReceiver).call{gas: 30000,value: amountETHDev}() (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#634)
+		- router.addLiquidityETH{value: amountETHLiquidity}(address(this),amountToLiquify,0,0,autoLiquidityReceiver,block.timestamp) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#640-647)
+	State variables written after the call(s):
+	- _balances[sender] = _balances[sender].sub(amount,Insufficient Balance) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#512)
+	Caishen._balances (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#351) can be used in cross function reentrancies:
+	- Caishen._basicTransfer(address,address,uint256) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#532-537)
+	- Caishen._transferFrom(address,address,uint256) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#476-530)
+	- Caishen.balanceOf(address) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#438)
+	- Caishen.constructor() (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#400-429)
+	- Caishen.setIsDividendExempt(address,bool) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#653-661)
+	- Caishen.shouldSwapBack() (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#569-574)
+	- Caishen.takeFee(address,uint256,bool) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#547-557)
+	- _balances[recipient] = _balances[recipient].add(amountReceived) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#515)
+	Caishen._balances (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#351) can be used in cross function reentrancies:
+	- Caishen._basicTransfer(address,address,uint256) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#532-537)
+	- Caishen._transferFrom(address,address,uint256) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#476-530)
+	- Caishen.balanceOf(address) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#438)
+	- Caishen.constructor() (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#400-429)
+	- Caishen.setIsDividendExempt(address,bool) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#653-661)
+	- Caishen.shouldSwapBack() (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#569-574)
+	- Caishen.takeFee(address,uint256,bool) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#547-557)
+	- amountReceived = takeFee(sender,amount,(recipient == pair)) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#514)
+		- _balances[address(this)] = _balances[address(this)].add(feeAmount) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#553)
+	Caishen._balances (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#351) can be used in cross function reentrancies:
+	- Caishen._basicTransfer(address,address,uint256) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#532-537)
+	- Caishen._transferFrom(address,address,uint256) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#476-530)
+	- Caishen.balanceOf(address) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#438)
+	- Caishen.constructor() (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#400-429)
+	- Caishen.setIsDividendExempt(address,bool) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#653-661)
+	- Caishen.shouldSwapBack() (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#569-574)
+	- Caishen.takeFee(address,uint256,bool) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#547-557)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+DividendDistributor.distributeDividend(address) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#290-301) ignores return value by RWRD.transfer(shareholder,amount) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#296)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+Reentrancy in DividendDistributor.distributeDividend(address) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#290-301):
+	External calls:
+	- RWRD.transfer(shareholder,amount) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#296)
+	State variables written after the call(s):
+	- shares[shareholder].totalRealised = shares[shareholder].totalRealised.add(amount) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#298)
+	DividendDistributor.shares (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#187) can be used in cross function reentrancies:
+	- DividendDistributor.distributeDividend(address) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#290-301)
+	- DividendDistributor.getUnpaidEarnings(address) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#307-316)
+	- DividendDistributor.setShare(address,uint256) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#223-237)
+	- DividendDistributor.shares (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#187)
+	- shares[shareholder].totalExcluded = getCumulativeDividends(shares[shareholder].amount) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#299)
+	DividendDistributor.shares (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#187) can be used in cross function reentrancies:
+	- DividendDistributor.distributeDividend(address) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#290-301)
+	- DividendDistributor.getUnpaidEarnings(address) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#307-316)
+	- DividendDistributor.setShare(address,uint256) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#223-237)
+	- DividendDistributor.shares (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#187)
+Reentrancy in DividendDistributor.process(uint256) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#259-283):
+	External calls:
+	- distributeDividend(shareholders[currentIndex]) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#275)
+		- RWRD.transfer(shareholder,amount) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#296)
+	State variables written after the call(s):
+	- currentIndex = 0 (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#271)
+	DividendDistributor.currentIndex (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#198) can be used in cross function reentrancies:
+	- DividendDistributor.process(uint256) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#259-283)
+	- currentIndex ++ (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#280)
+	DividendDistributor.currentIndex (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#198) can be used in cross function reentrancies:
+	- DividendDistributor.process(uint256) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#259-283)
+Reentrancy in DividendDistributor.setShare(address,uint256) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#223-237):
+	External calls:
+	- distributeDividend(shareholder) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#225)
+		- RWRD.transfer(shareholder,amount) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#296)
+	State variables written after the call(s):
+	- shares[shareholder].amount = amount (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#235)
+	DividendDistributor.shares (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#187) can be used in cross function reentrancies:
+	- DividendDistributor.distributeDividend(address) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#290-301)
+	- DividendDistributor.getUnpaidEarnings(address) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#307-316)
+	- DividendDistributor.setShare(address,uint256) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#223-237)
+	- DividendDistributor.shares (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#187)
+	- shares[shareholder].totalExcluded = getCumulativeDividends(shares[shareholder].amount) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#236)
+	DividendDistributor.shares (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#187) can be used in cross function reentrancies:
+	- DividendDistributor.distributeDividend(address) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#290-301)
+	- DividendDistributor.getUnpaidEarnings(address) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#307-316)
+	- DividendDistributor.setShare(address,uint256) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#223-237)
+	- DividendDistributor.shares (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#187)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+Caishen.swapBack() (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#604-650) ignores return value by router.addLiquidityETH{value: amountETHLiquidity}(address(this),amountToLiquify,0,0,autoLiquidityReceiver,block.timestamp) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#640-647)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+Caishen.swapBack().tmpSuccess (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#633) is written in both
+	(tmpSuccess,None) = address(marketingFeeReceiver).call{gas: 30000,value: amountETHMarketing}() (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#633)
+	(tmpSuccess,None) = address(devFeeReceiver).call{gas: 30000,value: amountETHDev}() (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#634)
+Caishen.swapBack().tmpSuccess (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#633) is written in both
+	(tmpSuccess,None) = address(devFeeReceiver).call{gas: 30000,value: amountETHDev}() (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#634)
+	tmpSuccess = false (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#637)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#write-after-write
+
+DividendDistributor.setDistributionCriteria(uint256,uint256) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#218-221) should emit an event for: 
+	- minPeriod = _minPeriod (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#219) 
+	- minDistribution = _minDistribution (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#220) 
+Caishen.setMaxTxPercent_base1000(uint256) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#466-468) should emit an event for: 
+	- _maxTxAmount = (_totalSupply * maxTXPercentage_base1000) / 1000 (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#467) 
+Caishen.setTxLimit(uint256) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#470-472) should emit an event for: 
+	- _maxTxAmount = amount (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#471) 
+Caishen.set_sell_multiplier(uint256) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#586-588) should emit an event for: 
+	- sellMultiplier = Multiplier (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#587) 
+Caishen.setFees(uint256,uint256,uint256,uint256,uint256) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#686-694) should emit an event for: 
+	- liquidityFee = _liquidityFee (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#687) 
+	- reflectionFee = _reflectionFee (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#688) 
+	- marketingFee = _marketingFee (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#689) 
+	- devFee = _devFee (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#690) 
+	- totalFee = _liquidityFee.add(_reflectionFee).add(_marketingFee).add(devFee) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#691) 
+	- feeDenominator = _feeDenominator (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#692) 
+Caishen.setSwapBackSettings(bool,uint256) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#702-705) should emit an event for: 
+	- swapThreshold = _amount (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#704) 
+Caishen.setTargetLiquidity(uint256,uint256) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#707-710) should emit an event for: 
+	- targetLiquidity = _target (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#708) 
+	- targetLiquidityDenominator = _denominator (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#709) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+Auth.transferOwnership(address).adr (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#100) lacks a zero-check on :
+		- owner = adr (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#101)
+Caishen.setFeeReceivers(address,address)._autoLiquidityReceiver (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#696) lacks a zero-check on :
+		- autoLiquidityReceiver = _autoLiquidityReceiver (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#697)
+Caishen.setFeeReceivers(address,address)._marketingFeeReceiver (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#696) lacks a zero-check on :
+		- marketingFeeReceiver = _marketingFeeReceiver (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#698)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+DividendDistributor.distributeDividend(address) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#290-301) has external calls inside a loop: RWRD.transfer(shareholder,amount) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#296)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation/#calls-inside-a-loop
+
+Reentrancy in DividendDistributor.deposit() (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#239-257):
+	External calls:
+	- router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: msg.value}(0,path,address(this),block.timestamp) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#246-251)
+	State variables written after the call(s):
+	- dividendsPerShare = dividendsPerShare.add(dividendsPerShareAccuracyFactor.mul(amount).div(totalShares)) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#256)
+	- totalDividends = totalDividends.add(amount) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#255)
+Reentrancy in DividendDistributor.distributeDividend(address) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#290-301):
+	External calls:
+	- RWRD.transfer(shareholder,amount) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#296)
+	State variables written after the call(s):
+	- shareholderClaims[shareholder] = block.timestamp (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#297)
+Reentrancy in DividendDistributor.setShare(address,uint256) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#223-237):
+	External calls:
+	- distributeDividend(shareholder) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#225)
+		- RWRD.transfer(shareholder,amount) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#296)
+	State variables written after the call(s):
+	- addShareholder(shareholder) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#229)
+		- shareholderIndexes[shareholder] = shareholders.length (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#323)
+	- removeShareholder(shareholder) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#231)
+		- shareholderIndexes[shareholders[shareholders.length - 1]] = shareholderIndexes[shareholder] (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#329)
+	- addShareholder(shareholder) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#229)
+		- shareholders.push(shareholder) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#324)
+	- removeShareholder(shareholder) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#231)
+		- shareholders[shareholderIndexes[shareholder]] = shareholders[shareholders.length - 1] (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#328)
+		- shareholders.pop() (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#330)
+	- totalShares = totalShares.sub(shares[shareholder].amount).add(amount) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#234)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in Caishen._transferFrom(address,address,uint256) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#476-530):
+	External calls:
+	- swapBack() (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#509)
+		- router.swapExactTokensForETHSupportingFeeOnTransferTokens(amountToSwap,0,path,address(this),block.timestamp) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#615-621)
+		- distributor.deposit{value: amountETHReflection}() (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#632)
+		- (tmpSuccess,None) = address(marketingFeeReceiver).call{gas: 30000,value: amountETHMarketing}() (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#633)
+		- (tmpSuccess,None) = address(devFeeReceiver).call{gas: 30000,value: amountETHDev}() (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#634)
+		- router.addLiquidityETH{value: amountETHLiquidity}(address(this),amountToLiquify,0,0,autoLiquidityReceiver,block.timestamp) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#640-647)
+	- distributor.setShare(sender,_balances[sender]) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#519)
+	- distributor.setShare(recipient,_balances[recipient]) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#523)
+	- distributor.process(distributorGas) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#526)
+	External calls sending eth:
+	- swapBack() (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#509)
+		- distributor.deposit{value: amountETHReflection}() (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#632)
+		- (tmpSuccess,None) = address(marketingFeeReceiver).call{gas: 30000,value: amountETHMarketing}() (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#633)
+		- (tmpSuccess,None) = address(devFeeReceiver).call{gas: 30000,value: amountETHDev}() (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#634)
+		- router.addLiquidityETH{value: amountETHLiquidity}(address(this),amountToLiquify,0,0,autoLiquidityReceiver,block.timestamp) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#640-647)
+	Event emitted after the call(s):
+	- Transfer(sender,recipient,amountReceived) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#528)
+Reentrancy in Caishen._transferFrom(address,address,uint256) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#476-530):
+	External calls:
+	- swapBack() (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#509)
+		- router.swapExactTokensForETHSupportingFeeOnTransferTokens(amountToSwap,0,path,address(this),block.timestamp) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#615-621)
+		- distributor.deposit{value: amountETHReflection}() (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#632)
+		- (tmpSuccess,None) = address(marketingFeeReceiver).call{gas: 30000,value: amountETHMarketing}() (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#633)
+		- (tmpSuccess,None) = address(devFeeReceiver).call{gas: 30000,value: amountETHDev}() (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#634)
+		- router.addLiquidityETH{value: amountETHLiquidity}(address(this),amountToLiquify,0,0,autoLiquidityReceiver,block.timestamp) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#640-647)
+	External calls sending eth:
+	- swapBack() (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#509)
+		- distributor.deposit{value: amountETHReflection}() (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#632)
+		- (tmpSuccess,None) = address(marketingFeeReceiver).call{gas: 30000,value: amountETHMarketing}() (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#633)
+		- (tmpSuccess,None) = address(devFeeReceiver).call{gas: 30000,value: amountETHDev}() (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#634)
+		- router.addLiquidityETH{value: amountETHLiquidity}(address(this),amountToLiquify,0,0,autoLiquidityReceiver,block.timestamp) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#640-647)
+	Event emitted after the call(s):
+	- Transfer(sender,address(this),feeAmount) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#554)
+		- amountReceived = takeFee(sender,amount,(recipient == pair)) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#514)
+Reentrancy in Caishen.swapBack() (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#604-650):
+	External calls:
+	- router.swapExactTokensForETHSupportingFeeOnTransferTokens(amountToSwap,0,path,address(this),block.timestamp) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#615-621)
+	- distributor.deposit{value: amountETHReflection}() (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#632)
+	- (tmpSuccess,None) = address(marketingFeeReceiver).call{gas: 30000,value: amountETHMarketing}() (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#633)
+	- (tmpSuccess,None) = address(devFeeReceiver).call{gas: 30000,value: amountETHDev}() (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#634)
+	- router.addLiquidityETH{value: amountETHLiquidity}(address(this),amountToLiquify,0,0,autoLiquidityReceiver,block.timestamp) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#640-647)
+	External calls sending eth:
+	- distributor.deposit{value: amountETHReflection}() (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#632)
+	- (tmpSuccess,None) = address(marketingFeeReceiver).call{gas: 30000,value: amountETHMarketing}() (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#633)
+	- (tmpSuccess,None) = address(devFeeReceiver).call{gas: 30000,value: amountETHDev}() (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#634)
+	- router.addLiquidityETH{value: amountETHLiquidity}(address(this),amountToLiquify,0,0,autoLiquidityReceiver,block.timestamp) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#640-647)
+	Event emitted after the call(s):
+	- AutoLiquify(amountETHLiquidity,amountToLiquify) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#648)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+Caishen.swapBack() (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#604-650) tries to limit the gas of an external call that controls implicit decoding
+	(tmpSuccess,None) = address(marketingFeeReceiver).call{gas: 30000,value: amountETHMarketing}() (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#633)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#return-bomb
+
+DividendDistributor.shouldDistribute(address) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#285-288) uses timestamp for comparisons
+	Dangerous comparisons:
+	- shareholderClaims[shareholder] + minPeriod < block.timestamp && getUnpaidEarnings(shareholder) > minDistribution (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#286-287)
+Caishen._transferFrom(address,address,uint256) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#476-530) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(cooldownTimer[recipient] < block.timestamp,Please wait for 1min between two buys) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#502)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+DividendDistributor.process(uint256) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#259-283) has costly operations inside a loop:
+	- currentIndex = 0 (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#271)
+DividendDistributor.distributeDividend(address) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#290-301) has costly operations inside a loop:
+	- totalDistributed = totalDistributed.add(amount) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#295)
+DividendDistributor.process(uint256) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#259-283) has costly operations inside a loop:
+	- currentIndex ++ (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#280)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#costly-operations-inside-a-loop
+
+Caishen._transferFrom(address,address,uint256) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#476-530) has a high cyclomatic complexity (16).
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#cyclomatic-complexity
+
+Caishen.totalFee (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#371) is set pre-construction with a non-constant function or state variable:
+	- marketingFee + reflectionFee + liquidityFee + devFee
+Caishen.swapThreshold (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#396) is set pre-construction with a non-constant function or state variable:
+	- _totalSupply * 30 / 10000
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#function-initializing-state
+
+Version constraint ^0.8.17 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- VerbatimInvalidDeduplication
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess.
+It is used by:
+	- ^0.8.17 (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#13)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in Caishen.swapBack() (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#604-650):
+	- (tmpSuccess,None) = address(marketingFeeReceiver).call{gas: 30000,value: amountETHMarketing}() (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#633)
+	- (tmpSuccess,None) = address(devFeeReceiver).call{gas: 30000,value: amountETHDev}() (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#634)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Function IDEXRouter.WETH() (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#115) is not in mixedCase
+Parameter DividendDistributor.setDistributionCriteria(uint256,uint256)._minPeriod (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#218) is not in mixedCase
+Parameter DividendDistributor.setDistributionCriteria(uint256,uint256)._minDistribution (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#218) is not in mixedCase
+Variable DividendDistributor.RWRD (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#179) is not in mixedCase
+Variable DividendDistributor.WETH (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#180) is not in mixedCase
+Function Caishen.setMaxWalletPercent_base1000(uint256) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#463-465) is not in mixedCase
+Parameter Caishen.setMaxWalletPercent_base1000(uint256).maxWallPercent_base1000 (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#463) is not in mixedCase
+Function Caishen.setMaxTxPercent_base1000(uint256) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#466-468) is not in mixedCase
+Parameter Caishen.setMaxTxPercent_base1000(uint256).maxTXPercentage_base1000 (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#466) is not in mixedCase
+Function Caishen.clearStuckBalance_sender(uint256) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#581-584) is not in mixedCase
+Function Caishen.set_sell_multiplier(uint256) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#586-588) is not in mixedCase
+Parameter Caishen.set_sell_multiplier(uint256).Multiplier (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#586) is not in mixedCase
+Parameter Caishen.enableTrading(uint256)._deadBlocks (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#590) is not in mixedCase
+Parameter Caishen.cooldownEnabled(bool,uint8)._status (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#599) is not in mixedCase
+Parameter Caishen.cooldownEnabled(bool,uint8)._interval (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#599) is not in mixedCase
+Function Caishen.enable_blacklist(bool) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#663-665) is not in mixedCase
+Parameter Caishen.enable_blacklist(bool)._status (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#663) is not in mixedCase
+Function Caishen.manage_blacklist(address[],bool) (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#667-671) is not in mixedCase
+Parameter Caishen.setFees(uint256,uint256,uint256,uint256,uint256)._liquidityFee (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#686) is not in mixedCase
+Parameter Caishen.setFees(uint256,uint256,uint256,uint256,uint256)._reflectionFee (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#686) is not in mixedCase
+Parameter Caishen.setFees(uint256,uint256,uint256,uint256,uint256)._marketingFee (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#686) is not in mixedCase
+Parameter Caishen.setFees(uint256,uint256,uint256,uint256,uint256)._devFee (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#686) is not in mixedCase
+Parameter Caishen.setFees(uint256,uint256,uint256,uint256,uint256)._feeDenominator (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#686) is not in mixedCase
+Parameter Caishen.setFeeReceivers(address,address)._autoLiquidityReceiver (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#696) is not in mixedCase
+Parameter Caishen.setFeeReceivers(address,address)._marketingFeeReceiver (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#696) is not in mixedCase
+Parameter Caishen.setSwapBackSettings(bool,uint256)._enabled (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#702) is not in mixedCase
+Parameter Caishen.setSwapBackSettings(bool,uint256)._amount (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#702) is not in mixedCase
+Parameter Caishen.setTargetLiquidity(uint256,uint256)._target (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#707) is not in mixedCase
+Parameter Caishen.setTargetLiquidity(uint256,uint256)._denominator (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#707) is not in mixedCase
+Parameter Caishen.setDistributionCriteria(uint256,uint256)._minPeriod (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#712) is not in mixedCase
+Parameter Caishen.setDistributionCriteria(uint256,uint256)._minDistribution (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#712) is not in mixedCase
+Variable Caishen.WETH (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#337) is not in mixedCase
+Variable Caishen.DEAD (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#338) is not in mixedCase
+Variable Caishen.ZERO (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#339) is not in mixedCase
+Variable Caishen.DEV (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#340) is not in mixedCase
+Constant Caishen._name (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#342) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant Caishen._symbol (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#343) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant Caishen._decimals (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#344) is not in UPPER_CASE_WITH_UNDERSCORES
+Variable Caishen._maxTxAmount (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#348) is not in mixedCase
+Variable Caishen._maxWalletToken (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#349) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Caishen.slitherConstructorVariables() (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#334-761) uses literals with too many digits:
+	- distributorGas = 500000 (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#389)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+Caishen.DEAD (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#338) should be constant 
+Caishen.DEV (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#340) should be constant 
+Caishen.WETH (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#337) should be constant 
+Caishen.ZERO (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#339) should be constant 
+Caishen._totalSupply (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#346) should be constant 
+DividendDistributor.RWRD (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#179) should be constant 
+DividendDistributor.WETH (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#180) should be constant 
+DividendDistributor.dividendsPerShareAccuracyFactor (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#193) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+
+Caishen.distributor (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#388) should be immutable 
+Caishen.pair (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#384) should be immutable 
+Caishen.router (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#383) should be immutable 
+DividendDistributor._token (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#171) should be immutable 
+DividendDistributor.router (0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol#181) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+./0x25061388ba6886d98110f7355e4f2c5912ae53c8.sol analyzed (8 contracts with 94 detectors), 91 result(s) found
+
+real	0m3.791s
+user	0m3.503s
+sys	0m0.289s

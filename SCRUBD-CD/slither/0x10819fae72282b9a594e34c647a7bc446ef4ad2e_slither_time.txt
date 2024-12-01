@@ -1,0 +1,274 @@
+'solc --version' running
+'solc ./0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+Reentrancy in CryptoFun.doInvest(address) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#608-678):
+	External calls:
+	- senderIsInvestor = m_investors.isInvestor(msg.sender) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#644)
+	- referrerAddr.notZero() && ! senderIsInvestor && ! m_referrals[msg.sender] && referrerAddr != msg.sender && m_investors.isInvestor(referrerAddr) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#647-648)
+	External calls sending eth:
+	- msg.sender.transfer(excess) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#618)
+	- advertisingAddress.transfer(m_advertisingPercent.mul(receivedEther)) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#624)
+	- adminsAddress.transfer(m_adminsPercent.mul(receivedEther)) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#625)
+	- referrerAddr.transfer(m_referrer_percent.mmul(investment)) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#631)
+	- adminsAddress.transfer(m_referrer_percent.mmul(investment)) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#634)
+	State variables written after the call(s):
+	- m_referrals[msg.sender] = true (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#651)
+	CryptoFun.m_referrals (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#423) can be used in cross function reentrancies:
+	- CryptoFun.doInvest(address) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#608-678)
+	- CryptoFun.investorInfo(address) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#559-562)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+Address.toAddress(bytes) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#166-169) is declared view but contains assembly code
+Address.isNotContract(address) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#171-175) is declared view but contains assembly code
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#constant-functions-using-assembly-code
+
+Percent.div(Percent.percent,uint256) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#120-122) performs a multiplication on the result of a division:
+	- a / p.num * p.den (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#121)
+Percent.mdiv(Percent.percent,uint256) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#147-149) performs a multiplication on the result of a division:
+	- a / p.num * p.den (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#148)
+CryptoFun.calcDividends(address) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#685-696) performs a multiplication on the result of a division:
+	- dividends = (now.sub(investor.paymentTime) / 1) * p.mmul(investor.investment) / 86400 (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#695)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+Reentrancy in CryptoFun.getMyDividends() (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#575-598):
+	External calls:
+	- dividends = calcDividends(msg.sender) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#581)
+		- (investment,paymentTime) = m_investors.investorInfo(investorAddr) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#681)
+	- assert(bool)(m_investors.setPaymentTime(msg.sender,now)) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#585)
+	State variables written after the call(s):
+	- nextWave() (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#589)
+		- m_investors = new InvestorsStorage() (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#710)
+	CryptoFun.m_investors (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#424) can be used in cross function reentrancies:
+	- CryptoFun.disqualifyAddress(address) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#485-487)
+	- CryptoFun.disqualifyAddress2(address) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#489-491)
+	- CryptoFun.doInvest(address) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#608-678)
+	- CryptoFun.getMemInvestor(address) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#680-683)
+	- CryptoFun.getMyDividends() (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#575-598)
+	- CryptoFun.init(address,uint256) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#501-524)
+	- CryptoFun.investorInfo(address) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#559-562)
+	- CryptoFun.investorsNumber() (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#541-543)
+	- CryptoFun.nextWave() (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#709-716)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+CryptoFun.disqualifyAddress(address) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#485-487) ignores return value by m_investors.disqalify(addr) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#486)
+CryptoFun.disqualifyAddress2(address) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#489-491) ignores return value by m_investors.disqalify2(addr) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#490)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+CryptoFun.setAdvertisingAddress(address).addr (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#526) lacks a zero-check on :
+		- advertisingAddress = addr (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#528)
+CryptoFun.setAdminsAddress(address).addr (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#531) lacks a zero-check on :
+		- adminsAddress = addr (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#533)
+CryptoFun.addInvestment2(uint256,address).investorAddr (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#604) lacks a zero-check on :
+		- investorAddr.transfer(investment) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#605)
+CryptoFun.doInvest(address).referrerAddr (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#608) lacks a zero-check on :
+		- referrerAddr.transfer(m_referrer_percent.mmul(investment)) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#631)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in CryptoFun.doInvest(address) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#608-678):
+	External calls:
+	- senderIsInvestor = m_investors.isInvestor(msg.sender) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#644)
+	- referrerAddr.notZero() && ! senderIsInvestor && ! m_referrals[msg.sender] && referrerAddr != msg.sender && m_investors.isInvestor(referrerAddr) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#647-648)
+	- dividends = calcDividends(msg.sender) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#660)
+		- (investment,paymentTime) = m_investors.investorInfo(investorAddr) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#681)
+	- assert(bool)(m_investors.addInvestment(msg.sender,investment)) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#668)
+	- assert(bool)(m_investors.setPaymentTime(msg.sender,now)) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#669)
+	- assert(bool)(m_investors.newInvestor(msg.sender,investment,now)) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#672)
+	External calls sending eth:
+	- msg.sender.transfer(excess) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#618)
+	- advertisingAddress.transfer(m_advertisingPercent.mul(receivedEther)) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#624)
+	- adminsAddress.transfer(m_adminsPercent.mul(receivedEther)) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#625)
+	- referrerAddr.transfer(m_referrer_percent.mmul(investment)) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#631)
+	- adminsAddress.transfer(m_referrer_percent.mmul(investment)) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#634)
+	State variables written after the call(s):
+	- investmentsNumber ++ (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#676)
+Reentrancy in CryptoFun.getMyDividends() (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#575-598):
+	External calls:
+	- dividends = calcDividends(msg.sender) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#581)
+		- (investment,paymentTime) = m_investors.investorInfo(investorAddr) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#681)
+	- assert(bool)(m_investors.setPaymentTime(msg.sender,now)) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#585)
+	State variables written after the call(s):
+	- nextWave() (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#589)
+		- investmentsNumber = 0 (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#711)
+	- nextWave() (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#589)
+		- waveStartup = now (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#712)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in CryptoFun.doInvest(address) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#608-678):
+	External calls:
+	- senderIsInvestor = m_investors.isInvestor(msg.sender) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#644)
+	- dividends = calcDividends(msg.sender) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#660)
+		- (investment,paymentTime) = m_investors.investorInfo(investorAddr) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#681)
+	External calls sending eth:
+	- msg.sender.transfer(excess) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#618)
+	- advertisingAddress.transfer(m_advertisingPercent.mul(receivedEther)) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#624)
+	- adminsAddress.transfer(m_adminsPercent.mul(receivedEther)) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#625)
+	- referrerAddr.transfer(m_referrer_percent.mmul(investment)) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#631)
+	- adminsAddress.transfer(m_referrer_percent.mmul(investment)) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#634)
+	Event emitted after the call(s):
+	- LogAutomaticReinvest(msg.sender,now,dividends) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#663)
+Reentrancy in CryptoFun.doInvest(address) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#608-678):
+	External calls:
+	- senderIsInvestor = m_investors.isInvestor(msg.sender) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#644)
+	- dividends = calcDividends(msg.sender) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#660)
+		- (investment,paymentTime) = m_investors.investorInfo(investorAddr) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#681)
+	- assert(bool)(m_investors.newInvestor(msg.sender,investment,now)) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#672)
+	External calls sending eth:
+	- msg.sender.transfer(excess) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#618)
+	- advertisingAddress.transfer(m_advertisingPercent.mul(receivedEther)) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#624)
+	- adminsAddress.transfer(m_adminsPercent.mul(receivedEther)) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#625)
+	- referrerAddr.transfer(m_referrer_percent.mmul(investment)) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#631)
+	- adminsAddress.transfer(m_referrer_percent.mmul(investment)) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#634)
+	Event emitted after the call(s):
+	- LogNewInvestor(msg.sender,now) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#673)
+Reentrancy in CryptoFun.doInvest(address) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#608-678):
+	External calls:
+	- senderIsInvestor = m_investors.isInvestor(msg.sender) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#644)
+	- referrerAddr.notZero() && ! senderIsInvestor && ! m_referrals[msg.sender] && referrerAddr != msg.sender && m_investors.isInvestor(referrerAddr) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#647-648)
+	- dividends = calcDividends(msg.sender) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#660)
+		- (investment,paymentTime) = m_investors.investorInfo(investorAddr) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#681)
+	- assert(bool)(m_investors.addInvestment(msg.sender,investment)) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#668)
+	- assert(bool)(m_investors.setPaymentTime(msg.sender,now)) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#669)
+	- assert(bool)(m_investors.newInvestor(msg.sender,investment,now)) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#672)
+	External calls sending eth:
+	- msg.sender.transfer(excess) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#618)
+	- advertisingAddress.transfer(m_advertisingPercent.mul(receivedEther)) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#624)
+	- adminsAddress.transfer(m_adminsPercent.mul(receivedEther)) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#625)
+	- referrerAddr.transfer(m_referrer_percent.mmul(investment)) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#631)
+	- adminsAddress.transfer(m_referrer_percent.mmul(investment)) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#634)
+	Event emitted after the call(s):
+	- LogNewInvesment(msg.sender,now,investment,receivedEther) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#677)
+Reentrancy in CryptoFun.getMyDividends() (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#575-598):
+	External calls:
+	- dividends = calcDividends(msg.sender) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#581)
+		- (investment,paymentTime) = m_investors.investorInfo(investorAddr) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#681)
+	- assert(bool)(m_investors.setPaymentTime(msg.sender,now)) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#585)
+	Event emitted after the call(s):
+	- LogNextWave(now) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#715)
+		- nextWave() (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#589)
+	- LogRGPInit(now,m_rgp.startTimestamp,m_rgp.maxDailyTotalInvestment,m_rgp.activityDays) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#714)
+		- nextWave() (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#589)
+Reentrancy in CryptoFun.getMyDividends() (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#575-598):
+	External calls:
+	- dividends = calcDividends(msg.sender) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#581)
+		- (investment,paymentTime) = m_investors.investorInfo(investorAddr) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#681)
+	- assert(bool)(m_investors.setPaymentTime(msg.sender,now)) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#585)
+	External calls sending eth:
+	- msg.sender.transfer(dividends) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#596)
+	Event emitted after the call(s):
+	- LogPayDividends(msg.sender,now,dividends) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#597)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+PrivateEntrance.isActive(PrivateEntrance.privateEntrance) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#285-287) uses timestamp for comparisons
+	Dangerous comparisons:
+	- pe.endTimestamp > now (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#286)
+RapidGrowthProtection.currDay(RapidGrowthProtection.rapidGrowthProtection) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#402-407) uses timestamp for comparisons
+	Dangerous comparisons:
+	- rgp.startTimestamp > now (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#403)
+CryptoFun.getMyDividends() (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#575-598) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(dividends.notZero(),cannot to pay zero dividends) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#582)
+	- assert(bool)(m_investors.setPaymentTime(msg.sender,now)) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#585)
+	- address(this).balance <= dividends (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#588)
+CryptoFun.doInvest(address) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#608-678) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(investment >= minInvesment,investment must be >= minInvesment) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#611)
+	- receivedEther > investment (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#616)
+	- investment > 10000000000000000000 (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#654)
+	- senderIsInvestor && dividends.notZero() (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#661)
+	- assert(bool)(m_investors.addInvestment(msg.sender,investment)) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#668)
+	- assert(bool)(m_investors.setPaymentTime(msg.sender,now)) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#669)
+	- assert(bool)(m_investors.newInvestor(msg.sender,investment,now)) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#672)
+CryptoFun.calcDividends(address) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#685-696) uses timestamp for comparisons
+	Dangerous comparisons:
+	- investor.investment.isZero() || now.sub(investor.paymentTime) < 1 (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#689)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Address.toAddress(bytes) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#166-169) uses assembly
+	- INLINE ASM (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#167-168)
+Address.isNotContract(address) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#171-175) uses assembly
+	- INLINE ASM (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#173-174)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#assembly-usage
+
+Version constraint 0.4.26 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2.
+It is used by:
+	- 0.4.26 (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#1)
+solc-0.4.26 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+InvestorsStorage (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#299-366) should inherit from Rev2Storage (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#269-271)
+CryptoFun (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#410-718) should inherit from Rev2Storage (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#269-271)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-inheritance
+
+Struct Percent.percent (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#108-111) is not in CapWords
+Parameter SafeMath.mul(uint256,uint256)._a (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#188) is not in mixedCase
+Parameter SafeMath.mul(uint256,uint256)._b (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#188) is not in mixedCase
+Parameter SafeMath.div(uint256,uint256)._a (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#202) is not in mixedCase
+Parameter SafeMath.div(uint256,uint256)._b (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#202) is not in mixedCase
+Parameter SafeMath.sub(uint256,uint256)._a (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#213) is not in mixedCase
+Parameter SafeMath.sub(uint256,uint256)._b (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#213) is not in mixedCase
+Parameter SafeMath.add(uint256,uint256)._a (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#223) is not in mixedCase
+Parameter SafeMath.add(uint256,uint256)._b (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#223) is not in mixedCase
+Function Accessibility.ToDo() (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#253-255) is not in mixedCase
+Struct PrivateEntrance.privateEntrance (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#277-283) is not in CapWords
+Struct RapidGrowthProtection.rapidGrowthProtection (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#371-376) is not in CapWords
+Variable CryptoFun.m_rgp (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#421) is not in mixedCase
+Variable CryptoFun.m_privEnter (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#422) is not in mixedCase
+Variable CryptoFun.m_referrals (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#423) is not in mixedCase
+Variable CryptoFun.m_investors (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#424) is not in mixedCase
+Variable CryptoFun.m_1_percent (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#436) is not in mixedCase
+Variable CryptoFun.m_referal_percent (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#437) is not in mixedCase
+Variable CryptoFun.m_referrer_percent (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#438) is not in mixedCase
+Variable CryptoFun.m_referrer_percentMax (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#439) is not in mixedCase
+Variable CryptoFun.m_adminsPercent (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#440) is not in mixedCase
+Variable CryptoFun.m_advertisingPercent (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#441) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in CryptoFun.doInvest(address) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#608-678):
+	External calls:
+	- msg.sender.transfer(excess) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#618)
+	Event emitted after the call(s):
+	- LogSendExcessOfEther(msg.sender,now,msg.value,investment,excess) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#620)
+Reentrancy in CryptoFun.doInvest(address) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#608-678):
+	External calls:
+	- msg.sender.transfer(excess) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#618)
+	- advertisingAddress.transfer(m_advertisingPercent.mul(receivedEther)) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#624)
+	- adminsAddress.transfer(m_adminsPercent.mul(receivedEther)) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#625)
+	- referrerAddr.transfer(m_referrer_percent.mmul(investment)) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#631)
+	- adminsAddress.transfer(m_referrer_percent.mmul(investment)) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#634)
+	State variables written after the call(s):
+	- investmentsNumber ++ (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#676)
+	- m_referrals[msg.sender] = true (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#651)
+	Event emitted after the call(s):
+	- LogAutomaticReinvest(msg.sender,now,dividends) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#663)
+	- LogNewInvesment(msg.sender,now,investment,receivedEther) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#677)
+	- LogNewInvestor(msg.sender,now) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#673)
+Reentrancy in CryptoFun.getMyDividends() (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#575-598):
+	External calls:
+	- msg.sender.transfer(dividends) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#596)
+	Event emitted after the call(s):
+	- LogPayDividends(msg.sender,now,dividends) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#597)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+CryptoFun.m_referal_percent (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#437) is never used in CryptoFun (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#410-718)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-state-variable
+
+privateEntranceProvideAccessFor(address[]) should be declared external:
+	- CryptoFun.privateEntranceProvideAccessFor(address[]) (0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol#536-538)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#public-function-that-could-be-declared-external
+./0x10819fae72282b9a594e34c647a7bc446ef4ad2e.sol analyzed (12 contracts with 94 detectors), 58 result(s) found
+
+real	0m2.130s
+user	0m1.882s
+sys	0m0.252s

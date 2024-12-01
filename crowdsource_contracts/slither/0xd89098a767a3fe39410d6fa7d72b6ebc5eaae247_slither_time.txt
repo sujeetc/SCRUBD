@@ -1,0 +1,79 @@
+'solc --version' running
+'solc ./0xd89098a767a3fe39410d6fa7d72b6ebc5eaae247.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0xd89098a767a3fe39410d6fa7d72b6ebc5eaae247.sol:
+./0xd89098a767a3fe39410d6fa7d72b6ebc5eaae247.sol:86:5: Warning: Invoking events without "emit" prefix is deprecated.
+    OwnershipTransferred(owner, newOwner);
+    ^-----------------------------------^
+
+
+Reentrancy in LockingContract.noteTokens(address,uint256) (0xd89098a767a3fe39410d6fa7d72b6ebc5eaae247.sol#160-167):
+	External calls:
+	- tokenBalance = tokenContract.balanceOf(this) (0xd89098a767a3fe39410d6fa7d72b6ebc5eaae247.sol#161)
+	State variables written after the call(s):
+	- tokens[_beneficiary] = tokens[_beneficiary].add(_tokenAmount) (0xd89098a767a3fe39410d6fa7d72b6ebc5eaae247.sol#164)
+	- totalTokens = totalTokens.add(_tokenAmount) (0xd89098a767a3fe39410d6fa7d72b6ebc5eaae247.sol#165)
+Reentrancy in LockingContract.releaseTokens(address) (0xd89098a767a3fe39410d6fa7d72b6ebc5eaae247.sol#169-176):
+	External calls:
+	- require(bool)(tokenContract.transfer(_beneficiary,amount)) (0xd89098a767a3fe39410d6fa7d72b6ebc5eaae247.sol#173)
+	State variables written after the call(s):
+	- totalTokens = totalTokens.sub(amount) (0xd89098a767a3fe39410d6fa7d72b6ebc5eaae247.sol#174)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in LockingContract.noteTokens(address,uint256) (0xd89098a767a3fe39410d6fa7d72b6ebc5eaae247.sol#160-167):
+	External calls:
+	- tokenBalance = tokenContract.balanceOf(this) (0xd89098a767a3fe39410d6fa7d72b6ebc5eaae247.sol#161)
+	Event emitted after the call(s):
+	- NotedTokens(_beneficiary,_tokenAmount) (0xd89098a767a3fe39410d6fa7d72b6ebc5eaae247.sol#166)
+Reentrancy in LockingContract.releaseTokens(address) (0xd89098a767a3fe39410d6fa7d72b6ebc5eaae247.sol#169-176):
+	External calls:
+	- require(bool)(tokenContract.transfer(_beneficiary,amount)) (0xd89098a767a3fe39410d6fa7d72b6ebc5eaae247.sol#173)
+	Event emitted after the call(s):
+	- ReleasedTokens(_beneficiary) (0xd89098a767a3fe39410d6fa7d72b6ebc5eaae247.sol#175)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+LockingContract.isLocked() (0xd89098a767a3fe39410d6fa7d72b6ebc5eaae247.sol#132-134) uses timestamp for comparisons
+	Dangerous comparisons:
+	- now < unlockTime (0xd89098a767a3fe39410d6fa7d72b6ebc5eaae247.sol#133)
+LockingContract.LockingContract(ERC20,uint256) (0xd89098a767a3fe39410d6fa7d72b6ebc5eaae247.sol#146-151) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(_unlockTime > now) (0xd89098a767a3fe39410d6fa7d72b6ebc5eaae247.sol#147)
+LockingContract.reduceLockingTime(uint256) (0xd89098a767a3fe39410d6fa7d72b6ebc5eaae247.sol#178-183) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(_newUnlockTime >= now) (0xd89098a767a3fe39410d6fa7d72b6ebc5eaae247.sol#179)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Version constraint ^0.4.21 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ABIEncoderV2PackedStorage_0.4.x
+	- ExpExponentCleanup
+	- EventStructWrongData
+	- NestedArrayFunctionCallDecoder.
+It is used by:
+	- ^0.4.21 (0xd89098a767a3fe39410d6fa7d72b6ebc5eaae247.sol#1)
+solc-0.4.21 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Parameter LockingContract.balanceOf(address)._owner (0xd89098a767a3fe39410d6fa7d72b6ebc5eaae247.sol#153) is not in mixedCase
+Parameter LockingContract.noteTokens(address,uint256)._beneficiary (0xd89098a767a3fe39410d6fa7d72b6ebc5eaae247.sol#160) is not in mixedCase
+Parameter LockingContract.noteTokens(address,uint256)._tokenAmount (0xd89098a767a3fe39410d6fa7d72b6ebc5eaae247.sol#160) is not in mixedCase
+Parameter LockingContract.releaseTokens(address)._beneficiary (0xd89098a767a3fe39410d6fa7d72b6ebc5eaae247.sol#169) is not in mixedCase
+Parameter LockingContract.reduceLockingTime(uint256)._newUnlockTime (0xd89098a767a3fe39410d6fa7d72b6ebc5eaae247.sol#178) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+./0xd89098a767a3fe39410d6fa7d72b6ebc5eaae247.sol analyzed (5 contracts with 94 detectors), 14 result(s) found
+
+real	0m1.534s
+user	0m1.270s
+sys	0m0.265s

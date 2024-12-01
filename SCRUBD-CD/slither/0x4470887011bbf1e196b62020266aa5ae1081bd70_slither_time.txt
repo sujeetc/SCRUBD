@@ -1,0 +1,220 @@
+'solc --version' running
+'solc ./0x4470887011bbf1e196b62020266aa5ae1081bd70.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x4470887011bbf1e196b62020266aa5ae1081bd70.sol:
+./0x4470887011bbf1e196b62020266aa5ae1081bd70.sol:144:27: Warning: Unused function parameter. Remove or comment out the variable name to silence this warning.
+    function getRedeemEst(address Claimer, uint256 NoOfTokens) public view returns(uint256 RedeemEstimate) {
+                          ^-------------^
+./0x4470887011bbf1e196b62020266aa5ae1081bd70.sol:21:31: Warning: Function declared as view, but this expression (potentially) modifies the state and thus requires non-payable (the default) or payable.
+        address realAddress = aRegistry.getAddr(AddressName);
+                              ^----------------------------^
+
+
+Reentrancy in Deposit.ClaimMTU(bool) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#73-90):
+	External calls:
+	- tokenAddress = getAddress(unit) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#81)
+		- realAddress = aRegistry.getAddr(AddressName) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#21)
+	- tokenTransfer.transfer(msg.sender,claimTokens) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#83)
+	- getAddress(team).transfer(ethVal / 20) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#84)
+		- realAddress = aRegistry.getAddr(AddressName) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#21)
+	External calls sending eth:
+	- getAddress(team).transfer(ethVal / 20) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#84)
+	- msg.sender.transfer(ethVal) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#86)
+	State variables written after the call(s):
+	- Investors[msg.sender] -= ethVal (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#88)
+	Deposit.Investors (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#47) can be used in cross function reentrancies:
+	- Deposit.ClaimMTU(bool) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#73-90)
+	- Deposit.Investors (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#47)
+	- Deposit.fallback() (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#60-65)
+	- Deposit.getClaimEst(address) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#67-70)
+Reentrancy in Redeem.RedeemMTU(bool) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#125-142):
+	External calls:
+	- tokenAddress = getAddress(unit) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#128)
+		- realAddress = aRegistry.getAddr(AddressName) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#21)
+	- tokenFunction.transfer(msg.sender,AppliedUnits) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#138)
+	External calls sending eth:
+	- msg.sender.transfer(withdrawVal) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#135)
+	State variables written after the call(s):
+	- Redeemer[msg.sender] = 0 (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#140)
+	Redeem.Redeemer (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#105) can be used in cross function reentrancies:
+	- Redeem.DepositMTU(uint256) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#114-122)
+	- Redeem.RedeemMTU(bool) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#125-142)
+	- Redeem.Redeemer (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#105)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+Redeem.DepositMTU(uint256) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#114-122) ignores return value by tokenFunction.transferFrom(msg.sender,address(this),NoOfTokens) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#118)
+Redeem.RedeemMTU(bool) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#125-142) ignores return value by tokenFunction.transfer(msg.sender,AppliedUnits) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#138)
+Deposit.ClaimMTU(bool) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#73-90) ignores return value by tokenTransfer.transfer(msg.sender,claimTokens) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#83)
+MoatFund.SendERC20ToAsset(address) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#180-184) ignores return value by tokenFunctions.transfer(getAddress(asset),tokenBal) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#183)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+MoatFund.constructor(uint256,address).rAddress (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#155) lacks a zero-check on :
+		- RegistryAddress = rAddress (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#157)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in Deposit.ClaimMTU(bool) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#73-90):
+	External calls:
+	- tokenAddress = getAddress(unit) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#81)
+		- realAddress = aRegistry.getAddr(AddressName) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#21)
+	- tokenTransfer.transfer(msg.sender,claimTokens) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#83)
+	- getAddress(team).transfer(ethVal / 20) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#84)
+		- realAddress = aRegistry.getAddr(AddressName) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#21)
+	External calls sending eth:
+	- getAddress(team).transfer(ethVal / 20) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#84)
+	- msg.sender.transfer(ethVal) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#86)
+	State variables written after the call(s):
+	- unClaimedEther -= ethVal (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#89)
+Reentrancy in Redeem.DepositMTU(uint256) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#114-122):
+	External calls:
+	- tokenAddress = getAddress(unit) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#116)
+		- realAddress = aRegistry.getAddr(AddressName) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#21)
+	- tokenFunction.transferFrom(msg.sender,address(this),NoOfTokens) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#118)
+	State variables written after the call(s):
+	- Redeemer[msg.sender] += NoOfTokens (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#120)
+	- unRedeemedMTU += NoOfTokens (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#119)
+Reentrancy in Redeem.RedeemMTU(bool) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#125-142):
+	External calls:
+	- tokenAddress = getAddress(unit) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#128)
+		- realAddress = aRegistry.getAddr(AddressName) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#21)
+	State variables written after the call(s):
+	- ethRedeemed += withdrawVal (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#134)
+Reentrancy in Redeem.RedeemMTU(bool) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#125-142):
+	External calls:
+	- tokenAddress = getAddress(unit) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#128)
+		- realAddress = aRegistry.getAddr(AddressName) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#21)
+	- tokenFunction.transfer(msg.sender,AppliedUnits) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#138)
+	External calls sending eth:
+	- msg.sender.transfer(withdrawVal) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#135)
+	State variables written after the call(s):
+	- unRedeemedMTU -= AppliedUnits (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#141)
+Reentrancy in Deposit.SetClaimRate(uint256) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#53-57):
+	External calls:
+	- onlyAdmin() (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#53)
+		- realAddress = aRegistry.getAddr(AddressName) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#21)
+	State variables written after the call(s):
+	- ClaimingTimeLimit = block.timestamp + 7 * 24 * 60 * 60 (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#56)
+	- claimRate = weiAmt (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#54)
+Reentrancy in Redeem.SetRedeemRate(uint256) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#107-111):
+	External calls:
+	- onlyAdmin() (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#107)
+		- realAddress = aRegistry.getAddr(AddressName) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#21)
+	State variables written after the call(s):
+	- RedeemingTimeLimit = block.timestamp + 7 * 24 * 60 * 60 (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#110)
+	- redeemRate = weiAmt (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#108)
+Reentrancy in Deposit.setCharge(bool) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#49-51):
+	External calls:
+	- onlyAdmin() (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#49)
+		- realAddress = aRegistry.getAddr(AddressName) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#21)
+	State variables written after the call(s):
+	- isCharged = chargeBool (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#50)
+Reentrancy in Deposit.setPause(bool) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#30-32):
+	External calls:
+	- onlyAdmin() (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#30)
+		- realAddress = aRegistry.getAddr(AddressName) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#21)
+	State variables written after the call(s):
+	- Paused = isPaused (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#31)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in Redeem.DepositMTU(uint256) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#114-122):
+	External calls:
+	- tokenAddress = getAddress(unit) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#116)
+		- realAddress = aRegistry.getAddr(AddressName) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#21)
+	- tokenFunction.transferFrom(msg.sender,address(this),NoOfTokens) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#118)
+	Event emitted after the call(s):
+	- eAllowedMTU(msg.sender,NoOfTokens) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#121)
+Reentrancy in Redeem.RedeemMTU(bool) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#125-142):
+	External calls:
+	- tokenAddress = getAddress(unit) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#128)
+		- realAddress = aRegistry.getAddr(AddressName) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#21)
+	External calls sending eth:
+	- msg.sender.transfer(withdrawVal) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#135)
+	Event emitted after the call(s):
+	- eRedeem(msg.sender,AppliedUnits,withdrawVal) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#136)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+Deposit.fallback() (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#60-65) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(block.timestamp > ClaimingTimeLimit) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#61)
+Deposit.ClaimMTU(bool) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#73-90) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(block.timestamp < ClaimingTimeLimit) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#78)
+Redeem.DepositMTU(uint256) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#114-122) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(block.timestamp > RedeemingTimeLimit) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#115)
+Redeem.RedeemMTU(bool) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#125-142) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(block.timestamp < RedeemingTimeLimit) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#131)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Version constraint ^0.4.24 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ABIEncoderV2PackedStorage_0.4.x
+	- ExpExponentCleanup
+	- EventStructWrongData.
+It is used by:
+	- ^0.4.24 (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#1)
+solc-0.4.24 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Contract token (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#3-7) is not in CapWords
+Parameter AddressRegistry.getAddr(string).AddrName (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#10) is not in mixedCase
+Parameter Registry.getAddress(string).AddressName (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#19) is not in mixedCase
+Variable Registry.RegistryAddress (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#14) is not in mixedCase
+Event Deposit.eDeposit(address,uint256) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#38) is not in CapWords
+Function Deposit.SetClaimRate(uint256) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#53-57) is not in mixedCase
+Parameter Deposit.getClaimEst(address).Claimer (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#67) is not in mixedCase
+Function Deposit.ClaimMTU(bool) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#73-90) is not in mixedCase
+Variable Deposit.Paused (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#29) is not in mixedCase
+Variable Deposit.ClaimingTimeLimit (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#44) is not in mixedCase
+Variable Deposit.Investors (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#47) is not in mixedCase
+Event Redeem.eAllowedMTU(address,uint256) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#96) is not in CapWords
+Event Redeem.eRedeem(address,uint256,uint256) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#97) is not in CapWords
+Function Redeem.SetRedeemRate(uint256) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#107-111) is not in mixedCase
+Function Redeem.DepositMTU(uint256) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#114-122) is not in mixedCase
+Parameter Redeem.DepositMTU(uint256).NoOfTokens (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#114) is not in mixedCase
+Function Redeem.RedeemMTU(bool) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#125-142) is not in mixedCase
+Parameter Redeem.getRedeemEst(address,uint256).Claimer (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#144) is not in mixedCase
+Parameter Redeem.getRedeemEst(address,uint256).NoOfTokens (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#144) is not in mixedCase
+Variable Redeem.RedeemingTimeLimit (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#103) is not in mixedCase
+Variable Redeem.Redeemer (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#105) is not in mixedCase
+Event MoatFund.eNonIssueDeposits(address,uint256) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#153) is not in CapWords
+Function MoatFund.NonIssueDeposits() (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#161-163) is not in mixedCase
+Function MoatFund.SendEtherToBoard(uint256) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#165-168) is not in mixedCase
+Function MoatFund.SendEtherToAsset(uint256) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#170-173) is not in mixedCase
+Function MoatFund.SendEtherToDex(uint256) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#175-178) is not in mixedCase
+Function MoatFund.SendERC20ToAsset(address) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#180-184) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in Deposit.ClaimMTU(bool) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#73-90):
+	External calls:
+	- getAddress(team).transfer(ethVal / 20) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#84)
+	- msg.sender.transfer(ethVal) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#86)
+	State variables written after the call(s):
+	- Investors[msg.sender] -= ethVal (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#88)
+	- unClaimedEther -= ethVal (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#89)
+Reentrancy in Redeem.RedeemMTU(bool) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#125-142):
+	External calls:
+	- msg.sender.transfer(withdrawVal) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#135)
+	State variables written after the call(s):
+	- Redeemer[msg.sender] = 0 (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#140)
+	- unRedeemedMTU -= AppliedUnits (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#141)
+	Event emitted after the call(s):
+	- eRedeem(msg.sender,AppliedUnits,withdrawVal) (0x4470887011bbf1e196b62020266aa5ae1081bd70.sol#136)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+./0x4470887011bbf1e196b62020266aa5ae1081bd70.sol analyzed (6 contracts with 94 detectors), 52 result(s) found
+
+real	0m2.113s
+user	0m1.913s
+sys	0m0.202s

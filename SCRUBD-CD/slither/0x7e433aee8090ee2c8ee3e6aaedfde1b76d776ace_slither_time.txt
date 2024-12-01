@@ -1,0 +1,92 @@
+'solc --version' running
+'solc ./0x7e433aee8090ee2c8ee3e6aaedfde1b76d776ace.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+LockToken.release() (0x7e433aee8090ee2c8ee3e6aaedfde1b76d776ace.sol#99-107) ignores return value by token_reward.transfer(beneficiary,token_amount) (0x7e433aee8090ee2c8ee3e6aaedfde1b76d776ace.sol#104)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+Reentrancy in LockToken.lock(uint256) (0x7e433aee8090ee2c8ee3e6aaedfde1b76d776ace.sol#86-92):
+	External calls:
+	- require(bool)(tokenBalance() > 0) (0x7e433aee8090ee2c8ee3e6aaedfde1b76d776ace.sol#88)
+		- token_reward.balanceOf(this) (0x7e433aee8090ee2c8ee3e6aaedfde1b76d776ace.sol#83)
+	State variables written after the call(s):
+	- isLocked = true (0x7e433aee8090ee2c8ee3e6aaedfde1b76d776ace.sol#91)
+	LockToken.isLocked (0x7e433aee8090ee2c8ee3e6aaedfde1b76d776ace.sol#70) can be used in cross function reentrancies:
+	- LockToken.isLocked (0x7e433aee8090ee2c8ee3e6aaedfde1b76d776ace.sol#70)
+	- LockToken.lock(uint256) (0x7e433aee8090ee2c8ee3e6aaedfde1b76d776ace.sol#86-92)
+	- LockToken.release() (0x7e433aee8090ee2c8ee3e6aaedfde1b76d776ace.sol#99-107)
+Reentrancy in LockToken.release() (0x7e433aee8090ee2c8ee3e6aaedfde1b76d776ace.sol#99-107):
+	External calls:
+	- token_amount = tokenBalance() (0x7e433aee8090ee2c8ee3e6aaedfde1b76d776ace.sol#103)
+		- token_reward.balanceOf(this) (0x7e433aee8090ee2c8ee3e6aaedfde1b76d776ace.sol#83)
+	- token_reward.transfer(beneficiary,token_amount) (0x7e433aee8090ee2c8ee3e6aaedfde1b76d776ace.sol#104)
+	State variables written after the call(s):
+	- isReleased = true (0x7e433aee8090ee2c8ee3e6aaedfde1b76d776ace.sol#106)
+	LockToken.isReleased (0x7e433aee8090ee2c8ee3e6aaedfde1b76d776ace.sol#71) can be used in cross function reentrancies:
+	- LockToken.isReleased (0x7e433aee8090ee2c8ee3e6aaedfde1b76d776ace.sol#71)
+	- LockToken.release() (0x7e433aee8090ee2c8ee3e6aaedfde1b76d776ace.sol#99-107)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+LockToken.lock(uint256) (0x7e433aee8090ee2c8ee3e6aaedfde1b76d776ace.sol#86-92) should emit an event for: 
+	- end_time = lockTime (0x7e433aee8090ee2c8ee3e6aaedfde1b76d776ace.sol#90) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+LockToken.constructor(address,address)._beneficiary (0x7e433aee8090ee2c8ee3e6aaedfde1b76d776ace.sol#77) lacks a zero-check on :
+		- beneficiary = _beneficiary (0x7e433aee8090ee2c8ee3e6aaedfde1b76d776ace.sol#79)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in LockToken.lock(uint256) (0x7e433aee8090ee2c8ee3e6aaedfde1b76d776ace.sol#86-92):
+	External calls:
+	- require(bool)(tokenBalance() > 0) (0x7e433aee8090ee2c8ee3e6aaedfde1b76d776ace.sol#88)
+		- token_reward.balanceOf(this) (0x7e433aee8090ee2c8ee3e6aaedfde1b76d776ace.sol#83)
+	State variables written after the call(s):
+	- end_time = lockTime (0x7e433aee8090ee2c8ee3e6aaedfde1b76d776ace.sol#90)
+	- start_time = now (0x7e433aee8090ee2c8ee3e6aaedfde1b76d776ace.sol#89)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in LockToken.release() (0x7e433aee8090ee2c8ee3e6aaedfde1b76d776ace.sol#99-107):
+	External calls:
+	- token_amount = tokenBalance() (0x7e433aee8090ee2c8ee3e6aaedfde1b76d776ace.sol#103)
+		- token_reward.balanceOf(this) (0x7e433aee8090ee2c8ee3e6aaedfde1b76d776ace.sol#83)
+	- token_reward.transfer(beneficiary,token_amount) (0x7e433aee8090ee2c8ee3e6aaedfde1b76d776ace.sol#104)
+	Event emitted after the call(s):
+	- TokenReleased(beneficiary,token_amount) (0x7e433aee8090ee2c8ee3e6aaedfde1b76d776ace.sol#105)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+LockToken.lockOver() (0x7e433aee8090ee2c8ee3e6aaedfde1b76d776ace.sol#94-97) uses timestamp for comparisons
+	Dangerous comparisons:
+	- current_time > end_time (0x7e433aee8090ee2c8ee3e6aaedfde1b76d776ace.sol#96)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Version constraint ^0.4.24 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ABIEncoderV2PackedStorage_0.4.x
+	- ExpExponentCleanup
+	- EventStructWrongData.
+It is used by:
+	- ^0.4.24 (0x7e433aee8090ee2c8ee3e6aaedfde1b76d776ace.sol#1)
+solc-0.4.24 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Contract token (0x7e433aee8090ee2c8ee3e6aaedfde1b76d776ace.sol#30-35) is not in CapWords
+Variable LockToken.token_reward (0x7e433aee8090ee2c8ee3e6aaedfde1b76d776ace.sol#68) is not in mixedCase
+Variable LockToken.start_time (0x7e433aee8090ee2c8ee3e6aaedfde1b76d776ace.sol#72) is not in mixedCase
+Variable LockToken.end_time (0x7e433aee8090ee2c8ee3e6aaedfde1b76d776ace.sol#73) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+./0x7e433aee8090ee2c8ee3e6aaedfde1b76d776ace.sol analyzed (4 contracts with 94 detectors), 14 result(s) found
+
+real	0m1.438s
+user	0m1.226s
+sys	0m0.214s

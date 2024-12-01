@@ -1,0 +1,160 @@
+'solc --version' running
+'solc ./0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+OpportyWhiteListHold.returnTokens(uint256) (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#350-355) ignores return value by OppToken.transfer(msg.sender,nTokens) (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#352)
+OpportyWhiteListHold.unlockTokens() (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#357-366) ignores return value by OppToken.transfer(msg.sender,holderList[msg.sender].tokens) (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#362)
+OpportyWhiteList.getTokensBack() (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#603-609) ignores return value by token.transfer(msg.sender,balance) (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#608)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+OpportyWhiteList.fallback() (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#545-577) performs a multiplication on the result of a division:
+	- tokenAmount = msg.value.div(price) (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#565)
+	- tokenAmount += tokenAmount.mul(contrib.bonus).div(100) (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#566)
+OpportyWhiteList.fallback() (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#545-577) performs a multiplication on the result of a division:
+	- tokenAmount = msg.value.div(price) (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#565)
+	- tokenAmount *= 10 ** 18 (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#567)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+Reentrancy in OpportyWhiteListHold.unlockTokens() (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#357-366):
+	External calls:
+	- OppToken.transfer(msg.sender,holderList[msg.sender].tokens) (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#362)
+	State variables written after the call(s):
+	- holderList[msg.sender].withdrawed = true (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#363)
+	OpportyWhiteListHold.holderList (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#291) can be used in cross function reentrancies:
+	- OpportyWhiteListHold.addHolder(address,uint256,uint8,uint256) (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#330-344)
+	- OpportyWhiteListHold.changeHold(address,uint256,uint8,uint256,bool) (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#320-328)
+	- OpportyWhiteListHold.holderList (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#291)
+	- OpportyWhiteListHold.unlockTokens() (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#357-366)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+OpportyWhiteList.OpportyWhiteList(address,uint256,uint256,address).walletAddress (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#493) lacks a zero-check on :
+		- wallet = walletAddress (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#502)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in OpportyWhiteList.sendTokensToHold() (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#592-601):
+	External calls:
+	- require(bool)(getBalanceContract() >= tokenRaised) (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#595)
+		- token.balanceOf(this) (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#589)
+	- token.transfer(holdContract,tokenRaised) (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#597)
+	State variables written after the call(s):
+	- tokensTransferredToHold = true (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#598)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in OpportyWhiteList.fallback() (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#545-577):
+	External calls:
+	- holdContract.addHolder(msg.sender,tokenAmount,contrib.holdPeriod,contrib.holdTimestamp) (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#571)
+	Event emitted after the call(s):
+	- AddedToHolder(msg.sender,tokenAmount,contrib.holdPeriod,contrib.holdTimestamp) (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#572)
+	- FundTransfered(msg.sender,msg.value) (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#573)
+Reentrancy in OpportyWhiteListHold.returnTokens(uint256) (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#350-355):
+	External calls:
+	- require(bool)(nTokens <= getBalance()) (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#351)
+		- OppToken.balanceOf(this) (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#347)
+	- OppToken.transfer(msg.sender,nTokens) (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#352)
+	Event emitted after the call(s):
+	- TokensTransfered(msg.sender,nTokens) (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#353)
+Reentrancy in OpportyWhiteList.sendTokensToHold() (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#592-601):
+	External calls:
+	- require(bool)(getBalanceContract() >= tokenRaised) (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#595)
+		- token.balanceOf(this) (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#589)
+	- token.transfer(holdContract,tokenRaised) (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#597)
+	Event emitted after the call(s):
+	- TokensTransferedToHold(holdContract,tokenRaised) (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#599)
+Reentrancy in OpportyWhiteListHold.unlockTokens() (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#357-366):
+	External calls:
+	- OppToken.transfer(msg.sender,holderList[msg.sender].tokens) (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#362)
+	Event emitted after the call(s):
+	- TokensTransfered(msg.sender,holderList[msg.sender].tokens) (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#364)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+OpportyWhiteListHold.unlockTokens() (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#357-366) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(now >= holderList[msg.sender].holdPeriodTimestamp) (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#360)
+OpportyWhiteList.fallback() (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#545-577) uses timestamp for comparisons
+	Dangerous comparisons:
+	- now > endDate (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#550)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+OpportyWhiteListHold.changeHold(address,uint256,uint8,uint256,bool) (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#320-328) compares to a boolean constant:
+	-holderList[holder].isActive == true (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#321)
+OpportyWhiteListHold.addHolder(address,uint256,uint8,uint256) (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#330-344) compares to a boolean constant:
+	-holderList[holder].isActive == false (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#331)
+OpportyWhiteList.addToWhitelist(address,uint256,uint8,uint8) (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#524-543) compares to a boolean constant:
+	-whiteList[inv].isActive == false (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#529)
+OpportyWhiteList.fallback() (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#545-577) compares to a boolean constant:
+	-whiteList[msg.sender].payed == false (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#559)
+OpportyWhiteList.getTokensBack() (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#603-609) compares to a boolean constant:
+	-require(bool)(tokensTransferredToHold == true) (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#605)
+OpportyWhiteList.withdrawEth() (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#611-619) compares to a boolean constant:
+	-require(bool)(tokensTransferredToHold == true) (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#615)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#boolean-equality
+
+OpportyWhiteListHold.getBalanceContract() (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#311-313) is never used and should be removed
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dead-code
+
+Version constraint ^0.4.18 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ExpExponentCleanup
+	- EventStructWrongData
+	- NestedArrayFunctionCallDecoder.
+It is used by:
+	- ^0.4.18 (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#1)
+solc-0.4.18 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Parameter BasicToken.transfer(address,uint256)._to (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#85) is not in mixedCase
+Parameter BasicToken.transfer(address,uint256)._value (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#85) is not in mixedCase
+Parameter BasicToken.balanceOf(address)._owner (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#101) is not in mixedCase
+Parameter StandardToken.transferFrom(address,address,uint256)._from (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#136) is not in mixedCase
+Parameter StandardToken.transferFrom(address,address,uint256)._to (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#136) is not in mixedCase
+Parameter StandardToken.transferFrom(address,address,uint256)._value (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#136) is not in mixedCase
+Parameter StandardToken.approve(address,uint256)._spender (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#158) is not in mixedCase
+Parameter StandardToken.approve(address,uint256)._value (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#158) is not in mixedCase
+Parameter StandardToken.allowance(address,address)._owner (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#170) is not in mixedCase
+Parameter StandardToken.allowance(address,address)._spender (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#170) is not in mixedCase
+Parameter StandardToken.increaseApproval(address,uint256)._spender (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#184) is not in mixedCase
+Parameter StandardToken.increaseApproval(address,uint256)._addedValue (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#184) is not in mixedCase
+Parameter StandardToken.decreaseApproval(address,uint256)._spender (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#200) is not in mixedCase
+Parameter StandardToken.decreaseApproval(address,uint256)._subtractedValue (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#200) is not in mixedCase
+Parameter OpportyWhiteListHold.addAssetsOwner(address)._owner (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#368) is not in mixedCase
+Parameter OpportyWhiteListHold.removeAssetsOwner(address)._owner (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#373) is not in mixedCase
+Parameter OpportyWhiteListHold.getAssetsOwners(uint256)._index (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#379) is not in mixedCase
+Variable OpportyWhiteListHold.OppToken (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#281) is not in mixedCase
+Parameter OpportyWhiteList.addAssetsOwner(address)._owner (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#653) is not in mixedCase
+Parameter OpportyWhiteList.removeAssetsOwner(address)._owner (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#658) is not in mixedCase
+Parameter OpportyWhiteList.getAssetsOwners(uint256)._index (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#664) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in OpportyWhiteList.withdrawEth() (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#611-619):
+	External calls:
+	- wallet.transfer(bal) (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#617)
+	Event emitted after the call(s):
+	- WithdrawedEthToWallet(bal) (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#618)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+OpportyToken.slitherConstructorConstantVariables() (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#219-236) uses literals with too many digits:
+	- INITIAL_SUPPLY = 1000000000 * (10 ** uint256(decimals)) (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#225)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+OpportyWhiteList.preSaleOld (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#445) is never used in OpportyWhiteList (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#428-668)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-state-variable
+
+OpportyWhiteList.preSaleOld (0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol#445) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+./0xe85083dec29ca5287a00a29f667a8c5489cdf297.sol analyzed (10 contracts with 94 detectors), 48 result(s) found
+
+real	0m2.951s
+user	0m2.746s
+sys	0m0.208s

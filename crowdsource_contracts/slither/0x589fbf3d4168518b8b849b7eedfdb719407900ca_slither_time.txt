@@ -1,0 +1,66 @@
+'solc --version' running
+'solc ./0x589fbf3d4168518b8b849b7eedfdb719407900ca.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+AirDropLight.transferDirect(address,uint256) (0x589fbf3d4168518b8b849b7eedfdb719407900ca.sol#215-233) has external calls inside a loop: require(bool)(token.balanceOf(this) >= _tokens) (0x589fbf3d4168518b8b849b7eedfdb719407900ca.sol#218)
+AirDropLight.transferDirect(address,uint256) (0x589fbf3d4168518b8b849b7eedfdb719407900ca.sol#215-233) has external calls inside a loop: require(bool)(token.transfer(_recipient,_tokens)) (0x589fbf3d4168518b8b849b7eedfdb719407900ca.sol#228)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation/#calls-inside-a-loop
+
+Reentrancy in AirDropLight.transferDirect(address,uint256) (0x589fbf3d4168518b8b849b7eedfdb719407900ca.sol#215-233):
+	External calls:
+	- require(bool)(token.balanceOf(this) >= _tokens) (0x589fbf3d4168518b8b849b7eedfdb719407900ca.sol#218)
+	State variables written after the call(s):
+	- recipients[_recipient] = true (0x589fbf3d4168518b8b849b7eedfdb719407900ca.sol#225)
+Reentrancy in AirDropLight.transferDirect(address,uint256) (0x589fbf3d4168518b8b849b7eedfdb719407900ca.sol#215-233):
+	External calls:
+	- require(bool)(token.balanceOf(this) >= _tokens) (0x589fbf3d4168518b8b849b7eedfdb719407900ca.sol#218)
+	- require(bool)(token.transfer(_recipient,_tokens)) (0x589fbf3d4168518b8b849b7eedfdb719407900ca.sol#228)
+	State variables written after the call(s):
+	- grandTotalClaimed = grandTotalClaimed.add(_tokens) (0x589fbf3d4168518b8b849b7eedfdb719407900ca.sol#231)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+AirDropLight.transferDirect(address,uint256) (0x589fbf3d4168518b8b849b7eedfdb719407900ca.sol#215-233) has costly operations inside a loop:
+	- grandTotalClaimed = grandTotalClaimed.add(_tokens) (0x589fbf3d4168518b8b849b7eedfdb719407900ca.sol#231)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#costly-operations-inside-a-loop
+
+Version constraint ^0.4.24 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ABIEncoderV2PackedStorage_0.4.x
+	- ExpExponentCleanup
+	- EventStructWrongData.
+It is used by:
+	- ^0.4.24 (0x589fbf3d4168518b8b849b7eedfdb719407900ca.sol#1)
+solc-0.4.24 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Parameter AirDropLight.transferManyDirect(address[],uint256)._recipients (0x589fbf3d4168518b8b849b7eedfdb719407900ca.sol#203) is not in mixedCase
+Parameter AirDropLight.transferManyDirect(address[],uint256)._tokenAmount (0x589fbf3d4168518b8b849b7eedfdb719407900ca.sol#203) is not in mixedCase
+Parameter AirDropLight.transferDirect(address,uint256)._recipient (0x589fbf3d4168518b8b849b7eedfdb719407900ca.sol#215) is not in mixedCase
+Parameter AirDropLight.transferDirect(address,uint256)._tokens (0x589fbf3d4168518b8b849b7eedfdb719407900ca.sol#215) is not in mixedCase
+Parameter AirDropLight.refundTokens(address,ERC20)._recipient (0x589fbf3d4168518b8b849b7eedfdb719407900ca.sol#243) is not in mixedCase
+Parameter AirDropLight.refundTokens(address,ERC20)._token (0x589fbf3d4168518b8b849b7eedfdb719407900ca.sol#243) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+AirDropLight.maxDirect (0x589fbf3d4168518b8b849b7eedfdb719407900ca.sol#173) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+
+transferManyDirect(address[],uint256) should be declared external:
+	- AirDropLight.transferManyDirect(address[],uint256) (0x589fbf3d4168518b8b849b7eedfdb719407900ca.sol#203-207)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#public-function-that-could-be-declared-external
+./0x589fbf3d4168518b8b849b7eedfdb719407900ca.sol analyzed (5 contracts with 94 detectors), 15 result(s) found
+
+real	0m1.739s
+user	0m1.499s
+sys	0m0.242s

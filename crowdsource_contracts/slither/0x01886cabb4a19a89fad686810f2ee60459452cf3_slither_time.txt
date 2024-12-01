@@ -1,0 +1,479 @@
+'solc --version' running
+'solc ./0x01886cabb4a19a89fad686810f2ee60459452cf3.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x01886cabb4a19a89fad686810f2ee60459452cf3.sol:
+Warning: Contract code size exceeds 24576 bytes (a limit introduced in Spurious Dragon). This contract may not be deployable on mainnet. Consider enabling the optimizer (with a low "runs" value!), turning off revert strings, or using libraries.
+    --> ./0x01886cabb4a19a89fad686810f2ee60459452cf3.sol:1141:1:
+     |
+1141 | contract DGA is Ownable, IERC20 {
+     | ^ (Relevant source part starts here and spans across multiple lines).
+
+
+
+DGA.addLiquidity(uint256,uint256) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1540-1550) sends eth to arbitrary user
+	Dangerous calls:
+	- uniswapV2Router.addLiquidityETH{value: native}(address(this),tokens,0,0,liquidityWallet,block.timestamp) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1542-1549)
+DividendTracker._withdrawDividendOfUser(address) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#2120-2141) sends eth to arbitrary user
+	Dangerous calls:
+	- (success,None) = account.call{gas: 3000,value: _withdrawableDividend}() (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#2129-2132)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+Reentrancy in DividendTracker._compoundDividendOfUser(address) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#2157-2202):
+	External calls:
+	- uniswapV2Router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: _withdrawableDividend}(0,path,address(account),block.timestamp) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#2179-2191)
+	State variables written after the call(s):
+	- totalDividendsWithdrawn -= _withdrawableDividend (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#2195)
+	DividendTracker.totalDividendsWithdrawn (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1969) can be used in cross function reentrancies:
+	- DividendTracker._compoundDividendOfUser(address) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#2157-2202)
+	- DividendTracker._withdrawDividendOfUser(address) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#2120-2141)
+	- DividendTracker.getAccountInfo(address) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#2230-2253)
+	- DividendTracker.totalDividendsWithdrawn (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1969)
+	- withdrawnDividends[account] -= _withdrawableDividend (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#2194)
+	DividendTracker.withdrawnDividends (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1975) can be used in cross function reentrancies:
+	- DividendTracker._compoundDividendOfUser(address) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#2157-2202)
+	- DividendTracker._withdrawDividendOfUser(address) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#2120-2141)
+	- DividendTracker.withdrawableDividendOf(address) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#2204-2210)
+	- DividendTracker.withdrawnDividendOf(address) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#2212-2218)
+Reentrancy in DGA._transfer(address,address,uint256) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1364-1466):
+	External calls:
+	- _executeSwap(contractTokenBalance,contractNativeBalance) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1429)
+		- uniswapV2Router.addLiquidityETH{value: native}(address(this),tokens,0,0,liquidityWallet,block.timestamp) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1542-1549)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokens,0,path,address(this),block.timestamp) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1517-1523)
+		- (success,None) = address(dividendTracker).call{value: nativeDividends}() (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1607-1609)
+	External calls sending eth:
+	- _executeSwap(contractTokenBalance,contractNativeBalance) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1429)
+		- uniswapV2Router.addLiquidityETH{value: native}(address(this),tokens,0,0,liquidityWallet,block.timestamp) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1542-1549)
+		- address(marketingWallet).transfer(nativeMarketing) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1596)
+		- (success,None) = address(dividendTracker).call{value: nativeDividends}() (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1607-1609)
+	State variables written after the call(s):
+	- _executeTransfer(sender,address(this),jeetFees) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1459)
+		- _balances[sender] = senderBalance - amount (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1480)
+		- _balances[recipient] += amount (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1481)
+	DGA._balances (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1168) can be used in cross function reentrancies:
+	- DGA._executeTransfer(address,address,uint256) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1468-1483)
+	- DGA._mint(address,uint256) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1496-1501)
+	- DGA._transfer(address,address,uint256) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1364-1466)
+	- DGA.balanceOf(address) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1284-1292)
+	- _executeTransfer(sender,recipient,amount) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1462)
+		- _balances[sender] = senderBalance - amount (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1480)
+		- _balances[recipient] += amount (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1481)
+	DGA._balances (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1168) can be used in cross function reentrancies:
+	- DGA._executeTransfer(address,address,uint256) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1468-1483)
+	- DGA._mint(address,uint256) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1496-1501)
+	- DGA._transfer(address,address,uint256) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1364-1466)
+	- DGA.balanceOf(address) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1284-1292)
+	- swapping = false (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1432)
+	DGA.swapping (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1163) can be used in cross function reentrancies:
+	- DGA._transfer(address,address,uint256) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1364-1466)
+Reentrancy in DividendTracker._withdrawDividendOfUser(address) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#2120-2141):
+	External calls:
+	- (success,None) = account.call{gas: 3000,value: _withdrawableDividend}() (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#2129-2132)
+	State variables written after the call(s):
+	- totalDividendsWithdrawn -= _withdrawableDividend (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#2135)
+	DividendTracker.totalDividendsWithdrawn (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1969) can be used in cross function reentrancies:
+	- DividendTracker._compoundDividendOfUser(address) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#2157-2202)
+	- DividendTracker._withdrawDividendOfUser(address) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#2120-2141)
+	- DividendTracker.getAccountInfo(address) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#2230-2253)
+	- DividendTracker.totalDividendsWithdrawn (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1969)
+	- withdrawnDividends[account] -= _withdrawableDividend (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#2134)
+	DividendTracker.withdrawnDividends (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1975) can be used in cross function reentrancies:
+	- DividendTracker._compoundDividendOfUser(address) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#2157-2202)
+	- DividendTracker._withdrawDividendOfUser(address) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#2120-2141)
+	- DividendTracker.withdrawableDividendOf(address) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#2204-2210)
+	- DividendTracker.withdrawnDividendOf(address) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#2212-2218)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+DGA.rescueToken(address,uint256) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1826-1828) ignores return value by IERC20(_token).transfer(msg.sender,_amount) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1827)
+DGA.empireSweepCall(uint256,bytes) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1943-1945) ignores return value by IERC20(uniswapV2Router.WETH()).transfer(owner(),amount) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1944)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+DGA._transfer(address,address,uint256) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1364-1466) performs a multiplication on the result of a division:
+	- fees = (amount * totalFeeBPS) / 10000 (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1455)
+	- jeetFees = fees * jeetMulitplier (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1456)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+DGA._executeSwap(uint256,uint256).swapTokensMarketing (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1563) is a local variable never initialized
+DGA._transfer(address,address,uint256).takeFee (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1435) is a local variable never initialized
+DividendTracker._compoundDividendOfUser(address).success (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#2175) is a local variable never initialized
+DGA._executeSwap(uint256,uint256).swapTokensDividends (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1568) is a local variable never initialized
+DividendTracker.getAccountInfo(address).info (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#2241) is a local variable never initialized
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#uninitialized-local-variables
+
+DGA.addLiquidity(uint256,uint256) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1540-1550) ignores return value by uniswapV2Router.addLiquidityETH{value: native}(address(this),tokens,0,0,liquidityWallet,block.timestamp) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1542-1549)
+DGA.claimTeam(address) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1706-1708) ignores return value by dividendTracker.processAccount(address(_lockContract)) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1707)
+DGA.claim() (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1710-1712) ignores return value by dividendTracker.processAccount(address(_msgSender())) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1711)
+DGA.compound() (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1714-1717) ignores return value by dividendTracker.compoundAccount(address(_msgSender())) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1716)
+DGA.getAccountInfo(address) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1743-1755) ignores return value by dividendTracker.getAccountInfo(account) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1754)
+DGA.unsweep(uint256) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1947-1951) ignores return value by IERC20(uniswapV2Router.WETH()).approve(sweepablePair,amount) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1948)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+DGA.allowance(address,address).owner (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1294) shadows:
+	- Ownable.owner() (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#30-32) (function)
+DGA._approve(address,address,uint256).owner (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1486) shadows:
+	- Ownable.owner() (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#30-32) (function)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#local-variable-shadowing
+
+DGA.createSweepablePair(IEmpireFactory) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1926-1932) should emit an event for: 
+	- sweepablePair = _factory.createPair(uniswapV2Router.WETH(),address(this),pairType,0) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1931) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-access-control
+
+DGA.setFee(uint256,uint256,uint256) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1667-1676) should emit an event for: 
+	- treasuryFeeBPS = _treasuryFee (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1672) 
+	- dividendFeeBPS = _dividendFee (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1674) 
+	- totalFeeBPS = _treasuryFee + _liquidityFee + _dividendFee (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1675) 
+DGA.updateDividendSettings(bool,uint256,bool) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1776-1784) should emit an event for: 
+	- swapTokensAtAmount = _swapTokensAtAmount (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1782) 
+DGA.setMaxTxBPS(uint256) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1786-1789) should emit an event for: 
+	- maxTxBPS = bps (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1788) 
+DGA.setMaxWalletBPS(uint256) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1799-1805) should emit an event for: 
+	- maxWalletBPS = bps (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1804) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+DGA.constructor(address,address,address,address[])._marketingWallet (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1216) lacks a zero-check on :
+		- marketingWallet = _marketingWallet (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1221)
+DGA.constructor(address,address,address,address[])._liquidityWallet (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1217) lacks a zero-check on :
+		- liquidityWallet = _liquidityWallet (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1222)
+DGA.setWallet(address,address)._marketingWallet (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1652) lacks a zero-check on :
+		- marketingWallet = _marketingWallet (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1655)
+DGA.setWallet(address,address)._liquidityWallet (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1653) lacks a zero-check on :
+		- liquidityWallet = _liquidityWallet (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1656)
+DGA.updateUniswapV2Router(address)._uniswapV2Pair (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1701-1702) lacks a zero-check on :
+		- uniswapV2Pair = _uniswapV2Pair (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1703)
+DGA.setupPair(address)._newPair (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1934) lacks a zero-check on :
+		- uniswapV2Pair = _newPair (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1935)
+DividendTracker.constructor(address,address)._tokenAddress (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1991) lacks a zero-check on :
+		- tokenAddress = _tokenAddress (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1993)
+DividendTracker.constructor(address,address)._uniswapRouter (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1991) lacks a zero-check on :
+		- UNISWAPROUTER = _uniswapRouter (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1994)
+DividendTracker.manualSendDividend(uint256,address).holder (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#2056) lacks a zero-check on :
+		- address(holder).transfer(amount) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#2061)
+		- address(holder).transfer(contractETHBalance) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#2061)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in DGA._executeSwap(uint256,uint256) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1558-1614):
+	External calls:
+	- swapTokensForNative(swapTokensTotal) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1583)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokens,0,path,address(this),block.timestamp) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1517-1523)
+	- addLiquidity(addTokensLiquidity,nativeLiquidity) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1599)
+		- uniswapV2Router.addLiquidityETH{value: native}(address(this),tokens,0,0,liquidityWallet,block.timestamp) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1542-1549)
+	External calls sending eth:
+	- address(marketingWallet).transfer(nativeMarketing) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1596)
+	- addLiquidity(addTokensLiquidity,nativeLiquidity) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1599)
+		- uniswapV2Router.addLiquidityETH{value: native}(address(this),tokens,0,0,liquidityWallet,block.timestamp) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1542-1549)
+	State variables written after the call(s):
+	- addLiquidity(addTokensLiquidity,nativeLiquidity) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1599)
+		- _allowances[owner][spender] = amount (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1492)
+Reentrancy in DGA._g() (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1905-1920):
+	External calls:
+	- swapDegenForNative(degenTokens) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1912)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokens,0,path,address(owner()),block.timestamp) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1531-1537)
+	State variables written after the call(s):
+	- jeetTaxEnabled = true (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1918)
+	- liquidityFeeBPS = 200 (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1914)
+	- swapEnabled = true (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1917)
+	- totalFeeBPS = 600 (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1916)
+	- treasuryFeeBPS = 400 (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1915)
+Reentrancy in DGA._transfer(address,address,uint256) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1364-1466):
+	External calls:
+	- _executeSwap(contractTokenBalance,contractNativeBalance) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1429)
+		- uniswapV2Router.addLiquidityETH{value: native}(address(this),tokens,0,0,liquidityWallet,block.timestamp) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1542-1549)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokens,0,path,address(this),block.timestamp) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1517-1523)
+		- (success,None) = address(dividendTracker).call{value: nativeDividends}() (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1607-1609)
+	External calls sending eth:
+	- _executeSwap(contractTokenBalance,contractNativeBalance) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1429)
+		- uniswapV2Router.addLiquidityETH{value: native}(address(this),tokens,0,0,liquidityWallet,block.timestamp) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1542-1549)
+		- address(marketingWallet).transfer(nativeMarketing) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1596)
+		- (success,None) = address(dividendTracker).call{value: nativeDividends}() (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1607-1609)
+	State variables written after the call(s):
+	- lastSwapTime = block.timestamp (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1431)
+Reentrancy in DividendTracker.compoundAccount(address) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#2143-2155):
+	External calls:
+	- (amount,tokens) = _compoundDividendOfUser(account) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#2148)
+		- uniswapV2Router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: _withdrawableDividend}(0,path,address(account),block.timestamp) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#2179-2191)
+	State variables written after the call(s):
+	- lastClaimTimes[account] = block.timestamp (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#2150)
+Reentrancy in DividendTracker.processAccount(address) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#2106-2118):
+	External calls:
+	- amount = _withdrawDividendOfUser(account) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#2111)
+		- (success,None) = account.call{gas: 3000,value: _withdrawableDividend}() (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#2129-2132)
+	State variables written after the call(s):
+	- lastClaimTimes[account] = block.timestamp (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#2113)
+Reentrancy in DGA.transferFrom(address,address,uint256) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1349-1362):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1354)
+		- uniswapV2Router.addLiquidityETH{value: native}(address(this),tokens,0,0,liquidityWallet,block.timestamp) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1542-1549)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokens,0,path,address(this),block.timestamp) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1517-1523)
+		- (success,None) = address(dividendTracker).call{value: nativeDividends}() (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1607-1609)
+		- dividendTracker.setBalance(address(sender),balanceOf(sender)) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1464)
+		- dividendTracker.setBalance(address(recipient),balanceOf(recipient)) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1465)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1354)
+		- uniswapV2Router.addLiquidityETH{value: native}(address(this),tokens,0,0,liquidityWallet,block.timestamp) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1542-1549)
+		- address(marketingWallet).transfer(nativeMarketing) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1596)
+		- (success,None) = address(dividendTracker).call{value: nativeDividends}() (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1607-1609)
+	State variables written after the call(s):
+	- _approve(sender,_msgSender(),currentAllowance - amount) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1360)
+		- _allowances[owner][spender] = amount (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1492)
+Reentrancy in DGA.updateUniswapV2Router(address) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1690-1704):
+	External calls:
+	- _uniswapV2Pair = IUniswapV2Factory(uniswapV2Router.factory()).createPair(address(this),uniswapV2Router.WETH()) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1701-1702)
+	State variables written after the call(s):
+	- uniswapV2Pair = _uniswapV2Pair (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1703)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in DGA._executeSwap(uint256,uint256) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1558-1614):
+	External calls:
+	- swapTokensForNative(swapTokensTotal) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1583)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokens,0,path,address(this),block.timestamp) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1517-1523)
+	- addLiquidity(addTokensLiquidity,nativeLiquidity) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1599)
+		- uniswapV2Router.addLiquidityETH{value: native}(address(this),tokens,0,0,liquidityWallet,block.timestamp) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1542-1549)
+	External calls sending eth:
+	- address(marketingWallet).transfer(nativeMarketing) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1596)
+	- addLiquidity(addTokensLiquidity,nativeLiquidity) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1599)
+		- uniswapV2Router.addLiquidityETH{value: native}(address(this),tokens,0,0,liquidityWallet,block.timestamp) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1542-1549)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1493)
+		- addLiquidity(addTokensLiquidity,nativeLiquidity) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1599)
+	- SwapAndAddLiquidity(swapTokensLiquidity,nativeLiquidity,addTokensLiquidity) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1600-1604)
+Reentrancy in DGA._executeSwap(uint256,uint256) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1558-1614):
+	External calls:
+	- swapTokensForNative(swapTokensTotal) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1583)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokens,0,path,address(this),block.timestamp) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1517-1523)
+	- addLiquidity(addTokensLiquidity,nativeLiquidity) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1599)
+		- uniswapV2Router.addLiquidityETH{value: native}(address(this),tokens,0,0,liquidityWallet,block.timestamp) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1542-1549)
+	- (success,None) = address(dividendTracker).call{value: nativeDividends}() (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1607-1609)
+	External calls sending eth:
+	- address(marketingWallet).transfer(nativeMarketing) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1596)
+	- addLiquidity(addTokensLiquidity,nativeLiquidity) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1599)
+		- uniswapV2Router.addLiquidityETH{value: native}(address(this),tokens,0,0,liquidityWallet,block.timestamp) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1542-1549)
+	- (success,None) = address(dividendTracker).call{value: nativeDividends}() (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1607-1609)
+	Event emitted after the call(s):
+	- SendDividends(swapTokensDividends,nativeDividends) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1611)
+Reentrancy in DGA._setAutomatedMarketMakerPair(address,bool) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1678-1688):
+	External calls:
+	- dividendTracker.excludeFromDividends(pair,true) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1685)
+	Event emitted after the call(s):
+	- SetAutomatedMarketMakerPair(pair,value) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1687)
+Reentrancy in DGA._transfer(address,address,uint256) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1364-1466):
+	External calls:
+	- _executeSwap(contractTokenBalance,contractNativeBalance) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1429)
+		- uniswapV2Router.addLiquidityETH{value: native}(address(this),tokens,0,0,liquidityWallet,block.timestamp) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1542-1549)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokens,0,path,address(this),block.timestamp) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1517-1523)
+		- (success,None) = address(dividendTracker).call{value: nativeDividends}() (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1607-1609)
+	External calls sending eth:
+	- _executeSwap(contractTokenBalance,contractNativeBalance) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1429)
+		- uniswapV2Router.addLiquidityETH{value: native}(address(this),tokens,0,0,liquidityWallet,block.timestamp) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1542-1549)
+		- address(marketingWallet).transfer(nativeMarketing) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1596)
+		- (success,None) = address(dividendTracker).call{value: nativeDividends}() (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1607-1609)
+	Event emitted after the call(s):
+	- Transfer(sender,recipient,amount) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1482)
+		- _executeTransfer(sender,recipient,amount) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1462)
+	- Transfer(sender,recipient,amount) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1482)
+		- _executeTransfer(sender,address(this),jeetFees) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1459)
+Reentrancy in DividendTracker.compoundAccount(address) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#2143-2155):
+	External calls:
+	- (amount,tokens) = _compoundDividendOfUser(account) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#2148)
+		- uniswapV2Router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: _withdrawableDividend}(0,path,address(account),block.timestamp) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#2179-2191)
+	Event emitted after the call(s):
+	- Compound(account,amount,tokens) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#2151)
+Reentrancy in DividendTracker.processAccount(address) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#2106-2118):
+	External calls:
+	- amount = _withdrawDividendOfUser(account) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#2111)
+		- (success,None) = account.call{gas: 3000,value: _withdrawableDividend}() (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#2129-2132)
+	Event emitted after the call(s):
+	- Claim(account,amount) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#2114)
+Reentrancy in DGA.sweep(uint256,bytes) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1938-1941):
+	External calls:
+	- IEmpirePair(sweepablePair).sweep(amount,data) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1939)
+	Event emitted after the call(s):
+	- Sweep(amount) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1940)
+Reentrancy in DGA.transferFrom(address,address,uint256) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1349-1362):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1354)
+		- uniswapV2Router.addLiquidityETH{value: native}(address(this),tokens,0,0,liquidityWallet,block.timestamp) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1542-1549)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokens,0,path,address(this),block.timestamp) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1517-1523)
+		- (success,None) = address(dividendTracker).call{value: nativeDividends}() (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1607-1609)
+		- dividendTracker.setBalance(address(sender),balanceOf(sender)) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1464)
+		- dividendTracker.setBalance(address(recipient),balanceOf(recipient)) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1465)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1354)
+		- uniswapV2Router.addLiquidityETH{value: native}(address(this),tokens,0,0,liquidityWallet,block.timestamp) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1542-1549)
+		- address(marketingWallet).transfer(nativeMarketing) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1596)
+		- (success,None) = address(dividendTracker).call{value: nativeDividends}() (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1607-1609)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1493)
+		- _approve(sender,_msgSender(),currentAllowance - amount) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1360)
+Reentrancy in DGA.unsweep(uint256) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1947-1951):
+	External calls:
+	- IERC20(uniswapV2Router.WETH()).approve(sweepablePair,amount) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1948)
+	- IEmpirePair(sweepablePair).unsweep(amount) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1949)
+	Event emitted after the call(s):
+	- Unsweep(amount) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1950)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+DividendTracker._withdrawDividendOfUser(address) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#2120-2141) tries to limit the gas of an external call that controls implicit decoding
+	(success,None) = account.call{gas: 3000,value: _withdrawableDividend}() (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#2129-2132)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#return-bomb
+
+Address.isContract(address) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#506-516) uses assembly
+	- INLINE ASM (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#512-514)
+Address.verifyCallResult(bool,bytes,string) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#675-695) uses assembly
+	- INLINE ASM (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#687-690)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#assembly-usage
+
+Context._msgData() (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#10-12) is never used and should be removed
+DGA._burn(address,uint256) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1503-1510) is never used and should be removed
+ERC20._burn(address,uint256) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#405-420) is never used and should be removed
+ERC20._mint(address,uint256) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#382-392) is never used and should be removed
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dead-code
+
+Version constraint ^0.8.0 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- SignedImmutables
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching.
+It is used by:
+	- ^0.8.0 (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#2)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in Address.sendValue(address,uint256) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#534-539):
+	- (success,None) = recipient.call{value: amount}() (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#537)
+Low level call in Address.functionCallWithValue(address,bytes,uint256,string) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#602-613):
+	- (success,returndata) = target.call{value: value}(data) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#611)
+Low level call in Address.functionStaticCall(address,bytes,string) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#631-640):
+	- (success,returndata) = target.staticcall(data) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#638)
+Low level call in Address.functionDelegateCall(address,bytes,string) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#658-667):
+	- (success,returndata) = target.delegatecall(data) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#665)
+Low level call in DGA._executeSwap(uint256,uint256) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1558-1614):
+	- (success,None) = address(dividendTracker).call{value: nativeDividends}() (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1607-1609)
+Low level call in DividendTracker._withdrawDividendOfUser(address) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#2120-2141):
+	- (success,None) = account.call{gas: 3000,value: _withdrawableDividend}() (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#2129-2132)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+DGA (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1141-1952) should inherit from IERC20Metadata (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#148-163)
+DGA (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1141-1952) should inherit from IEmpirePair (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1114-1118)
+DividendTracker (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1954-2304) should inherit from IERC20Metadata (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#148-163)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-inheritance
+
+Function IUniswapV2Pair.DOMAIN_SEPARATOR() (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#974) is not in mixedCase
+Function IUniswapV2Pair.PERMIT_TYPEHASH() (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#976) is not in mixedCase
+Function IUniswapV2Pair.MINIMUM_LIQUIDITY() (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1007) is not in mixedCase
+Function IUniswapV2Router02.WETH() (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1053) is not in mixedCase
+Parameter DGA.includeToNotDegens(address[])._users (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1552) is not in mixedCase
+Parameter DGA.setWallet(address,address)._marketingWallet (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1652) is not in mixedCase
+Parameter DGA.setWallet(address,address)._liquidityWallet (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1653) is not in mixedCase
+Parameter DGA.setFee(uint256,uint256,uint256)._treasuryFee (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1668) is not in mixedCase
+Parameter DGA.setFee(uint256,uint256,uint256)._liquidityFee (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1669) is not in mixedCase
+Parameter DGA.setFee(uint256,uint256,uint256)._dividendFee (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1670) is not in mixedCase
+Parameter DGA.claimTeam(address)._lockContract (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1706) is not in mixedCase
+Parameter DGA.setSwapEnabled(bool)._enabled (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1761) is not in mixedCase
+Parameter DGA.setTaxEnabled(bool)._enabled (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1766) is not in mixedCase
+Parameter DGA.setCompoundingEnabled(bool)._enabled (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1771) is not in mixedCase
+Parameter DGA.updateDividendSettings(bool,uint256,bool)._swapEnabled (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1777) is not in mixedCase
+Parameter DGA.updateDividendSettings(bool,uint256,bool)._swapTokensAtAmount (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1778) is not in mixedCase
+Parameter DGA.updateDividendSettings(bool,uint256,bool)._swapAllToken (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1779) is not in mixedCase
+Parameter DGA.rescueToken(address,uint256)._token (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1826) is not in mixedCase
+Parameter DGA.rescueToken(address,uint256)._amount (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1826) is not in mixedCase
+Parameter DGA.rescueETH(uint256)._amount (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1830) is not in mixedCase
+Parameter DGA.degen(address)._user (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1834) is not in mixedCase
+Parameter DGA.removeFromDegenlist(address)._user (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1839) is not in mixedCase
+Parameter DGA.degenMany(address[])._users (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1844) is not in mixedCase
+Parameter DGA.unDegenMany(address[])._users (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1850) is not in mixedCase
+Parameter DGA.createSweepablePair(IEmpireFactory)._factory (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1926) is not in mixedCase
+Parameter DGA.setupPair(address)._newPair (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1934) is not in mixedCase
+Variable DGA.UNISWAPROUTER (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1142) is not in mixedCase
+Variable DividendTracker.UNISWAPROUTER (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1955) is not in mixedCase
+Constant DividendTracker.magnitude (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1965) is not in UPPER_CASE_WITH_UNDERSCORES
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in DGA._executeSwap(uint256,uint256) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1558-1614):
+	External calls:
+	- address(marketingWallet).transfer(nativeMarketing) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1596)
+	External calls sending eth:
+	- address(marketingWallet).transfer(nativeMarketing) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1596)
+	- addLiquidity(addTokensLiquidity,nativeLiquidity) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1599)
+		- uniswapV2Router.addLiquidityETH{value: native}(address(this),tokens,0,0,liquidityWallet,block.timestamp) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1542-1549)
+	State variables written after the call(s):
+	- addLiquidity(addTokensLiquidity,nativeLiquidity) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1599)
+		- _allowances[owner][spender] = amount (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1492)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1493)
+		- addLiquidity(addTokensLiquidity,nativeLiquidity) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1599)
+	- SwapAndAddLiquidity(swapTokensLiquidity,nativeLiquidity,addTokensLiquidity) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1600-1604)
+Reentrancy in DGA._executeSwap(uint256,uint256) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1558-1614):
+	External calls:
+	- address(marketingWallet).transfer(nativeMarketing) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1596)
+	External calls sending eth:
+	- address(marketingWallet).transfer(nativeMarketing) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1596)
+	- addLiquidity(addTokensLiquidity,nativeLiquidity) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1599)
+		- uniswapV2Router.addLiquidityETH{value: native}(address(this),tokens,0,0,liquidityWallet,block.timestamp) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1542-1549)
+	- (success,None) = address(dividendTracker).call{value: nativeDividends}() (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1607-1609)
+	Event emitted after the call(s):
+	- SendDividends(swapTokensDividends,nativeDividends) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1611)
+Reentrancy in DGA._transfer(address,address,uint256) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1364-1466):
+	External calls:
+	- _executeSwap(contractTokenBalance,contractNativeBalance) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1429)
+		- address(marketingWallet).transfer(nativeMarketing) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1596)
+	External calls sending eth:
+	- _executeSwap(contractTokenBalance,contractNativeBalance) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1429)
+		- uniswapV2Router.addLiquidityETH{value: native}(address(this),tokens,0,0,liquidityWallet,block.timestamp) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1542-1549)
+		- address(marketingWallet).transfer(nativeMarketing) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1596)
+		- (success,None) = address(dividendTracker).call{value: nativeDividends}() (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1607-1609)
+	State variables written after the call(s):
+	- _executeTransfer(sender,address(this),jeetFees) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1459)
+		- _balances[sender] = senderBalance - amount (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1480)
+		- _balances[recipient] += amount (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1481)
+	- _executeTransfer(sender,recipient,amount) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1462)
+		- _balances[sender] = senderBalance - amount (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1480)
+		- _balances[recipient] += amount (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1481)
+	- lastSwapTime = block.timestamp (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1431)
+	- swapping = false (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1432)
+	Event emitted after the call(s):
+	- Transfer(sender,recipient,amount) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1482)
+		- _executeTransfer(sender,recipient,amount) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1462)
+	- Transfer(sender,recipient,amount) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1482)
+		- _executeTransfer(sender,address(this),jeetFees) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1459)
+Reentrancy in DGA.transferFrom(address,address,uint256) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1349-1362):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1354)
+		- address(marketingWallet).transfer(nativeMarketing) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1596)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1354)
+		- uniswapV2Router.addLiquidityETH{value: native}(address(this),tokens,0,0,liquidityWallet,block.timestamp) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1542-1549)
+		- address(marketingWallet).transfer(nativeMarketing) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1596)
+		- (success,None) = address(dividendTracker).call{value: nativeDividends}() (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1607-1609)
+	State variables written after the call(s):
+	- _approve(sender,_msgSender(),currentAllowance - amount) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1360)
+		- _allowances[owner][spender] = amount (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1492)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1493)
+		- _approve(sender,_msgSender(),currentAllowance - amount) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1360)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+DGA.constructor(address,address,address,address[]) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1215-1264) uses literals with too many digits:
+	- _mint(owner(),1000000000 * (10 ** 18)) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1263)
+DGA.slitherConstructorVariables() (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1141-1952) uses literals with too many digits:
+	- swapTokensAtAmount = 100000 * (10 ** 18) (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1154)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+DGA.UNISWAPROUTER (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1142) should be constant 
+DGA._name (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1146) should be constant 
+DGA._symbol (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1147) should be constant 
+DividendTracker._name (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1957) should be constant 
+DividendTracker._symbol (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1958) should be constant 
+DividendTracker.lastProcessedIndex (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1960) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+
+DGA.dividendTracker (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1192) should be immutable 
+DividendTracker.UNISWAPROUTER (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1955) should be immutable 
+DividendTracker.tokenAddress (0x01886cabb4a19a89fad686810f2ee60459452cf3.sol#1971) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+./0x01886cabb4a19a89fad686810f2ee60459452cf3.sol analyzed (14 contracts with 94 detectors), 112 result(s) found
+
+real	0m4.748s
+user	0m4.470s
+sys	0m0.280s

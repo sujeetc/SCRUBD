@@ -1,0 +1,127 @@
+'solc --version' running
+'solc ./0x479cbe1f6a7fa4d7e304ae983803c46e85ced870.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+Slaughter3D.tryFinalizeStage() (0x479cbe1f6a7fa4d7e304ae983803c46e85ced870.sol#322-382) uses a weak PRNG: "sacrificeSlot = uint8(blockhash(uint256)(stageToFinalize.blocknumber)) % MAX_PLAYERS_PER_STAGE (0x479cbe1f6a7fa4d7e304ae983803c46e85ced870.sol#345)" 
+Slaughter3D.tryFinalizeStage() (0x479cbe1f6a7fa4d7e304ae983803c46e85ced870.sol#322-382) uses a weak PRNG: "jackpot = uint256(blockhash(uint256)(stageToFinalize.blocknumber)) % 1000 (0x479cbe1f6a7fa4d7e304ae983803c46e85ced870.sol#346)" 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#weak-PRNG
+
+Slaughter3D.DivsToRefundpot() (0x479cbe1f6a7fa4d7e304ae983803c46e85ced870.sol#158-169) performs a multiplication on the result of a division:
+	- base = dividends.div(100) (0x479cbe1f6a7fa4d7e304ae983803c46e85ced870.sol#163)
+	- Refundpot = Refundpot.add(base.mul(94)) (0x479cbe1f6a7fa4d7e304ae983803c46e85ced870.sol#166)
+Slaughter3D.DivsToRefundpot() (0x479cbe1f6a7fa4d7e304ae983803c46e85ced870.sol#158-169) performs a multiplication on the result of a division:
+	- base = dividends.div(100) (0x479cbe1f6a7fa4d7e304ae983803c46e85ced870.sol#163)
+	- Jackpot = Jackpot.add(base.mul(5)) (0x479cbe1f6a7fa4d7e304ae983803c46e85ced870.sol#167)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+Slaughter3D.isNewToStage() (0x479cbe1f6a7fa4d7e304ae983803c46e85ced870.sol#227-231) uses a dangerous strict equality:
+	- require(bool)(stages[numberOfStages - 1].players[msg.sender] == false) (0x479cbe1f6a7fa4d7e304ae983803c46e85ced870.sol#229)
+Slaughter3D.prepareStage() (0x479cbe1f6a7fa4d7e304ae983803c46e85ced870.sol#217-225) uses a dangerous strict equality:
+	- stages[numberOfStages - 1].numberOfPlayers == MAX_PLAYERS_PER_STAGE (0x479cbe1f6a7fa4d7e304ae983803c46e85ced870.sol#220)
+Slaughter3D.tryFinalizeStage() (0x479cbe1f6a7fa4d7e304ae983803c46e85ced870.sol#322-382) uses a dangerous strict equality:
+	- block.number == stageToFinalize.blocknumber (0x479cbe1f6a7fa4d7e304ae983803c46e85ced870.sol#342)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-strict-equalities
+
+Slaughter3D.checkstatus().check (0x479cbe1f6a7fa4d7e304ae983803c46e85ced870.sol#119) is a local variable never initialized
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#uninitialized-local-variables
+
+Slaughter3D.Expand(address) (0x479cbe1f6a7fa4d7e304ae983803c46e85ced870.sol#149-156) ignores return value by p3dContract.buy.value(amt)(masternode) (0x479cbe1f6a7fa4d7e304ae983803c46e85ced870.sol#154)
+Slaughter3D.changevanity(string,address) (0x479cbe1f6a7fa4d7e304ae983803c46e85ced870.sol#189-197) ignores return value by p3dContract.buy.value(amt)(masternode) (0x479cbe1f6a7fa4d7e304ae983803c46e85ced870.sol#196)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+Reentrancy in Slaughter3D.DivsToRefundpot() (0x479cbe1f6a7fa4d7e304ae983803c46e85ced870.sol#158-169):
+	External calls:
+	- dividends = p3dContract.myDividends(true) (0x479cbe1f6a7fa4d7e304ae983803c46e85ced870.sol#161)
+	- p3dContract.withdraw() (0x479cbe1f6a7fa4d7e304ae983803c46e85ced870.sol#164)
+	- SPASM_.disburse.value(base)() (0x479cbe1f6a7fa4d7e304ae983803c46e85ced870.sol#165)
+	External calls sending eth:
+	- SPASM_.disburse.value(base)() (0x479cbe1f6a7fa4d7e304ae983803c46e85ced870.sol#165)
+	State variables written after the call(s):
+	- Jackpot = Jackpot.add(base.mul(5)) (0x479cbe1f6a7fa4d7e304ae983803c46e85ced870.sol#167)
+	- Refundpot = Refundpot.add(base.mul(94)) (0x479cbe1f6a7fa4d7e304ae983803c46e85ced870.sol#166)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Slaughter3D.isNewToStage() (0x479cbe1f6a7fa4d7e304ae983803c46e85ced870.sol#227-231) compares to a boolean constant:
+	-require(bool)(stages[numberOfStages - 1].players[msg.sender] == false) (0x479cbe1f6a7fa4d7e304ae983803c46e85ced870.sol#229)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#boolean-equality
+
+Version constraint ^0.4.25 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ABIEncoderV2PackedStorage_0.4.x.
+It is used by:
+	- ^0.4.25 (0x479cbe1f6a7fa4d7e304ae983803c46e85ced870.sol#1)
+solc-0.4.25 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Function Slaughter3D.Expand(address) (0x479cbe1f6a7fa4d7e304ae983803c46e85ced870.sol#149-156) is not in mixedCase
+Function Slaughter3D.DivsToRefundpot() (0x479cbe1f6a7fa4d7e304ae983803c46e85ced870.sol#158-169) is not in mixedCase
+Function Slaughter3D.DonateToLosers() (0x479cbe1f6a7fa4d7e304ae983803c46e85ced870.sol#171-176) is not in mixedCase
+Function Slaughter3D.Payoutnextrefund() (0x479cbe1f6a7fa4d7e304ae983803c46e85ced870.sol#178-187) is not in mixedCase
+Parameter Slaughter3D.offerAsSacrifice(address).MN (0x479cbe1f6a7fa4d7e304ae983803c46e85ced870.sol#242) is not in mixedCase
+Parameter Slaughter3D.offerAsSacrificeFromVault(address).MN (0x479cbe1f6a7fa4d7e304ae983803c46e85ced870.sol#255) is not in mixedCase
+Parameter Slaughter3D.acceptOffer(address).MN (0x479cbe1f6a7fa4d7e304ae983803c46e85ced870.sol#299) is not in mixedCase
+Constant Slaughter3D.p3dContract (0x479cbe1f6a7fa4d7e304ae983803c46e85ced870.sol#30) is not in UPPER_CASE_WITH_UNDERSCORES
+Variable Slaughter3D.Refundpot (0x479cbe1f6a7fa4d7e304ae983803c46e85ced870.sol#37) is not in mixedCase
+Variable Slaughter3D.Jackpot (0x479cbe1f6a7fa4d7e304ae983803c46e85ced870.sol#38) is not in mixedCase
+Variable Slaughter3D.SPASMfee (0x479cbe1f6a7fa4d7e304ae983803c46e85ced870.sol#39) is not in mixedCase
+Variable Slaughter3D.ETHtoP3Dbymasternode (0x479cbe1f6a7fa4d7e304ae983803c46e85ced870.sol#40) is not in mixedCase
+Variable Slaughter3D.Vanity (0x479cbe1f6a7fa4d7e304ae983803c46e85ced870.sol#46) is not in mixedCase
+Variable Slaughter3D.RefundWaitingLine (0x479cbe1f6a7fa4d7e304ae983803c46e85ced870.sol#49) is not in mixedCase
+Variable Slaughter3D.Loser (0x479cbe1f6a7fa4d7e304ae983803c46e85ced870.sol#50) is not in mixedCase
+Variable Slaughter3D.NextInLine (0x479cbe1f6a7fa4d7e304ae983803c46e85ced870.sol#51) is not in mixedCase
+Variable Slaughter3D.NextAtLineEnd (0x479cbe1f6a7fa4d7e304ae983803c46e85ced870.sol#52) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in Slaughter3D.Payoutnextrefund() (0x479cbe1f6a7fa4d7e304ae983803c46e85ced870.sol#178-187):
+	External calls:
+	- RefundWaitingLine[NextInLine].transfer(100000000000000000) (0x479cbe1f6a7fa4d7e304ae983803c46e85ced870.sol#184)
+	State variables written after the call(s):
+	- NextInLine ++ (0x479cbe1f6a7fa4d7e304ae983803c46e85ced870.sol#185)
+Reentrancy in Slaughter3D.tryFinalizeStage() (0x479cbe1f6a7fa4d7e304ae983803c46e85ced870.sol#322-382):
+	External calls:
+	- sacrifice.transfer(Jackpot) (0x479cbe1f6a7fa4d7e304ae983803c46e85ced870.sol#356)
+	State variables written after the call(s):
+	- ETHtoP3Dbymasternode[stageToFinalize.setMN[1]] = ETHtoP3Dbymasternode[stageToFinalize.setMN[1]].add(5000000000000000) (0x479cbe1f6a7fa4d7e304ae983803c46e85ced870.sol#367)
+	- ETHtoP3Dbymasternode[stageToFinalize.setMN[1]] = ETHtoP3Dbymasternode[stageToFinalize.setMN[2]].add(5000000000000000) (0x479cbe1f6a7fa4d7e304ae983803c46e85ced870.sol#368)
+	- Jackpot = 0 (0x479cbe1f6a7fa4d7e304ae983803c46e85ced870.sol#358)
+	- NextAtLineEnd ++ (0x479cbe1f6a7fa4d7e304ae983803c46e85ced870.sol#364)
+	- RefundWaitingLine[NextAtLineEnd] = sacrifice (0x479cbe1f6a7fa4d7e304ae983803c46e85ced870.sol#363)
+	- Refundpot = Refundpot.add(5000000000000000) (0x479cbe1f6a7fa4d7e304ae983803c46e85ced870.sol#371)
+	- numberOfFinalizedStages ++ (0x479cbe1f6a7fa4d7e304ae983803c46e85ced870.sol#381)
+	- stageToFinalize.finalized = true (0x479cbe1f6a7fa4d7e304ae983803c46e85ced870.sol#380)
+	Event emitted after the call(s):
+	- JackpotWon(sacrifice,Jackpot) (0x479cbe1f6a7fa4d7e304ae983803c46e85ced870.sol#357)
+Reentrancy in Slaughter3D.withdraw() (0x479cbe1f6a7fa4d7e304ae983803c46e85ced870.sol#268-280):
+	External calls:
+	- tryFinalizeStage() (0x479cbe1f6a7fa4d7e304ae983803c46e85ced870.sol#272)
+		- sacrifice.transfer(Jackpot) (0x479cbe1f6a7fa4d7e304ae983803c46e85ced870.sol#356)
+	State variables written after the call(s):
+	- playerVault[msg.sender] = 0 (0x479cbe1f6a7fa4d7e304ae983803c46e85ced870.sol#275)
+	Event emitted after the call(s):
+	- EarningsWithdrawn(msg.sender,amount) (0x479cbe1f6a7fa4d7e304ae983803c46e85ced870.sol#277)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+Slaughter3D.p3dPerStage (0x479cbe1f6a7fa4d7e304ae983803c46e85ced870.sol#42) is never used in Slaughter3D (0x479cbe1f6a7fa4d7e304ae983803c46e85ced870.sol#18-405)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-state-variable
+
+Slaughter3D.SPASMfee (0x479cbe1f6a7fa4d7e304ae983803c46e85ced870.sol#39) should be constant 
+Slaughter3D.p3dPerStage (0x479cbe1f6a7fa4d7e304ae983803c46e85ced870.sol#42) should be constant 
+Slaughter3D.winningsPerRound (0x479cbe1f6a7fa4d7e304ae983803c46e85ced870.sol#44) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+./0x479cbe1f6a7fa4d7e304ae983803c46e85ced870.sol analyzed (4 contracts with 94 detectors), 38 result(s) found
+
+real	0m2.303s
+user	0m2.062s
+sys	0m0.241s

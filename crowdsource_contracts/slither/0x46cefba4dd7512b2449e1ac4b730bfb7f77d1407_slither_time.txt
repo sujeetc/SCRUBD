@@ -1,0 +1,119 @@
+'solc --version' running
+'solc ./0x46cefba4dd7512b2449e1ac4b730bfb7f77d1407.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+DecentralizedExchangeHotPotato.withdrawAll() (0x46cefba4dd7512b2449e1ac4b730bfb7f77d1407.sol#50-52) sends eth to arbitrary user
+	Dangerous calls:
+	- msg.sender.transfer(address(this).balance) (0x46cefba4dd7512b2449e1ac4b730bfb7f77d1407.sol#51)
+DecentralizedExchangeHotPotato.withdrawAmount(uint256) (0x46cefba4dd7512b2449e1ac4b730bfb7f77d1407.sol#54-56) sends eth to arbitrary user
+	Dangerous calls:
+	- msg.sender.transfer(_amount) (0x46cefba4dd7512b2449e1ac4b730bfb7f77d1407.sol#55)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+DecentralizedExchangeHotPotato (0x46cefba4dd7512b2449e1ac4b730bfb7f77d1407.sol#4-121) contract sets array length with a user-controlled value:
+	- orderBook.push(Order(msg.sender,msg.sender,_issuer,_tokenId,_price,_startTime,_endTime)) (0x46cefba4dd7512b2449e1ac4b730bfb7f77d1407.sol#93)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#array-length-assignment
+
+DecentralizedExchangeHotPotato.isContract(address) (0x46cefba4dd7512b2449e1ac4b730bfb7f77d1407.sol#75-79) is declared view but contains assembly code
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#constant-functions-using-assembly-code
+
+Reentrancy in DecentralizedExchangeHotPotato.revoke(uint256) (0x46cefba4dd7512b2449e1ac4b730bfb7f77d1407.sol#112-120):
+	External calls:
+	- issuer.transfer(msg.sender,orderBook[_id].tokenId) (0x46cefba4dd7512b2449e1ac4b730bfb7f77d1407.sol#117)
+	State variables written after the call(s):
+	- orderBook[_id] = orderBook[orderBookSize - 1] (0x46cefba4dd7512b2449e1ac4b730bfb7f77d1407.sol#118)
+	DecentralizedExchangeHotPotato.orderBook (0x46cefba4dd7512b2449e1ac4b730bfb7f77d1407.sol#17) can be used in cross function reentrancies:
+	- DecentralizedExchangeHotPotato.allOf(uint256) (0x46cefba4dd7512b2449e1ac4b730bfb7f77d1407.sol#70-72)
+	- DecentralizedExchangeHotPotato.buy(uint256) (0x46cefba4dd7512b2449e1ac4b730bfb7f77d1407.sol#99-111)
+	- DecentralizedExchangeHotPotato.put(address,uint256,uint256,uint256,uint256) (0x46cefba4dd7512b2449e1ac4b730bfb7f77d1407.sol#86-98)
+	- DecentralizedExchangeHotPotato.revoke(uint256) (0x46cefba4dd7512b2449e1ac4b730bfb7f77d1407.sol#112-120)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+DecentralizedExchangeHotPotato.setOwner(address) (0x46cefba4dd7512b2449e1ac4b730bfb7f77d1407.sol#37-39) should emit an event for: 
+	- owner = _owner (0x46cefba4dd7512b2449e1ac4b730bfb7f77d1407.sol#38) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-access-control
+
+DecentralizedExchangeHotPotato.setOwner(address)._owner (0x46cefba4dd7512b2449e1ac4b730bfb7f77d1407.sol#37) lacks a zero-check on :
+		- owner = _owner (0x46cefba4dd7512b2449e1ac4b730bfb7f77d1407.sol#38)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in DecentralizedExchangeHotPotato.put(address,uint256,uint256,uint256,uint256) (0x46cefba4dd7512b2449e1ac4b730bfb7f77d1407.sol#86-98):
+	External calls:
+	- require(bool)(issuer.ownerOf(_tokenId) == msg.sender) (0x46cefba4dd7512b2449e1ac4b730bfb7f77d1407.sol#90)
+	- issuer.transferFrom(msg.sender,address(this),_tokenId) (0x46cefba4dd7512b2449e1ac4b730bfb7f77d1407.sol#91)
+	State variables written after the call(s):
+	- orderBook.push(Order(msg.sender,msg.sender,_issuer,_tokenId,_price,_startTime,_endTime)) (0x46cefba4dd7512b2449e1ac4b730bfb7f77d1407.sol#93)
+	- orderBook[orderBookSize] = Order(msg.sender,msg.sender,_issuer,_tokenId,_price,_startTime,_endTime) (0x46cefba4dd7512b2449e1ac4b730bfb7f77d1407.sol#95)
+	- orderBookSize += 1 (0x46cefba4dd7512b2449e1ac4b730bfb7f77d1407.sol#97)
+Reentrancy in DecentralizedExchangeHotPotato.revoke(uint256) (0x46cefba4dd7512b2449e1ac4b730bfb7f77d1407.sol#112-120):
+	External calls:
+	- issuer.transfer(msg.sender,orderBook[_id].tokenId) (0x46cefba4dd7512b2449e1ac4b730bfb7f77d1407.sol#117)
+	State variables written after the call(s):
+	- orderBookSize -= 1 (0x46cefba4dd7512b2449e1ac4b730bfb7f77d1407.sol#119)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+DecentralizedExchangeHotPotato.buy(uint256) (0x46cefba4dd7512b2449e1ac4b730bfb7f77d1407.sol#99-111) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(orderBook[_id].startTime <= now && now <= orderBook[_id].endTime) (0x46cefba4dd7512b2449e1ac4b730bfb7f77d1407.sol#103)
+DecentralizedExchangeHotPotato.revoke(uint256) (0x46cefba4dd7512b2449e1ac4b730bfb7f77d1407.sol#112-120) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(orderBook[_id].endTime <= now) (0x46cefba4dd7512b2449e1ac4b730bfb7f77d1407.sol#114)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+DecentralizedExchangeHotPotato.isContract(address) (0x46cefba4dd7512b2449e1ac4b730bfb7f77d1407.sol#75-79) uses assembly
+	- INLINE ASM (0x46cefba4dd7512b2449e1ac4b730bfb7f77d1407.sol#77-78)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#assembly-usage
+
+Version constraint ^0.4.21 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ABIEncoderV2PackedStorage_0.4.x
+	- ExpExponentCleanup
+	- EventStructWrongData
+	- NestedArrayFunctionCallDecoder.
+It is used by:
+	- ^0.4.21 (0x46cefba4dd7512b2449e1ac4b730bfb7f77d1407.sol#1)
+solc-0.4.21 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Parameter DecentralizedExchangeHotPotato.setOwner(address)._owner (0x46cefba4dd7512b2449e1ac4b730bfb7f77d1407.sol#37) is not in mixedCase
+Parameter DecentralizedExchangeHotPotato.addAdmin(address)._admin (0x46cefba4dd7512b2449e1ac4b730bfb7f77d1407.sol#41) is not in mixedCase
+Parameter DecentralizedExchangeHotPotato.removeAdmin(address)._admin (0x46cefba4dd7512b2449e1ac4b730bfb7f77d1407.sol#45) is not in mixedCase
+Parameter DecentralizedExchangeHotPotato.withdrawAmount(uint256)._amount (0x46cefba4dd7512b2449e1ac4b730bfb7f77d1407.sol#54) is not in mixedCase
+Parameter DecentralizedExchangeHotPotato.isAdmin(address)._admin (0x46cefba4dd7512b2449e1ac4b730bfb7f77d1407.sol#64) is not in mixedCase
+Parameter DecentralizedExchangeHotPotato.allOf(uint256)._id (0x46cefba4dd7512b2449e1ac4b730bfb7f77d1407.sol#70) is not in mixedCase
+Parameter DecentralizedExchangeHotPotato.getNextPrice(uint256)._price (0x46cefba4dd7512b2449e1ac4b730bfb7f77d1407.sol#81) is not in mixedCase
+Parameter DecentralizedExchangeHotPotato.put(address,uint256,uint256,uint256,uint256)._issuer (0x46cefba4dd7512b2449e1ac4b730bfb7f77d1407.sol#86) is not in mixedCase
+Parameter DecentralizedExchangeHotPotato.put(address,uint256,uint256,uint256,uint256)._tokenId (0x46cefba4dd7512b2449e1ac4b730bfb7f77d1407.sol#86) is not in mixedCase
+Parameter DecentralizedExchangeHotPotato.put(address,uint256,uint256,uint256,uint256)._price (0x46cefba4dd7512b2449e1ac4b730bfb7f77d1407.sol#86) is not in mixedCase
+Parameter DecentralizedExchangeHotPotato.put(address,uint256,uint256,uint256,uint256)._startTime (0x46cefba4dd7512b2449e1ac4b730bfb7f77d1407.sol#87) is not in mixedCase
+Parameter DecentralizedExchangeHotPotato.put(address,uint256,uint256,uint256,uint256)._endTime (0x46cefba4dd7512b2449e1ac4b730bfb7f77d1407.sol#87) is not in mixedCase
+Parameter DecentralizedExchangeHotPotato.buy(uint256)._id (0x46cefba4dd7512b2449e1ac4b730bfb7f77d1407.sol#99) is not in mixedCase
+Parameter DecentralizedExchangeHotPotato.revoke(uint256)._id (0x46cefba4dd7512b2449e1ac4b730bfb7f77d1407.sol#112) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in DecentralizedExchangeHotPotato.buy(uint256) (0x46cefba4dd7512b2449e1ac4b730bfb7f77d1407.sol#99-111):
+	External calls:
+	- orderBook[_id].owner.transfer(orderBook[_id].price * 24 / 25) (0x46cefba4dd7512b2449e1ac4b730bfb7f77d1407.sol#104)
+	- orderBook[_id].creator.transfer(orderBook[_id].price / 50) (0x46cefba4dd7512b2449e1ac4b730bfb7f77d1407.sol#105)
+	- msg.sender.transfer(msg.value - orderBook[_id].price) (0x46cefba4dd7512b2449e1ac4b730bfb7f77d1407.sol#107)
+	State variables written after the call(s):
+	- orderBook[_id].owner = msg.sender (0x46cefba4dd7512b2449e1ac4b730bfb7f77d1407.sol#109)
+	- orderBook[_id].price = getNextPrice(orderBook[_id].price) (0x46cefba4dd7512b2449e1ac4b730bfb7f77d1407.sol#110)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+./0x46cefba4dd7512b2449e1ac4b730bfb7f77d1407.sol analyzed (2 contracts with 94 detectors), 29 result(s) found
+
+real	0m1.568s
+user	0m1.355s
+sys	0m0.216s

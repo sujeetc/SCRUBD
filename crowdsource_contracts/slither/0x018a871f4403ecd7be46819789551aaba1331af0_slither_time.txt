@@ -1,0 +1,188 @@
+'solc --version' running
+'solc ./0x018a871f4403ecd7be46819789551aaba1331af0.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+Reentrancy in $Jiraiya._transfer(address,address,uint256) (0x018a871f4403ecd7be46819789551aaba1331af0.sol#221-252):
+	External calls:
+	- swapTokensForEth(contractTokenBalance) (0x018a871f4403ecd7be46819789551aaba1331af0.sol#243)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x018a871f4403ecd7be46819789551aaba1331af0.sol#259-265)
+	External calls sending eth:
+	- sendETHToFee(address(this).balance) (0x018a871f4403ecd7be46819789551aaba1331af0.sol#246)
+		- _feeAddrWallet2.transfer(amount / 10 * 2) (0x018a871f4403ecd7be46819789551aaba1331af0.sol#269)
+		- _feeAddrWallet1.transfer(amount / 10 * 8) (0x018a871f4403ecd7be46819789551aaba1331af0.sol#270)
+	State variables written after the call(s):
+	- _tokenTransfer(from,to,amount) (0x018a871f4403ecd7be46819789551aaba1331af0.sol#251)
+		- _rOwned[address(this)] = _rOwned[address(this)].add(rTeam) (0x018a871f4403ecd7be46819789551aaba1331af0.sol#312)
+		- _rOwned[sender] = _rOwned[sender].sub(rAmount) (0x018a871f4403ecd7be46819789551aaba1331af0.sol#302)
+		- _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount) (0x018a871f4403ecd7be46819789551aaba1331af0.sol#303)
+	$Jiraiya._rOwned (0x018a871f4403ecd7be46819789551aaba1331af0.sol#120) can be used in cross function reentrancies:
+	- $Jiraiya._takeTeam(uint256) (0x018a871f4403ecd7be46819789551aaba1331af0.sol#309-313)
+	- $Jiraiya._transferStandard(address,address,uint256) (0x018a871f4403ecd7be46819789551aaba1331af0.sol#300-307)
+	- $Jiraiya.balanceOf(address) (0x018a871f4403ecd7be46819789551aaba1331af0.sol#180-182)
+	- $Jiraiya.constructor() (0x018a871f4403ecd7be46819789551aaba1331af0.sol#153-162)
+	- _tokenTransfer(from,to,amount) (0x018a871f4403ecd7be46819789551aaba1331af0.sol#251)
+		- _rTotal = _rTotal.sub(rFee) (0x018a871f4403ecd7be46819789551aaba1331af0.sol#316)
+	$Jiraiya._rTotal (0x018a871f4403ecd7be46819789551aaba1331af0.sol#128) can be used in cross function reentrancies:
+	- $Jiraiya._getCurrentSupply() (0x018a871f4403ecd7be46819789551aaba1331af0.sol#362-367)
+	- $Jiraiya._reflectFee(uint256,uint256) (0x018a871f4403ecd7be46819789551aaba1331af0.sol#315-318)
+	- $Jiraiya.constructor() (0x018a871f4403ecd7be46819789551aaba1331af0.sol#153-162)
+	- $Jiraiya.tokenFromReflection(uint256) (0x018a871f4403ecd7be46819789551aaba1331af0.sol#208-212)
+Reentrancy in $Jiraiya.openTrading() (0x018a871f4403ecd7be46819789551aaba1331af0.sol#272-284):
+	External calls:
+	- uniswapV2Pair = IUniswapV2Factory(_uniswapV2Router.factory()).createPair(address(this),_uniswapV2Router.WETH()) (0x018a871f4403ecd7be46819789551aaba1331af0.sol#277)
+	- uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x018a871f4403ecd7be46819789551aaba1331af0.sol#278)
+	External calls sending eth:
+	- uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x018a871f4403ecd7be46819789551aaba1331af0.sol#278)
+	State variables written after the call(s):
+	- tradingOpen = true (0x018a871f4403ecd7be46819789551aaba1331af0.sol#282)
+	$Jiraiya.tradingOpen (0x018a871f4403ecd7be46819789551aaba1331af0.sol#142) can be used in cross function reentrancies:
+	- $Jiraiya.openTrading() (0x018a871f4403ecd7be46819789551aaba1331af0.sol#272-284)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+$Jiraiya.sendETHToFee(uint256) (0x018a871f4403ecd7be46819789551aaba1331af0.sol#268-271) performs a multiplication on the result of a division:
+	- _feeAddrWallet2.transfer(amount / 10 * 2) (0x018a871f4403ecd7be46819789551aaba1331af0.sol#269)
+$Jiraiya.sendETHToFee(uint256) (0x018a871f4403ecd7be46819789551aaba1331af0.sol#268-271) performs a multiplication on the result of a division:
+	- _feeAddrWallet1.transfer(amount / 10 * 8) (0x018a871f4403ecd7be46819789551aaba1331af0.sol#270)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+$Jiraiya.openTrading() (0x018a871f4403ecd7be46819789551aaba1331af0.sol#272-284) ignores return value by uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x018a871f4403ecd7be46819789551aaba1331af0.sol#278)
+$Jiraiya.openTrading() (0x018a871f4403ecd7be46819789551aaba1331af0.sol#272-284) ignores return value by IERC20(uniswapV2Pair).approve(address(uniswapV2Router),type()(uint256).max) (0x018a871f4403ecd7be46819789551aaba1331af0.sol#283)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+$Jiraiya.allowance(address,address).owner (0x018a871f4403ecd7be46819789551aaba1331af0.sol#189) shadows:
+	- Ownable.owner() (0x018a871f4403ecd7be46819789551aaba1331af0.sol#78-80) (function)
+$Jiraiya._approve(address,address,uint256).owner (0x018a871f4403ecd7be46819789551aaba1331af0.sol#214) shadows:
+	- Ownable.owner() (0x018a871f4403ecd7be46819789551aaba1331af0.sol#78-80) (function)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#local-variable-shadowing
+
+Reentrancy in $Jiraiya._transfer(address,address,uint256) (0x018a871f4403ecd7be46819789551aaba1331af0.sol#221-252):
+	External calls:
+	- swapTokensForEth(contractTokenBalance) (0x018a871f4403ecd7be46819789551aaba1331af0.sol#243)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x018a871f4403ecd7be46819789551aaba1331af0.sol#259-265)
+	External calls sending eth:
+	- sendETHToFee(address(this).balance) (0x018a871f4403ecd7be46819789551aaba1331af0.sol#246)
+		- _feeAddrWallet2.transfer(amount / 10 * 2) (0x018a871f4403ecd7be46819789551aaba1331af0.sol#269)
+		- _feeAddrWallet1.transfer(amount / 10 * 8) (0x018a871f4403ecd7be46819789551aaba1331af0.sol#270)
+	State variables written after the call(s):
+	- _tokenTransfer(from,to,amount) (0x018a871f4403ecd7be46819789551aaba1331af0.sol#251)
+		- _tFeeTotal = _tFeeTotal.add(tFee) (0x018a871f4403ecd7be46819789551aaba1331af0.sol#317)
+Reentrancy in $Jiraiya.openTrading() (0x018a871f4403ecd7be46819789551aaba1331af0.sol#272-284):
+	External calls:
+	- uniswapV2Pair = IUniswapV2Factory(_uniswapV2Router.factory()).createPair(address(this),_uniswapV2Router.WETH()) (0x018a871f4403ecd7be46819789551aaba1331af0.sol#277)
+	- uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x018a871f4403ecd7be46819789551aaba1331af0.sol#278)
+	External calls sending eth:
+	- uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x018a871f4403ecd7be46819789551aaba1331af0.sol#278)
+	State variables written after the call(s):
+	- _maxTxAmount = 30000000 * 10 ** 9 (0x018a871f4403ecd7be46819789551aaba1331af0.sol#281)
+	- cooldownEnabled = true (0x018a871f4403ecd7be46819789551aaba1331af0.sol#280)
+	- swapEnabled = true (0x018a871f4403ecd7be46819789551aaba1331af0.sol#279)
+Reentrancy in $Jiraiya.transferFrom(address,address,uint256) (0x018a871f4403ecd7be46819789551aaba1331af0.sol#198-202):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x018a871f4403ecd7be46819789551aaba1331af0.sol#199)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x018a871f4403ecd7be46819789551aaba1331af0.sol#259-265)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x018a871f4403ecd7be46819789551aaba1331af0.sol#199)
+		- _feeAddrWallet2.transfer(amount / 10 * 2) (0x018a871f4403ecd7be46819789551aaba1331af0.sol#269)
+		- _feeAddrWallet1.transfer(amount / 10 * 8) (0x018a871f4403ecd7be46819789551aaba1331af0.sol#270)
+	State variables written after the call(s):
+	- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x018a871f4403ecd7be46819789551aaba1331af0.sol#200)
+		- _allowances[owner][spender] = amount (0x018a871f4403ecd7be46819789551aaba1331af0.sol#217)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in $Jiraiya._transfer(address,address,uint256) (0x018a871f4403ecd7be46819789551aaba1331af0.sol#221-252):
+	External calls:
+	- swapTokensForEth(contractTokenBalance) (0x018a871f4403ecd7be46819789551aaba1331af0.sol#243)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x018a871f4403ecd7be46819789551aaba1331af0.sol#259-265)
+	External calls sending eth:
+	- sendETHToFee(address(this).balance) (0x018a871f4403ecd7be46819789551aaba1331af0.sol#246)
+		- _feeAddrWallet2.transfer(amount / 10 * 2) (0x018a871f4403ecd7be46819789551aaba1331af0.sol#269)
+		- _feeAddrWallet1.transfer(amount / 10 * 8) (0x018a871f4403ecd7be46819789551aaba1331af0.sol#270)
+	Event emitted after the call(s):
+	- Transfer(sender,recipient,tTransferAmount) (0x018a871f4403ecd7be46819789551aaba1331af0.sol#306)
+		- _tokenTransfer(from,to,amount) (0x018a871f4403ecd7be46819789551aaba1331af0.sol#251)
+Reentrancy in $Jiraiya.transferFrom(address,address,uint256) (0x018a871f4403ecd7be46819789551aaba1331af0.sol#198-202):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x018a871f4403ecd7be46819789551aaba1331af0.sol#199)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x018a871f4403ecd7be46819789551aaba1331af0.sol#259-265)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x018a871f4403ecd7be46819789551aaba1331af0.sol#199)
+		- _feeAddrWallet2.transfer(amount / 10 * 2) (0x018a871f4403ecd7be46819789551aaba1331af0.sol#269)
+		- _feeAddrWallet1.transfer(amount / 10 * 8) (0x018a871f4403ecd7be46819789551aaba1331af0.sol#270)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x018a871f4403ecd7be46819789551aaba1331af0.sol#218)
+		- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x018a871f4403ecd7be46819789551aaba1331af0.sol#200)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+$Jiraiya._transfer(address,address,uint256) (0x018a871f4403ecd7be46819789551aaba1331af0.sol#221-252) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(cooldown[to] < block.timestamp) (0x018a871f4403ecd7be46819789551aaba1331af0.sol#232)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Version constraint ^0.8.8 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- VerbatimInvalidDeduplication
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- UserDefinedValueTypesBug
+	- SignedImmutables.
+It is used by:
+	- ^0.8.8 (0x018a871f4403ecd7be46819789551aaba1331af0.sol#10)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Function IUniswapV2Router02.WETH() (0x018a871f4403ecd7be46819789551aaba1331af0.sol#107) is not in mixedCase
+Contract $Jiraiya (0x018a871f4403ecd7be46819789551aaba1331af0.sol#118-369) is not in CapWords
+Constant $Jiraiya._tTotal (0x018a871f4403ecd7be46819789551aaba1331af0.sol#127) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant $Jiraiya._name (0x018a871f4403ecd7be46819789551aaba1331af0.sol#136) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant $Jiraiya._symbol (0x018a871f4403ecd7be46819789551aaba1331af0.sol#137) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant $Jiraiya._decimals (0x018a871f4403ecd7be46819789551aaba1331af0.sol#138) is not in UPPER_CASE_WITH_UNDERSCORES
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in $Jiraiya._transfer(address,address,uint256) (0x018a871f4403ecd7be46819789551aaba1331af0.sol#221-252):
+	External calls:
+	- sendETHToFee(address(this).balance) (0x018a871f4403ecd7be46819789551aaba1331af0.sol#246)
+		- _feeAddrWallet2.transfer(amount / 10 * 2) (0x018a871f4403ecd7be46819789551aaba1331af0.sol#269)
+		- _feeAddrWallet1.transfer(amount / 10 * 8) (0x018a871f4403ecd7be46819789551aaba1331af0.sol#270)
+	State variables written after the call(s):
+	- _tokenTransfer(from,to,amount) (0x018a871f4403ecd7be46819789551aaba1331af0.sol#251)
+		- _rOwned[address(this)] = _rOwned[address(this)].add(rTeam) (0x018a871f4403ecd7be46819789551aaba1331af0.sol#312)
+		- _rOwned[sender] = _rOwned[sender].sub(rAmount) (0x018a871f4403ecd7be46819789551aaba1331af0.sol#302)
+		- _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount) (0x018a871f4403ecd7be46819789551aaba1331af0.sol#303)
+	- _tokenTransfer(from,to,amount) (0x018a871f4403ecd7be46819789551aaba1331af0.sol#251)
+		- _rTotal = _rTotal.sub(rFee) (0x018a871f4403ecd7be46819789551aaba1331af0.sol#316)
+	- _tokenTransfer(from,to,amount) (0x018a871f4403ecd7be46819789551aaba1331af0.sol#251)
+		- _tFeeTotal = _tFeeTotal.add(tFee) (0x018a871f4403ecd7be46819789551aaba1331af0.sol#317)
+	Event emitted after the call(s):
+	- Transfer(sender,recipient,tTransferAmount) (0x018a871f4403ecd7be46819789551aaba1331af0.sol#306)
+		- _tokenTransfer(from,to,amount) (0x018a871f4403ecd7be46819789551aaba1331af0.sol#251)
+Reentrancy in $Jiraiya.transferFrom(address,address,uint256) (0x018a871f4403ecd7be46819789551aaba1331af0.sol#198-202):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x018a871f4403ecd7be46819789551aaba1331af0.sol#199)
+		- _feeAddrWallet2.transfer(amount / 10 * 2) (0x018a871f4403ecd7be46819789551aaba1331af0.sol#269)
+		- _feeAddrWallet1.transfer(amount / 10 * 8) (0x018a871f4403ecd7be46819789551aaba1331af0.sol#270)
+	State variables written after the call(s):
+	- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x018a871f4403ecd7be46819789551aaba1331af0.sol#200)
+		- _allowances[owner][spender] = amount (0x018a871f4403ecd7be46819789551aaba1331af0.sol#217)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x018a871f4403ecd7be46819789551aaba1331af0.sol#218)
+		- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x018a871f4403ecd7be46819789551aaba1331af0.sol#200)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+$Jiraiya.openTrading() (0x018a871f4403ecd7be46819789551aaba1331af0.sol#272-284) uses literals with too many digits:
+	- _maxTxAmount = 30000000 * 10 ** 9 (0x018a871f4403ecd7be46819789551aaba1331af0.sol#281)
+$Jiraiya.slitherConstructorConstantVariables() (0x018a871f4403ecd7be46819789551aaba1331af0.sol#118-369) uses literals with too many digits:
+	- _tTotal = 1000000000 * 10 ** 9 (0x018a871f4403ecd7be46819789551aaba1331af0.sol#127)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+$Jiraiya._tOwned (0x018a871f4403ecd7be46819789551aaba1331af0.sol#121) is never used in $Jiraiya (0x018a871f4403ecd7be46819789551aaba1331af0.sol#118-369)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-state-variable
+
+$Jiraiya._feeAddrWallet1 (0x018a871f4403ecd7be46819789551aaba1331af0.sol#133) should be immutable 
+$Jiraiya._feeAddrWallet2 (0x018a871f4403ecd7be46819789551aaba1331af0.sol#134) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+./0x018a871f4403ecd7be46819789551aaba1331af0.sol analyzed (7 contracts with 94 detectors), 28 result(s) found
+
+real	0m2.323s
+user	0m2.182s
+sys	0m0.143s

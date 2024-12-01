@@ -1,0 +1,231 @@
+'solc --version' running
+'solc ./0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+MultiVesting (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#88-354) contract sets array length with a user-controlled value:
+	- addresses.push(_beneficiary) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#221)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#array-length-assignment
+
+Token (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#82-86) has incorrect ERC20 function interface:Token.transfer(address,uint256) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#83)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-erc20-interface
+
+MultiVesting.release(address) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#164-184) uses a dangerous strict equality:
+	- (beneficiary.vested - beneficiary.released) == 0 (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#179)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-strict-equalities
+
+Reentrancy in MultiVesting.addBeneficiary(address,uint256,uint256,uint256,uint256,bool,string) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#202-223):
+	External calls:
+	- require(bool)(token.balanceOf(this) >= totalVested.sub(totalReleased).add(_vested)) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#208)
+	State variables written after the call(s):
+	- beneficiaries[_beneficiary] = Beneficiary({released:0,vested:_vested,start:_start,cliff:_cliff,duration:_duration,revoked:false,revocable:_revocable,isBeneficiary:true,description:_description}) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#209-219)
+	MultiVesting.beneficiaries (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#110) can be used in cross function reentrancies:
+	- MultiVesting.addBeneficiary(address,uint256,uint256,uint256,uint256,bool,string) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#202-223)
+	- MultiVesting.beneficiaries (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#110)
+	- MultiVesting.clearAll() (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#280-298)
+	- MultiVesting.destroyBeneficiary(address) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#254-275)
+	- MultiVesting.isBeneficiary(address) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#123-126)
+	- MultiVesting.isNotBeneficiary(address) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#119-122)
+	- MultiVesting.releasableAmount(address) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#304-306)
+	- MultiVesting.release(address) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#164-184)
+	- MultiVesting.revoke(address) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#230-248)
+	- MultiVesting.vestedAmount(address) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#312-323)
+	- totalVested = totalVested.add(_vested) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#220)
+	MultiVesting.totalVested (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#113) can be used in cross function reentrancies:
+	- MultiVesting.addBeneficiary(address,uint256,uint256,uint256,uint256,bool,string) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#202-223)
+	- MultiVesting.totalVested (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#113)
+Reentrancy in MultiVesting.destroyBeneficiary(address) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#254-275):
+	External calls:
+	- token.transfer(owner,balance) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#259)
+	State variables written after the call(s):
+	- beneficiary.isBeneficiary = false (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#263)
+	MultiVesting.beneficiaries (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#110) can be used in cross function reentrancies:
+	- MultiVesting.addBeneficiary(address,uint256,uint256,uint256,uint256,bool,string) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#202-223)
+	- MultiVesting.beneficiaries (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#110)
+	- MultiVesting.clearAll() (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#280-298)
+	- MultiVesting.destroyBeneficiary(address) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#254-275)
+	- MultiVesting.isBeneficiary(address) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#123-126)
+	- MultiVesting.isNotBeneficiary(address) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#119-122)
+	- MultiVesting.releasableAmount(address) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#304-306)
+	- MultiVesting.release(address) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#164-184)
+	- MultiVesting.revoke(address) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#230-248)
+	- MultiVesting.vestedAmount(address) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#312-323)
+	- beneficiary.released = beneficiary.released.add(balance) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#264)
+	MultiVesting.beneficiaries (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#110) can be used in cross function reentrancies:
+	- MultiVesting.addBeneficiary(address,uint256,uint256,uint256,uint256,bool,string) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#202-223)
+	- MultiVesting.beneficiaries (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#110)
+	- MultiVesting.clearAll() (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#280-298)
+	- MultiVesting.destroyBeneficiary(address) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#254-275)
+	- MultiVesting.isBeneficiary(address) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#123-126)
+	- MultiVesting.isNotBeneficiary(address) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#119-122)
+	- MultiVesting.releasableAmount(address) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#304-306)
+	- MultiVesting.release(address) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#164-184)
+	- MultiVesting.revoke(address) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#230-248)
+	- MultiVesting.vestedAmount(address) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#312-323)
+Reentrancy in MultiVesting.release(address) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#164-184):
+	External calls:
+	- token.transfer(_beneficiary,unreleased) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#177)
+	State variables written after the call(s):
+	- beneficiary.isBeneficiary = false (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#180)
+	MultiVesting.beneficiaries (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#110) can be used in cross function reentrancies:
+	- MultiVesting.addBeneficiary(address,uint256,uint256,uint256,uint256,bool,string) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#202-223)
+	- MultiVesting.beneficiaries (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#110)
+	- MultiVesting.clearAll() (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#280-298)
+	- MultiVesting.destroyBeneficiary(address) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#254-275)
+	- MultiVesting.isBeneficiary(address) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#123-126)
+	- MultiVesting.isNotBeneficiary(address) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#119-122)
+	- MultiVesting.releasableAmount(address) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#304-306)
+	- MultiVesting.release(address) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#164-184)
+	- MultiVesting.revoke(address) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#230-248)
+	- MultiVesting.vestedAmount(address) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#312-323)
+Reentrancy in MultiVesting.revoke(address) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#230-248):
+	External calls:
+	- token.transfer(owner,refund) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#240)
+	State variables written after the call(s):
+	- beneficiary.revoked = true (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#244)
+	MultiVesting.beneficiaries (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#110) can be used in cross function reentrancies:
+	- MultiVesting.addBeneficiary(address,uint256,uint256,uint256,uint256,bool,string) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#202-223)
+	- MultiVesting.beneficiaries (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#110)
+	- MultiVesting.clearAll() (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#280-298)
+	- MultiVesting.destroyBeneficiary(address) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#254-275)
+	- MultiVesting.isBeneficiary(address) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#123-126)
+	- MultiVesting.isNotBeneficiary(address) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#119-122)
+	- MultiVesting.releasableAmount(address) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#304-306)
+	- MultiVesting.release(address) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#164-184)
+	- MultiVesting.revoke(address) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#230-248)
+	- MultiVesting.vestedAmount(address) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#312-323)
+	- beneficiary.released = beneficiary.released.add(refund) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#245)
+	MultiVesting.beneficiaries (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#110) can be used in cross function reentrancies:
+	- MultiVesting.addBeneficiary(address,uint256,uint256,uint256,uint256,bool,string) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#202-223)
+	- MultiVesting.beneficiaries (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#110)
+	- MultiVesting.clearAll() (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#280-298)
+	- MultiVesting.destroyBeneficiary(address) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#254-275)
+	- MultiVesting.isBeneficiary(address) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#123-126)
+	- MultiVesting.isNotBeneficiary(address) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#119-122)
+	- MultiVesting.releasableAmount(address) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#304-306)
+	- MultiVesting.release(address) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#164-184)
+	- MultiVesting.revoke(address) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#230-248)
+	- MultiVesting.vestedAmount(address) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#312-323)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+Reentrancy in MultiVesting.addBeneficiary(address,uint256,uint256,uint256,uint256,bool,string) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#202-223):
+	External calls:
+	- require(bool)(token.balanceOf(this) >= totalVested.sub(totalReleased).add(_vested)) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#208)
+	State variables written after the call(s):
+	- addresses.push(_beneficiary) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#221)
+Reentrancy in MultiVesting.clearAll() (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#280-298):
+	External calls:
+	- token.transfer(owner,token.balanceOf(this)) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#282)
+	State variables written after the call(s):
+	- addresses.length = 0 (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#296)
+	- beneficiary.isBeneficiary = false (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#286)
+	- beneficiary.released = 0 (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#287)
+	- beneficiary.vested = 0 (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#288)
+	- beneficiary.start = 0 (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#289)
+	- beneficiary.cliff = 0 (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#290)
+	- beneficiary.duration = 0 (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#291)
+	- beneficiary.revoked = false (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#292)
+	- beneficiary.revocable = false (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#293)
+	- beneficiary.description =  (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#294)
+Reentrancy in MultiVesting.destroyBeneficiary(address) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#254-275):
+	External calls:
+	- token.transfer(owner,balance) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#259)
+	State variables written after the call(s):
+	- addresses[i] = addresses[addresses.length - 1] (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#268)
+	- addresses.length -= 1 (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#272)
+	- totalReleased = totalReleased.add(balance) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#261)
+Reentrancy in MultiVesting.revoke(address) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#230-248):
+	External calls:
+	- token.transfer(owner,refund) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#240)
+	State variables written after the call(s):
+	- totalReleased = totalReleased.add(refund) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#242)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in MultiVesting.addBeneficiary(address,uint256,uint256,uint256,uint256,bool,string) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#202-223):
+	External calls:
+	- require(bool)(token.balanceOf(this) >= totalVested.sub(totalReleased).add(_vested)) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#208)
+	Event emitted after the call(s):
+	- NewBeneficiary(_beneficiary) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#222)
+Reentrancy in MultiVesting.destroyBeneficiary(address) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#254-275):
+	External calls:
+	- token.transfer(owner,balance) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#259)
+	Event emitted after the call(s):
+	- BeneficiaryDestroyed(_beneficiary) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#274)
+Reentrancy in MultiVesting.release(address) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#164-184):
+	External calls:
+	- token.transfer(_beneficiary,unreleased) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#177)
+	Event emitted after the call(s):
+	- Released(_beneficiary,unreleased) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#183)
+Reentrancy in MultiVesting.revoke(address) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#230-248):
+	External calls:
+	- token.transfer(owner,refund) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#240)
+	Event emitted after the call(s):
+	- Revoked(_beneficiary) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#247)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+MultiVesting.release(address) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#164-184) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(unreleased > 0) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#171)
+	- (beneficiary.vested - beneficiary.released) == 0 (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#179)
+MultiVesting.addBeneficiary(address,uint256,uint256,uint256,uint256,bool,string) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#202-223) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(token.balanceOf(this) >= totalVested.sub(totalReleased).add(_vested)) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#208)
+MultiVesting.revoke(address) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#230-248) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(beneficiary.revocable) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#232)
+	- require(bool)(! beneficiary.revoked) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#233)
+MultiVesting.vestedAmount(address) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#312-323) uses timestamp for comparisons
+	Dangerous comparisons:
+	- now < beneficiary.cliff (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#316)
+	- now >= beneficiary.start.add(beneficiary.duration) || beneficiary.revoked (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#318)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Version constraint ^0.4.21 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ABIEncoderV2PackedStorage_0.4.x
+	- ExpExponentCleanup
+	- EventStructWrongData
+	- NestedArrayFunctionCallDecoder.
+It is used by:
+	- ^0.4.21 (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#1)
+solc-0.4.21 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Parameter MultiVesting.release(address)._beneficiary (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#164) is not in mixedCase
+Parameter MultiVesting.releaseTo(address)._beneficiary (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#190) is not in mixedCase
+Parameter MultiVesting.addBeneficiary(address,uint256,uint256,uint256,uint256,bool,string)._beneficiary (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#202) is not in mixedCase
+Parameter MultiVesting.addBeneficiary(address,uint256,uint256,uint256,uint256,bool,string)._vested (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#202) is not in mixedCase
+Parameter MultiVesting.addBeneficiary(address,uint256,uint256,uint256,uint256,bool,string)._start (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#202) is not in mixedCase
+Parameter MultiVesting.addBeneficiary(address,uint256,uint256,uint256,uint256,bool,string)._cliff (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#202) is not in mixedCase
+Parameter MultiVesting.addBeneficiary(address,uint256,uint256,uint256,uint256,bool,string)._duration (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#202) is not in mixedCase
+Parameter MultiVesting.addBeneficiary(address,uint256,uint256,uint256,uint256,bool,string)._revocable (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#202) is not in mixedCase
+Parameter MultiVesting.addBeneficiary(address,uint256,uint256,uint256,uint256,bool,string)._description (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#202) is not in mixedCase
+Parameter MultiVesting.revoke(address)._beneficiary (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#230) is not in mixedCase
+Parameter MultiVesting.destroyBeneficiary(address)._beneficiary (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#254) is not in mixedCase
+Parameter MultiVesting.releasableAmount(address)._beneficiary (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#304) is not in mixedCase
+Parameter MultiVesting.vestedAmount(address)._beneficiary (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#312) is not in mixedCase
+Function MultiVesting.Balance() (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#328-330) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Loop condition i < addresses.length (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#284) should use cached array length instead of referencing `length` member of the storage array.
+ Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#cache-array-length
+
+addBeneficiary(address,uint256,uint256,uint256,uint256,bool,string) should be declared external:
+	- MultiVesting.addBeneficiary(address,uint256,uint256,uint256,uint256,bool,string) (0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol#202-223)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#public-function-that-could-be-declared-external
+./0x1d86a854da490ff74dedc7abe281fb468f8c19ee.sol analyzed (5 contracts with 94 detectors), 37 result(s) found
+
+real	0m2.333s
+user	0m2.069s
+sys	0m0.266s

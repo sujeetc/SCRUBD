@@ -1,0 +1,102 @@
+'solc --version' running
+'solc ./0x967719548b8385be3c21ee96bdc57b9409b501cb.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+SellERC20BasicTokens.fallback() (0x967719548b8385be3c21ee96bdc57b9409b501cb.sol#170-209) sends eth to arbitrary user
+	Dangerous calls:
+	- owner.transfer(address(this).balance) (0x967719548b8385be3c21ee96bdc57b9409b501cb.sol#208)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+Reentrancy in SellERC20BasicTokens.fallback() (0x967719548b8385be3c21ee96bdc57b9409b501cb.sol#170-209):
+	External calls:
+	- balance = token.balanceOf(address(this)) (0x967719548b8385be3c21ee96bdc57b9409b501cb.sol#176)
+	- assert(bool)(token.transfer(msg.sender,tokenBought)) (0x967719548b8385be3c21ee96bdc57b9409b501cb.sol#188)
+	- assert(bool)(token.transfer(msg.sender,tokenBought)) (0x967719548b8385be3c21ee96bdc57b9409b501cb.sol#195)
+	External calls sending eth:
+	- msg.sender.transfer(weiAmount - weiExpense.mul(10 ** decimalDiff)) (0x967719548b8385be3c21ee96bdc57b9409b501cb.sol#198)
+	State variables written after the call(s):
+	- deposit = deposit.add(tokenDeposit) (0x967719548b8385be3c21ee96bdc57b9409b501cb.sol#202)
+	SellERC20BasicTokens.deposit (0x967719548b8385be3c21ee96bdc57b9409b501cb.sol#141) can be used in cross function reentrancies:
+	- SellERC20BasicTokens.deposit (0x967719548b8385be3c21ee96bdc57b9409b501cb.sol#141)
+	- SellERC20BasicTokens.fallback() (0x967719548b8385be3c21ee96bdc57b9409b501cb.sol#170-209)
+	- SellERC20BasicTokens.sendToken(address,uint256) (0x967719548b8385be3c21ee96bdc57b9409b501cb.sol#217-222)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+SellERC20BasicTokens.fallback() (0x967719548b8385be3c21ee96bdc57b9409b501cb.sol#170-209) performs a multiplication on the result of a division:
+	- weiExpense = onsale.div(rate + depositRate) (0x967719548b8385be3c21ee96bdc57b9409b501cb.sol#190)
+	- tokenBought = weiExpense.mul(rate) (0x967719548b8385be3c21ee96bdc57b9409b501cb.sol#191)
+SellERC20BasicTokens.fallback() (0x967719548b8385be3c21ee96bdc57b9409b501cb.sol#170-209) performs a multiplication on the result of a division:
+	- weiExpense = onsale.div(rate + depositRate) (0x967719548b8385be3c21ee96bdc57b9409b501cb.sol#190)
+	- msg.sender.transfer(weiAmount - weiExpense.mul(10 ** decimalDiff)) (0x967719548b8385be3c21ee96bdc57b9409b501cb.sol#198)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+Reentrancy in SellERC20BasicTokens.sendToken(address,uint256) (0x967719548b8385be3c21ee96bdc57b9409b501cb.sol#217-222):
+	External calls:
+	- assert(bool)(token.transfer(_receiver,_amount)) (0x967719548b8385be3c21ee96bdc57b9409b501cb.sol#220)
+	State variables written after the call(s):
+	- deposit = deposit.sub(_amount) (0x967719548b8385be3c21ee96bdc57b9409b501cb.sol#221)
+	SellERC20BasicTokens.deposit (0x967719548b8385be3c21ee96bdc57b9409b501cb.sol#141) can be used in cross function reentrancies:
+	- SellERC20BasicTokens.deposit (0x967719548b8385be3c21ee96bdc57b9409b501cb.sol#141)
+	- SellERC20BasicTokens.fallback() (0x967719548b8385be3c21ee96bdc57b9409b501cb.sol#170-209)
+	- SellERC20BasicTokens.sendToken(address,uint256) (0x967719548b8385be3c21ee96bdc57b9409b501cb.sol#217-222)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+SellERC20BasicTokens.sendToken(address,uint256) (0x967719548b8385be3c21ee96bdc57b9409b501cb.sol#217-222) should emit an event for: 
+	- deposit = deposit.sub(_amount) (0x967719548b8385be3c21ee96bdc57b9409b501cb.sol#221) 
+SellERC20BasicTokens.setRate(uint256,uint256) (0x967719548b8385be3c21ee96bdc57b9409b501cb.sol#230-233) should emit an event for: 
+	- rate = _rate (0x967719548b8385be3c21ee96bdc57b9409b501cb.sol#231) 
+	- depositRate = _depositRate (0x967719548b8385be3c21ee96bdc57b9409b501cb.sol#232) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+SellERC20BasicTokens.constructor(ERC20Basic,uint256,uint256,uint256,uint256,address)._wallet (0x967719548b8385be3c21ee96bdc57b9409b501cb.sol#157) lacks a zero-check on :
+		- wallet = _wallet (0x967719548b8385be3c21ee96bdc57b9409b501cb.sol#164)
+SellERC20BasicTokens.setWallet(address)._wallet (0x967719548b8385be3c21ee96bdc57b9409b501cb.sol#240) lacks a zero-check on :
+		- wallet = _wallet (0x967719548b8385be3c21ee96bdc57b9409b501cb.sol#241)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Version constraint ^0.4.21 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ABIEncoderV2PackedStorage_0.4.x
+	- ExpExponentCleanup
+	- EventStructWrongData
+	- NestedArrayFunctionCallDecoder.
+It is used by:
+	- ^0.4.21 (0x967719548b8385be3c21ee96bdc57b9409b501cb.sol#1)
+solc-0.4.22 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Parameter Ownable.transferOwnership(address)._newOwner (0x967719548b8385be3c21ee96bdc57b9409b501cb.sol#49) is not in mixedCase
+Parameter Ownable.rescueTokens(ERC20Basic)._token (0x967719548b8385be3c21ee96bdc57b9409b501cb.sol#60) is not in mixedCase
+Parameter SellERC20BasicTokens.sendToken(address,uint256)._receiver (0x967719548b8385be3c21ee96bdc57b9409b501cb.sol#217) is not in mixedCase
+Parameter SellERC20BasicTokens.sendToken(address,uint256)._amount (0x967719548b8385be3c21ee96bdc57b9409b501cb.sol#217) is not in mixedCase
+Parameter SellERC20BasicTokens.setRate(uint256,uint256)._rate (0x967719548b8385be3c21ee96bdc57b9409b501cb.sol#230) is not in mixedCase
+Parameter SellERC20BasicTokens.setRate(uint256,uint256)._depositRate (0x967719548b8385be3c21ee96bdc57b9409b501cb.sol#230) is not in mixedCase
+Parameter SellERC20BasicTokens.setWallet(address)._wallet (0x967719548b8385be3c21ee96bdc57b9409b501cb.sol#240) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in SellERC20BasicTokens.fallback() (0x967719548b8385be3c21ee96bdc57b9409b501cb.sol#170-209):
+	External calls:
+	- msg.sender.transfer(weiAmount - weiExpense.mul(10 ** decimalDiff)) (0x967719548b8385be3c21ee96bdc57b9409b501cb.sol#198)
+	State variables written after the call(s):
+	- deposit = deposit.add(tokenDeposit) (0x967719548b8385be3c21ee96bdc57b9409b501cb.sol#202)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+SellERC20BasicTokens.etherDecimals (0x967719548b8385be3c21ee96bdc57b9409b501cb.sol#129) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+./0x967719548b8385be3c21ee96bdc57b9409b501cb.sol analyzed (4 contracts with 94 detectors), 20 result(s) found
+
+real	0m1.669s
+user	0m1.463s
+sys	0m0.208s

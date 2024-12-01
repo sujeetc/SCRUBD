@@ -1,0 +1,95 @@
+'solc --version' running
+'solc ./0xc86dd185fc95031489b89eeaaa3fd47e11c065e9.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+OpportyBountyHold.returnTokens(uint256) (0xc86dd185fc95031489b89eeaaa3fd47e11c065e9.sol#357-362) ignores return value by token.transfer(msg.sender,nTokens) (0xc86dd185fc95031489b89eeaaa3fd47e11c065e9.sol#359)
+OpportyBountyHold.unlockTokens() (0xc86dd185fc95031489b89eeaaa3fd47e11c065e9.sol#364-372) ignores return value by token.transfer(msg.sender,holderList[msg.sender].tokens) (0xc86dd185fc95031489b89eeaaa3fd47e11c065e9.sol#368)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+Reentrancy in OpportyBountyHold.unlockTokens() (0xc86dd185fc95031489b89eeaaa3fd47e11c065e9.sol#364-372):
+	External calls:
+	- token.transfer(msg.sender,holderList[msg.sender].tokens) (0xc86dd185fc95031489b89eeaaa3fd47e11c065e9.sol#368)
+	State variables written after the call(s):
+	- holderList[msg.sender].withdrawed = true (0xc86dd185fc95031489b89eeaaa3fd47e11c065e9.sol#369)
+	OpportyBountyHold.holderList (0xc86dd185fc95031489b89eeaaa3fd47e11c065e9.sol#292) can be used in cross function reentrancies:
+	- OpportyBountyHold.addHolder(address,uint256) (0xc86dd185fc95031489b89eeaaa3fd47e11c065e9.sol#317-328)
+	- OpportyBountyHold.changeHold(address,uint256) (0xc86dd185fc95031489b89eeaaa3fd47e11c065e9.sol#330-334)
+	- OpportyBountyHold.getTokenAmount() (0xc86dd185fc95031489b89eeaaa3fd47e11c065e9.sol#374-382)
+	- OpportyBountyHold.holderList (0xc86dd185fc95031489b89eeaaa3fd47e11c065e9.sol#292)
+	- OpportyBountyHold.unlockTokens() (0xc86dd185fc95031489b89eeaaa3fd47e11c065e9.sol#364-372)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+Reentrancy in OpportyBountyHold.returnTokens(uint256) (0xc86dd185fc95031489b89eeaaa3fd47e11c065e9.sol#357-362):
+	External calls:
+	- require(bool)(nTokens <= getBalance()) (0xc86dd185fc95031489b89eeaaa3fd47e11c065e9.sol#358)
+		- token.balanceOf(this) (0xc86dd185fc95031489b89eeaaa3fd47e11c065e9.sol#354)
+	- token.transfer(msg.sender,nTokens) (0xc86dd185fc95031489b89eeaaa3fd47e11c065e9.sol#359)
+	Event emitted after the call(s):
+	- TokensTransfered(msg.sender,nTokens) (0xc86dd185fc95031489b89eeaaa3fd47e11c065e9.sol#360)
+Reentrancy in OpportyBountyHold.unlockTokens() (0xc86dd185fc95031489b89eeaaa3fd47e11c065e9.sol#364-372):
+	External calls:
+	- token.transfer(msg.sender,holderList[msg.sender].tokens) (0xc86dd185fc95031489b89eeaaa3fd47e11c065e9.sol#368)
+	Event emitted after the call(s):
+	- TokensTransfered(msg.sender,holderList[msg.sender].tokens) (0xc86dd185fc95031489b89eeaaa3fd47e11c065e9.sol#370)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+OpportyBountyHold.unlockTokens() (0xc86dd185fc95031489b89eeaaa3fd47e11c065e9.sol#364-372) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(now >= endDate) (0xc86dd185fc95031489b89eeaaa3fd47e11c065e9.sol#367)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+OpportyBountyHold.addHolder(address,uint256) (0xc86dd185fc95031489b89eeaaa3fd47e11c065e9.sol#317-328) compares to a boolean constant:
+	-holderList[holder].isActive == false (0xc86dd185fc95031489b89eeaaa3fd47e11c065e9.sol#318)
+OpportyBountyHold.changeHold(address,uint256) (0xc86dd185fc95031489b89eeaaa3fd47e11c065e9.sol#330-334) compares to a boolean constant:
+	-require(bool)(holderList[holder].isActive == true) (0xc86dd185fc95031489b89eeaaa3fd47e11c065e9.sol#331)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#boolean-equality
+
+Version constraint ^0.4.18 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ExpExponentCleanup
+	- EventStructWrongData
+	- NestedArrayFunctionCallDecoder.
+It is used by:
+	- ^0.4.18 (0xc86dd185fc95031489b89eeaaa3fd47e11c065e9.sol#1)
+solc-0.4.18 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Parameter BasicToken.transfer(address,uint256)._to (0xc86dd185fc95031489b89eeaaa3fd47e11c065e9.sol#85) is not in mixedCase
+Parameter BasicToken.transfer(address,uint256)._value (0xc86dd185fc95031489b89eeaaa3fd47e11c065e9.sol#85) is not in mixedCase
+Parameter BasicToken.balanceOf(address)._owner (0xc86dd185fc95031489b89eeaaa3fd47e11c065e9.sol#101) is not in mixedCase
+Parameter StandardToken.transferFrom(address,address,uint256)._from (0xc86dd185fc95031489b89eeaaa3fd47e11c065e9.sol#136) is not in mixedCase
+Parameter StandardToken.transferFrom(address,address,uint256)._to (0xc86dd185fc95031489b89eeaaa3fd47e11c065e9.sol#136) is not in mixedCase
+Parameter StandardToken.transferFrom(address,address,uint256)._value (0xc86dd185fc95031489b89eeaaa3fd47e11c065e9.sol#136) is not in mixedCase
+Parameter StandardToken.approve(address,uint256)._spender (0xc86dd185fc95031489b89eeaaa3fd47e11c065e9.sol#158) is not in mixedCase
+Parameter StandardToken.approve(address,uint256)._value (0xc86dd185fc95031489b89eeaaa3fd47e11c065e9.sol#158) is not in mixedCase
+Parameter StandardToken.allowance(address,address)._owner (0xc86dd185fc95031489b89eeaaa3fd47e11c065e9.sol#170) is not in mixedCase
+Parameter StandardToken.allowance(address,address)._spender (0xc86dd185fc95031489b89eeaaa3fd47e11c065e9.sol#170) is not in mixedCase
+Parameter StandardToken.increaseApproval(address,uint256)._spender (0xc86dd185fc95031489b89eeaaa3fd47e11c065e9.sol#184) is not in mixedCase
+Parameter StandardToken.increaseApproval(address,uint256)._addedValue (0xc86dd185fc95031489b89eeaaa3fd47e11c065e9.sol#184) is not in mixedCase
+Parameter StandardToken.decreaseApproval(address,uint256)._spender (0xc86dd185fc95031489b89eeaaa3fd47e11c065e9.sol#200) is not in mixedCase
+Parameter StandardToken.decreaseApproval(address,uint256)._subtractedValue (0xc86dd185fc95031489b89eeaaa3fd47e11c065e9.sol#200) is not in mixedCase
+Parameter OpportyBountyHold.addAssetsOwner(address)._owner (0xc86dd185fc95031489b89eeaaa3fd47e11c065e9.sol#336) is not in mixedCase
+Parameter OpportyBountyHold.removeAssetsOwner(address)._owner (0xc86dd185fc95031489b89eeaaa3fd47e11c065e9.sol#342) is not in mixedCase
+Parameter OpportyBountyHold.getAssetsOwners(uint256)._index (0xc86dd185fc95031489b89eeaaa3fd47e11c065e9.sol#349) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+OpportyToken.slitherConstructorConstantVariables() (0xc86dd185fc95031489b89eeaaa3fd47e11c065e9.sol#219-236) uses literals with too many digits:
+	- INITIAL_SUPPLY = 1000000000 * (10 ** uint256(decimals)) (0xc86dd185fc95031489b89eeaaa3fd47e11c065e9.sol#225)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+./0xc86dd185fc95031489b89eeaaa3fd47e11c065e9.sol analyzed (8 contracts with 94 detectors), 28 result(s) found
+
+real	0m1.961s
+user	0m1.753s
+sys	0m0.211s

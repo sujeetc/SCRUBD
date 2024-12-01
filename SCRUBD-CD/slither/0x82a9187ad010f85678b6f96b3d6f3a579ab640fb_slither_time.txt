@@ -1,0 +1,89 @@
+'solc --version' running
+'solc ./0x82a9187ad010f85678b6f96b3d6f3a579ab640fb.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x82a9187ad010f85678b6f96b3d6f3a579ab640fb.sol:
+./0x82a9187ad010f85678b6f96b3d6f3a579ab640fb.sol:30:13: Warning: Failure condition of 'send' ignored. Consider using 'transfer' instead.
+            __owner.send(this.balance);
+            ^------------------------^
+./0x82a9187ad010f85678b6f96b3d6f3a579ab640fb.sol:50:17: Warning: Failure condition of 'send' ignored. Consider using 'transfer' instead.
+                __owner.send(summa_rest);
+                ^----------------------^
+
+
+AgentContract (0x82a9187ad010f85678b6f96b3d6f3a579ab640fb.sol#3-62) contract sets array length with a user-controlled value:
+	- agents.push(tar1) (0x82a9187ad010f85678b6f96b3d6f3a579ab640fb.sol#14)
+AgentContract (0x82a9187ad010f85678b6f96b3d6f3a579ab640fb.sol#3-62) contract sets array length with a user-controlled value:
+	- agents.push(tar2) (0x82a9187ad010f85678b6f96b3d6f3a579ab640fb.sol#16)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#array-length-assignment
+
+AgentContract.returnBalanseToTarget() (0x82a9187ad010f85678b6f96b3d6f3a579ab640fb.sol#27-32) ignores return value by __owner.send(this.balance) (0x82a9187ad010f85678b6f96b3d6f3a579ab640fb.sol#30)
+AgentContract.fallback() (0x82a9187ad010f85678b6f96b3d6f3a579ab640fb.sol#33-60) ignores return value by __owner.send(summa_rest) (0x82a9187ad010f85678b6f96b3d6f3a579ab640fb.sol#50)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-send
+
+AgentContract.AgentContract(address,address,address,uint256,uint256).tar_main (0x82a9187ad010f85678b6f96b3d6f3a579ab640fb.sol#11) lacks a zero-check on :
+		- target = tar_main (0x82a9187ad010f85678b6f96b3d6f3a579ab640fb.sol#17)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+AgentContract.fallback() (0x82a9187ad010f85678b6f96b3d6f3a579ab640fb.sol#33-60) has external calls inside a loop: ! agents[i].send(value_to_send) (0x82a9187ad010f85678b6f96b3d6f3a579ab640fb.sol#41)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation/#calls-inside-a-loop
+
+Version constraint ^0.4.0 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ExpExponentCleanup
+	- NestedArrayFunctionCallDecoder
+	- ZeroFunctionSelector
+	- DelegateCallReturnValue
+	- ECRecoverMalformedInput
+	- SkipEmptyStringLiteral
+	- ConstantOptimizerSubtraction
+	- IdentityPrecompileReturnIgnored
+	- HighOrderByteCleanStorage
+	- OptimizerStaleKnowledgeAboutSHA3
+	- LibrariesNotCallableFromPayableFunctions.
+It is used by:
+	- ^0.4.0 (0x82a9187ad010f85678b6f96b3d6f3a579ab640fb.sol#1)
+solc-0.4.11 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Variable AgentContract.__owner (0x82a9187ad010f85678b6f96b3d6f3a579ab640fb.sol#5) is not in mixedCase
+Variable AgentContract.agent_to_piece_of_10000 (0x82a9187ad010f85678b6f96b3d6f3a579ab640fb.sol#7) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in AgentContract.fallback() (0x82a9187ad010f85678b6f96b3d6f3a579ab640fb.sol#33-60):
+	External calls:
+	- ! agents[i].send(value_to_send) (0x82a9187ad010f85678b6f96b3d6f3a579ab640fb.sol#41)
+	Event emitted after the call(s):
+	- SendEther(agents[i],value_to_send) (0x82a9187ad010f85678b6f96b3d6f3a579ab640fb.sol#45)
+Reentrancy in AgentContract.fallback() (0x82a9187ad010f85678b6f96b3d6f3a579ab640fb.sol#33-60):
+	External calls:
+	- ! agents[i].send(value_to_send) (0x82a9187ad010f85678b6f96b3d6f3a579ab640fb.sol#41)
+	- __owner.send(summa_rest) (0x82a9187ad010f85678b6f96b3d6f3a579ab640fb.sol#50)
+	Event emitted after the call(s):
+	- SendEther(__owner,summa_rest) (0x82a9187ad010f85678b6f96b3d6f3a579ab640fb.sol#51)
+Reentrancy in AgentContract.fallback() (0x82a9187ad010f85678b6f96b3d6f3a579ab640fb.sol#33-60):
+	External calls:
+	- ! agents[i].send(value_to_send) (0x82a9187ad010f85678b6f96b3d6f3a579ab640fb.sol#41)
+	- ! msg.sender.send(summa_rest) (0x82a9187ad010f85678b6f96b3d6f3a579ab640fb.sol#49)
+	Event emitted after the call(s):
+	- SendEther(msg.sender,summa_rest) (0x82a9187ad010f85678b6f96b3d6f3a579ab640fb.sol#54)
+Reentrancy in AgentContract.fallback() (0x82a9187ad010f85678b6f96b3d6f3a579ab640fb.sol#33-60):
+	External calls:
+	- ! agents[i].send(value_to_send) (0x82a9187ad010f85678b6f96b3d6f3a579ab640fb.sol#41)
+	- ! target.send(summa_rest) (0x82a9187ad010f85678b6f96b3d6f3a579ab640fb.sol#48)
+	Event emitted after the call(s):
+	- SendEther(target,summa_rest) (0x82a9187ad010f85678b6f96b3d6f3a579ab640fb.sol#58)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+Loop condition i < agents.length (0x82a9187ad010f85678b6f96b3d6f3a579ab640fb.sol#37) should use cached array length instead of referencing `length` member of the storage array.
+ Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#cache-array-length
+./0x82a9187ad010f85678b6f96b3d6f3a579ab640fb.sol analyzed (1 contracts with 94 detectors), 15 result(s) found
+
+real	0m1.415s
+user	0m1.197s
+sys	0m0.220s

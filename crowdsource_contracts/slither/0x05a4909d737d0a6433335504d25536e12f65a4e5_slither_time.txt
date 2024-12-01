@@ -1,0 +1,417 @@
+'solc --version' running
+'solc ./0x05a4909d737d0a6433335504d25536e12f65a4e5.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x05a4909d737d0a6433335504d25536e12f65a4e5.sol:
+Warning: Return value of low-level calls not used.
+   --> ./0x05a4909d737d0a6433335504d25536e12f65a4e5.sol:642:9:
+    |
+642 |         payable(marketingFeeReceiver).call{value : amountETHMarketing, gas : 30000}("");
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+
+Hydra.swapBack() (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#614-655) sends eth to arbitrary user
+	Dangerous calls:
+	- address(marketingFeeReceiver).call{gas: 30000,value: amountETHMarketing}() (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#642)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+Reentrancy in Hydra._transferFrom(address,address,uint256) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#547-569):
+	External calls:
+	- swapBack() (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#552)
+		- router.swapExactTokensForETHSupportingFeeOnTransferTokens(amountToSwap,0,path,address(this),block.timestamp) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#625-631)
+		- distributor.deposit{value: amountETHReflection}() (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#641)
+		- address(marketingFeeReceiver).call{gas: 30000,value: amountETHMarketing}() (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#642)
+		- router.addLiquidityETH{value: amountETHLiquidity}(address(this),amountToLiquify,0,0,autoLiquidityReceiver,block.timestamp) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#645-652)
+	- triggerAutoBuyback() (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#553)
+		- router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: amount}(0,path,to,block.timestamp) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#689-694)
+	External calls sending eth:
+	- swapBack() (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#552)
+		- distributor.deposit{value: amountETHReflection}() (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#641)
+		- address(marketingFeeReceiver).call{gas: 30000,value: amountETHMarketing}() (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#642)
+		- router.addLiquidityETH{value: amountETHLiquidity}(address(this),amountToLiquify,0,0,autoLiquidityReceiver,block.timestamp) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#645-652)
+	- triggerAutoBuyback() (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#553)
+		- router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: amount}(0,path,to,block.timestamp) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#689-694)
+	State variables written after the call(s):
+	- _balances[sender] = _balances[sender].sub(amount,Insufficient Balance) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#557)
+	Hydra._balances (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#436) can be used in cross function reentrancies:
+	- Hydra._basicTransfer(address,address,uint256) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#571-576)
+	- Hydra._transferFrom(address,address,uint256) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#547-569)
+	- Hydra.balanceOf(address) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#521)
+	- Hydra.constructor() (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#485-507)
+	- Hydra.setIsDividendExempt(address,bool) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#726-734)
+	- Hydra.shouldSwapBack() (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#607-612)
+	- Hydra.takeFee(address,address,uint256) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#598-605)
+	- _balances[recipient] = _balances[recipient].add(amountReceived) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#560)
+	Hydra._balances (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#436) can be used in cross function reentrancies:
+	- Hydra._basicTransfer(address,address,uint256) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#571-576)
+	- Hydra._transferFrom(address,address,uint256) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#547-569)
+	- Hydra.balanceOf(address) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#521)
+	- Hydra.constructor() (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#485-507)
+	- Hydra.setIsDividendExempt(address,bool) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#726-734)
+	- Hydra.shouldSwapBack() (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#607-612)
+	- Hydra.takeFee(address,address,uint256) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#598-605)
+	- amountReceived = takeFee(sender,recipient,amount) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#559)
+		- _balances[address(this)] = _balances[address(this)].add(feeAmount) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#601)
+	Hydra._balances (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#436) can be used in cross function reentrancies:
+	- Hydra._basicTransfer(address,address,uint256) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#571-576)
+	- Hydra._transferFrom(address,address,uint256) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#547-569)
+	- Hydra.balanceOf(address) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#521)
+	- Hydra.constructor() (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#485-507)
+	- Hydra.setIsDividendExempt(address,bool) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#726-734)
+	- Hydra.shouldSwapBack() (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#607-612)
+	- Hydra.takeFee(address,address,uint256) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#598-605)
+	- triggerAutoBuyback() (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#553)
+		- inSwap = true (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#480)
+		- inSwap = false (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#482)
+	Hydra.inSwap (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#478) can be used in cross function reentrancies:
+	- Hydra._transferFrom(address,address,uint256) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#547-569)
+	- Hydra.shouldAutoBuyback() (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#657-663)
+	- Hydra.shouldSwapBack() (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#607-612)
+	- Hydra.swapping() (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#479-483)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+DividendDistributor.swapAndDistributeSpecial(address,uint256) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#367-380) ignores return value by USDC.transfer(shareholder,amount) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#370)
+DividendDistributor.swapAndDistributeSpecial(address,uint256) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#367-380) ignores return value by USDC.transfer(shareholder,amount) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#377)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+Reentrancy in DividendDistributor.distributeDividend(address) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#354-365):
+	External calls:
+	- swapAndDistributeSpecial(shareholder,amount) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#360)
+		- USDC.transfer(shareholder,amount) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#370)
+		- router.swapExactTokensForTokensSupportingFeeOnTransferTokens(amount,0,path,shareholder,block.timestamp) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#376-378)
+		- USDC.transfer(shareholder,amount) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#377)
+	State variables written after the call(s):
+	- shares[shareholder].totalRealised = shares[shareholder].totalRealised.add(amount) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#362)
+	DividendDistributor.shares (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#250) can be used in cross function reentrancies:
+	- DividendDistributor.distributeDividend(address) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#354-365)
+	- DividendDistributor.getUnpaidEarnings(address) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#394-403)
+	- DividendDistributor.setShare(address,uint256) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#287-301)
+	- DividendDistributor.shares (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#250)
+	- shares[shareholder].totalExcluded = getCumulativeDividends(shares[shareholder].amount) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#363)
+	DividendDistributor.shares (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#250) can be used in cross function reentrancies:
+	- DividendDistributor.distributeDividend(address) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#354-365)
+	- DividendDistributor.getUnpaidEarnings(address) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#394-403)
+	- DividendDistributor.setShare(address,uint256) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#287-301)
+	- DividendDistributor.shares (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#250)
+Reentrancy in DividendDistributor.process(uint256) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#323-347):
+	External calls:
+	- distributeDividend(shareholders[currentIndex]) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#339)
+		- USDC.transfer(shareholder,amount) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#370)
+		- router.swapExactTokensForTokensSupportingFeeOnTransferTokens(amount,0,path,shareholder,block.timestamp) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#376-378)
+		- USDC.transfer(shareholder,amount) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#377)
+	State variables written after the call(s):
+	- currentIndex = 0 (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#335)
+	DividendDistributor.currentIndex (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#261) can be used in cross function reentrancies:
+	- DividendDistributor.process(uint256) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#323-347)
+	- currentIndex ++ (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#344)
+	DividendDistributor.currentIndex (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#261) can be used in cross function reentrancies:
+	- DividendDistributor.process(uint256) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#323-347)
+Reentrancy in DividendDistributor.setShare(address,uint256) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#287-301):
+	External calls:
+	- distributeDividend(shareholder) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#289)
+		- USDC.transfer(shareholder,amount) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#370)
+		- router.swapExactTokensForTokensSupportingFeeOnTransferTokens(amount,0,path,shareholder,block.timestamp) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#376-378)
+		- USDC.transfer(shareholder,amount) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#377)
+	State variables written after the call(s):
+	- shares[shareholder].amount = amount (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#299)
+	DividendDistributor.shares (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#250) can be used in cross function reentrancies:
+	- DividendDistributor.distributeDividend(address) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#354-365)
+	- DividendDistributor.getUnpaidEarnings(address) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#394-403)
+	- DividendDistributor.setShare(address,uint256) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#287-301)
+	- DividendDistributor.shares (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#250)
+	- shares[shareholder].totalExcluded = getCumulativeDividends(shares[shareholder].amount) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#300)
+	DividendDistributor.shares (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#250) can be used in cross function reentrancies:
+	- DividendDistributor.distributeDividend(address) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#354-365)
+	- DividendDistributor.getUnpaidEarnings(address) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#394-403)
+	- DividendDistributor.setShare(address,uint256) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#287-301)
+	- DividendDistributor.shares (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#250)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+Hydra.swapBack() (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#614-655) ignores return value by address(marketingFeeReceiver).call{gas: 30000,value: amountETHMarketing}() (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#642)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-low-level-calls
+
+Hydra.swapBack() (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#614-655) ignores return value by router.addLiquidityETH{value: amountETHLiquidity}(address(this),amountToLiquify,0,0,autoLiquidityReceiver,block.timestamp) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#645-652)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+DividendDistributor.setDistributionCriteria(uint256,uint256) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#282-285) should emit an event for: 
+	- minPeriod = _minPeriod (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#283) 
+	- minDistribution = _minDistribution (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#284) 
+Hydra.setAutoBuybackSettings(bool,uint256,uint256,uint256) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#697-704) should emit an event for: 
+	- autoBuybackCap = _cap (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#699) 
+	- autoBuybackAmount = _amount (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#701) 
+Hydra.setBuybackMultiplierSettings(uint256,uint256,uint256) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#706-711) should emit an event for: 
+	- buybackMultiplierNumerator = numerator (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#708) 
+	- buybackMultiplierDenominator = denominator (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#709) 
+	- buybackMultiplierLength = length (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#710) 
+Hydra.setTxLimit(uint256) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#721-724) should emit an event for: 
+	- _maxTxAmount = amount (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#723) 
+Hydra.setFees(uint256,uint256,uint256,uint256,uint256) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#744-752) should emit an event for: 
+	- liquidityFee = _liquidityFee (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#745) 
+	- reflectionFee = _reflectionFee (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#747) 
+	- marketingFee = _marketingFee (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#748) 
+	- totalFee = _liquidityFee.add(_buybackFee).add(_reflectionFee).add(_marketingFee) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#749) 
+	- feeDenominator = _feeDenominator (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#750) 
+Hydra.setSwapBackSettings(bool,uint256) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#759-762) should emit an event for: 
+	- swapThreshold = _amount (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#761) 
+Hydra.setTargetLiquidity(uint256,uint256) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#764-767) should emit an event for: 
+	- targetLiquidity = _target (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#765) 
+	- targetLiquidityDenominator = _denominator (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#766) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+Auth.transferOwnership(address).adr (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#158) lacks a zero-check on :
+		- owner = adr (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#159)
+Hydra.setFeeReceivers(address,address)._autoLiquidityReceiver (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#754) lacks a zero-check on :
+		- autoLiquidityReceiver = _autoLiquidityReceiver (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#755)
+Hydra.setFeeReceivers(address,address)._marketingFeeReceiver (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#754) lacks a zero-check on :
+		- marketingFeeReceiver = _marketingFeeReceiver (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#756)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+DividendDistributor.swapAndDistributeSpecial(address,uint256) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#367-380) has external calls inside a loop: USDC.transfer(shareholder,amount) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#370)
+DividendDistributor.swapAndDistributeSpecial(address,uint256) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#367-380) has external calls inside a loop: router.swapExactTokensForTokensSupportingFeeOnTransferTokens(amount,0,path,shareholder,block.timestamp) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#376-378)
+DividendDistributor.swapAndDistributeSpecial(address,uint256) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#367-380) has external calls inside a loop: USDC.transfer(shareholder,amount) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#377)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation/#calls-inside-a-loop
+
+Reentrancy in Hydra._transferFrom(address,address,uint256) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#547-569):
+	External calls:
+	- swapBack() (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#552)
+		- router.swapExactTokensForETHSupportingFeeOnTransferTokens(amountToSwap,0,path,address(this),block.timestamp) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#625-631)
+		- distributor.deposit{value: amountETHReflection}() (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#641)
+		- address(marketingFeeReceiver).call{gas: 30000,value: amountETHMarketing}() (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#642)
+		- router.addLiquidityETH{value: amountETHLiquidity}(address(this),amountToLiquify,0,0,autoLiquidityReceiver,block.timestamp) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#645-652)
+	- triggerAutoBuyback() (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#553)
+		- router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: amount}(0,path,to,block.timestamp) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#689-694)
+	External calls sending eth:
+	- swapBack() (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#552)
+		- distributor.deposit{value: amountETHReflection}() (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#641)
+		- address(marketingFeeReceiver).call{gas: 30000,value: amountETHMarketing}() (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#642)
+		- router.addLiquidityETH{value: amountETHLiquidity}(address(this),amountToLiquify,0,0,autoLiquidityReceiver,block.timestamp) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#645-652)
+	- triggerAutoBuyback() (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#553)
+		- router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: amount}(0,path,to,block.timestamp) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#689-694)
+	State variables written after the call(s):
+	- launch() (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#555)
+		- launchedAt = block.number (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#718)
+Reentrancy in DividendDistributor.deposit() (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#303-321):
+	External calls:
+	- router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: msg.value}(0,path,address(this),block.timestamp) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#310-315)
+	State variables written after the call(s):
+	- dividendsPerShare = dividendsPerShare.add(dividendsPerShareAccuracyFactor.mul(amount).div(totalShares)) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#320)
+	- totalDividends = totalDividends.add(amount) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#319)
+Reentrancy in DividendDistributor.distributeDividend(address) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#354-365):
+	External calls:
+	- swapAndDistributeSpecial(shareholder,amount) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#360)
+		- USDC.transfer(shareholder,amount) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#370)
+		- router.swapExactTokensForTokensSupportingFeeOnTransferTokens(amount,0,path,shareholder,block.timestamp) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#376-378)
+		- USDC.transfer(shareholder,amount) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#377)
+	State variables written after the call(s):
+	- shareholderClaims[shareholder] = block.timestamp (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#361)
+Reentrancy in DividendDistributor.setShare(address,uint256) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#287-301):
+	External calls:
+	- distributeDividend(shareholder) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#289)
+		- USDC.transfer(shareholder,amount) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#370)
+		- router.swapExactTokensForTokensSupportingFeeOnTransferTokens(amount,0,path,shareholder,block.timestamp) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#376-378)
+		- USDC.transfer(shareholder,amount) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#377)
+	State variables written after the call(s):
+	- addShareholder(shareholder) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#293)
+		- shareholderIndexes[shareholder] = shareholders.length (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#410)
+	- removeShareholder(shareholder) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#295)
+		- shareholderIndexes[shareholders[shareholders.length - 1]] = shareholderIndexes[shareholder] (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#416)
+	- addShareholder(shareholder) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#293)
+		- shareholders.push(shareholder) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#411)
+	- removeShareholder(shareholder) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#295)
+		- shareholders[shareholderIndexes[shareholder]] = shareholders[shareholders.length - 1] (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#415)
+		- shareholders.pop() (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#417)
+	- totalShares = totalShares.sub(shares[shareholder].amount).add(amount) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#298)
+Reentrancy in Hydra.triggerAutoBuyback() (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#677-682):
+	External calls:
+	- buyTokens(autoBuybackAmount,DEAD) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#678)
+		- router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: amount}(0,path,to,block.timestamp) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#689-694)
+	State variables written after the call(s):
+	- autoBuybackAccumulator = autoBuybackAccumulator.add(autoBuybackAmount) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#680)
+	- autoBuybackBlockLast = block.number (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#679)
+	- autoBuybackEnabled = false (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#681)
+Reentrancy in Hydra.triggerHydraBuyback(uint256,bool) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#665-671):
+	External calls:
+	- buyTokens(amount,DEAD) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#666)
+		- router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: amount}(0,path,to,block.timestamp) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#689-694)
+	State variables written after the call(s):
+	- buybackMultiplierTriggeredAt = block.timestamp (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#668)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in Hydra._transferFrom(address,address,uint256) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#547-569):
+	External calls:
+	- swapBack() (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#552)
+		- router.swapExactTokensForETHSupportingFeeOnTransferTokens(amountToSwap,0,path,address(this),block.timestamp) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#625-631)
+		- distributor.deposit{value: amountETHReflection}() (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#641)
+		- address(marketingFeeReceiver).call{gas: 30000,value: amountETHMarketing}() (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#642)
+		- router.addLiquidityETH{value: amountETHLiquidity}(address(this),amountToLiquify,0,0,autoLiquidityReceiver,block.timestamp) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#645-652)
+	- triggerAutoBuyback() (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#553)
+		- router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: amount}(0,path,to,block.timestamp) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#689-694)
+	- distributor.setShare(sender,_balances[sender]) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#562)
+	- distributor.setShare(recipient,_balances[recipient]) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#563)
+	- distributor.process(distributorGas) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#565)
+	External calls sending eth:
+	- swapBack() (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#552)
+		- distributor.deposit{value: amountETHReflection}() (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#641)
+		- address(marketingFeeReceiver).call{gas: 30000,value: amountETHMarketing}() (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#642)
+		- router.addLiquidityETH{value: amountETHLiquidity}(address(this),amountToLiquify,0,0,autoLiquidityReceiver,block.timestamp) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#645-652)
+	- triggerAutoBuyback() (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#553)
+		- router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: amount}(0,path,to,block.timestamp) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#689-694)
+	Event emitted after the call(s):
+	- Transfer(sender,recipient,amountReceived) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#567)
+Reentrancy in Hydra._transferFrom(address,address,uint256) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#547-569):
+	External calls:
+	- swapBack() (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#552)
+		- router.swapExactTokensForETHSupportingFeeOnTransferTokens(amountToSwap,0,path,address(this),block.timestamp) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#625-631)
+		- distributor.deposit{value: amountETHReflection}() (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#641)
+		- address(marketingFeeReceiver).call{gas: 30000,value: amountETHMarketing}() (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#642)
+		- router.addLiquidityETH{value: amountETHLiquidity}(address(this),amountToLiquify,0,0,autoLiquidityReceiver,block.timestamp) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#645-652)
+	- triggerAutoBuyback() (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#553)
+		- router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: amount}(0,path,to,block.timestamp) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#689-694)
+	External calls sending eth:
+	- swapBack() (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#552)
+		- distributor.deposit{value: amountETHReflection}() (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#641)
+		- address(marketingFeeReceiver).call{gas: 30000,value: amountETHMarketing}() (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#642)
+		- router.addLiquidityETH{value: amountETHLiquidity}(address(this),amountToLiquify,0,0,autoLiquidityReceiver,block.timestamp) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#645-652)
+	- triggerAutoBuyback() (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#553)
+		- router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: amount}(0,path,to,block.timestamp) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#689-694)
+	Event emitted after the call(s):
+	- Transfer(sender,address(this),feeAmount) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#602)
+		- amountReceived = takeFee(sender,recipient,amount) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#559)
+Reentrancy in Hydra.swapBack() (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#614-655):
+	External calls:
+	- router.swapExactTokensForETHSupportingFeeOnTransferTokens(amountToSwap,0,path,address(this),block.timestamp) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#625-631)
+	- distributor.deposit{value: amountETHReflection}() (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#641)
+	- address(marketingFeeReceiver).call{gas: 30000,value: amountETHMarketing}() (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#642)
+	- router.addLiquidityETH{value: amountETHLiquidity}(address(this),amountToLiquify,0,0,autoLiquidityReceiver,block.timestamp) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#645-652)
+	External calls sending eth:
+	- distributor.deposit{value: amountETHReflection}() (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#641)
+	- address(marketingFeeReceiver).call{gas: 30000,value: amountETHMarketing}() (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#642)
+	- router.addLiquidityETH{value: amountETHLiquidity}(address(this),amountToLiquify,0,0,autoLiquidityReceiver,block.timestamp) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#645-652)
+	Event emitted after the call(s):
+	- AutoLiquify(amountETHLiquidity,amountToLiquify) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#653)
+Reentrancy in Hydra.triggerHydraBuyback(uint256,bool) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#665-671):
+	External calls:
+	- buyTokens(amount,DEAD) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#666)
+		- router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: amount}(0,path,to,block.timestamp) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#689-694)
+	Event emitted after the call(s):
+	- BuybackMultiplierActive(buybackMultiplierLength) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#669)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+Hydra.swapBack() (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#614-655) tries to limit the gas of an external call that controls implicit decoding
+	address(marketingFeeReceiver).call{gas: 30000,value: amountETHMarketing}() (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#642)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#return-bomb
+
+DividendDistributor.shouldDistribute(address) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#349-352) uses timestamp for comparisons
+	Dangerous comparisons:
+	- shareholderClaims[shareholder] + minPeriod < block.timestamp && getUnpaidEarnings(shareholder) > minDistribution (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#350-351)
+Hydra._transferFrom(address,address,uint256) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#547-569) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(_balances[sender] > 0) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#555)
+Hydra.getTotalFee(bool) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#586-590) uses timestamp for comparisons
+	Dangerous comparisons:
+	- selling && buybackMultiplierTriggeredAt.add(buybackMultiplierLength) > block.timestamp (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#588)
+Hydra.shouldSwapBack() (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#607-612) uses timestamp for comparisons
+	Dangerous comparisons:
+	- msg.sender != pair && ! inSwap && swapEnabled && _balances[address(this)] >= swapThreshold (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#608-611)
+Hydra.isOverLiquified(uint256,uint256) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#794-796) uses timestamp for comparisons
+	Dangerous comparisons:
+	- getLiquidityBacking(accuracy) > target (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#795)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+DividendDistributor.process(uint256) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#323-347) has costly operations inside a loop:
+	- currentIndex = 0 (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#335)
+DividendDistributor.distributeDividend(address) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#354-365) has costly operations inside a loop:
+	- totalDistributed = totalDistributed.add(amount) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#359)
+DividendDistributor.process(uint256) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#323-347) has costly operations inside a loop:
+	- currentIndex ++ (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#344)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#costly-operations-inside-a-loop
+
+Hydra._transferFrom(address,address,uint256) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#547-569) has a high cyclomatic complexity (13).
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#cyclomatic-complexity
+
+Hydra._maxTxAmount (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#434) is set pre-construction with a non-constant function or state variable:
+	- _totalSupply / 100
+Hydra.swapThreshold (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#477) is set pre-construction with a non-constant function or state variable:
+	- _totalSupply / 10000
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#function-initializing-state
+
+Version constraint ^0.7.4 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- SignedImmutables
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching.
+It is used by:
+	- ^0.7.4 (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#3)
+solc-0.7.4 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in Hydra.swapBack() (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#614-655):
+	- address(marketingFeeReceiver).call{gas: 30000,value: amountETHMarketing}() (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#642)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Function IDEXRouter.WETH() (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#174) is not in mixedCase
+Parameter DividendDistributor.setDistributionCriteria(uint256,uint256)._minPeriod (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#282) is not in mixedCase
+Parameter DividendDistributor.setDistributionCriteria(uint256,uint256)._minDistribution (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#282) is not in mixedCase
+Variable DividendDistributor.USDC (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#241) is not in mixedCase
+Variable DividendDistributor.WETH (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#242) is not in mixedCase
+Parameter Hydra.setAutoBuybackSettings(bool,uint256,uint256,uint256)._enabled (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#697) is not in mixedCase
+Parameter Hydra.setAutoBuybackSettings(bool,uint256,uint256,uint256)._cap (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#697) is not in mixedCase
+Parameter Hydra.setAutoBuybackSettings(bool,uint256,uint256,uint256)._amount (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#697) is not in mixedCase
+Parameter Hydra.setAutoBuybackSettings(bool,uint256,uint256,uint256)._period (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#697) is not in mixedCase
+Parameter Hydra.setFees(uint256,uint256,uint256,uint256,uint256)._liquidityFee (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#744) is not in mixedCase
+Parameter Hydra.setFees(uint256,uint256,uint256,uint256,uint256)._buybackFee (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#744) is not in mixedCase
+Parameter Hydra.setFees(uint256,uint256,uint256,uint256,uint256)._reflectionFee (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#744) is not in mixedCase
+Parameter Hydra.setFees(uint256,uint256,uint256,uint256,uint256)._marketingFee (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#744) is not in mixedCase
+Parameter Hydra.setFees(uint256,uint256,uint256,uint256,uint256)._feeDenominator (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#744) is not in mixedCase
+Parameter Hydra.setFeeReceivers(address,address)._autoLiquidityReceiver (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#754) is not in mixedCase
+Parameter Hydra.setFeeReceivers(address,address)._marketingFeeReceiver (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#754) is not in mixedCase
+Parameter Hydra.setSwapBackSettings(bool,uint256)._enabled (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#759) is not in mixedCase
+Parameter Hydra.setSwapBackSettings(bool,uint256)._amount (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#759) is not in mixedCase
+Parameter Hydra.setTargetLiquidity(uint256,uint256)._target (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#764) is not in mixedCase
+Parameter Hydra.setTargetLiquidity(uint256,uint256)._denominator (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#764) is not in mixedCase
+Parameter Hydra.setDistributionCriteria(uint256,uint256)._minPeriod (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#769) is not in mixedCase
+Parameter Hydra.setDistributionCriteria(uint256,uint256)._minDistribution (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#769) is not in mixedCase
+Variable Hydra.USDC (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#424) is not in mixedCase
+Variable Hydra.WETH (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#425) is not in mixedCase
+Variable Hydra.DEAD (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#426) is not in mixedCase
+Variable Hydra.ZERO (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#427) is not in mixedCase
+Constant Hydra._name (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#429) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant Hydra._symbol (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#430) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant Hydra._decimals (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#431) is not in UPPER_CASE_WITH_UNDERSCORES
+Variable Hydra._maxTxAmount (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#434) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Hydra.slitherConstructorVariables() (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#421-801) uses literals with too many digits:
+	- _totalSupply = 1000000000000 * (10 ** _decimals) (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#433)
+Hydra.slitherConstructorVariables() (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#421-801) uses literals with too many digits:
+	- distributorGas = 500000 (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#474)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+Hydra.USDC (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#424) is never used in Hydra (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#421-801)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-state-variable
+
+DividendDistributor.USDC (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#241) should be constant 
+DividendDistributor.WETH (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#242) should be constant 
+DividendDistributor.dividendsPerShareAccuracyFactor (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#256) should be constant 
+Hydra.DEAD (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#426) should be constant 
+Hydra.USDC (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#424) should be constant 
+Hydra.WETH (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#425) should be constant 
+Hydra.ZERO (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#427) should be constant 
+Hydra._totalSupply (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#433) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+
+DividendDistributor._token (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#233) should be immutable 
+DividendDistributor.router (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#243) should be immutable 
+Hydra.distributor (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#473) should be immutable 
+Hydra.pair (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#457) should be immutable 
+Hydra.router (0x05a4909d737d0a6433335504d25536e12f65a4e5.sol#456) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+./0x05a4909d737d0a6433335504d25536e12f65a4e5.sol analyzed (8 contracts with 94 detectors), 93 result(s) found
+
+real	0m3.832s
+user	0m3.574s
+sys	0m0.258s

@@ -1,0 +1,192 @@
+'solc --version' running
+'solc ./0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol:
+Warning: Unused local variable.
+   --> 0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol:405:21:
+    |
+405 |         (bool sent, bytes memory data) = _to.call{value: amountETH}("");
+    |                     ^^^^^^^^^^^^^^^^^
+
+
+
+Cave._sendViaCall(address,uint256) (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#402-407) sends eth to arbitrary user
+	Dangerous calls:
+	- (sent,data) = _to.call{value: amountETH}() (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#405)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+Reentrancy in Cave._distributeTaxes(uint256) (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#385-400):
+	External calls:
+	- _transfer(address(this),DEAD,burnAmount) (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#392)
+		- (sent,data) = _to.call{value: amountETH}() (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#405)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#301-307)
+	- _swapTokensForEth(amount) (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#393)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#301-307)
+	External calls sending eth:
+	- _transfer(address(this),DEAD,burnAmount) (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#392)
+		- (sent,data) = _to.call{value: amountETH}() (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#405)
+	State variables written after the call(s):
+	- _swapTokensForEth(amount) (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#393)
+		- inInternalSwap = true (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#189)
+		- inInternalSwap = false (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#191)
+	Cave.inInternalSwap (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#178) can be used in cross function reentrancies:
+	- Cave._transfer(address,address,uint256) (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#259-294)
+	- Cave.lockTheSwap() (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#188-192)
+Reentrancy in Cave._transfer(address,address,uint256) (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#259-294):
+	External calls:
+	- _distributeTaxes(_collectedTaxThreshold) (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#283)
+		- (sent,data) = _to.call{value: amountETH}() (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#405)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#301-307)
+	External calls sending eth:
+	- _distributeTaxes(_collectedTaxThreshold) (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#283)
+		- (sent,data) = _to.call{value: amountETH}() (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#405)
+	State variables written after the call(s):
+	- _balances[from] = _balances[from].sub(amount) (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#286)
+	Cave._balances (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#149) can be used in cross function reentrancies:
+	- Cave._transfer(address,address,uint256) (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#259-294)
+	- Cave.balanceOf(address) (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#228-230)
+	- Cave.constructor(address,address,uint256,address) (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#194-208)
+	- _balances[to] = _balances[to].add(amount.sub(taxAmount)) (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#287)
+	Cave._balances (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#149) can be used in cross function reentrancies:
+	- Cave._transfer(address,address,uint256) (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#259-294)
+	- Cave.balanceOf(address) (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#228-230)
+	- Cave.constructor(address,address,uint256,address) (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#194-208)
+	- _balances[address(this)] = _balances[address(this)].add(taxAmount) (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#291)
+	Cave._balances (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#149) can be used in cross function reentrancies:
+	- Cave._transfer(address,address,uint256) (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#259-294)
+	- Cave.balanceOf(address) (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#228-230)
+	- Cave.constructor(address,address,uint256,address) (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#194-208)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+Cave.manualSendToken() (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#409-411) ignores return value by IERC20(address(this)).transfer(msg.sender,balanceOf(address(this))) (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#410)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+Cave._distributeTaxes(uint256) (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#385-400) performs a multiplication on the result of a division:
+	- burnAmount = amount.div(100).mul(_burnSplit) (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#390)
+Cave._distributeTaxes(uint256) (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#385-400) performs a multiplication on the result of a division:
+	- _sendViaCall(treasuryWallet,contractETHBalance.div(_treasuryAndRewardsSplit).mul(_treasurySplit)) (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#397)
+Cave._distributeTaxes(uint256) (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#385-400) performs a multiplication on the result of a division:
+	- _sendViaCall(rewardsWallet,contractETHBalance.div(_treasuryAndRewardsSplit).mul(_rewardsSplit)) (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#398)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+Cave.allowance(address,address).owner (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#237) shadows:
+	- Ownable.owner() (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#100-102) (function)
+Cave._approve(address,address,uint256).owner (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#252) shadows:
+	- Ownable.owner() (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#100-102) (function)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#local-variable-shadowing
+
+Ownable.constructor().msgSender (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#95) lacks a zero-check on :
+		- _owner = msgSender (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#96)
+Cave.constructor(address,address,uint256,address)._treasuryWallet (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#194) lacks a zero-check on :
+		- treasuryWallet = _treasuryWallet (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#195)
+Cave.constructor(address,address,uint256,address)._rewardsWallet (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#194) lacks a zero-check on :
+		- rewardsWallet = _rewardsWallet (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#196)
+Cave.setLaunchContract(address)._launchContract (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#365) lacks a zero-check on :
+		- launchContract = _launchContract (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#366)
+Cave.setTreasuryAddress(address)._treasuryWallet (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#371) lacks a zero-check on :
+		- treasuryWallet = _treasuryWallet (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#372)
+Cave.setRewardsAddress(address)._rewardsWallet (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#376) lacks a zero-check on :
+		- rewardsWallet = _rewardsWallet (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#377)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in Cave._distributeTaxes(uint256) (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#385-400):
+	External calls:
+	- _transfer(address(this),DEAD,burnAmount) (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#392)
+		- (sent,data) = _to.call{value: amountETH}() (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#405)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#301-307)
+	- _swapTokensForEth(amount) (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#393)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#301-307)
+	External calls sending eth:
+	- _transfer(address(this),DEAD,burnAmount) (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#392)
+		- (sent,data) = _to.call{value: amountETH}() (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#405)
+	State variables written after the call(s):
+	- _swapTokensForEth(amount) (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#393)
+		- _allowances[owner][spender] = amount (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#255)
+Reentrancy in Cave.transferFrom(address,address,uint256) (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#246-250):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#247)
+		- (sent,data) = _to.call{value: amountETH}() (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#405)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#301-307)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#247)
+		- (sent,data) = _to.call{value: amountETH}() (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#405)
+	State variables written after the call(s):
+	- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#248)
+		- _allowances[owner][spender] = amount (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#255)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in Cave._distributeTaxes(uint256) (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#385-400):
+	External calls:
+	- _transfer(address(this),DEAD,burnAmount) (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#392)
+		- (sent,data) = _to.call{value: amountETH}() (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#405)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#301-307)
+	- _swapTokensForEth(amount) (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#393)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#301-307)
+	External calls sending eth:
+	- _transfer(address(this),DEAD,burnAmount) (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#392)
+		- (sent,data) = _to.call{value: amountETH}() (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#405)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#256)
+		- _swapTokensForEth(amount) (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#393)
+Reentrancy in Cave._transfer(address,address,uint256) (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#259-294):
+	External calls:
+	- _distributeTaxes(_collectedTaxThreshold) (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#283)
+		- (sent,data) = _to.call{value: amountETH}() (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#405)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#301-307)
+	External calls sending eth:
+	- _distributeTaxes(_collectedTaxThreshold) (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#283)
+		- (sent,data) = _to.call{value: amountETH}() (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#405)
+	Event emitted after the call(s):
+	- Transfer(from,to,amount.sub(taxAmount)) (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#289)
+	- Transfer(from,address(this),taxAmount) (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#292)
+Reentrancy in Cave.transferFrom(address,address,uint256) (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#246-250):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#247)
+		- (sent,data) = _to.call{value: amountETH}() (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#405)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#301-307)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#247)
+		- (sent,data) = _to.call{value: amountETH}() (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#405)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#256)
+		- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#248)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+Version constraint 0.8.17 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- VerbatimInvalidDeduplication
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess.
+It is used by:
+	- 0.8.17 (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#33)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in Cave._sendViaCall(address,uint256) (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#402-407):
+	- (sent,data) = _to.call{value: amountETH}() (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#405)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Function IUniswapV2Router02.WETH() (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#136) is not in mixedCase
+Parameter Cave.setTxLimits(uint256,uint256)._maxTxAmount (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#310) is not in mixedCase
+Parameter Cave.setTxLimits(uint256,uint256)._maxWalletSize (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#310) is not in mixedCase
+Parameter Cave.setAutoTaxDistributionEnabled(bool)._enabled (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#333) is not in mixedCase
+Parameter Cave.reduceFee(uint256)._feePercentage (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#338) is not in mixedCase
+Parameter Cave.setSplits(uint256,uint256,uint256)._burnSplit (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#344) is not in mixedCase
+Parameter Cave.setSplits(uint256,uint256,uint256)._treasurySplit (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#344) is not in mixedCase
+Parameter Cave.setSplits(uint256,uint256,uint256)._rewardsSplit (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#344) is not in mixedCase
+Parameter Cave.setTaxThreshold(uint256)._newThreshold (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#354) is not in mixedCase
+Parameter Cave.setExcludeFromFee(address,bool)._address (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#359) is not in mixedCase
+Parameter Cave.setExcludeFromFee(address,bool)._excluded (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#359) is not in mixedCase
+Parameter Cave.setLaunchContract(address)._launchContract (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#365) is not in mixedCase
+Parameter Cave.setTreasuryAddress(address)._treasuryWallet (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#371) is not in mixedCase
+Parameter Cave.setRewardsAddress(address)._rewardsWallet (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#376) is not in mixedCase
+Constant Cave._decimals (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#165) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant Cave._tTotal (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#166) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant Cave._name (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#167) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant Cave._symbol (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#168) is not in UPPER_CASE_WITH_UNDERSCORES
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Cave.uniswapV2Router (0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol#179) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+./0x2fd4f0569896b4009ffad793ac6308bfd79b4c35.sol analyzed (7 contracts with 94 detectors), 41 result(s) found
+
+real	0m2.198s
+user	0m2.010s
+sys	0m0.191s

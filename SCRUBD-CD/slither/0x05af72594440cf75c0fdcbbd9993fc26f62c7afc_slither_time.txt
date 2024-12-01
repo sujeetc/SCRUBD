@@ -1,0 +1,242 @@
+'solc --version' running
+'solc ./0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+TwelveHourAuction.sendToTeamMaketing(uint256) (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#370-377) sends eth to arbitrary user
+	Dangerous calls:
+	- teamMarketing[idx].transfer(profit) (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#375)
+TwelveHourAuction.buyTHT(uint256) (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#403-406) sends eth to arbitrary user
+	Dangerous calls:
+	- TwelveHourToken.fallback.value(_value)() (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#405)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+Reentrancy in TwelveHourAuction.sendProfitTTH() (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#378-392):
+	External calls:
+	- buyTHT(calEthSendToTHT(profitTHT)) (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#381)
+		- TwelveHourToken.fallback.value(_value)() (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#405)
+	- exitTHT() (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#382)
+		- TwelveHourToken.exit() (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#409)
+	External calls sending eth:
+	- buyTHT(calEthSendToTHT(profitTHT)) (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#381)
+		- TwelveHourToken.fallback.value(_value)() (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#405)
+	State variables written after the call(s):
+	- profitTHT = 0 (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#387)
+	TwelveHourAuction.profitTHT (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#73) can be used in cross function reentrancies:
+	- TwelveHourAuction.buy(address) (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#202-243)
+	- TwelveHourAuction.profitTHT (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#73)
+	- TwelveHourAuction.sendProfitTTH() (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#378-392)
+	- profitTHT = SafeMath.sub(profitTHT,ethSendToTHT) (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#390)
+	TwelveHourAuction.profitTHT (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#73) can be used in cross function reentrancies:
+	- TwelveHourAuction.buy(address) (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#202-243)
+	- TwelveHourAuction.profitTHT (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#73)
+	- TwelveHourAuction.sendProfitTTH() (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#378-392)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+TwelveHourAuction.buy(address) (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#202-243) performs a multiplication on the result of a division:
+	- _dividends = SafeMath.div(SafeMath.mul(keyPrice,KEY_HOLDERS_DIVIDEND),100) (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#216)
+	- _fee = _dividends * MAGINITUDE (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#225)
+TwelveHourAuction.buy(address) (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#202-243) performs a multiplication on the result of a division:
+	- _dividends = SafeMath.div(SafeMath.mul(keyPrice,KEY_HOLDERS_DIVIDEND),100) (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#216)
+	- g.profitPerShare += (_dividends * MAGINITUDE / g.keyLevel) (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#230)
+TwelveHourAuction.buy(address) (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#202-243) performs a multiplication on the result of a division:
+	- _fee = _fee - (_fee - (1 * (_dividends * MAGINITUDE / g.keyLevel))) (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#231)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+TwelveHourAuction.calculateDividends(address,uint256) (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#322-328) uses a dangerous strict equality:
+	- p.curentRound == _round && p.lastRound < _round && _round != 0 (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#326)
+TwelveHourAuction.myDividends(address) (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#277-294) uses a dangerous strict equality:
+	- g.ended == false && g.endTime <= now && g.keyHolder == _addr (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#288-290)
+TwelveHourAuction.startRound() (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#175-184) uses a dangerous strict equality:
+	- require(bool)(games[round].ended == true) (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#177)
+TwelveHourAuction.updatePlayer(address,int256) (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#337-344) uses a dangerous strict equality:
+	- games[p.curentRound].ended == true (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#340)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-strict-equalities
+
+TwelveHourTokenInterface.fallback() (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#60) (function) shadows built-in symbol"
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#builtin-symbol-shadowing
+
+TwelveHourAuction.setTwelveHourToken(address)._addr (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#150) lacks a zero-check on :
+		- twelveHourTokenAddress = _addr (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#152)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in TwelveHourAuction.sendProfitTTH() (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#378-392):
+	External calls:
+	- buyTHT(calEthSendToTHT(profitTHT)) (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#381)
+		- TwelveHourToken.fallback.value(_value)() (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#405)
+	- exitTHT() (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#382)
+		- TwelveHourToken.exit() (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#409)
+	External calls sending eth:
+	- buyTHT(calEthSendToTHT(profitTHT)) (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#381)
+		- TwelveHourToken.fallback.value(_value)() (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#405)
+	State variables written after the call(s):
+	- nextPot = SafeMath.sub(nextPot,SafeMath.sub(ethSendToTHT,profitTHT)) (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#388)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in TwelveHourAuction.buy(address) (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#202-243):
+	External calls:
+	- sendProfitTTH() (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#240)
+		- TwelveHourToken.fallback.value(_value)() (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#405)
+		- TwelveHourToken.exit() (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#409)
+	External calls sending eth:
+	- msg.sender.transfer(repay) (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#221)
+	- owner.transfer(_referralBonus) (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#223)
+	- sendToTeamMaketing(_marketingFee) (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#238)
+		- teamMarketing[idx].transfer(profit) (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#375)
+	- sendProfitTTH() (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#240)
+		- TwelveHourToken.fallback.value(_value)() (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#405)
+	Event emitted after the call(s):
+	- Buy(round,msg.sender,keyPrice,games[round].keyLevel) (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#242)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+TwelveHourAuction.startRound() (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#175-184) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(games[round].ended == true) (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#177)
+TwelveHourAuction.endRound() (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#185-198) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(games[round].ended == false && games[round].endTime <= now) (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#187)
+TwelveHourAuction.buy(address) (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#202-243) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool)(games[round].ended == false) (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#205)
+	- games[round].endTime <= now (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#208)
+TwelveHourAuction.withdraw() (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#244-264) uses timestamp for comparisons
+	Dangerous comparisons:
+	- games[round].ended == false && games[round].endTime <= now (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#247)
+	- require(bool)(balance > 0) (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#256)
+	- address(this).balance >= balance (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#257)
+TwelveHourAuction.myDividends(address) (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#277-294) uses timestamp for comparisons
+	Dangerous comparisons:
+	- g.ended == false && g.endTime <= now && g.keyHolder == _addr (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#288-290)
+TwelveHourAuction.calculateDividends(address,uint256) (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#322-328) uses timestamp for comparisons
+	Dangerous comparisons:
+	- p.curentRound == _round && p.lastRound < _round && _round != 0 (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#326)
+TwelveHourAuction.updatePlayer(address,int256) (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#337-344) uses timestamp for comparisons
+	Dangerous comparisons:
+	- games[p.curentRound].ended == true (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#340)
+TwelveHourAuction.updateGame(uint256) (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#355-369) uses timestamp for comparisons
+	Dangerous comparisons:
+	- endTime <= now (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#365)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+TwelveHourAuction.startGame() (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#168-174) compares to a boolean constant:
+	-require(bool)(init == false) (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#170)
+TwelveHourAuction.startRound() (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#175-184) compares to a boolean constant:
+	-require(bool)(games[round].ended == true) (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#177)
+TwelveHourAuction.endRound() (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#185-198) compares to a boolean constant:
+	-require(bool)(games[round].ended == false && games[round].endTime <= now) (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#187)
+TwelveHourAuction.buy(address) (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#202-243) compares to a boolean constant:
+	-require(bool)(init == true) (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#204)
+TwelveHourAuction.buy(address) (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#202-243) compares to a boolean constant:
+	-_referral != 0x0 && referrals[_referral] == true (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#222)
+TwelveHourAuction.buy(address) (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#202-243) compares to a boolean constant:
+	-require(bool)(games[round].ended == false) (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#205)
+TwelveHourAuction.withdraw() (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#244-264) compares to a boolean constant:
+	-games[players[msg.sender].curentRound].ended == true (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#249)
+TwelveHourAuction.withdraw() (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#244-264) compares to a boolean constant:
+	-games[round].ended == false && games[round].endTime <= now (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#247)
+TwelveHourAuction.myDividends(address) (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#277-294) compares to a boolean constant:
+	-g.ended == false && g.endTime <= now && g.keyHolder == _addr (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#288-290)
+TwelveHourAuction.updatePlayer(address,int256) (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#337-344) compares to a boolean constant:
+	-games[p.curentRound].ended == true (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#340)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#boolean-equality
+
+Version constraint ^0.4.25 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ABIEncoderV2PackedStorage_0.4.x.
+It is used by:
+	- ^0.4.25 (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#1)
+solc-0.4.25 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Parameter TwelveHourAuction.setTwelveHourToken(address)._addr (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#150) is not in mixedCase
+Parameter TwelveHourAuction.setTeamMaketing(address,uint256)._addr (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#155) is not in mixedCase
+Parameter TwelveHourAuction.setTeamMaketing(address,uint256)._idx (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#155) is not in mixedCase
+Parameter TwelveHourAuction.buy(address)._referral (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#202) is not in mixedCase
+Parameter TwelveHourAuction.myDividends(address)._addr (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#277) is not in mixedCase
+Parameter TwelveHourAuction.getData(address)._addr (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#295) is not in mixedCase
+Parameter TwelveHourAuction.calculateDividends(address,uint256)._addr (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#322) is not in mixedCase
+Parameter TwelveHourAuction.calculateDividends(address,uint256)._round (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#322) is not in mixedCase
+Parameter TwelveHourAuction.updatePlayer(address,int256)._addr (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#337) is not in mixedCase
+Parameter TwelveHourAuction.updatePlayer(address,int256)._updatedPayouts (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#337) is not in mixedCase
+Parameter TwelveHourAuction.updatePlayerEndRound(address)._addr (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#345) is not in mixedCase
+Parameter TwelveHourAuction.updateGame(uint256)._finalPot (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#355) is not in mixedCase
+Parameter TwelveHourAuction.sendToTeamMaketing(uint256)._marketingFee (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#370) is not in mixedCase
+Parameter TwelveHourAuction.calEthSendToTHT(uint256)._eth (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#398) is not in mixedCase
+Parameter TwelveHourAuction.buyTHT(uint256)._value (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#403) is not in mixedCase
+Variable TwelveHourAuction.TwelveHourToken (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#88) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in TwelveHourAuction.buy(address) (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#202-243):
+	External calls:
+	- msg.sender.transfer(repay) (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#221)
+	State variables written after the call(s):
+	- players[_referral].referrals += _referralBonus (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#222)
+Reentrancy in TwelveHourAuction.buy(address) (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#202-243):
+	External calls:
+	- msg.sender.transfer(repay) (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#221)
+	- owner.transfer(_referralBonus) (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#223)
+	State variables written after the call(s):
+	- g.profitPerShare += (_dividends * MAGINITUDE / g.keyLevel) (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#230)
+	- updateGame(_finalPot) (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#236)
+		- g.finalPot = SafeMath.add(g.finalPot,_finalPot) (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#359)
+		- g.keyHolder = msg.sender (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#361)
+		- g.endTime = endTime (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#366)
+		- g.keyLevel += 1 (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#368)
+	- nextPot = SafeMath.add(nextPot,_nextPot) (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#226)
+	- updatePlayer(msg.sender,_updatedPayouts) (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#234)
+		- p.dividends = SafeMath.add(p.dividends,dividends) (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#350)
+		- p.lastRound = p.curentRound (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#351)
+		- p.keys = 0 (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#352)
+		- p.curentRound = round (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#341)
+		- p.payouts = 0 (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#353)
+		- p.keys += 1 (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#342)
+		- p.payouts += int256(_updatedPayouts) (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#343)
+	- profitTHT = SafeMath.add(profitTHT,_profitTHT) (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#227)
+Reentrancy in TwelveHourAuction.buy(address) (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#202-243):
+	External calls:
+	- msg.sender.transfer(repay) (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#221)
+	- owner.transfer(_referralBonus) (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#223)
+	- sendToTeamMaketing(_marketingFee) (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#238)
+		- teamMarketing[idx].transfer(profit) (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#375)
+	External calls sending eth:
+	- msg.sender.transfer(repay) (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#221)
+	- owner.transfer(_referralBonus) (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#223)
+	- sendToTeamMaketing(_marketingFee) (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#238)
+		- teamMarketing[idx].transfer(profit) (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#375)
+	- sendProfitTTH() (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#240)
+		- TwelveHourToken.fallback.value(_value)() (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#405)
+	State variables written after the call(s):
+	- sendProfitTTH() (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#240)
+		- nextPot = SafeMath.sub(nextPot,SafeMath.sub(ethSendToTHT,profitTHT)) (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#388)
+	- sendProfitTTH() (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#240)
+		- profitTHT = 0 (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#387)
+		- profitTHT = SafeMath.sub(profitTHT,ethSendToTHT) (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#390)
+	Event emitted after the call(s):
+	- Buy(round,msg.sender,keyPrice,games[round].keyLevel) (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#242)
+Reentrancy in TwelveHourAuction.withdraw() (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#244-264):
+	External calls:
+	- msg.sender.transfer(balance) (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#261)
+	Event emitted after the call(s):
+	- Withdraw(msg.sender,balance) (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#262)
+Reentrancy in TwelveHourAuction.withdrawReferral() (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#265-276):
+	External calls:
+	- msg.sender.transfer(balance) (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#273)
+	Event emitted after the call(s):
+	- WithdrawReferral(msg.sender,balance) (0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol#274)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+./0x05af72594440cf75c0fdcbbd9993fc26f62c7afc.sol analyzed (3 contracts with 94 detectors), 55 result(s) found
+
+real	0m5.264s
+user	0m4.963s
+sys	0m0.300s

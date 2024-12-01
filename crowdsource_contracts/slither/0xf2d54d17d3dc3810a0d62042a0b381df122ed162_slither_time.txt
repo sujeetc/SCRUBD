@@ -1,0 +1,87 @@
+'solc --version' running
+'solc ./0xf2d54d17d3dc3810a0d62042a0b381df122ed162.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+Beercoin (0xf2d54d17d3dc3810a0d62042a0b381df122ed162.sol#7-11) has incorrect ERC20 function interface:Beercoin.transfer(address,uint256) (0xf2d54d17d3dc3810a0d62042a0b381df122ed162.sol#8)
+BeercoinICO (0xf2d54d17d3dc3810a0d62042a0b381df122ed162.sol#93-210) has incorrect ERC20 function interface:BeercoinICO.transfer(address,uint256) (0xf2d54d17d3dc3810a0d62042a0b381df122ed162.sol#155-162)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-erc20-interface
+
+GuardedBeercoinICO.setOwner(address) (0xf2d54d17d3dc3810a0d62042a0b381df122ed162.sol#57-86) should emit an event for: 
+	- owner = newOwner (0xf2d54d17d3dc3810a0d62042a0b381df122ed162.sol#60) 
+	- owner = newOwner (0xf2d54d17d3dc3810a0d62042a0b381df122ed162.sol#69) 
+	- owner = newOwner (0xf2d54d17d3dc3810a0d62042a0b381df122ed162.sol#78) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-access-control
+
+Reentrancy in BeercoinICO.fallback() (0xf2d54d17d3dc3810a0d62042a0b381df122ed162.sol#137-147):
+	External calls:
+	- beercoinAmount = (etherAmount * 10 ** uint256(beercoin.decimals())) / price (0xf2d54d17d3dc3810a0d62042a0b381df122ed162.sol#141)
+	- beercoin.transfer(msg.sender,beercoinAmount) (0xf2d54d17d3dc3810a0d62042a0b381df122ed162.sol#142)
+	State variables written after the call(s):
+	- raisedEther += etherAmount (0xf2d54d17d3dc3810a0d62042a0b381df122ed162.sol#145)
+	- soldBeercoins += beercoinAmount (0xf2d54d17d3dc3810a0d62042a0b381df122ed162.sol#144)
+Reentrancy in BeercoinICO.transfer(address,uint256) (0xf2d54d17d3dc3810a0d62042a0b381df122ed162.sol#155-162):
+	External calls:
+	- beercoin.transfer(to,beercoinAmount) (0xf2d54d17d3dc3810a0d62042a0b381df122ed162.sol#156)
+	State variables written after the call(s):
+	- raisedEther += etherAmount (0xf2d54d17d3dc3810a0d62042a0b381df122ed162.sol#159)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in BeercoinICO.fallback() (0xf2d54d17d3dc3810a0d62042a0b381df122ed162.sol#137-147):
+	External calls:
+	- beercoinAmount = (etherAmount * 10 ** uint256(beercoin.decimals())) / price (0xf2d54d17d3dc3810a0d62042a0b381df122ed162.sol#141)
+	- beercoin.transfer(msg.sender,beercoinAmount) (0xf2d54d17d3dc3810a0d62042a0b381df122ed162.sol#142)
+	Event emitted after the call(s):
+	- FundTransfer(msg.sender,etherAmount,true) (0xf2d54d17d3dc3810a0d62042a0b381df122ed162.sol#146)
+Reentrancy in BeercoinICO.transfer(address,uint256) (0xf2d54d17d3dc3810a0d62042a0b381df122ed162.sol#155-162):
+	External calls:
+	- beercoin.transfer(to,beercoinAmount) (0xf2d54d17d3dc3810a0d62042a0b381df122ed162.sol#156)
+	Event emitted after the call(s):
+	- FundTransfer(msg.sender,etherAmount,true) (0xf2d54d17d3dc3810a0d62042a0b381df122ed162.sol#161)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+Version constraint ^0.4.21 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ABIEncoderV2PackedStorage_0.4.x
+	- ExpExponentCleanup
+	- EventStructWrongData
+	- NestedArrayFunctionCallDecoder.
+It is used by:
+	- ^0.4.21 (0xf2d54d17d3dc3810a0d62042a0b381df122ed162.sol#1)
+solc-0.4.21 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Reentrancy in BeercoinICO.claimFunds() (0xf2d54d17d3dc3810a0d62042a0b381df122ed162.sol#181-186):
+	External calls:
+	- owner.transfer(etherAmount) (0xf2d54d17d3dc3810a0d62042a0b381df122ed162.sol#183)
+	Event emitted after the call(s):
+	- FundTransfer(owner,etherAmount,false) (0xf2d54d17d3dc3810a0d62042a0b381df122ed162.sol#185)
+Reentrancy in BeercoinICO.withdraw() (0xf2d54d17d3dc3810a0d62042a0b381df122ed162.sol#167-175):
+	External calls:
+	- msg.sender.transfer(amount) (0xf2d54d17d3dc3810a0d62042a0b381df122ed162.sol#172)
+	Event emitted after the call(s):
+	- FundTransfer(msg.sender,amount,false) (0xf2d54d17d3dc3810a0d62042a0b381df122ed162.sol#174)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+BeercoinICO.slitherConstructorConstantVariables() (0xf2d54d17d3dc3810a0d62042a0b381df122ed162.sol#93-210) uses literals with too many digits:
+	- price = 6000000000000 (0xf2d54d17d3dc3810a0d62042a0b381df122ed162.sol#96)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+BeercoinICO.beercoin (0xf2d54d17d3dc3810a0d62042a0b381df122ed162.sol#94) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+./0xf2d54d17d3dc3810a0d62042a0b381df122ed162.sol analyzed (3 contracts with 94 detectors), 13 result(s) found
+
+real	0m1.557s
+user	0m1.360s
+sys	0m0.199s

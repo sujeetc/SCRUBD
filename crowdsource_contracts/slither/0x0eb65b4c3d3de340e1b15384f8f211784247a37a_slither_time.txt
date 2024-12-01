@@ -1,0 +1,361 @@
+'solc --version' running
+'solc ./0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol:
+Warning: Contract code size exceeds 24576 bytes (a limit introduced in Spurious Dragon). This contract may not be deployable on mainnet. Consider enabling the optimizer (with a low "runs" value!), turning off revert strings, or using libraries.
+    --> ./0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol:1250:1:
+     |
+1250 | contract KODAV3SecondaryMarketplace is
+     | ^ (Relevant source part starts here and spans across multiple lines).
+
+
+
+BaseMarketplace.recoverStuckETH(address,uint256) (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#838-842) sends eth to arbitrary user
+	Dangerous calls:
+	- (success,None) = _recipient.call{value: _amount}() (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#839)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+Reentrancy in ReserveAuctionMarketplace._placeBidOnReserveAuction(uint256,address) (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1066-1103):
+	External calls:
+	- _refundBidder(_id,reserveAuction.bidder,reserveAuction.bid,_bidder,msg.value) (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1096)
+		- (success,None) = _receiver.call{value: _paymentAmount}() (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#884)
+	State variables written after the call(s):
+	- reserveAuction.bid = uint128(msg.value) (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1099)
+	ReserveAuctionMarketplace.editionOrTokenWithReserveAuctions (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1016) can be used in cross function reentrancies:
+	- ReserveAuctionMarketplace.editionOrTokenWithReserveAuctions (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1016)
+	- ReserveAuctionMarketplace.listForReserveAuction(address,uint256,uint128,uint128) (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1024-1046)
+	- reserveAuction.bidder = _bidder (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1100)
+	ReserveAuctionMarketplace.editionOrTokenWithReserveAuctions (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1016) can be used in cross function reentrancies:
+	- ReserveAuctionMarketplace.editionOrTokenWithReserveAuctions (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1016)
+	- ReserveAuctionMarketplace.listForReserveAuction(address,uint256,uint128,uint128) (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1024-1046)
+Reentrancy in KODAV3SecondaryMarketplace._placeEditionBidFor(uint256,address) (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1583-1599):
+	External calls:
+	- _refundBidder(_editionId,offer.bidder,offer.offer,_bidder,msg.value) (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1592)
+		- (success,None) = _receiver.call{value: _paymentAmount}() (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#884)
+	State variables written after the call(s):
+	- editionBids[_editionId] = Offer(msg.value,_bidder,_getLockupTime()) (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1596)
+	KODAV3SecondaryMarketplace.editionBids (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1271) can be used in cross function reentrancies:
+	- KODAV3SecondaryMarketplace.editionBids (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1271)
+Reentrancy in KODAV3SecondaryMarketplace._placeTokenBidFor(uint256,address) (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1601-1617):
+	External calls:
+	- _refundBidder(_tokenId,offer.bidder,offer.offer,_bidder,msg.value) (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1610)
+		- (success,None) = _receiver.call{value: _paymentAmount}() (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#884)
+	State variables written after the call(s):
+	- tokenBids[_tokenId] = Offer(msg.value,_bidder,_getLockupTime()) (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1614)
+	KODAV3SecondaryMarketplace.tokenBids (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1268) can be used in cross function reentrancies:
+	- KODAV3SecondaryMarketplace.tokenBids (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1268)
+Reentrancy in ReserveAuctionMarketplace._removeReserveAuctionListing(uint256) (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1218-1231):
+	External calls:
+	- _refundBidder(_id,reserveAuction.bidder,reserveAuction.bid,address(0),0) (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1227)
+		- (success,None) = _receiver.call{value: _paymentAmount}() (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#884)
+	State variables written after the call(s):
+	- delete editionOrTokenWithReserveAuctions[_id] (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1230)
+	ReserveAuctionMarketplace.editionOrTokenWithReserveAuctions (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1016) can be used in cross function reentrancies:
+	- ReserveAuctionMarketplace.editionOrTokenWithReserveAuctions (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1016)
+	- ReserveAuctionMarketplace.listForReserveAuction(address,uint256,uint128,uint128) (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1024-1046)
+Reentrancy in KODAV3SecondaryMarketplace.acceptEditionBid(uint256,uint256) (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1345-1367):
+	External calls:
+	- _facilitateSecondarySale(_tokenId,offer.offer,currentOwner,offer.bidder) (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1361)
+		- (creatorSuccess,None) = _royaltyRecipient.call{value: _creatorRoyalties}() (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1513)
+		- koda.safeTransferFrom(_seller,_buyer,_tokenId) (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1503)
+		- (koCommissionSuccess,None) = platformAccount.call{value: koCommission}() (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1518)
+		- (success,None) = _seller.call{value: _paymentAmount - _creatorRoyalties - koCommission}() (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1522)
+	External calls sending eth:
+	- _facilitateSecondarySale(_tokenId,offer.offer,currentOwner,offer.bidder) (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1361)
+		- (creatorSuccess,None) = _royaltyRecipient.call{value: _creatorRoyalties}() (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1513)
+		- (koCommissionSuccess,None) = platformAccount.call{value: koCommission}() (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1518)
+		- (success,None) = _seller.call{value: _paymentAmount - _creatorRoyalties - koCommission}() (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1522)
+	State variables written after the call(s):
+	- delete editionBids[editionId] (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1364)
+	KODAV3SecondaryMarketplace.editionBids (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1271) can be used in cross function reentrancies:
+	- KODAV3SecondaryMarketplace.editionBids (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1271)
+Reentrancy in KODAV3SecondaryMarketplace.acceptTokenBid(uint256,uint256) (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1429-1447):
+	External calls:
+	- _facilitateSecondarySale(_tokenId,offer.offer,currentOwner,offer.bidder) (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1441)
+		- (creatorSuccess,None) = _royaltyRecipient.call{value: _creatorRoyalties}() (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1513)
+		- koda.safeTransferFrom(_seller,_buyer,_tokenId) (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1503)
+		- (koCommissionSuccess,None) = platformAccount.call{value: koCommission}() (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1518)
+		- (success,None) = _seller.call{value: _paymentAmount - _creatorRoyalties - koCommission}() (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1522)
+	External calls sending eth:
+	- _facilitateSecondarySale(_tokenId,offer.offer,currentOwner,offer.bidder) (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1441)
+		- (creatorSuccess,None) = _royaltyRecipient.call{value: _creatorRoyalties}() (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1513)
+		- (koCommissionSuccess,None) = platformAccount.call{value: koCommission}() (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1518)
+		- (success,None) = _seller.call{value: _paymentAmount - _creatorRoyalties - koCommission}() (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1522)
+	State variables written after the call(s):
+	- delete tokenBids[_tokenId] (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1444)
+	KODAV3SecondaryMarketplace.tokenBids (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1268) can be used in cross function reentrancies:
+	- KODAV3SecondaryMarketplace.tokenBids (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1268)
+Reentrancy in KODAV3SecondaryMarketplace.adminRejectTokenBid(uint256) (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1450-1466):
+	External calls:
+	- _refundBidder(_tokenId,offer.bidder,offer.offer,address(0),0) (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1459)
+		- (success,None) = _receiver.call{value: _paymentAmount}() (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#884)
+	State variables written after the call(s):
+	- delete tokenBids[_tokenId] (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1463)
+	KODAV3SecondaryMarketplace.tokenBids (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1268) can be used in cross function reentrancies:
+	- KODAV3SecondaryMarketplace.tokenBids (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1268)
+Reentrancy in ReserveAuctionMarketplace.emergencyExitBidFromReserveAuction(uint256) (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1176-1202):
+	External calls:
+	- _refundBidder(_id,reserveAuction.bidder,reserveAuction.bid,address(0),0) (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1197)
+		- (success,None) = _receiver.call{value: _paymentAmount}() (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#884)
+	State variables written after the call(s):
+	- delete editionOrTokenWithReserveAuctions[_id] (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1201)
+	ReserveAuctionMarketplace.editionOrTokenWithReserveAuctions (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1016) can be used in cross function reentrancies:
+	- ReserveAuctionMarketplace.editionOrTokenWithReserveAuctions (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1016)
+	- ReserveAuctionMarketplace.listForReserveAuction(address,uint256,uint128,uint128) (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1024-1046)
+Reentrancy in KODAV3SecondaryMarketplace.rejectTokenBid(uint256) (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1409-1427):
+	External calls:
+	- _refundBidder(_tokenId,offer.bidder,offer.offer,address(0),0) (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1421)
+		- (success,None) = _receiver.call{value: _paymentAmount}() (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#884)
+	State variables written after the call(s):
+	- delete tokenBids[_tokenId] (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1424)
+	KODAV3SecondaryMarketplace.tokenBids (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1268) can be used in cross function reentrancies:
+	- KODAV3SecondaryMarketplace.tokenBids (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1268)
+Reentrancy in ReserveAuctionMarketplace.withdrawBidFromReserveAuction(uint256) (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1129-1147):
+	External calls:
+	- _refundBidder(_id,reserveAuction.bidder,bidToRefund,address(0),0) (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1141)
+		- (success,None) = _receiver.call{value: _paymentAmount}() (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#884)
+	State variables written after the call(s):
+	- reserveAuction.bidder = address(0) (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1143)
+	ReserveAuctionMarketplace.editionOrTokenWithReserveAuctions (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1016) can be used in cross function reentrancies:
+	- ReserveAuctionMarketplace.editionOrTokenWithReserveAuctions (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1016)
+	- ReserveAuctionMarketplace.listForReserveAuction(address,uint256,uint128,uint128) (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1024-1046)
+	- reserveAuction.bid = 0 (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1144)
+	ReserveAuctionMarketplace.editionOrTokenWithReserveAuctions (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1016) can be used in cross function reentrancies:
+	- ReserveAuctionMarketplace.editionOrTokenWithReserveAuctions (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1016)
+	- ReserveAuctionMarketplace.listForReserveAuction(address,uint256,uint128,uint128) (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1024-1046)
+Reentrancy in KODAV3SecondaryMarketplace.withdrawEditionBid(uint256) (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1323-1343):
+	External calls:
+	- _refundBidder(_editionId,offer.bidder,offer.offer,address(0),0) (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1337)
+		- (success,None) = _receiver.call{value: _paymentAmount}() (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#884)
+	State variables written after the call(s):
+	- delete editionBids[_editionId] (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1340)
+	KODAV3SecondaryMarketplace.editionBids (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1271) can be used in cross function reentrancies:
+	- KODAV3SecondaryMarketplace.editionBids (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1271)
+Reentrancy in KODAV3SecondaryMarketplace.withdrawTokenBid(uint256) (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1387-1407):
+	External calls:
+	- _refundBidder(_tokenId,offer.bidder,offer.offer,address(0),0) (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1401)
+		- (success,None) = _receiver.call{value: _paymentAmount}() (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#884)
+	State variables written after the call(s):
+	- delete tokenBids[_tokenId] (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1404)
+	KODAV3SecondaryMarketplace.tokenBids (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1268) can be used in cross function reentrancies:
+	- KODAV3SecondaryMarketplace.tokenBids (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1268)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+BaseMarketplace.recoverERC20(IERC20,address,uint256) (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#833-836) ignores return value by _token.transfer(_recipient,_amount) (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#834)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+KODAV3SecondaryMarketplace.handleSecondarySaleFunds(address,address,uint256,uint256) (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1506-1524) performs a multiplication on the result of a division:
+	- koCommission = (_paymentAmount / modulo) * platformSecondarySaleCommission (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1517)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+BaseMarketplace.recoverStuckETH(address,uint256)._recipient (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#838) lacks a zero-check on :
+		- (success,None) = _recipient.call{value: _amount}() (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#839)
+BaseMarketplace.updatePlatformAccount(address)._newPlatformAccount (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#866) lacks a zero-check on :
+		- platformAccount = _newPlatformAccount (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#868)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in KODAV3SecondaryMarketplace.convertReserveAuctionToBuyItNow(uint256,uint128,uint128) (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1468-1479):
+	External calls:
+	- _removeReserveAuctionListing(_tokenId) (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1474)
+		- (success,None) = _receiver.call{value: _paymentAmount}() (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#884)
+	State variables written after the call(s):
+	- editionOrTokenListings[_tokenId] = Listing(_listingPrice,_startDate,_msgSender()) (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1476)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in BaseMarketplace._refundBidder(uint256,address,uint256,address,uint256) (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#883-890):
+	External calls:
+	- (success,None) = _receiver.call{value: _paymentAmount}() (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#884)
+	Event emitted after the call(s):
+	- BidderRefunded(_id,_receiver,_paymentAmount,_newBidder,_newOffer) (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#888)
+	- BidderRefundedFailed(_id,_receiver,_paymentAmount,_newBidder,_newOffer) (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#886)
+Reentrancy in BaseMarketplace.recoverERC20(IERC20,address,uint256) (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#833-836):
+	External calls:
+	- _token.transfer(_recipient,_amount) (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#834)
+	Event emitted after the call(s):
+	- AdminRecoverERC20(_token,_recipient,_amount) (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#835)
+Reentrancy in BaseMarketplace.recoverStuckETH(address,uint256) (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#838-842):
+	External calls:
+	- (success,None) = _recipient.call{value: _amount}() (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#839)
+	Event emitted after the call(s):
+	- AdminRecoverETH(_recipient,_amount) (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#841)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+BuyNowMarketplace._facilitateBuyNow(uint256,address) (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#977-986) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(block.timestamp >= listing.startDate,List not available yet) (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#981)
+ReserveAuctionMarketplace._placeBidOnReserveAuction(uint256,address) (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1066-1103) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(reserveAuction.reservePrice > 0,Not set up for reserve auction) (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1068)
+	- require(bool,string)(block.timestamp >= reserveAuction.startDate,Not accepting bids yet) (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1069)
+	- require(bool,string)(msg.value >= reserveAuction.bid + minBidAmount,You have not exceeded previous bid by min bid amount) (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1070)
+	- require(bool,string)(block.timestamp < originalBiddingEnd,No longer accepting bids) (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1085)
+	- secondsUntilBiddingEnd <= reserveAuctionBidExtensionWindow (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1089)
+ReserveAuctionMarketplace.resultReserveAuction(uint256) (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1105-1126) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(block.timestamp > reserveAuction.biddingEnd,Bidding has not yet ended) (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1114)
+ReserveAuctionMarketplace.updateReservePriceForReserveAuction(uint256,uint128) (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1150-1174) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(reserveAuction.seller == _msgSender() || accessControls.isVerifiedArtistProxy(reserveAuction.seller,_msgSender()),Not the seller) (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1157-1161)
+	- require(bool,string)(reserveAuction.biddingEnd == 0,Reserve countdown commenced) (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1163)
+KODAV3SecondaryMarketplace.withdrawEditionBid(uint256) (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1323-1343) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(block.timestamp >= offer.lockupUntil,Bid lockup not elapsed) (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1334)
+KODAV3SecondaryMarketplace.acceptEditionBid(uint256,uint256) (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1345-1367) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(offer.bidder != address(0),No open bid) (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1353)
+	- require(bool,string)(offer.offer >= _offerPrice,Offer price has changed) (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1354)
+KODAV3SecondaryMarketplace.withdrawTokenBid(uint256) (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1387-1407) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(block.timestamp >= offer.lockupUntil,Bid lockup not elapsed) (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1398)
+KODAV3SecondaryMarketplace.handleSecondarySaleFunds(address,address,uint256,uint256) (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1506-1524) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(creatorSuccess,Token payment failed) (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1514)
+	- require(bool,string)(koCommissionSuccess,Token commission payment failed) (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1519)
+	- require(bool,string)(success,Token payment failed) (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1523)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+2 different versions of Solidity are used:
+	- Version constraint 0.8.4 is used by:
+		-0.8.4 (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#5)
+		-0.8.4 (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#138)
+		-0.8.4 (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#329)
+		-0.8.4 (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#358)
+		-0.8.4 (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#403)
+		-0.8.4 (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#421)
+		-0.8.4 (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#767)
+		-0.8.4 (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#908)
+		-0.8.4 (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#995)
+		-0.8.4 (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1238)
+	- Version constraint ^0.8.0 is used by:
+		-^0.8.0 (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#158)
+		-^0.8.0 (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#185)
+		-^0.8.0 (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#500)
+		-^0.8.0 (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#565)
+		-^0.8.0 (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#591)
+		-^0.8.0 (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#683)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#different-pragma-directives-are-used
+
+BaseMarketplace._onlyContract() (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#795-797) is never used and should be removed
+Context._msgData() (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#582-584) is never used and should be removed
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dead-code
+
+Version constraint 0.8.4 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- SignedImmutables.
+It is used by:
+	- 0.8.4 (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#5)
+	- 0.8.4 (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#138)
+	- 0.8.4 (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#329)
+	- 0.8.4 (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#358)
+	- 0.8.4 (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#403)
+	- 0.8.4 (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#421)
+	- 0.8.4 (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#767)
+	- 0.8.4 (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#908)
+	- 0.8.4 (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#995)
+	- 0.8.4 (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1238)
+Version constraint ^0.8.0 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- SignedImmutables
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching.
+It is used by:
+	- ^0.8.0 (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#158)
+	- ^0.8.0 (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#185)
+	- ^0.8.0 (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#500)
+	- ^0.8.0 (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#565)
+	- ^0.8.0 (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#591)
+	- ^0.8.0 (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#683)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in BaseMarketplace.recoverStuckETH(address,uint256) (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#838-842):
+	- (success,None) = _recipient.call{value: _amount}() (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#839)
+Low level call in BaseMarketplace._refundBidder(uint256,address,uint256,address,uint256) (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#883-890):
+	- (success,None) = _receiver.call{value: _paymentAmount}() (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#884)
+Low level call in KODAV3SecondaryMarketplace.handleSecondarySaleFunds(address,address,uint256,uint256) (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1506-1524):
+	- (creatorSuccess,None) = _royaltyRecipient.call{value: _creatorRoyalties}() (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1513)
+	- (koCommissionSuccess,None) = platformAccount.call{value: koCommission}() (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1518)
+	- (success,None) = _seller.call{value: _paymentAmount - _creatorRoyalties - koCommission}() (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1522)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Parameter BaseMarketplace.recoverERC20(IERC20,address,uint256)._token (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#833) is not in mixedCase
+Parameter BaseMarketplace.recoverERC20(IERC20,address,uint256)._recipient (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#833) is not in mixedCase
+Parameter BaseMarketplace.recoverERC20(IERC20,address,uint256)._amount (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#833) is not in mixedCase
+Parameter BaseMarketplace.recoverStuckETH(address,uint256)._recipient (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#838) is not in mixedCase
+Parameter BaseMarketplace.recoverStuckETH(address,uint256)._amount (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#838) is not in mixedCase
+Parameter BaseMarketplace.updateAccessControls(IKOAccessControlsLookup)._accessControls (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#844) is not in mixedCase
+Parameter BaseMarketplace.updateModulo(uint256)._modulo (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#850) is not in mixedCase
+Parameter BaseMarketplace.updateMinBidAmount(uint256)._minBidAmount (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#856) is not in mixedCase
+Parameter BaseMarketplace.updateBidLockupPeriod(uint256)._bidLockupPeriod (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#861) is not in mixedCase
+Parameter BaseMarketplace.updatePlatformAccount(address)._newPlatformAccount (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#866) is not in mixedCase
+Parameter BuyNowMarketplace.listForBuyNow(address,uint256,uint128,uint128)._seller (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#925) is not in mixedCase
+Parameter BuyNowMarketplace.listForBuyNow(address,uint256,uint128,uint128)._id (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#925) is not in mixedCase
+Parameter BuyNowMarketplace.listForBuyNow(address,uint256,uint128,uint128)._listingPrice (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#925) is not in mixedCase
+Parameter BuyNowMarketplace.listForBuyNow(address,uint256,uint128,uint128)._startDate (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#925) is not in mixedCase
+Parameter BuyNowMarketplace.buyEditionToken(uint256)._id (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#940) is not in mixedCase
+Parameter BuyNowMarketplace.buyEditionTokenFor(uint256,address)._id (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#950) is not in mixedCase
+Parameter BuyNowMarketplace.buyEditionTokenFor(uint256,address)._recipient (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#950) is not in mixedCase
+Parameter BuyNowMarketplace.setBuyNowPriceListing(uint256,uint128)._id (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#960) is not in mixedCase
+Parameter BuyNowMarketplace.setBuyNowPriceListing(uint256,uint128)._listingPrice (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#960) is not in mixedCase
+Parameter ReserveAuctionMarketplace.listForReserveAuction(address,uint256,uint128,uint128)._creator (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1025) is not in mixedCase
+Parameter ReserveAuctionMarketplace.listForReserveAuction(address,uint256,uint128,uint128)._id (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1026) is not in mixedCase
+Parameter ReserveAuctionMarketplace.listForReserveAuction(address,uint256,uint128,uint128)._reservePrice (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1027) is not in mixedCase
+Parameter ReserveAuctionMarketplace.listForReserveAuction(address,uint256,uint128,uint128)._startDate (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1028) is not in mixedCase
+Parameter ReserveAuctionMarketplace.placeBidOnReserveAuction(uint256)._id (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1048) is not in mixedCase
+Parameter ReserveAuctionMarketplace.placeBidOnReserveAuctionFor(uint256,address)._id (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1057) is not in mixedCase
+Parameter ReserveAuctionMarketplace.placeBidOnReserveAuctionFor(uint256,address)._bidder (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1057) is not in mixedCase
+Parameter ReserveAuctionMarketplace.resultReserveAuction(uint256)._id (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1105) is not in mixedCase
+Parameter ReserveAuctionMarketplace.withdrawBidFromReserveAuction(uint256)._id (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1129) is not in mixedCase
+Parameter ReserveAuctionMarketplace.updateReservePriceForReserveAuction(uint256,uint128)._id (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1150) is not in mixedCase
+Parameter ReserveAuctionMarketplace.updateReservePriceForReserveAuction(uint256,uint128)._reservePrice (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1150) is not in mixedCase
+Parameter ReserveAuctionMarketplace.emergencyExitBidFromReserveAuction(uint256)._id (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1176) is not in mixedCase
+Parameter ReserveAuctionMarketplace.updateReserveAuctionBidExtensionWindow(uint128)._reserveAuctionBidExtensionWindow (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1204) is not in mixedCase
+Parameter ReserveAuctionMarketplace.updateReserveAuctionLengthOnceReserveMet(uint128)._reserveAuctionLengthOnceReserveMet (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1209) is not in mixedCase
+Parameter KODAV3SecondaryMarketplace.listTokenForBuyNow(uint256,uint128,uint128)._tokenId (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1280) is not in mixedCase
+Parameter KODAV3SecondaryMarketplace.listTokenForBuyNow(uint256,uint128,uint128)._listingPrice (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1280) is not in mixedCase
+Parameter KODAV3SecondaryMarketplace.listTokenForBuyNow(uint256,uint128,uint128)._startDate (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1280) is not in mixedCase
+Parameter KODAV3SecondaryMarketplace.delistToken(uint256)._tokenId (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1287) is not in mixedCase
+Parameter KODAV3SecondaryMarketplace.placeEditionBid(uint256)._editionId (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1305) is not in mixedCase
+Parameter KODAV3SecondaryMarketplace.placeEditionBidFor(uint256,address)._editionId (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1314) is not in mixedCase
+Parameter KODAV3SecondaryMarketplace.placeEditionBidFor(uint256,address)._bidder (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1314) is not in mixedCase
+Parameter KODAV3SecondaryMarketplace.withdrawEditionBid(uint256)._editionId (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1323) is not in mixedCase
+Parameter KODAV3SecondaryMarketplace.acceptEditionBid(uint256,uint256)._tokenId (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1345) is not in mixedCase
+Parameter KODAV3SecondaryMarketplace.acceptEditionBid(uint256,uint256)._offerPrice (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1345) is not in mixedCase
+Parameter KODAV3SecondaryMarketplace.placeTokenBid(uint256)._tokenId (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1369) is not in mixedCase
+Parameter KODAV3SecondaryMarketplace.placeTokenBidFor(uint256,address)._tokenId (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1378) is not in mixedCase
+Parameter KODAV3SecondaryMarketplace.placeTokenBidFor(uint256,address)._bidder (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1378) is not in mixedCase
+Parameter KODAV3SecondaryMarketplace.withdrawTokenBid(uint256)._tokenId (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1387) is not in mixedCase
+Parameter KODAV3SecondaryMarketplace.rejectTokenBid(uint256)._tokenId (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1409) is not in mixedCase
+Parameter KODAV3SecondaryMarketplace.acceptTokenBid(uint256,uint256)._tokenId (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1429) is not in mixedCase
+Parameter KODAV3SecondaryMarketplace.acceptTokenBid(uint256,uint256)._offerPrice (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1429) is not in mixedCase
+Parameter KODAV3SecondaryMarketplace.adminRejectTokenBid(uint256)._tokenId (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1450) is not in mixedCase
+Parameter KODAV3SecondaryMarketplace.convertReserveAuctionToBuyItNow(uint256,uint128,uint128)._tokenId (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1468) is not in mixedCase
+Parameter KODAV3SecondaryMarketplace.convertReserveAuctionToBuyItNow(uint256,uint128,uint128)._listingPrice (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1468) is not in mixedCase
+Parameter KODAV3SecondaryMarketplace.convertReserveAuctionToBuyItNow(uint256,uint128,uint128)._startDate (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1468) is not in mixedCase
+Parameter KODAV3SecondaryMarketplace.convertReserveAuctionToOffers(uint256)._tokenId (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1481) is not in mixedCase
+Parameter KODAV3SecondaryMarketplace.handleSecondarySaleFunds(address,address,uint256,uint256)._seller (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1507) is not in mixedCase
+Parameter KODAV3SecondaryMarketplace.handleSecondarySaleFunds(address,address,uint256,uint256)._royaltyRecipient (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1508) is not in mixedCase
+Parameter KODAV3SecondaryMarketplace.handleSecondarySaleFunds(address,address,uint256,uint256)._paymentAmount (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1509) is not in mixedCase
+Parameter KODAV3SecondaryMarketplace.handleSecondarySaleFunds(address,address,uint256,uint256)._creatorRoyalties (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1510) is not in mixedCase
+Parameter KODAV3SecondaryMarketplace.updatePlatformSecondarySaleCommission(uint256)._platformSecondarySaleCommission (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1528) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+KODAV3SecondaryMarketplace.slitherConstructorVariables() (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#1250-1619) uses literals with too many digits:
+	- modulo = 100_00000 (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#819)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+BaseMarketplace.koda (0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol#813) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+./0x0eb65b4c3d3de340e1b15384f8f211784247a37a.sol analyzed (26 contracts with 94 detectors), 99 result(s) found
+
+real	0m4.625s
+user	0m4.350s
+sys	0m0.273s

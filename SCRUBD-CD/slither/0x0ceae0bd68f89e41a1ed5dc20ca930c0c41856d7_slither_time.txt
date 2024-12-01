@@ -1,0 +1,314 @@
+'solc --version' running
+'solc ./0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+EscrowGoods.safeSend(address,uint256) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#155-164) sends eth to arbitrary user
+	Dangerous calls:
+	- ! (addr.call.gas(safeGas).value(value)()) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#159)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+Reentrancy in EscrowGoods.arbYes(uint256,address,uint256,string,uint256) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#248-297):
+	External calls:
+	- safeSend(_who,_payment) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#289)
+		- ! (addr.call.gas(safeGas).value(value)()) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#159)
+	State variables written after the call(s):
+	- info.lockedFunds -= _payment (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#292)
+	EscrowGoods.escrows (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#67) can be used in cross function reentrancies:
+	- EscrowGoods.accept(uint256,string,uint256) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#427-445)
+	- EscrowGoods.arbYes(uint256,address,uint256,string,uint256) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#248-297)
+	- EscrowGoods.buy(uint256,string,uint256,uint16) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#385-425)
+	- EscrowGoods.escrows (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#67)
+	- EscrowGoods.getMoney(uint256) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#316-373)
+	- EscrowGoods.no(uint256,string,uint256) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#211-243)
+	- EscrowGoods.reject(uint256,string,uint256) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#447-464)
+	- EscrowGoods.yes(uint256,string,uint256) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#169-208)
+	- info.lockedFunds = 0 (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#294)
+	EscrowGoods.escrows (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#67) can be used in cross function reentrancies:
+	- EscrowGoods.accept(uint256,string,uint256) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#427-445)
+	- EscrowGoods.arbYes(uint256,address,uint256,string,uint256) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#248-297)
+	- EscrowGoods.buy(uint256,string,uint256,uint16) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#385-425)
+	- EscrowGoods.escrows (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#67)
+	- EscrowGoods.getMoney(uint256) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#316-373)
+	- EscrowGoods.no(uint256,string,uint256) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#211-243)
+	- EscrowGoods.reject(uint256,string,uint256) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#447-464)
+	- EscrowGoods.yes(uint256,string,uint256) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#169-208)
+Reentrancy in EscrowGoods.getFees() (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#300-311):
+	External calls:
+	- safeSend(arbiter,feeFunds) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#308)
+		- ! (addr.call.gas(safeGas).value(value)()) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#159)
+	State variables written after the call(s):
+	- feeFunds = 0 (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#310)
+	EscrowGoods.feeFunds (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#64) can be used in cross function reentrancies:
+	- EscrowGoods.arbYes(uint256,address,uint256,string,uint256) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#248-297)
+	- EscrowGoods.buy(uint256,string,uint256,uint16) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#385-425)
+	- EscrowGoods.feeFunds (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#64)
+	- EscrowGoods.getFees() (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#300-311)
+	- EscrowGoods.kill() (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#140-153)
+Reentrancy in EscrowGoods.getMoney(uint256) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#316-373):
+	External calls:
+	- safeSend(info.buyer,payment) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#353)
+		- ! (addr.call.gas(safeGas).value(value)()) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#159)
+	State variables written after the call(s):
+	- info.lockedFunds = 0 (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#355)
+	EscrowGoods.escrows (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#67) can be used in cross function reentrancies:
+	- EscrowGoods.accept(uint256,string,uint256) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#427-445)
+	- EscrowGoods.arbYes(uint256,address,uint256,string,uint256) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#248-297)
+	- EscrowGoods.buy(uint256,string,uint256,uint16) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#385-425)
+	- EscrowGoods.escrows (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#67)
+	- EscrowGoods.getMoney(uint256) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#316-373)
+	- EscrowGoods.no(uint256,string,uint256) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#211-243)
+	- EscrowGoods.reject(uint256,string,uint256) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#447-464)
+	- EscrowGoods.yes(uint256,string,uint256) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#169-208)
+Reentrancy in EscrowGoods.getMoney(uint256) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#316-373):
+	External calls:
+	- safeSend(info.buyer,payment) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#361)
+		- ! (addr.call.gas(safeGas).value(value)()) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#159)
+	State variables written after the call(s):
+	- info.lockedFunds = 0 (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#363)
+	EscrowGoods.escrows (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#67) can be used in cross function reentrancies:
+	- EscrowGoods.accept(uint256,string,uint256) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#427-445)
+	- EscrowGoods.arbYes(uint256,address,uint256,string,uint256) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#248-297)
+	- EscrowGoods.buy(uint256,string,uint256,uint16) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#385-425)
+	- EscrowGoods.escrows (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#67)
+	- EscrowGoods.getMoney(uint256) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#316-373)
+	- EscrowGoods.no(uint256,string,uint256) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#211-243)
+	- EscrowGoods.reject(uint256,string,uint256) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#447-464)
+	- EscrowGoods.yes(uint256,string,uint256) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#169-208)
+Reentrancy in EscrowGoods.getMoney(uint256) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#316-373):
+	External calls:
+	- safeSend(seller,payment) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#368)
+		- ! (addr.call.gas(safeGas).value(value)()) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#159)
+	State variables written after the call(s):
+	- info.lockedFunds = 0 (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#370)
+	EscrowGoods.escrows (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#67) can be used in cross function reentrancies:
+	- EscrowGoods.accept(uint256,string,uint256) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#427-445)
+	- EscrowGoods.arbYes(uint256,address,uint256,string,uint256) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#248-297)
+	- EscrowGoods.buy(uint256,string,uint256,uint16) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#385-425)
+	- EscrowGoods.escrows (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#67)
+	- EscrowGoods.getMoney(uint256) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#316-373)
+	- EscrowGoods.no(uint256,string,uint256) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#211-243)
+	- EscrowGoods.reject(uint256,string,uint256) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#447-464)
+	- EscrowGoods.yes(uint256,string,uint256) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#169-208)
+Reentrancy in EscrowGoods.reject(uint256,string,uint256) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#447-464):
+	External calls:
+	- yes(_lockId,_dataInfo,_version) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#459)
+		- ! (addr.call.gas(safeGas).value(value)()) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#159)
+	State variables written after the call(s):
+	- logEvent(_lockId,_dataInfo,_version,Reject,msg.sender,info.count,info.lockedFunds) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#463)
+		- contentCount ++ (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#136)
+	EscrowGoods.contentCount (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#51) can be used in cross function reentrancies:
+	- EscrowGoods.contentCount (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#51)
+	- EscrowGoods.logEvent(uint256,string,uint256,uint16,address,uint256,uint256) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#134-138)
+Reentrancy in EscrowGoods.safeSend(address,uint256) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#155-164):
+	External calls:
+	- ! (addr.call.gas(safeGas).value(value)()) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#159)
+	State variables written after the call(s):
+	- atomicLock = false (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#163)
+	EscrowGoods.atomicLock (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#84) can be used in cross function reentrancies:
+	- EscrowGoods.safeSend(address,uint256) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#155-164)
+Reentrancy in EscrowGoods.yes(uint256,string,uint256) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#169-208):
+	External calls:
+	- safeSend(seller,payment) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#192)
+		- ! (addr.call.gas(safeGas).value(value)()) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#159)
+	- safeSend(info.buyer,payment) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#196)
+		- ! (addr.call.gas(safeGas).value(value)()) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#159)
+	State variables written after the call(s):
+	- info.lockedFunds = 0 (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#205)
+	EscrowGoods.escrows (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#67) can be used in cross function reentrancies:
+	- EscrowGoods.accept(uint256,string,uint256) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#427-445)
+	- EscrowGoods.arbYes(uint256,address,uint256,string,uint256) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#248-297)
+	- EscrowGoods.buy(uint256,string,uint256,uint16) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#385-425)
+	- EscrowGoods.escrows (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#67)
+	- EscrowGoods.getMoney(uint256) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#316-373)
+	- EscrowGoods.no(uint256,string,uint256) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#211-243)
+	- EscrowGoods.reject(uint256,string,uint256) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#447-464)
+	- EscrowGoods.yes(uint256,string,uint256) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#169-208)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+EscrowGoods.logEvent(uint256,string,uint256,uint16,address,uint256,uint256).count (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#135) shadows:
+	- EscrowGoods.count (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#74) (state variable)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#local-variable-shadowing
+
+EscrowGoods.EscrowGoods(address,uint256,uint256,uint256,uint16,uint256)._arbiter (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#105) lacks a zero-check on :
+		- arbiter = _arbiter (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#114)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in EscrowGoods.arbYes(uint256,address,uint256,string,uint256) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#248-297):
+	External calls:
+	- safeSend(_who,_payment) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#289)
+		- ! (addr.call.gas(safeGas).value(value)()) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#159)
+	State variables written after the call(s):
+	- logEvent(_lockId,_dataInfo,_version,Resolved,msg.sender,info.count,_payment) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#296)
+		- contentCount ++ (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#136)
+	- feeFunds += info.lockedFunds (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#293)
+Reentrancy in EscrowGoods.yes(uint256,string,uint256) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#169-208):
+	External calls:
+	- safeSend(seller,payment) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#192)
+		- ! (addr.call.gas(safeGas).value(value)()) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#159)
+	- safeSend(info.buyer,payment) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#196)
+		- ! (addr.call.gas(safeGas).value(value)()) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#159)
+	State variables written after the call(s):
+	- logEvent(_lockId,_dataInfo,_version,Unlock,msg.sender,info.count,payment) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#207)
+		- contentCount ++ (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#136)
+	- totalEscrows -= 1 (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#204)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in EscrowGoods.arbYes(uint256,address,uint256,string,uint256) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#248-297):
+	External calls:
+	- safeSend(_who,_payment) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#289)
+		- ! (addr.call.gas(safeGas).value(value)()) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#159)
+	Event emitted after the call(s):
+	- LogEvent(lockId,dataInfo,version,eventType,sender,count,payment) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#137)
+		- logEvent(_lockId,_dataInfo,_version,Resolved,msg.sender,info.count,_payment) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#296)
+Reentrancy in EscrowGoods.reject(uint256,string,uint256) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#447-464):
+	External calls:
+	- yes(_lockId,_dataInfo,_version) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#459)
+		- ! (addr.call.gas(safeGas).value(value)()) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#159)
+	Event emitted after the call(s):
+	- LogEvent(lockId,dataInfo,version,eventType,sender,count,payment) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#137)
+		- logEvent(_lockId,_dataInfo,_version,Reject,msg.sender,info.count,info.lockedFunds) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#463)
+Reentrancy in EscrowGoods.yes(uint256,string,uint256) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#169-208):
+	External calls:
+	- safeSend(seller,payment) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#192)
+		- ! (addr.call.gas(safeGas).value(value)()) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#159)
+	- safeSend(info.buyer,payment) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#196)
+		- ! (addr.call.gas(safeGas).value(value)()) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#159)
+	Event emitted after the call(s):
+	- LogEvent(lockId,dataInfo,version,eventType,sender,count,payment) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#137)
+		- logEvent(_lockId,_dataInfo,_version,Unlock,msg.sender,info.count,payment) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#207)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+EscrowGoods.safeSend(address,uint256) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#155-164) tries to limit the gas of an external call that controls implicit decoding
+	! (addr.call.gas(safeGas).value(value)()) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#159)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#return-bomb
+
+EscrowGoods.getMoney(uint256) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#316-373) uses timestamp for comparisons
+	Dangerous comparisons:
+	- now < (info.frozenTime + freezePeriod) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#331)
+	- now < (info.frozenTime + freezePeriod + arbitrationPeriod) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#347)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Deprecated standard detected suicide(address)(msg.sender) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#152):
+	- Usage of "suicide()" should be replaced with "selfdestruct()"
+Deprecated standard detected THROW (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#157):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#161):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#389):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#390):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#391):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#392):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#393):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#394):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#395):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#401):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#407):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#482):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#93):
+	- Usage of "throw" should be replaced with "revert()"
+Deprecated standard detected THROW (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#99):
+	- Usage of "throw" should be replaced with "revert()"
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#deprecated-standards
+
+Version constraint ^0.4.0 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ExpExponentCleanup
+	- NestedArrayFunctionCallDecoder
+	- ZeroFunctionSelector
+	- DelegateCallReturnValue
+	- ECRecoverMalformedInput
+	- SkipEmptyStringLiteral
+	- ConstantOptimizerSubtraction
+	- IdentityPrecompileReturnIgnored
+	- HighOrderByteCleanStorage
+	- OptimizerStaleKnowledgeAboutSHA3
+	- LibrariesNotCallableFromPayableFunctions.
+It is used by:
+	- ^0.4.0 (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#12)
+solc-0.4.11 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in EscrowGoods.safeSend(address,uint256) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#155-164):
+	- ! (addr.call.gas(safeGas).value(value)()) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#159)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Parameter EscrowGoods.yes(uint256,string,uint256)._lockId (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#169) is not in mixedCase
+Parameter EscrowGoods.yes(uint256,string,uint256)._dataInfo (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#169) is not in mixedCase
+Parameter EscrowGoods.yes(uint256,string,uint256)._version (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#169) is not in mixedCase
+Parameter EscrowGoods.no(uint256,string,uint256)._lockId (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#211) is not in mixedCase
+Parameter EscrowGoods.no(uint256,string,uint256)._dataInfo (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#211) is not in mixedCase
+Parameter EscrowGoods.no(uint256,string,uint256)._version (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#211) is not in mixedCase
+Parameter EscrowGoods.arbYes(uint256,address,uint256,string,uint256)._lockId (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#248) is not in mixedCase
+Parameter EscrowGoods.arbYes(uint256,address,uint256,string,uint256)._who (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#248) is not in mixedCase
+Parameter EscrowGoods.arbYes(uint256,address,uint256,string,uint256)._payment (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#248) is not in mixedCase
+Parameter EscrowGoods.arbYes(uint256,address,uint256,string,uint256)._dataInfo (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#248) is not in mixedCase
+Parameter EscrowGoods.arbYes(uint256,address,uint256,string,uint256)._version (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#248) is not in mixedCase
+Parameter EscrowGoods.getMoney(uint256)._lockId (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#316) is not in mixedCase
+Parameter EscrowGoods.addDescription(string,uint256)._dataInfo (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#378) is not in mixedCase
+Parameter EscrowGoods.addDescription(string,uint256)._version (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#378) is not in mixedCase
+Parameter EscrowGoods.buy(uint256,string,uint256,uint16)._lockId (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#385) is not in mixedCase
+Parameter EscrowGoods.buy(uint256,string,uint256,uint16)._dataInfo (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#385) is not in mixedCase
+Parameter EscrowGoods.buy(uint256,string,uint256,uint16)._version (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#385) is not in mixedCase
+Parameter EscrowGoods.buy(uint256,string,uint256,uint16)._count (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#385) is not in mixedCase
+Parameter EscrowGoods.accept(uint256,string,uint256)._lockId (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#427) is not in mixedCase
+Parameter EscrowGoods.accept(uint256,string,uint256)._dataInfo (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#427) is not in mixedCase
+Parameter EscrowGoods.accept(uint256,string,uint256)._version (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#427) is not in mixedCase
+Parameter EscrowGoods.reject(uint256,string,uint256)._lockId (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#447) is not in mixedCase
+Parameter EscrowGoods.reject(uint256,string,uint256)._dataInfo (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#447) is not in mixedCase
+Parameter EscrowGoods.reject(uint256,string,uint256)._version (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#447) is not in mixedCase
+Parameter EscrowGoods.cancel(string,uint256)._dataInfo (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#466) is not in mixedCase
+Parameter EscrowGoods.cancel(string,uint256)._version (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#466) is not in mixedCase
+Constant EscrowGoods.None (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#28) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant EscrowGoods.Available (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#29) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant EscrowGoods.Canceled (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#30) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant EscrowGoods.Buy (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#33) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant EscrowGoods.Accept (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#34) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant EscrowGoods.Reject (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#35) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant EscrowGoods.Cancel (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#36) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant EscrowGoods.Description (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#37) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant EscrowGoods.Unlock (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#38) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant EscrowGoods.Freeze (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#39) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant EscrowGoods.Resolved (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#40) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant EscrowGoods.arbitrationPeriod (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#44) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant EscrowGoods.safeGas (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#45) is not in UPPER_CASE_WITH_UNDERSCORES
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+EscrowGoods.None (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#28) is never used in EscrowGoods (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#14-485)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-state-variable
+
+no(uint256,string,uint256) should be declared external:
+	- EscrowGoods.no(uint256,string,uint256) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#211-243)
+arbYes(uint256,address,uint256,string,uint256) should be declared external:
+	- EscrowGoods.arbYes(uint256,address,uint256,string,uint256) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#248-297)
+addDescription(string,uint256) should be declared external:
+	- EscrowGoods.addDescription(string,uint256) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#378-382)
+buy(uint256,string,uint256,uint16) should be declared external:
+	- EscrowGoods.buy(uint256,string,uint256,uint16) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#385-425)
+accept(uint256,string,uint256) should be declared external:
+	- EscrowGoods.accept(uint256,string,uint256) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#427-445)
+reject(uint256,string,uint256) should be declared external:
+	- EscrowGoods.reject(uint256,string,uint256) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#447-464)
+cancel(string,uint256) should be declared external:
+	- EscrowGoods.cancel(string,uint256) (0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol#466-473)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#public-function-that-could-be-declared-external
+./0x0ceae0bd68f89e41a1ed5dc20ca930c0c41856d7.sol analyzed (1 contracts with 94 detectors), 83 result(s) found
+
+real	0m1.888s
+user	0m1.657s
+sys	0m0.233s

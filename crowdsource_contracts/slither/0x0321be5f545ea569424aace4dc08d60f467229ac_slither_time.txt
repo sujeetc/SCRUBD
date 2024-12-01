@@ -1,0 +1,242 @@
+'solc --version' running
+'solc ./0x0321be5f545ea569424aace4dc08d60f467229ac.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+Reentrancy in BlackErc20.mintProof(uint256,address,bytes32[]) (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#833-889):
+	External calls:
+	- IWETH(wethAddress).deposit{value: msg.value * (1000 - deployReserveEthPro - donateEthPro) / 1000}() (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#857)
+	- IWETH(wethAddress).approve(lpContract,msg.value * (1000 - deployReserveEthPro - donateEthPro) / 1000) (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#858)
+	- IWETH(wethAddress).transferFrom(address(this),lpContract,msg.value * (1000 - deployReserveEthPro - donateEthPro) / 1000) (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#859)
+	- IUniswapV2Pair(lpContract).sync() (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#885)
+	External calls sending eth:
+	- IWETH(wethAddress).deposit{value: msg.value * (1000 - deployReserveEthPro - donateEthPro) / 1000}() (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#857)
+	State variables written after the call(s):
+	- _mintCounts[msg.sender] += mintCount (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#887)
+	BlackErc20._mintCounts (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#701) can be used in cross function reentrancies:
+	- BlackErc20._mintCounts (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#701)
+	- BlackErc20.mintProof(uint256,address,bytes32[]) (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#833-889)
+	- _mintedCounts += mintCount (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#888)
+	BlackErc20._mintedCounts (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#702) can be used in cross function reentrancies:
+	- BlackErc20._mintedCounts (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#702)
+	- BlackErc20.deployAwardEth() (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#999-1014)
+	- BlackErc20.deployAwardToken() (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#1016-1034)
+	- BlackErc20.devAwardEth() (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#982-997)
+	- BlackErc20.getMintedCounts() (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#1052-1054)
+	- BlackErc20.mintProof(uint256,address,bytes32[]) (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#833-889)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+BlackErc20.mintProof(uint256,address,bytes32[]) (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#833-889) ignores return value by IWETH(wethAddress).transferFrom(address(this),lpContract,msg.value * (1000 - deployReserveEthPro - donateEthPro) / 1000) (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#859)
+BlackErc20.deployAwardToken() (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#1016-1034) ignores return value by token2.transfer(msg.sender,claimableTokens) (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#1033)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+BlackErc20.totalTokensClaimed (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#721) is never initialized. It is used in:
+	- BlackErc20.deployAwardToken() (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#1016-1034)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#uninitialized-state-variables
+
+BlackErc20.deployAwardToken() (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#1016-1034) performs a multiplication on the result of a division:
+	- unlockTimes = (lockEndTime - currentTimestamp) / ((tokenLockDays / tokenUnlockCounts) * 86400) - hadTokenUnlockCounts (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#1022)
+BlackErc20.deployAwardToken() (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#1016-1034) performs a multiplication on the result of a division:
+	- claimableTokens = unlockTimes * (totalTokensLocked / tokenUnlockCounts) (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#1030)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+BlackErc20.deployAwardEth() (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#999-1014) uses a dangerous strict equality:
+	- remainBalance == 0 (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#1007)
+BlackErc20.devAwardEth() (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#982-997) uses a dangerous strict equality:
+	- remainBalance == 0 (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#990)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-strict-equalities
+
+BlackErc20.mintProof(uint256,address,bytes32[]) (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#833-889) ignores return value by IWETH(wethAddress).approve(lpContract,msg.value * (1000 - deployReserveEthPro - donateEthPro) / 1000) (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#858)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+BlackErc20.constructor(string,string,uint256,uint256,uint256,uint256,address,address,address,address,uint256[]).name (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#764) shadows:
+	- ERC20.name() (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#256-258) (function)
+	- IERC20Metadata.name() (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#51) (function)
+BlackErc20.constructor(string,string,uint256,uint256,uint256,uint256,address,address,address,address,uint256[]).symbol (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#765) shadows:
+	- ERC20.symbol() (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#260-262) (function)
+	- IERC20Metadata.symbol() (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#53) (function)
+BlackErc20.constructor(string,string,uint256,uint256,uint256,uint256,address,address,address,address,uint256[]).totalSupply (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#766) shadows:
+	- ERC20.totalSupply() (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#268-270) (function)
+	- IERC20.totalSupply() (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#32) (function)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#local-variable-shadowing
+
+BlackErc20.mintProof(uint256,address,bytes32[]) (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#833-889) should emit an event for: 
+	- _mintedCounts += mintCount (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#888) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+BlackErc20.constructor(string,string,uint256,uint256,uint256,uint256,address,address,address,address,uint256[]).devAddress (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#771) lacks a zero-check on :
+		- _devAddress = devAddress (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#778)
+BlackErc20.constructor(string,string,uint256,uint256,uint256,uint256,address,address,address,address,uint256[]).deplyAddress (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#772) lacks a zero-check on :
+		- _deplyAddress = deplyAddress (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#779)
+BlackErc20.constructor(string,string,uint256,uint256,uint256,uint256,address,address,address,address,uint256[])._airDropAddress (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#773) lacks a zero-check on :
+		- airDropAddress = _airDropAddress (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#808)
+BlackErc20.setLPContract(address).lp (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#974) lacks a zero-check on :
+		- lpContract = lp (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#975)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+BlackErc20.mintProof(uint256,address,bytes32[]) (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#833-889) has external calls inside a loop: tokenId = eRC721Enumerable.tokenOfOwnerByIndex(msg.sender,0) (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#867)
+BlackErc20.getERC721TokenCount(address) (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#1037-1040) has external calls inside a loop: erc721Contract.balanceOf(msg.sender) (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#1039)
+BlackErc20.getERC20TokenCount(address) (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#1042-1045) has external calls inside a loop: erc20Contract.balanceOf(msg.sender) (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#1044)
+BlackErc20.getERC1155TokenCount(address,uint256) (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#1047-1050) has external calls inside a loop: erc1155Contract.balanceOf(msg.sender,tokenId) (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#1049)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation/#calls-inside-a-loop
+
+Reentrancy in BlackErc20.mintProof(uint256,address,bytes32[]) (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#833-889):
+	External calls:
+	- IWETH(wethAddress).deposit{value: msg.value * (1000 - deployReserveEthPro - donateEthPro) / 1000}() (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#857)
+	- IWETH(wethAddress).approve(lpContract,msg.value * (1000 - deployReserveEthPro - donateEthPro) / 1000) (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#858)
+	- IWETH(wethAddress).transferFrom(address(this),lpContract,msg.value * (1000 - deployReserveEthPro - donateEthPro) / 1000) (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#859)
+	External calls sending eth:
+	- IWETH(wethAddress).deposit{value: msg.value * (1000 - deployReserveEthPro - donateEthPro) / 1000}() (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#857)
+	State variables written after the call(s):
+	- _transfer(address(this),receiveAds,mintAmount) (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#883)
+		- _balances[from] = fromBalance - amount (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#335)
+		- _balances[to] += amount (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#338)
+	- _transfer(address(this),lpContract,mintAmount) (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#884)
+		- _balances[from] = fromBalance - amount (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#335)
+		- _balances[to] += amount (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#338)
+	- tokenExists[tokenId] = true (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#869)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in BlackErc20.mintProof(uint256,address,bytes32[]) (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#833-889):
+	External calls:
+	- IWETH(wethAddress).deposit{value: msg.value * (1000 - deployReserveEthPro - donateEthPro) / 1000}() (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#857)
+	- IWETH(wethAddress).approve(lpContract,msg.value * (1000 - deployReserveEthPro - donateEthPro) / 1000) (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#858)
+	- IWETH(wethAddress).transferFrom(address(this),lpContract,msg.value * (1000 - deployReserveEthPro - donateEthPro) / 1000) (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#859)
+	External calls sending eth:
+	- IWETH(wethAddress).deposit{value: msg.value * (1000 - deployReserveEthPro - donateEthPro) / 1000}() (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#857)
+	Event emitted after the call(s):
+	- Transfer(from,to,amount) (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#341)
+		- _transfer(address(this),lpContract,mintAmount) (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#884)
+	- Transfer(from,to,amount) (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#341)
+		- _transfer(address(this),receiveAds,mintAmount) (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#883)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+BlackErc20.mintProof(uint256,address,bytes32[]) (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#833-889) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(block.timestamp >= mintStartTime,Minting has not started yet) (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#842)
+	- require(bool,string)(block.timestamp <= mintEndTime,Minting has ended) (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#843)
+	- block.timestamp < wlMintedEndTime (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#845)
+	- block.timestamp < wlMintedEndTime (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#853)
+BlackErc20.deployAwardToken() (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#1016-1034) uses timestamp for comparisons
+	Dangerous comparisons:
+	- unlockTimes >= tokenUnlockCounts (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#1025)
+	- require(bool,string)(unlockTimes > 0,not have unlock times!) (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#1029)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+MerkleProof._efficientHash(bytes32,bytes32) (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#192-199) uses assembly
+	- INLINE ASM (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#194-198)
+BlackErc20.isContract(address) (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#896-902) uses assembly
+	- INLINE ASM (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#898-900)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#assembly-usage
+
+Context._msgData() (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#21-23) is never used and should be removed
+ERC20._burn(address,uint256) (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#361-377) is never used and should be removed
+ERC20._spendAllowance(address,address,uint256) (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#391-403) is never used and should be removed
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dead-code
+
+Version constraint ^0.8.9 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- VerbatimInvalidDeduplication
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation.
+It is used by:
+	- ^0.8.9 (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#13)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Function IUniswapV2Router01.WETH() (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#449) is not in mixedCase
+Function IUniswapV2Pair.DOMAIN_SEPARATOR() (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#599) is not in mixedCase
+Function IUniswapV2Pair.PERMIT_TYPEHASH() (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#600) is not in mixedCase
+Function IUniswapV2Pair.MINIMUM_LIQUIDITY() (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#617) is not in mixedCase
+Variable BlackErc20._maxMintCount (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#697) is not in mixedCase
+Variable BlackErc20._mintPrice (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#698) is not in mixedCase
+Variable BlackErc20._maxMintPerAddress (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#699) is not in mixedCase
+Variable BlackErc20._mintCounts (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#701) is not in mixedCase
+Variable BlackErc20._mintedCounts (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#702) is not in mixedCase
+Variable BlackErc20._devAddress (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#707) is not in mixedCase
+Variable BlackErc20._deplyAddress (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#708) is not in mixedCase
+Variable BlackErc20._maxPro (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#710) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in BlackErc20.deployAwardEth() (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#999-1014):
+	External calls:
+	- sender.transfer(deplyAmount) (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#1008)
+	State variables written after the call(s):
+	- remainBalance = balance - deplyAmount (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#1009)
+Reentrancy in BlackErc20.deployAwardEth() (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#999-1014):
+	External calls:
+	- sender.transfer(deplyAmount) (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#1008)
+	- sender.transfer(remainBalance) (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#1011)
+	State variables written after the call(s):
+	- deployHadClaimEth = true (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#1013)
+Reentrancy in BlackErc20.devAwardEth() (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#982-997):
+	External calls:
+	- sender.transfer(devAmount) (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#991)
+	State variables written after the call(s):
+	- remainBalance = balance - devAmount (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#992)
+Reentrancy in BlackErc20.devAwardEth() (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#982-997):
+	External calls:
+	- sender.transfer(devAmount) (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#991)
+	- sender.transfer(remainBalance) (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#994)
+	State variables written after the call(s):
+	- devHadClaimEth = true (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#996)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+BlackErc20.constructor(string,string,uint256,uint256,uint256,uint256,address,address,address,address,uint256[]) (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#763-831) uses literals with too many digits:
+	- _maxPro = 1000000 - (10 + params[0] * 1000 + params[1] * 1000 + params[2] * 1000) (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#810)
+BlackErc20.constructor(string,string,uint256,uint256,uint256,uint256,address,address,address,address,uint256[]) (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#763-831) uses literals with too many digits:
+	- _mint(factoryContract,totalSupply * 1 / 100000) (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#811)
+BlackErc20.constructor(string,string,uint256,uint256,uint256,uint256,address,address,address,address,uint256[]) (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#763-831) uses literals with too many digits:
+	- _mint(devAddress,totalSupply * donateReserveTokenPro * 1000 / 1000000) (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#824)
+BlackErc20.constructor(string,string,uint256,uint256,uint256,uint256,address,address,address,address,uint256[]) (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#763-831) uses literals with too many digits:
+	- _mint(deplyAddress,totalSupply * deployReserveTokenPro * 1000 / 1000000) (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#828)
+BlackErc20.constructor(string,string,uint256,uint256,uint256,uint256,address,address,address,address,uint256[]) (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#763-831) uses literals with too many digits:
+	- _mint(address(this),totalSupply * _maxPro / 1000000) (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#830)
+BlackErc20.mintProof(uint256,address,bytes32[]) (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#833-889) uses literals with too many digits:
+	- mintAmount = (totalSupply() * _maxPro * mintCount) / (_maxMintCount * 2000000) (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#861)
+BlackErc20.isZero(bytes32) (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#1064-1066) uses literals with too many digits:
+	- value == 0x0000000000000000000000000000000000000000000000000000000000000000 (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#1065)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+BlackErc20.DECIMAL_MULTIPLIER (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#693) is never used in BlackErc20 (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#691-1081)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-state-variable
+
+Loop condition i < contractAuths.length (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#863) should use cached array length instead of referencing `length` member of the storage array.
+ Loop condition i < contractAuths.length (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#1073) should use cached array length instead of referencing `length` member of the storage array.
+ Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#cache-array-length
+
+BlackErc20.blackHole (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#694) should be constant 
+BlackErc20.totalTokensClaimed (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#721) should be constant 
+BlackErc20.wethAddress (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#704) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+
+BlackErc20._deplyAddress (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#708) should be immutable 
+BlackErc20._devAddress (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#707) should be immutable 
+BlackErc20._maxMintCount (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#697) should be immutable 
+BlackErc20._maxMintPerAddress (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#699) should be immutable 
+BlackErc20._maxPro (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#710) should be immutable 
+BlackErc20._mintPrice (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#698) should be immutable 
+BlackErc20.airDropAddress (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#740) should be immutable 
+BlackErc20.airDropTokenPro (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#714) should be immutable 
+BlackErc20.burnAddressPer (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#735) should be immutable 
+BlackErc20.burnAirDropPer (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#737) should be immutable 
+BlackErc20.burnBlockPer (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#736) should be immutable 
+BlackErc20.deployReserveEthPro (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#724) should be immutable 
+BlackErc20.deployReserveTokenPro (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#712) should be immutable 
+BlackErc20.deployTime (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#717) should be immutable 
+BlackErc20.donateEthPro (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#725) should be immutable 
+BlackErc20.donateReserveTokenPro (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#713) should be immutable 
+BlackErc20.mintEndTime (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#733) should be immutable 
+BlackErc20.mintStartTime (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#732) should be immutable 
+BlackErc20.tokenLockDays (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#716) should be immutable 
+BlackErc20.tokenUnlockCounts (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#718) should be immutable 
+BlackErc20.totalTokensLocked (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#720) should be immutable 
+BlackErc20.validateNftNumber (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#745) should be immutable 
+BlackErc20.wlMintCounts (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#727) should be immutable 
+BlackErc20.wlMintedEndTime (0x0321be5f545ea569424aace4dc08d60f467229ac.sol#729) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+./0x0321be5f545ea569424aace4dc08d60f467229ac.sol analyzed (18 contracts with 94 detectors), 84 result(s) found
+
+real	0m3.705s
+user	0m3.525s
+sys	0m0.182s

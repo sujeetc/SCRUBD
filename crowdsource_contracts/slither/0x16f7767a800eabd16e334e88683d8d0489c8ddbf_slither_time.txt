@@ -1,0 +1,177 @@
+'solc --version' running
+'solc ./0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+M510.sendETHToFee(uint256) (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#274-277) sends eth to arbitrary user
+	Dangerous calls:
+	- _m510.transfer(amount.div(100).mul(percentage1)) (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#275)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+Reentrancy in M510._transfer(address,address,uint256) (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#220-252):
+	External calls:
+	- swapTokensForEth(contractTokenBalance) (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#240)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#259-265)
+	External calls sending eth:
+	- sendETHToFee(address(this).balance) (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#243)
+		- _m510.transfer(amount.div(100).mul(percentage1)) (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#275)
+		- _marketingWallet.transfer(amount.div(100).mul(percentage2)) (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#276)
+	State variables written after the call(s):
+	- _transferStandard(from,to,amount) (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#251)
+		- _tOwned[sender] = _tOwned[sender].sub(tAmount) (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#299)
+		- _tOwned[recipient] = _tOwned[recipient].add(transferAmount) (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#300)
+		- _tOwned[address(this)] = _tOwned[address(this)].add(tfee) (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#301)
+	M510._tOwned (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#113) can be used in cross function reentrancies:
+	- M510._transferStandard(address,address,uint256) (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#297-303)
+	- M510.balanceOf(address) (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#175-177)
+	- M510.constructor() (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#145-157)
+Reentrancy in M510.openTrading() (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#279-285):
+	External calls:
+	- addLiquidity(balanceOf(address(this)),address(this).balance,owner()) (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#281)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,target,block.timestamp) (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#271)
+	State variables written after the call(s):
+	- tradingOpen = true (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#283)
+	M510.tradingOpen (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#137) can be used in cross function reentrancies:
+	- M510.openTrading() (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#279-285)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+M510.recoverTokens(address) (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#325-329) ignores return value by recoveryToken.transfer(_m510,recoveryToken.balanceOf(address(this))) (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#328)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+
+M510.sendETHToFee(uint256) (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#274-277) performs a multiplication on the result of a division:
+	- _m510.transfer(amount.div(100).mul(percentage1)) (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#275)
+M510.sendETHToFee(uint256) (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#274-277) performs a multiplication on the result of a division:
+	- _marketingWallet.transfer(amount.div(100).mul(percentage2)) (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#276)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+M510.addLiquidity(uint256,uint256,address) (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#269-272) ignores return value by uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,target,block.timestamp) (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#271)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+M510.allowance(address,address).owner (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#184) shadows:
+	- Ownable.owner() (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#71-73) (function)
+M510._approve(address,address,uint256).owner (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#213) shadows:
+	- Ownable.owner() (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#71-73) (function)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#local-variable-shadowing
+
+Reentrancy in M510._transfer(address,address,uint256) (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#220-252):
+	External calls:
+	- swapTokensForEth(contractTokenBalance) (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#240)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#259-265)
+	External calls sending eth:
+	- sendETHToFee(address(this).balance) (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#243)
+		- _m510.transfer(amount.div(100).mul(percentage1)) (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#275)
+		- _marketingWallet.transfer(amount.div(100).mul(percentage2)) (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#276)
+	State variables written after the call(s):
+	- _tax = fee2 (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#249)
+Reentrancy in M510.openTrading() (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#279-285):
+	External calls:
+	- addLiquidity(balanceOf(address(this)),address(this).balance,owner()) (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#281)
+		- uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,0,0,target,block.timestamp) (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#271)
+	State variables written after the call(s):
+	- swapEnabled = true (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#282)
+	- time = block.timestamp + (300) (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#284)
+Reentrancy in M510.transferFrom(address,address,uint256) (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#193-197):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#194)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#259-265)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#194)
+		- _m510.transfer(amount.div(100).mul(percentage1)) (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#275)
+		- _marketingWallet.transfer(amount.div(100).mul(percentage2)) (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#276)
+	State variables written after the call(s):
+	- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#195)
+		- _allowances[owner][spender] = amount (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#216)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in M510._transfer(address,address,uint256) (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#220-252):
+	External calls:
+	- swapTokensForEth(contractTokenBalance) (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#240)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#259-265)
+	External calls sending eth:
+	- sendETHToFee(address(this).balance) (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#243)
+		- _m510.transfer(amount.div(100).mul(percentage1)) (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#275)
+		- _marketingWallet.transfer(amount.div(100).mul(percentage2)) (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#276)
+	Event emitted after the call(s):
+	- Transfer(sender,recipient,transferAmount) (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#302)
+		- _transferStandard(from,to,amount) (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#251)
+Reentrancy in M510.transferFrom(address,address,uint256) (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#193-197):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#194)
+		- uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount,0,path,address(this),block.timestamp) (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#259-265)
+	External calls sending eth:
+	- _transfer(sender,recipient,amount) (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#194)
+		- _m510.transfer(amount.div(100).mul(percentage1)) (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#275)
+		- _marketingWallet.transfer(amount.div(100).mul(percentage2)) (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#276)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#217)
+		- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#195)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+M510._transfer(address,address,uint256) (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#220-252) uses timestamp for comparisons
+	Dangerous comparisons:
+	- from == uniswapV2Pair && to != address(uniswapV2Router) && ! _isExcludedFromFee[to] && (block.timestamp < time) (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#228)
+	- require(bool)(cooldown[to] < block.timestamp) (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#231)
+	- require(bool,string)(block.timestamp > time,Sells prohibited for the first 5 minutes) (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#237)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Version constraint ^0.8.4 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess
+	- AbiReencodingHeadOverflowWithStaticArrayCleanup
+	- DirtyBytesArrayToStorage
+	- DataLocationChangeInInternalOverride
+	- NestedCalldataArrayAbiReencodingSizeValidation
+	- SignedImmutables.
+It is used by:
+	- ^0.8.4 (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#3)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Function IUniswapV2Router02.WETH() (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#100) is not in mixedCase
+Parameter M510.changeFeeDistribution(uint256,uint256)._percent1 (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#206) is not in mixedCase
+Parameter M510.changeFeeDistribution(uint256,uint256)._percent2 (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#206) is not in mixedCase
+Constant M510._tTotal (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#121) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant M510._name (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#126) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant M510._symbol (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#127) is not in UPPER_CASE_WITH_UNDERSCORES
+Constant M510._decimals (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#132) is not in UPPER_CASE_WITH_UNDERSCORES
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in M510._transfer(address,address,uint256) (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#220-252):
+	External calls:
+	- sendETHToFee(address(this).balance) (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#243)
+		- _m510.transfer(amount.div(100).mul(percentage1)) (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#275)
+		- _marketingWallet.transfer(amount.div(100).mul(percentage2)) (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#276)
+	State variables written after the call(s):
+	- _transferStandard(from,to,amount) (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#251)
+		- _tOwned[sender] = _tOwned[sender].sub(tAmount) (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#299)
+		- _tOwned[recipient] = _tOwned[recipient].add(transferAmount) (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#300)
+		- _tOwned[address(this)] = _tOwned[address(this)].add(tfee) (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#301)
+	- _tax = fee2 (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#249)
+	Event emitted after the call(s):
+	- Transfer(sender,recipient,transferAmount) (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#302)
+		- _transferStandard(from,to,amount) (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#251)
+Reentrancy in M510.transferFrom(address,address,uint256) (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#193-197):
+	External calls:
+	- _transfer(sender,recipient,amount) (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#194)
+		- _m510.transfer(amount.div(100).mul(percentage1)) (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#275)
+		- _marketingWallet.transfer(amount.div(100).mul(percentage2)) (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#276)
+	State variables written after the call(s):
+	- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#195)
+		- _allowances[owner][spender] = amount (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#216)
+	Event emitted after the call(s):
+	- Approval(owner,spender,amount) (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#217)
+		- _approve(sender,_msgSender(),_allowances[sender][_msgSender()].sub(amount,ERC20: transfer amount exceeds allowance)) (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#195)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+M510._maxTxAmount (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#128) should be constant 
+M510.fee1 (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#122) should be constant 
+M510.fee2 (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#123) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+
+M510._m510 (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#133) should be immutable 
+M510._marketingWallet (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#134) should be immutable 
+M510.uniswapV2Pair (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#136) should be immutable 
+M510.uniswapV2Router (0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol#135) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+./0x16f7767a800eabd16e334e88683d8d0489c8ddbf.sol analyzed (7 contracts with 94 detectors), 32 result(s) found
+
+real	0m2.062s
+user	0m1.856s
+sys	0m0.208s

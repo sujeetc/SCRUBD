@@ -1,0 +1,67 @@
+'solc --version' running
+'solc ./0x57acbe7bf11b8a4584403cc900e230a18a7ab138.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+Locker.initLockedBalance() (0x57acbe7bf11b8a4584403cc900e230a18a7ab138.sol#277-286) uses a dangerous strict equality:
+	- require(bool,string)(totalLockedBalance == 0,Locker: There is no token stored) (0x57acbe7bf11b8a4584403cc900e230a18a7ab138.sol#278)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-strict-equalities
+
+Reentrancy in Locker.unlock(uint8) (0x57acbe7bf11b8a4584403cc900e230a18a7ab138.sol#301-334):
+	External calls:
+	- require(bool)(APIX.transfer(receiver,amount)) (0x57acbe7bf11b8a4584403cc900e230a18a7ab138.sol#326)
+	State variables written after the call(s):
+	- lastRound = round (0x57acbe7bf11b8a4584403cc900e230a18a7ab138.sol#332)
+	Locker.lastRound (0x57acbe7bf11b8a4584403cc900e230a18a7ab138.sol#107) can be used in cross function reentrancies:
+	- Locker._getNextRoundTime() (0x57acbe7bf11b8a4584403cc900e230a18a7ab138.sol#205-207)
+	- Locker._getNextRoundUnlock() (0x57acbe7bf11b8a4584403cc900e230a18a7ab138.sol#219-231)
+	- Locker.getLockInfo() (0x57acbe7bf11b8a4584403cc900e230a18a7ab138.sol#251-258)
+	- Locker.getNextRound() (0x57acbe7bf11b8a4584403cc900e230a18a7ab138.sol#191-193)
+	- Locker.unlock(uint8) (0x57acbe7bf11b8a4584403cc900e230a18a7ab138.sol#301-334)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+Locker.constructor(address,address,uint256,uint32)._receiver (0x57acbe7bf11b8a4584403cc900e230a18a7ab138.sol#152) lacks a zero-check on :
+		- receiver = _receiver (0x57acbe7bf11b8a4584403cc900e230a18a7ab138.sol#154)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in Locker.unlock(uint8) (0x57acbe7bf11b8a4584403cc900e230a18a7ab138.sol#301-334):
+	External calls:
+	- require(bool)(APIX.transfer(receiver,amount)) (0x57acbe7bf11b8a4584403cc900e230a18a7ab138.sol#326)
+	Event emitted after the call(s):
+	- APIXUnlock(amount,receiver) (0x57acbe7bf11b8a4584403cc900e230a18a7ab138.sol#328)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+Locker.unlock(uint8) (0x57acbe7bf11b8a4584403cc900e230a18a7ab138.sol#301-334) uses timestamp for comparisons
+	Dangerous comparisons:
+	- require(bool,string)(block.timestamp >= _getNextRoundTime(),Locker: It's not time to unlock yet) (0x57acbe7bf11b8a4584403cc900e230a18a7ab138.sol#319)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Version constraint ^0.5.0 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor
+	- IncorrectEventSignatureInLibraries
+	- ABIEncoderV2PackedStorage.
+It is used by:
+	- ^0.5.0 (0x57acbe7bf11b8a4584403cc900e230a18a7ab138.sol#1)
+solc-0.5.0 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Variable Locker.APIX (0x57acbe7bf11b8a4584403cc900e230a18a7ab138.sol#100) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Locker.unlockOffsetTime (0x57acbe7bf11b8a4584403cc900e230a18a7ab138.sol#104) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+./0x57acbe7bf11b8a4584403cc900e230a18a7ab138.sol analyzed (2 contracts with 94 detectors), 9 result(s) found
+
+real	0m1.513s
+user	0m1.220s
+sys	0m0.295s

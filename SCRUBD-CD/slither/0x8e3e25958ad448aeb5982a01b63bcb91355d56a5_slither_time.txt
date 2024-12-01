@@ -1,0 +1,97 @@
+'solc --version' running
+'solc ./0x8e3e25958ad448aeb5982a01b63bcb91355d56a5.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x8e3e25958ad448aeb5982a01b63bcb91355d56a5.sol:
+./0x8e3e25958ad448aeb5982a01b63bcb91355d56a5.sol:55:9: Warning: Failure condition of 'send' ignored. Consider using 'transfer' instead.
+        beneficiary.send(msg.value);
+        ^-------------------------^
+
+
+Reentrancy in Swap.fallback() (0x8e3e25958ad448aeb5982a01b63bcb91355d56a5.sol#34-58):
+	External calls:
+	- swapaddress.transfer(msg.sender,amount / newvalue) (0x8e3e25958ad448aeb5982a01b63bcb91355d56a5.sol#47)
+	- swapaddress.transfer(msg.sender,amount / secondvalue) (0x8e3e25958ad448aeb5982a01b63bcb91355d56a5.sol#50)
+	- swapaddress.transfer(msg.sender,amount / third) (0x8e3e25958ad448aeb5982a01b63bcb91355d56a5.sol#52)
+	External calls sending eth:
+	- beneficiary.send(msg.value) (0x8e3e25958ad448aeb5982a01b63bcb91355d56a5.sol#55)
+	State variables written after the call(s):
+	- check[msg.sender] = true (0x8e3e25958ad448aeb5982a01b63bcb91355d56a5.sol#57)
+	Swap.check (0x8e3e25958ad448aeb5982a01b63bcb91355d56a5.sol#14) can be used in cross function reentrancies:
+	- Swap.check (0x8e3e25958ad448aeb5982a01b63bcb91355d56a5.sol#14)
+	- Swap.fallback() (0x8e3e25958ad448aeb5982a01b63bcb91355d56a5.sol#34-58)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+collectible (0x8e3e25958ad448aeb5982a01b63bcb91355d56a5.sol#3-5) has incorrect ERC20 function interface:collectible.transfer(address,uint256) (0x8e3e25958ad448aeb5982a01b63bcb91355d56a5.sol#4)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-erc20-interface
+
+Swap.fallback() (0x8e3e25958ad448aeb5982a01b63bcb91355d56a5.sol#34-58) ignores return value by beneficiary.send(msg.value) (0x8e3e25958ad448aeb5982a01b63bcb91355d56a5.sol#55)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-send
+
+Swap.constructor(address,uint256,address).SendTo (0x8e3e25958ad448aeb5982a01b63bcb91355d56a5.sol#24) lacks a zero-check on :
+		- beneficiary = SendTo (0x8e3e25958ad448aeb5982a01b63bcb91355d56a5.sol#28)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in Swap.fallback() (0x8e3e25958ad448aeb5982a01b63bcb91355d56a5.sol#34-58):
+	External calls:
+	- swapaddress.transfer(msg.sender,amount / newvalue) (0x8e3e25958ad448aeb5982a01b63bcb91355d56a5.sol#47)
+	- swapaddress.transfer(msg.sender,amount / secondvalue) (0x8e3e25958ad448aeb5982a01b63bcb91355d56a5.sol#50)
+	- swapaddress.transfer(msg.sender,amount / third) (0x8e3e25958ad448aeb5982a01b63bcb91355d56a5.sol#52)
+	External calls sending eth:
+	- beneficiary.send(msg.value) (0x8e3e25958ad448aeb5982a01b63bcb91355d56a5.sol#55)
+	Event emitted after the call(s):
+	- FundTransfer(msg.sender,amount,true) (0x8e3e25958ad448aeb5982a01b63bcb91355d56a5.sol#56)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+Swap.fallback() (0x8e3e25958ad448aeb5982a01b63bcb91355d56a5.sol#34-58) compares to a boolean constant:
+	-require(bool)(check[msg.sender] == false) (0x8e3e25958ad448aeb5982a01b63bcb91355d56a5.sol#35)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#boolean-equality
+
+Version constraint >=0.4.22<0.6.0 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ABIEncoderV2PackedStorage_0.4.x
+	- ExpExponentCleanup
+	- EventStructWrongData
+	- OneOfTwoConstructorsSkipped.
+It is used by:
+	- >=0.4.22<0.6.0 (0x8e3e25958ad448aeb5982a01b63bcb91355d56a5.sol#1)
+solc-0.4.22 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Contract collectible (0x8e3e25958ad448aeb5982a01b63bcb91355d56a5.sol#3-5) is not in CapWords
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in Swap.fallback() (0x8e3e25958ad448aeb5982a01b63bcb91355d56a5.sol#34-58):
+	External calls:
+	- beneficiary.send(msg.value) (0x8e3e25958ad448aeb5982a01b63bcb91355d56a5.sol#55)
+	State variables written after the call(s):
+	- check[msg.sender] = true (0x8e3e25958ad448aeb5982a01b63bcb91355d56a5.sol#57)
+	Event emitted after the call(s):
+	- FundTransfer(msg.sender,amount,true) (0x8e3e25958ad448aeb5982a01b63bcb91355d56a5.sol#56)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+Swap.fallback() (0x8e3e25958ad448aeb5982a01b63bcb91355d56a5.sol#34-58) uses literals with too many digits:
+	- require(bool)(msg.value < 1000000000000000001) (0x8e3e25958ad448aeb5982a01b63bcb91355d56a5.sol#36)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+Swap.contractover (0x8e3e25958ad448aeb5982a01b63bcb91355d56a5.sol#11) is never used in Swap (0x8e3e25958ad448aeb5982a01b63bcb91355d56a5.sol#7-61)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-state-variable
+
+Swap.contractover (0x8e3e25958ad448aeb5982a01b63bcb91355d56a5.sol#11) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+./0x8e3e25958ad448aeb5982a01b63bcb91355d56a5.sol analyzed (2 contracts with 94 detectors), 13 result(s) found
+
+real	0m1.738s
+user	0m1.489s
+sys	0m0.251s

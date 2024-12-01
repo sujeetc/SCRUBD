@@ -1,0 +1,211 @@
+'solc --version' running
+'solc ./0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+
+SelectOne._getAward(uint256) (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#432-480) uses a weak PRNG: "awardNum = uint256(encrptyHash) % 22 (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#458)" 
+SelectOne.getAwardNum(uint256) (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#481-489) uses a weak PRNG: "_awardNum = uint256(encrptyHash) % 22 (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#486)" 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#weak-PRNG
+
+Reentrancy in Loan._userRefund(address) (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#118-137):
+	External calls:
+	- checkPayShareholder() (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#125)
+		- token.profitOrgPay.value(toShareHolder)() (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#164)
+	External calls sending eth:
+	- checkPayShareholder() (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#125)
+		- token.profitOrgPay.value(toShareHolder)() (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#164)
+		- shareholder.transfer(toShareHolder) (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#166)
+	- _to.transfer(amount) (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#129)
+	State variables written after the call(s):
+	- unLock() (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#136)
+		- globalLocked = false (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#69)
+	Base.globalLocked (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#60) can be used in cross function reentrancies:
+	- Base.globalLocked (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#60)
+	- Base.lock() (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#62-65)
+	- Base.setLock() (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#72-74)
+	- Base.unLock() (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#67-70)
+Reentrancy in Loan.checkPayShareholder() (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#153-171):
+	External calls:
+	- token.profitOrgPay.value(toShareHolder)() (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#164)
+	External calls sending eth:
+	- token.profitOrgPay.value(toShareHolder)() (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#164)
+	- shareholder.transfer(toShareHolder) (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#166)
+	State variables written after the call(s):
+	- userEtherOf[shareholder] = me (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#168)
+	BaseGame.userEtherOf (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#42) can be used in cross function reentrancies:
+	- Loan._userRefund(address) (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#118-137)
+	- Loan.bidLoan(uint256) (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#200-239)
+	- Loan.checkPayLoan() (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#275-310)
+	- Loan.checkPayShareholder() (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#153-171)
+	- Loan.depositEther() (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#190-195)
+	- Loan.getCanLoanAmount() (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#241-261)
+	- BaseGame.userEtherOf (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#42)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+Reentrancy in SelectOne._play(uint256[],uint256[]) (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#372-422):
+	External calls:
+	- _giftToken = GameToken.mineToken(msg.sender,totalBetAmount) (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#416)
+	State variables written after the call(s):
+	- OnPlay(msg.sender,_betNums,_betAmounts,_giftToken,block.number,playNo,now,getEventId()) (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#417)
+		- currentEventId ++ (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#81)
+	Base.currentEventId (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#77) can be used in cross function reentrancies:
+	- SelectOne._play(uint256[],uint256[]) (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#372-422)
+	- Base.currentEventId (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#77)
+	- Base.getEventId() (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#79-82)
+	- unLock() (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#420)
+		- globalLocked = false (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#69)
+	Base.globalLocked (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#60) can be used in cross function reentrancies:
+	- Base.globalLocked (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#60)
+	- Base.lock() (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#62-65)
+	- Base.setLock() (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#72-74)
+	- Base.unLock() (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#67-70)
+	- playNo ++ (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#418)
+	SelectOne.playNo (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#316) can be used in cross function reentrancies:
+	- SelectOne._getAward(uint256) (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#432-480)
+	- SelectOne._play(uint256[],uint256[]) (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#372-422)
+	- SelectOne.playNo (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#316)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+SelectOne.play(uint256[],uint256[])._result (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#364) is written in both
+	_result = false (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#365)
+	_result = _play(_betNums,_betAmounts) (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#369)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#write-after-write
+
+Base.setOwner(address) (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#56-58) should emit an event for: 
+	- owner = _newOwner (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#57) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-access-control
+
+Base.setOwner(address)._newOwner (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#56) lacks a zero-check on :
+		- owner = _newOwner (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#57)
+SelectOne.SelectOne(uint256,uint256,string,address)._gameToken (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#336) lacks a zero-check on :
+		- shareholder = _gameToken (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#350)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in SelectOne._play(uint256[],uint256[]) (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#372-422):
+	External calls:
+	- _giftToken = GameToken.mineToken(msg.sender,totalBetAmount) (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#416)
+	Event emitted after the call(s):
+	- OnPlay(msg.sender,_betNums,_betAmounts,_giftToken,block.number,playNo,now,getEventId()) (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#417)
+Reentrancy in SelectOne._play(uint256[],uint256[]) (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#372-422):
+	External calls:
+	- _giftToken = GameToken.mineToken(msg.sender,totalBetAmount) (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#416)
+	- autoCheckPayShareholder() (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#421)
+		- token.profitOrgPay.value(toShareHolder)() (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#164)
+	External calls sending eth:
+	- autoCheckPayShareholder() (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#421)
+		- token.profitOrgPay.value(toShareHolder)() (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#164)
+		- shareholder.transfer(toShareHolder) (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#166)
+	Event emitted after the call(s):
+	- OnPayLoan(msg.sender,now,toLoan) (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#295)
+		- autoCheckPayShareholder() (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#421)
+	- OnPayLoan(msg.sender,now,toLoan) (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#306)
+		- autoCheckPayShareholder() (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#421)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+Loan.calLoanAmount() (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#263-272) uses timestamp for comparisons
+	Dangerous comparisons:
+	- i < d (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#268)
+Loan.checkPayLoan() (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#275-310) uses timestamp for comparisons
+	Dangerous comparisons:
+	- isStopPlay && now > stopTime.add(86400) (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#279)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Base.lock() (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#62-65) has costly operations inside a loop:
+	- globalLocked = true (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#64)
+Base.getEventId() (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#79-82) has costly operations inside a loop:
+	- currentEventId ++ (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#81)
+Base.unLock() (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#67-70) has costly operations inside a loop:
+	- globalLocked = false (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#69)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#costly-operations-inside-a-loop
+
+Deprecated standard detected encrptyHash = keccak256()(bi.Player,block.blockhash(bi.BlockNumber),uintToString(randomNum)) (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#457):
+	- Usage of "block.blockhash()" should be replaced with "blockhash()"
+Deprecated standard detected encrptyHash = keccak256()(bi.Player,block.blockhash(bi.BlockNumber),uintToString(randomNum)) (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#485):
+	- Usage of "block.blockhash()" should be replaced with "blockhash()"
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#deprecated-standards
+
+Loan.minBankerEther (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#177) is set pre-construction with a non-constant function or state variable:
+	- gameMaxBetAmount * 20
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#function-initializing-state
+
+Version constraint ^0.4.21 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ABIEncoderV2PackedStorage_0.4.x
+	- ExpExponentCleanup
+	- EventStructWrongData
+	- NestedArrayFunctionCallDecoder.
+It is used by:
+	- ^0.4.21 (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#1)
+solc-0.4.21 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Parameter Base.setOwner(address)._newOwner (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#56) is not in mixedCase
+Parameter Base.setOfficialGameUrl(string)._newOfficialGameUrl (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#84) is not in mixedCase
+Parameter Loan.setStopPlay(bool)._isStopPlay (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#108) is not in mixedCase
+Parameter Loan.setMaxShareholderEther(uint256)._value (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#141) is not in mixedCase
+Parameter Loan.setMinBankerEther(uint256)._value (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#179) is not in mixedCase
+Parameter Loan.bidLoan(uint256)._dayRate10000 (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#200) is not in mixedCase
+Struct SelectOne.betInfo (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#321-330) is not in CapWords
+Parameter SelectOne.tokenOf(address)._user (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#356) is not in mixedCase
+Parameter SelectOne.play(uint256[],uint256[])._betNums (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#364) is not in mixedCase
+Parameter SelectOne.play(uint256[],uint256[])._betAmounts (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#364) is not in mixedCase
+Parameter SelectOne.getAward(uint256[])._playNos (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#424) is not in mixedCase
+Parameter SelectOne.getAwardNum(uint256)._playNo (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#481) is not in mixedCase
+Variable SelectOne.GameToken (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#332) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Reentrancy in Loan._userRefund(address) (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#118-137):
+	External calls:
+	- checkPayShareholder() (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#125)
+		- shareholder.transfer(toShareHolder) (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#166)
+	- _to.transfer(amount) (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#129)
+	External calls sending eth:
+	- checkPayShareholder() (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#125)
+		- token.profitOrgPay.value(toShareHolder)() (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#164)
+		- shareholder.transfer(toShareHolder) (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#166)
+	- _to.transfer(amount) (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#129)
+	State variables written after the call(s):
+	- unLock() (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#136)
+		- globalLocked = false (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#69)
+Reentrancy in Loan.checkPayShareholder() (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#153-171):
+	External calls:
+	- shareholder.transfer(toShareHolder) (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#166)
+	External calls sending eth:
+	- token.profitOrgPay.value(toShareHolder)() (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#164)
+	- shareholder.transfer(toShareHolder) (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#166)
+	State variables written after the call(s):
+	- userEtherOf[shareholder] = me (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#168)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+SelectOne._getAward(uint256) (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#432-480) uses literals with too many digits:
+	- randomNum = bi.EventId % 1000000 (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#456)
+SelectOne.getAwardNum(uint256) (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#481-489) uses literals with too many digits:
+	- randomNum = bi.EventId % 1000000 (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#484)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+BaseGame.gameType (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#40) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+
+setOfficialGameUrl(string) should be declared external:
+	- Base.setOfficialGameUrl(string) (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#84-86)
+play(uint256[],uint256[]) should be declared external:
+	- SelectOne.play(uint256[],uint256[]) (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#364-370)
+getAward(uint256[]) should be declared external:
+	- SelectOne.getAward(uint256[]) (0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol#424-430)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#public-function-that-could-be-declared-external
+./0x0a28dd8141394e6d680d20d54ffeb3544b576a78.sol analyzed (7 contracts with 94 detectors), 42 result(s) found
+
+real	0m3.298s
+user	0m3.036s
+sys	0m0.263s

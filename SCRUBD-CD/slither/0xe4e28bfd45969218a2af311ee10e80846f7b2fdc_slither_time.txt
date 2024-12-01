@@ -1,0 +1,85 @@
+'solc --version' running
+'solc ./0xe4e28bfd45969218a2af311ee10e80846f7b2fdc.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0xe4e28bfd45969218a2af311ee10e80846f7b2fdc.sol:
+./0xe4e28bfd45969218a2af311ee10e80846f7b2fdc.sol:136:5: Warning: Failure condition of 'send' ignored. Consider using 'transfer' instead.
+    benefit.send(amount);
+    ^------------------^
+
+
+Reentrancy in Presale.fallback() (0xe4e28bfd45969218a2af311ee10e80846f7b2fdc.sol#112-126):
+	External calls:
+	- token.transferPresale(msg.sender,tokenAmount) (0xe4e28bfd45969218a2af311ee10e80846f7b2fdc.sol#118)
+	State variables written after the call(s):
+	- raised += msg.value (0xe4e28bfd45969218a2af311ee10e80846f7b2fdc.sol#120)
+	Presale.raised (0xe4e28bfd45969218a2af311ee10e80846f7b2fdc.sol#57) can be used in cross function reentrancies:
+	- Presale.belowHardCap() (0xe4e28bfd45969218a2af311ee10e80846f7b2fdc.sol#80-83)
+	- Presale.fallback() (0xe4e28bfd45969218a2af311ee10e80846f7b2fdc.sol#112-126)
+	- Presale.raised (0xe4e28bfd45969218a2af311ee10e80846f7b2fdc.sol#57)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+Presale.getFunds(uint256) (0xe4e28bfd45969218a2af311ee10e80846f7b2fdc.sol#132-137) ignores return value by benefit.send(amount) (0xe4e28bfd45969218a2af311ee10e80846f7b2fdc.sol#136)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-send
+
+Admins.setAdmin(address) (0xe4e28bfd45969218a2af311ee10e80846f7b2fdc.sol#28-45) should emit an event for: 
+	- admin1 = _adminAddress (0xe4e28bfd45969218a2af311ee10e80846f7b2fdc.sol#35) 
+	- admin2 = _adminAddress (0xe4e28bfd45969218a2af311ee10e80846f7b2fdc.sol#39) 
+	- admin3 = _adminAddress (0xe4e28bfd45969218a2af311ee10e80846f7b2fdc.sol#43) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-access-control
+
+Admins.Admins(address,address,address).a1 (0xe4e28bfd45969218a2af311ee10e80846f7b2fdc.sol#17) lacks a zero-check on :
+		- admin1 = a1 (0xe4e28bfd45969218a2af311ee10e80846f7b2fdc.sol#18)
+Admins.Admins(address,address,address).a2 (0xe4e28bfd45969218a2af311ee10e80846f7b2fdc.sol#17) lacks a zero-check on :
+		- admin2 = a2 (0xe4e28bfd45969218a2af311ee10e80846f7b2fdc.sol#19)
+Admins.Admins(address,address,address).a3 (0xe4e28bfd45969218a2af311ee10e80846f7b2fdc.sol#17) lacks a zero-check on :
+		- admin3 = a3 (0xe4e28bfd45969218a2af311ee10e80846f7b2fdc.sol#20)
+Presale.Presale(address,address,address,address)._tokenAddress (0xe4e28bfd45969218a2af311ee10e80846f7b2fdc.sol#90) lacks a zero-check on :
+		- tokenAddress = _tokenAddress (0xe4e28bfd45969218a2af311ee10e80846f7b2fdc.sol#104)
+Presale.setBenefit(address)._benefit (0xe4e28bfd45969218a2af311ee10e80846f7b2fdc.sol#128) lacks a zero-check on :
+		- benefit = _benefit (0xe4e28bfd45969218a2af311ee10e80846f7b2fdc.sol#129)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in Presale.fallback() (0xe4e28bfd45969218a2af311ee10e80846f7b2fdc.sol#112-126):
+	External calls:
+	- token.transferPresale(msg.sender,tokenAmount) (0xe4e28bfd45969218a2af311ee10e80846f7b2fdc.sol#118)
+	State variables written after the call(s):
+	- balanceOf[msg.sender] += msg.value (0xe4e28bfd45969218a2af311ee10e80846f7b2fdc.sol#122)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in Presale.fallback() (0xe4e28bfd45969218a2af311ee10e80846f7b2fdc.sol#112-126):
+	External calls:
+	- token.transferPresale(msg.sender,tokenAmount) (0xe4e28bfd45969218a2af311ee10e80846f7b2fdc.sol#118)
+	Event emitted after the call(s):
+	- Investing(msg.sender,msg.value,tokenAmountWithoutBonus,tokenAmount) (0xe4e28bfd45969218a2af311ee10e80846f7b2fdc.sol#124)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+Version constraint ^0.4.16 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- DirtyBytesArrayToStorage
+	- ABIDecodeTwoDimensionalArrayMemory
+	- KeccakCaching
+	- EmptyByteArrayCopy
+	- DynamicArrayCleanup
+	- ImplicitConstructorCallvalueCheck
+	- TupleAssignmentMultiStackSlotComponents
+	- MemoryArrayCreationOverflow
+	- privateCanBeOverridden
+	- SignedArrayStorageCopy
+	- ABIEncoderV2StorageArrayWithMultiSlotElement
+	- DynamicConstructorArgumentsClippedABIV2
+	- UninitializedFunctionPointerInConstructor_0.4.x
+	- IncorrectEventSignatureInLibraries_0.4.x
+	- ExpExponentCleanup
+	- NestedArrayFunctionCallDecoder
+	- ZeroFunctionSelector.
+It is used by:
+	- ^0.4.16 (0xe4e28bfd45969218a2af311ee10e80846f7b2fdc.sol#1)
+solc-0.4.16 is an outdated solc version. Use a more recent version (at least 0.8.0), if possible.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Parameter Admins.setAdmin(address)._adminAddress (0xe4e28bfd45969218a2af311ee10e80846f7b2fdc.sol#28) is not in mixedCase
+Parameter Presale.setBenefit(address)._benefit (0xe4e28bfd45969218a2af311ee10e80846f7b2fdc.sol#128) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+./0xe4e28bfd45969218a2af311ee10e80846f7b2fdc.sol analyzed (3 contracts with 94 detectors), 14 result(s) found
+
+real	0m1.425s
+user	0m1.174s
+sys	0m0.252s

@@ -1,0 +1,552 @@
+'solc --version' running
+'solc ./0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes,compact-format --allow-paths .,/ethereum-security/empirical-study/data/extracted_solc_codes/crowdsource_contracts' running
+Compilation warnings/errors on ./0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol:
+Warning: Contract code size exceeds 24576 bytes (a limit introduced in Spurious Dragon). This contract may not be deployable on mainnet. Consider enabling the optimizer (with a low "runs" value!), turning off revert strings, or using libraries.
+   --> ./0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol:187:1:
+    |
+187 | contract TheBureau121 is Context, IERC20Upgradeable {
+    | ^ (Relevant source part starts here and spans across multiple lines).
+
+
+
+TheBureau121.swapAndLiquify(uint256) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#616-657) sends eth to arbitrary user
+	Dangerous calls:
+	- dexRouter.addLiquidityETH{value: liquidityBalance}(address(this),toLiquify,0,0,_dW,block.timestamp) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#639-646)
+	- _dW.transfer(dF) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#653)
+	- _SecretVault.transfer(mF) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#654)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+Reentrancy in TheBureau121._t(address,address,uint256) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#575-614):
+	External calls:
+	- swapAndLiquify(contractTokenBalance) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#609)
+		- dexRouter.swapExactTokensForETHSupportingFeeOnTransferTokens(toSwapForEth,0,path,address(this),block.timestamp) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#627-633)
+		- dexRouter.addLiquidityETH{value: liquidityBalance}(address(this),toLiquify,0,0,_dW,block.timestamp) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#639-646)
+	External calls sending eth:
+	- swapAndLiquify(contractTokenBalance) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#609)
+		- dexRouter.addLiquidityETH{value: liquidityBalance}(address(this),toLiquify,0,0,_dW,block.timestamp) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#639-646)
+		- _dW.transfer(dF) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#653)
+		- _SecretVault.transfer(mF) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#654)
+	State variables written after the call(s):
+	- _ftt(from,to,amount,takeFee) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#613)
+		- _lH[from] = true (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#664)
+	TheBureau121._lH (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#197) can be used in cross function reentrancies:
+	- TheBureau121._checkLiquidityAdd(address,address) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#661-671)
+	- TheBureau121._hasLimits(address,address) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#557-559)
+	- TheBureau121.constructor() (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#265-286)
+	- _ftt(from,to,amount,takeFee) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#613)
+		- _rOd[address(this)] = _rOd[address(this)] + rLiquidity (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#846)
+		- _rOd[from] = _rOd[from] - values.rAmount (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#704)
+		- _rOd[to] = _rOd[to] + values.rTransferAmount (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#705)
+	TheBureau121._rOd (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#189) can be used in cross function reentrancies:
+	- TheBureau121.CommunityBurn(uint256) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#764-777)
+	- TheBureau121.RessaBurn(address,uint256) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#731-745)
+	- TheBureau121.RessaDAOBurn(address,uint256) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#747-762)
+	- TheBureau121._RFT(address,address,string,string) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#290-343)
+	- TheBureau121._ftt(address,address,uint256,bool) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#692-723)
+	- TheBureau121._getCurrentSupply() (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#822-832)
+	- TheBureau121._takeLiquidity(address,uint256) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#843-850)
+	- TheBureau121.balanceOf(address) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#382-385)
+	- TheBureau121.setExcludedFromReward(address,bool) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#531-551)
+	- _ftt(from,to,amount,takeFee) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#613)
+		- _rTotal = _rTotal - rFee (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#835)
+	TheBureau121._rTotal (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#216) can be used in cross function reentrancies:
+	- TheBureau121._RFT(address,address,string,string) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#290-343)
+	- TheBureau121._getCurrentSupply() (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#822-832)
+	- TheBureau121._takeReflect(uint256,uint256) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#834-837)
+	- TheBureau121.tokenFromReflection(uint256) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#561-565)
+	- _ftt(from,to,amount,takeFee) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#613)
+		- _tOd[address(this)] = _tOd[address(this)] + tLiquidity (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#848)
+		- _tOd[from] = _tOd[from] - tAmount (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#708)
+		- _tOd[to] = _tOd[to] + values.tTransferAmount (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#710)
+		- _tOd[from] = _tOd[from] - tAmount (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#712)
+		- _tOd[to] = _tOd[to] + values.tTransferAmount (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#713)
+	TheBureau121._tOd (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#190) can be used in cross function reentrancies:
+	- TheBureau121.CommunityBurn(uint256) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#764-777)
+	- TheBureau121.RessaBurn(address,uint256) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#731-745)
+	- TheBureau121.RessaDAOBurn(address,uint256) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#747-762)
+	- TheBureau121._ftt(address,address,uint256,bool) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#692-723)
+	- TheBureau121._getCurrentSupply() (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#822-832)
+	- TheBureau121._takeLiquidity(address,uint256) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#843-850)
+	- TheBureau121.balanceOf(address) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#382-385)
+	- TheBureau121.setExcludedFromReward(address,bool) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#531-551)
+	- _ftt(from,to,amount,takeFee) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#613)
+		- swapAndLiquifyEnabled = true (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#668)
+	TheBureau121.swapAndLiquifyEnabled (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#227) can be used in cross function reentrancies:
+	- TheBureau121._checkLiquidityAdd(address,address) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#661-671)
+	- TheBureau121._t(address,address,uint256) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#575-614)
+	- TheBureau121.hackstart() (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#673-680)
+	- TheBureau121.setSwapAndLiquifyEnabled(bool) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#522-525)
+	- TheBureau121.swapAndLiquifyEnabled (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#227)
+Reentrancy in TheBureau121.transferOwner(address) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#349-367):
+	External calls:
+	- _t(_owner,newOwner,balanceOf(_owner)) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#361)
+		- dexRouter.swapExactTokensForETHSupportingFeeOnTransferTokens(toSwapForEth,0,path,address(this),block.timestamp) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#627-633)
+		- dexRouter.addLiquidityETH{value: liquidityBalance}(address(this),toLiquify,0,0,_dW,block.timestamp) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#639-646)
+	External calls sending eth:
+	- _t(_owner,newOwner,balanceOf(_owner)) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#361)
+		- dexRouter.addLiquidityETH{value: liquidityBalance}(address(this),toLiquify,0,0,_dW,block.timestamp) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#639-646)
+		- _dW.transfer(dF) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#653)
+		- _SecretVault.transfer(mF) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#654)
+	State variables written after the call(s):
+	- _owner = newOwner (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#364)
+	TheBureau121._owner (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#188) can be used in cross function reentrancies:
+	- TheBureau121.constructor() (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#265-286)
+	- TheBureau121.onlyOwner() (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#260-263)
+	- TheBureau121.owner() (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#345-347)
+	- TheBureau121.renounceOwnership() (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#369-373)
+	- TheBureau121.transferOwner(address) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#349-367)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+
+TheBureau121.swapAndLiquify(uint256) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#616-657) performs a multiplication on the result of a division:
+	- mF = OperationsFee / (VaD) * (MaS) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#652)
+TheBureau121.swapAndLiquify(uint256) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#616-657) performs a multiplication on the result of a division:
+	- dF = OperationsFee / (VaD) * (DeS) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#653)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
+
+Reentrancy in TheBureau121._RFT(address,address,string,string) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#290-343):
+	External calls:
+	- lpPair = IUniswapV2Factory(dexRouter.factory()).createPair(dexRouter.WETH(),address(this)) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#313)
+	State variables written after the call(s):
+	- rft = true (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#326)
+	TheBureau121.rft (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#252) can be used in cross function reentrancies:
+	- TheBureau121._RFT(address,address,string,string) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#290-343)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+
+TheBureau121._getValues(address,address,uint256,bool).values (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#780) is a local variable never initialized
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#uninitialized-local-variables
+
+TheBureau121._RFT(address,address,string,string) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#290-343) ignores return value by dexRouter.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#334-341)
+TheBureau121.swapAndLiquify(uint256) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#616-657) ignores return value by dexRouter.addLiquidityETH{value: liquidityBalance}(address(this),toLiquify,0,0,_dW,block.timestamp) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#639-646)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+
+TheBureau121.setTB(uint256,uint256,uint256) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#450-459) should emit an event for: 
+	- _bReF = reflect (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#456) 
+	- _bLiF = liquidity (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#457) 
+	- _bMaF = marketing (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#458) 
+TheBureau121.setTS(uint256,uint256,uint256) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#461-470) should emit an event for: 
+	- _sReF = reflect (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#467) 
+	- _sLiF = liquidity (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#468) 
+	- _sMaF = marketing (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#469) 
+TheBureau121.setTT(uint256,uint256,uint256) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#472-481) should emit an event for: 
+	- _tReF = reflect (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#478) 
+	- _tLiF = liquidity (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#479) 
+	- _tMaF = marketing (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#480) 
+TheBureau121.setValues(uint256,uint256,uint256) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#483-487) should emit an event for: 
+	- MaS = ms (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#484) 
+	- DeS = ds (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#485) 
+	- VaD = vd (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#486) 
+TheBureau121.setRatios(uint256,uint256) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#489-492) should emit an event for: 
+	- _liquidityRatio = liquidity (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#490) 
+	- _mR = marketing (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#491) 
+TheBureau121.setMTP(uint256,uint256) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#494-499) should emit an event for: 
+	- _mTA = check (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#497) 
+TheBureau121.setMWS(uint256,uint256) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#501-506) should emit an event for: 
+	- _mWS = check (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#504) 
+TheBureau121.setSwapSettings(uint256,uint256,uint256,uint256) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#508-511) should emit an event for: 
+	- swapThreshold = (_tTotal * thresholdPercent) / thresholdDivisor (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#509) 
+	- swapAmount = (_tTotal * amountPercent) / amountDivisor (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#510) 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+
+TheBureau121._RFT(address,address,string,string).setSecretVault (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#290) lacks a zero-check on :
+		- _SecretVault = address(setSecretVault) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#293)
+TheBureau121._RFT(address,address,string,string).setDW (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#290) lacks a zero-check on :
+		- _dW = address(setDW) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#294)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
+
+Reentrancy in TheBureau121._RFT(address,address,string,string) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#290-343):
+	External calls:
+	- lpPair = IUniswapV2Factory(dexRouter.factory()).createPair(dexRouter.WETH(),address(this)) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#313)
+	State variables written after the call(s):
+	- _als[address(this)][address(dexRouter)] = type()(uint256).max (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#315)
+	- approve(_routerAddress,type()(uint256).max) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#324)
+		- _als[sender][spender] = amount (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#571)
+	- _approve(address(this),address(dexRouter),type()(uint256).max) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#330)
+		- _als[sender][spender] = amount (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#571)
+	- _mTA = (_tTotal * 1000) / 100000 (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#317)
+	- _mWS = (_tTotal * 10) / 1000 (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#319)
+	- _rOd[owner()] = _rTotal (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#327)
+	- lpPs[lpPair] = true (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#314)
+	- mTAUI = (sS * 500) / 100000 (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#318)
+	- mWSUI = (sS * 10) / 1000 (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#320)
+	- swapAmount = (_tTotal * 5) / 1000 (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#322)
+	- swapThreshold = (_tTotal * 5) / 10000 (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#321)
+Reentrancy in TheBureau121._RFT(address,address,string,string) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#290-343):
+	External calls:
+	- lpPair = IUniswapV2Factory(dexRouter.factory()).createPair(dexRouter.WETH(),address(this)) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#313)
+	- _t(owner(),address(this),balanceOf(owner())) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#332)
+		- dexRouter.swapExactTokensForETHSupportingFeeOnTransferTokens(toSwapForEth,0,path,address(this),block.timestamp) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#627-633)
+		- dexRouter.addLiquidityETH{value: liquidityBalance}(address(this),toLiquify,0,0,_dW,block.timestamp) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#639-646)
+	External calls sending eth:
+	- _t(owner(),address(this),balanceOf(owner())) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#332)
+		- dexRouter.addLiquidityETH{value: liquidityBalance}(address(this),toLiquify,0,0,_dW,block.timestamp) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#639-646)
+		- _dW.transfer(dF) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#653)
+		- _SecretVault.transfer(mF) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#654)
+	State variables written after the call(s):
+	- _t(owner(),address(this),balanceOf(owner())) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#332)
+		- _liqAddStamp = block.timestamp (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#666)
+Reentrancy in TheBureau121._RFT(address,address,string,string) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#290-343):
+	External calls:
+	- lpPair = IUniswapV2Factory(dexRouter.factory()).createPair(dexRouter.WETH(),address(this)) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#313)
+	- _t(owner(),address(this),balanceOf(owner())) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#332)
+		- dexRouter.swapExactTokensForETHSupportingFeeOnTransferTokens(toSwapForEth,0,path,address(this),block.timestamp) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#627-633)
+		- dexRouter.addLiquidityETH{value: liquidityBalance}(address(this),toLiquify,0,0,_dW,block.timestamp) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#639-646)
+	- dexRouter.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#334-341)
+	External calls sending eth:
+	- _t(owner(),address(this),balanceOf(owner())) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#332)
+		- dexRouter.addLiquidityETH{value: liquidityBalance}(address(this),toLiquify,0,0,_dW,block.timestamp) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#639-646)
+		- _dW.transfer(dF) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#653)
+		- _SecretVault.transfer(mF) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#654)
+	- dexRouter.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#334-341)
+	State variables written after the call(s):
+	- Planted = block.number (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#342)
+Reentrancy in TheBureau121._t(address,address,uint256) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#575-614):
+	External calls:
+	- swapAndLiquify(contractTokenBalance) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#609)
+		- dexRouter.swapExactTokensForETHSupportingFeeOnTransferTokens(toSwapForEth,0,path,address(this),block.timestamp) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#627-633)
+		- dexRouter.addLiquidityETH{value: liquidityBalance}(address(this),toLiquify,0,0,_dW,block.timestamp) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#639-646)
+	External calls sending eth:
+	- swapAndLiquify(contractTokenBalance) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#609)
+		- dexRouter.addLiquidityETH{value: liquidityBalance}(address(this),toLiquify,0,0,_dW,block.timestamp) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#639-646)
+		- _dW.transfer(dF) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#653)
+		- _SecretVault.transfer(mF) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#654)
+	State variables written after the call(s):
+	- _ftt(from,to,amount,takeFee) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#613)
+		- _LiqHasBeenAdded = true (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#665)
+	- _ftt(from,to,amount,takeFee) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#613)
+		- _liF = _sLiF (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#788)
+		- _liF = _bLiF (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#792)
+		- _liF = _tLiF (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#796)
+	- _ftt(from,to,amount,takeFee) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#613)
+		- _liqAddStamp = block.timestamp (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#666)
+	- _ftt(from,to,amount,takeFee) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#613)
+		- _maF = _sMaF (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#789)
+		- _maF = _bMaF (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#793)
+		- _maF = _tMaF (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#797)
+	- _ftt(from,to,amount,takeFee) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#613)
+		- _reF = _sReF (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#787)
+		- _reF = _bReF (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#791)
+		- _reF = _tReF (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#795)
+	- _ftt(from,to,amount,takeFee) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#613)
+		- _tFeeTotal = _tFeeTotal + tFee (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#836)
+Reentrancy in TheBureau121.setNewRouter(address) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#417-428):
+	External calls:
+	- lpPair = IUniswapV2Factory(_newRouter.factory()).createPair(address(this),_newRouter.WETH()) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#421)
+	State variables written after the call(s):
+	- _approve(address(this),newRouter,MAX) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#427)
+		- _als[sender][spender] = amount (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#571)
+	- dexRouter = _newRouter (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#426)
+Reentrancy in TheBureau121.transferFrom(address,address,uint256) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#401-405):
+	External calls:
+	- _t(sender,recipient,amount) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#402)
+		- dexRouter.swapExactTokensForETHSupportingFeeOnTransferTokens(toSwapForEth,0,path,address(this),block.timestamp) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#627-633)
+		- dexRouter.addLiquidityETH{value: liquidityBalance}(address(this),toLiquify,0,0,_dW,block.timestamp) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#639-646)
+	External calls sending eth:
+	- _t(sender,recipient,amount) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#402)
+		- dexRouter.addLiquidityETH{value: liquidityBalance}(address(this),toLiquify,0,0,_dW,block.timestamp) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#639-646)
+		- _dW.transfer(dF) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#653)
+		- _SecretVault.transfer(mF) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#654)
+	State variables written after the call(s):
+	- _approve(sender,_msgSender(),_als[sender][_msgSender()] - amount) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#403)
+		- _als[sender][spender] = amount (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#571)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Reentrancy in TheBureau121._RFT(address,address,string,string) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#290-343):
+	External calls:
+	- lpPair = IUniswapV2Factory(dexRouter.factory()).createPair(dexRouter.WETH(),address(this)) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#313)
+	Event emitted after the call(s):
+	- Approval(sender,spender,amount) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#572)
+		- approve(_routerAddress,type()(uint256).max) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#324)
+	- Approval(sender,spender,amount) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#572)
+		- _approve(address(this),address(dexRouter),type()(uint256).max) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#330)
+	- Transfer(ZERO,owner(),_tTotal) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#328)
+Reentrancy in TheBureau121._RFT(address,address,string,string) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#290-343):
+	External calls:
+	- lpPair = IUniswapV2Factory(dexRouter.factory()).createPair(dexRouter.WETH(),address(this)) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#313)
+	- _t(owner(),address(this),balanceOf(owner())) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#332)
+		- dexRouter.swapExactTokensForETHSupportingFeeOnTransferTokens(toSwapForEth,0,path,address(this),block.timestamp) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#627-633)
+		- dexRouter.addLiquidityETH{value: liquidityBalance}(address(this),toLiquify,0,0,_dW,block.timestamp) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#639-646)
+	External calls sending eth:
+	- _t(owner(),address(this),balanceOf(owner())) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#332)
+		- dexRouter.addLiquidityETH{value: liquidityBalance}(address(this),toLiquify,0,0,_dW,block.timestamp) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#639-646)
+		- _dW.transfer(dF) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#653)
+		- _SecretVault.transfer(mF) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#654)
+	Event emitted after the call(s):
+	- SwapAndLiquify(toLiquify,liquidityBalance,toLiquify) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#647)
+		- _t(owner(),address(this),balanceOf(owner())) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#332)
+	- SwapAndLiquifyEnabledUpdated(true) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#669)
+		- _t(owner(),address(this),balanceOf(owner())) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#332)
+	- Transfer(sender,address(this),tLiquidity) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#849)
+		- _t(owner(),address(this),balanceOf(owner())) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#332)
+	- Transfer(from,to,values.tTransferAmount) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#721)
+		- _t(owner(),address(this),balanceOf(owner())) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#332)
+Reentrancy in TheBureau121._t(address,address,uint256) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#575-614):
+	External calls:
+	- swapAndLiquify(contractTokenBalance) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#609)
+		- dexRouter.swapExactTokensForETHSupportingFeeOnTransferTokens(toSwapForEth,0,path,address(this),block.timestamp) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#627-633)
+		- dexRouter.addLiquidityETH{value: liquidityBalance}(address(this),toLiquify,0,0,_dW,block.timestamp) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#639-646)
+	External calls sending eth:
+	- swapAndLiquify(contractTokenBalance) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#609)
+		- dexRouter.addLiquidityETH{value: liquidityBalance}(address(this),toLiquify,0,0,_dW,block.timestamp) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#639-646)
+		- _dW.transfer(dF) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#653)
+		- _SecretVault.transfer(mF) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#654)
+	Event emitted after the call(s):
+	- SwapAndLiquifyEnabledUpdated(true) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#669)
+		- _ftt(from,to,amount,takeFee) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#613)
+	- Transfer(sender,address(this),tLiquidity) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#849)
+		- _ftt(from,to,amount,takeFee) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#613)
+	- Transfer(from,to,values.tTransferAmount) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#721)
+		- _ftt(from,to,amount,takeFee) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#613)
+Reentrancy in TheBureau121.setNewRouter(address) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#417-428):
+	External calls:
+	- lpPair = IUniswapV2Factory(_newRouter.factory()).createPair(address(this),_newRouter.WETH()) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#421)
+	Event emitted after the call(s):
+	- Approval(sender,spender,amount) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#572)
+		- _approve(address(this),newRouter,MAX) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#427)
+Reentrancy in TheBureau121.swapAndLiquify(uint256) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#616-657):
+	External calls:
+	- dexRouter.swapExactTokensForETHSupportingFeeOnTransferTokens(toSwapForEth,0,path,address(this),block.timestamp) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#627-633)
+	- dexRouter.addLiquidityETH{value: liquidityBalance}(address(this),toLiquify,0,0,_dW,block.timestamp) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#639-646)
+	External calls sending eth:
+	- dexRouter.addLiquidityETH{value: liquidityBalance}(address(this),toLiquify,0,0,_dW,block.timestamp) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#639-646)
+	Event emitted after the call(s):
+	- SwapAndLiquify(toLiquify,liquidityBalance,toLiquify) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#647)
+Reentrancy in TheBureau121.transferFrom(address,address,uint256) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#401-405):
+	External calls:
+	- _t(sender,recipient,amount) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#402)
+		- dexRouter.swapExactTokensForETHSupportingFeeOnTransferTokens(toSwapForEth,0,path,address(this),block.timestamp) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#627-633)
+		- dexRouter.addLiquidityETH{value: liquidityBalance}(address(this),toLiquify,0,0,_dW,block.timestamp) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#639-646)
+	External calls sending eth:
+	- _t(sender,recipient,amount) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#402)
+		- dexRouter.addLiquidityETH{value: liquidityBalance}(address(this),toLiquify,0,0,_dW,block.timestamp) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#639-646)
+		- _dW.transfer(dF) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#653)
+		- _SecretVault.transfer(mF) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#654)
+	Event emitted after the call(s):
+	- Approval(sender,spender,amount) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#572)
+		- _approve(sender,_msgSender(),_als[sender][_msgSender()] - amount) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#403)
+Reentrancy in TheBureau121.transferOwner(address) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#349-367):
+	External calls:
+	- _t(_owner,newOwner,balanceOf(_owner)) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#361)
+		- dexRouter.swapExactTokensForETHSupportingFeeOnTransferTokens(toSwapForEth,0,path,address(this),block.timestamp) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#627-633)
+		- dexRouter.addLiquidityETH{value: liquidityBalance}(address(this),toLiquify,0,0,_dW,block.timestamp) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#639-646)
+	External calls sending eth:
+	- _t(_owner,newOwner,balanceOf(_owner)) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#361)
+		- dexRouter.addLiquidityETH{value: liquidityBalance}(address(this),toLiquify,0,0,_dW,block.timestamp) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#639-646)
+		- _dW.transfer(dF) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#653)
+		- _SecretVault.transfer(mF) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#654)
+	Event emitted after the call(s):
+	- OwnershipTransferred(_owner,newOwner) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#365)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+
+TheBureau121.setLpPair(address,bool) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#430-440) uses timestamp for comparisons
+	Dangerous comparisons:
+	- tSLP != 0 (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#434)
+	- require(bool,string)(block.timestamp - tSLP > 604800,Cannot set a new pair this week!) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#435)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Address.isContract(address) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#66-75) uses assembly
+	- INLINE ASM (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#73)
+Address._functionCallWithValue(address,bytes,uint256,string) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#103-124) uses assembly
+	- INLINE ASM (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#116-119)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#assembly-usage
+
+TheBureau121.setLpPair(address,bool) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#430-440) compares to a boolean constant:
+	-enabled == false (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#431)
+TheBureau121.setExcludedFromReward(address,bool) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#531-551) compares to a boolean constant:
+	-enabled == false (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#539)
+TheBureau121.setExcludedFromReward(address,bool) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#531-551) compares to a boolean constant:
+	-enabled == true (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#532)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#boolean-equality
+
+TheBureau121.setExcludedFromReward(address,bool) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#531-551) has costly operations inside a loop:
+	- _excluded.pop() (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#546)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#costly-operations-inside-a-loop
+
+Context._msgData() (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#42-45) is never used and should be removed
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dead-code
+
+TheBureau121._bReF (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#202) is set pre-construction with a non-constant function or state variable:
+	- _reF
+TheBureau121._bLiF (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#202) is set pre-construction with a non-constant function or state variable:
+	- _liF
+TheBureau121._bMaF (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#202) is set pre-construction with a non-constant function or state variable:
+	- _maF
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#function-initializing-state
+
+Version constraint >=0.6.0<0.9.0 is too complex.
+It is used by:
+	- >=0.6.0<0.9.0 (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#37)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+
+Low level call in Address.sendValue(address,uint256) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#77-83):
+	- (success,None) = recipient.call{value: amount}() (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#81)
+Low level call in Address._functionCallWithValue(address,bytes,uint256,string) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#103-124):
+	- (success,returndata) = target.call{value: weiValue}(data) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#107)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Function IUniswapV2Router01.WETH() (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#135) is not in mixedCase
+Function TheBureau121._RFT(address,address,string,string) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#290-343) is not in mixedCase
+Parameter TheBureau121._RFT(address,address,string,string)._tokenname (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#290) is not in mixedCase
+Parameter TheBureau121._RFT(address,address,string,string)._tokensymbol (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#290) is not in mixedCase
+Parameter TheBureau121.setSwapAndLiquifyEnabled(bool)._enabled (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#522) is not in mixedCase
+Function TheBureau121.Update(string,string) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#725-729) is not in mixedCase
+Parameter TheBureau121.Update(string,string)._tn (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#725) is not in mixedCase
+Parameter TheBureau121.Update(string,string)._ts (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#725) is not in mixedCase
+Function TheBureau121.RessaBurn(address,uint256) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#731-745) is not in mixedCase
+Function TheBureau121.RessaDAOBurn(address,uint256) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#747-762) is not in mixedCase
+Function TheBureau121.CommunityBurn(uint256) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#764-777) is not in mixedCase
+Variable TheBureau121._reF (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#201) is not in mixedCase
+Variable TheBureau121._liF (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#201) is not in mixedCase
+Variable TheBureau121._maF (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#201) is not in mixedCase
+Variable TheBureau121._bReF (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#202) is not in mixedCase
+Variable TheBureau121._bLiF (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#202) is not in mixedCase
+Variable TheBureau121._bMaF (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#202) is not in mixedCase
+Variable TheBureau121._sLiF (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#203) is not in mixedCase
+Variable TheBureau121._sReF (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#203) is not in mixedCase
+Variable TheBureau121._sMaF (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#203) is not in mixedCase
+Variable TheBureau121._tReF (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#204) is not in mixedCase
+Variable TheBureau121._tLiF (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#204) is not in mixedCase
+Variable TheBureau121._tMaF (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#204) is not in mixedCase
+Variable TheBureau121._liquidityRatio (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#206) is not in mixedCase
+Variable TheBureau121._mR (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#207) is not in mixedCase
+Variable TheBureau121.MaS (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#209) is not in mixedCase
+Variable TheBureau121.DeS (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#210) is not in mixedCase
+Variable TheBureau121.VaD (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#211) is not in mixedCase
+Variable TheBureau121._routerAddress (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#221) is not in mixedCase
+Variable TheBureau121.DEAD (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#222) is not in mixedCase
+Variable TheBureau121.ZERO (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#223) is not in mixedCase
+Variable TheBureau121._SecretVault (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#225) is not in mixedCase
+Variable TheBureau121._LiqHasBeenAdded (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#235) is not in mixedCase
+Variable TheBureau121.Planted (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#250) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+
+Redundant expression "this (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#43)" inContext (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#38-46)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#redundant-statements
+
+Reentrancy in TheBureau121._RFT(address,address,string,string) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#290-343):
+	External calls:
+	- _t(owner(),address(this),balanceOf(owner())) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#332)
+		- _dW.transfer(dF) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#653)
+		- _SecretVault.transfer(mF) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#654)
+	External calls sending eth:
+	- _t(owner(),address(this),balanceOf(owner())) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#332)
+		- dexRouter.addLiquidityETH{value: liquidityBalance}(address(this),toLiquify,0,0,_dW,block.timestamp) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#639-646)
+		- _dW.transfer(dF) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#653)
+		- _SecretVault.transfer(mF) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#654)
+	- dexRouter.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#334-341)
+	State variables written after the call(s):
+	- Planted = block.number (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#342)
+Reentrancy in TheBureau121._t(address,address,uint256) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#575-614):
+	External calls:
+	- swapAndLiquify(contractTokenBalance) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#609)
+		- _dW.transfer(dF) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#653)
+		- _SecretVault.transfer(mF) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#654)
+	External calls sending eth:
+	- swapAndLiquify(contractTokenBalance) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#609)
+		- dexRouter.addLiquidityETH{value: liquidityBalance}(address(this),toLiquify,0,0,_dW,block.timestamp) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#639-646)
+		- _dW.transfer(dF) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#653)
+		- _SecretVault.transfer(mF) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#654)
+	State variables written after the call(s):
+	- _ftt(from,to,amount,takeFee) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#613)
+		- _LiqHasBeenAdded = true (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#665)
+	- _ftt(from,to,amount,takeFee) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#613)
+		- _lH[from] = true (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#664)
+	- _ftt(from,to,amount,takeFee) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#613)
+		- _liF = _sLiF (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#788)
+		- _liF = _bLiF (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#792)
+		- _liF = _tLiF (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#796)
+	- _ftt(from,to,amount,takeFee) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#613)
+		- _liqAddStamp = block.timestamp (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#666)
+	- _ftt(from,to,amount,takeFee) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#613)
+		- _maF = _sMaF (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#789)
+		- _maF = _bMaF (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#793)
+		- _maF = _tMaF (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#797)
+	- _ftt(from,to,amount,takeFee) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#613)
+		- _rOd[address(this)] = _rOd[address(this)] + rLiquidity (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#846)
+		- _rOd[from] = _rOd[from] - values.rAmount (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#704)
+		- _rOd[to] = _rOd[to] + values.rTransferAmount (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#705)
+	- _ftt(from,to,amount,takeFee) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#613)
+		- _rTotal = _rTotal - rFee (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#835)
+	- _ftt(from,to,amount,takeFee) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#613)
+		- _reF = _sReF (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#787)
+		- _reF = _bReF (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#791)
+		- _reF = _tReF (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#795)
+	- _ftt(from,to,amount,takeFee) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#613)
+		- _tFeeTotal = _tFeeTotal + tFee (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#836)
+	- _ftt(from,to,amount,takeFee) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#613)
+		- _tOd[address(this)] = _tOd[address(this)] + tLiquidity (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#848)
+		- _tOd[from] = _tOd[from] - tAmount (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#708)
+		- _tOd[to] = _tOd[to] + values.tTransferAmount (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#710)
+		- _tOd[from] = _tOd[from] - tAmount (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#712)
+		- _tOd[to] = _tOd[to] + values.tTransferAmount (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#713)
+	- _ftt(from,to,amount,takeFee) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#613)
+		- swapAndLiquifyEnabled = true (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#668)
+	Event emitted after the call(s):
+	- SwapAndLiquifyEnabledUpdated(true) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#669)
+		- _ftt(from,to,amount,takeFee) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#613)
+	- Transfer(sender,address(this),tLiquidity) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#849)
+		- _ftt(from,to,amount,takeFee) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#613)
+	- Transfer(from,to,values.tTransferAmount) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#721)
+		- _ftt(from,to,amount,takeFee) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#613)
+Reentrancy in TheBureau121.transferFrom(address,address,uint256) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#401-405):
+	External calls:
+	- _t(sender,recipient,amount) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#402)
+		- _dW.transfer(dF) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#653)
+		- _SecretVault.transfer(mF) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#654)
+	External calls sending eth:
+	- _t(sender,recipient,amount) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#402)
+		- dexRouter.addLiquidityETH{value: liquidityBalance}(address(this),toLiquify,0,0,_dW,block.timestamp) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#639-646)
+		- _dW.transfer(dF) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#653)
+		- _SecretVault.transfer(mF) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#654)
+	State variables written after the call(s):
+	- _approve(sender,_msgSender(),_als[sender][_msgSender()] - amount) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#403)
+		- _als[sender][spender] = amount (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#571)
+	Event emitted after the call(s):
+	- Approval(sender,spender,amount) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#572)
+		- _approve(sender,_msgSender(),_als[sender][_msgSender()] - amount) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#403)
+Reentrancy in TheBureau121.transferOwner(address) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#349-367):
+	External calls:
+	- _t(_owner,newOwner,balanceOf(_owner)) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#361)
+		- _dW.transfer(dF) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#653)
+		- _SecretVault.transfer(mF) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#654)
+	External calls sending eth:
+	- _t(_owner,newOwner,balanceOf(_owner)) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#361)
+		- dexRouter.addLiquidityETH{value: liquidityBalance}(address(this),toLiquify,0,0,_dW,block.timestamp) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#639-646)
+		- _dW.transfer(dF) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#653)
+		- _SecretVault.transfer(mF) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#654)
+	State variables written after the call(s):
+	- _owner = newOwner (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#364)
+	Event emitted after the call(s):
+	- OwnershipTransferred(_owner,newOwner) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#365)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+TheBureau121._RFT(address,address,string,string) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#290-343) uses literals with too many digits:
+	- sS < 1000000000000 (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#302)
+TheBureau121._RFT(address,address,string,string) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#290-343) uses literals with too many digits:
+	- _mTA = (_tTotal * 1000) / 100000 (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#317)
+TheBureau121._RFT(address,address,string,string) (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#290-343) uses literals with too many digits:
+	- mTAUI = (sS * 500) / 100000 (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#318)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#too-many-digits
+
+TheBureau121._liqAddBlock (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#236) is never used in TheBureau121 (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#187-852)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-state-variable
+
+Loop condition i < _excluded.length (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#825) should use cached array length instead of referencing `length` member of the storage array.
+ Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#cache-array-length
+
+TheBureau121.DEAD (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#222) should be constant 
+TheBureau121.ZERO (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#223) should be constant 
+TheBureau121._liqAddBlock (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#236) should be constant 
+TheBureau121.masterTaxDivisor (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#208) should be constant 
+TheBureau121.maxLiF (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#205) should be constant 
+TheBureau121.maxMaF (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#205) should be constant 
+TheBureau121.maxReF (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#205) should be constant 
+TheBureau121.sameBlockActive (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#238) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+
+TheBureau121._routerAddress (0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol#221) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+./0x0af27f9be4ac583a491ee6573ebdccf32d1b561c.sol analyzed (7 contracts with 94 detectors), 99 result(s) found
+
+real	0m5.447s
+user	0m5.196s
+sys	0m0.253s
