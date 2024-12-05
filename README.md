@@ -7,7 +7,7 @@ SCRUBD is a dataset designed for the detection of bugs in smart contracts. It in
 The repository is organized into the following main folders:
 
 ### 1. `limitations/`
-This folder contains a detailed analysis of the limitations in existing smart contract datasets. It highlights areas where current datasets fall short and suggests improvements for more comprehensive bug detection.
+This folder contains a detailed analysis of the limitations in existing smart contract datasets. It highlights areas where current datasets fall short and suggests improvements for more comprehensive bug detection. For more information, refer to the detailed README in the [limitations folder](limitations/README.md).
 
 ### 2. `SCRUBD-CD/` (Crowdsourced Dataset)
 This folder contains a crowdsourced dataset with labeled smart contract data, focusing on **Reentrancy** (RE) and **Unhandled Exceptions** (UX).
@@ -35,13 +35,13 @@ Similar to `SCRUBD-CD`, this folder also contains the following subdirectories:
 2. Navigate to the relevant folder:
     - For crowdsourced data: `SCRUBD-CD/`
     - For synthesized data: `SCRUBD-SD/`
-    
+    - For limitations and analysis of dataset gaps: `limitations/`
+
 3. Analyze the Solidity codes and labels using the provided tool results for vulnerability detection.
 
 ## Contribution
 
 We welcome contributions from the community to improve this dataset. If you have suggestions for new scenarios, tools, or enhancements to the current dataset, feel free to open an issue or submit a pull request.
-
 
 ## Acknowledgments
 
