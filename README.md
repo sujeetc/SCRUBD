@@ -21,7 +21,7 @@ Within this folder, you'll find the following subdirectories:
 This folder contains manually synthesized Reentrancy Scenarios designed to aid in the study of Reentrancy vulnerabilities in smart contracts.
 
 Similar to `SCRUBD-CD`, this folder also contains the following subdirectories:
-- **`labels.csv`**: A CSV file containing the labels for the manually synthesized scenarios. This file categorizes the contracts based on the presence of RE or UX vulnerabilities.
+- **`labels.csv`**: A CSV file containing the labels for the manually synthesized scenarios. This file categorizes the contracts based on the presence of RE.
 - **`solidity_codes/`**: Contains the manually synthesized smart contracts designed to demonstrate specific vulnerabilities, particularly Reentrancy.
 - **`tool-results/`**: Results of the tool analysis applied to the synthesized smart contracts.
 
