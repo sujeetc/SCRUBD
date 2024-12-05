@@ -1,6 +1,6 @@
 # SCRUBD: A Dataset for Smart Contract Bug Detection
 
-SCRUBD is a dataset designed for the detection of bugs in smart contracts. It includes both real-world and synthetically generated scenarios, with a focus on **Reentrancy** (RE) and **Unhandled Exceptions** (UX). This dataset is divided into multiple components, each serving a specific purpose in advancing smart contract bug detection research.
+SCRUBD is a dataset designed for the detection of bugs in smart contracts, with a focus on **Reentrancy** (RE) and **Unhandled Exceptions** (UX). The dataset includes both real-world and synthetically generated scenarios, providing a comprehensive resource for advancing smart contract bug detection research.
 
 ## Project Structure
 
@@ -10,20 +10,48 @@ The repository is organized into the following main folders:
 This folder contains a detailed analysis of the limitations in existing smart contract datasets. It highlights areas where current datasets fall short and suggests improvements for more comprehensive bug detection. For more information, refer to the detailed README in the [limitations folder](limitations/README.md).
 
 ### 2. `SCRUBD-CD/` (Crowdsourced Dataset)
-This folder contains a crowdsourced dataset with labeled smart contract data, focusing on **Reentrancy** (RE) and **Unhandled Exceptions** (UX).
+This folder contains a crowdsourced dataset with labeled smart contract data, focusing on both **Reentrancy** (RE) and **Unhandled Exceptions** (UX).
 
 Within this folder, you'll find the following subdirectories:
 - **`labels.csv`**: A CSV file containing labels for the dataset. It specifies whether the smart contract is vulnerable to RE or UX.
 - **`solidity_codes/`**: A folder containing Solidity smart contract codes. These are the actual contracts associated with the labels.
-- **`tool-results/`**: This directory contains the results of automated tool analyses applied to the smart contract codes, indicating vulnerabilities identified by various static analysis tools.
+- **`tool-results/`**: This directory contains two files, `tools_RE.csv` and `tools_UX.csv`, which store the results of automated tool analyses applied to the smart contract codes, indicating vulnerabilities identified by various static analysis tools.
 
 ### 3. `SCRUBD-SD/` (Synthesized Dataset)
-This folder contains manually synthesized Reentrancy Scenarios designed to aid in the study of Reentrancy vulnerabilities in smart contracts.
+This folder contains manually synthesized Reentrancy (RE) scenarios designed to aid in the study of Reentrancy vulnerabilities in smart contracts.
 
 Similar to `SCRUBD-CD`, this folder also contains the following subdirectories:
-- **`labels.csv`**: A CSV file containing the labels for the manually synthesized scenarios. This file categorizes the contracts based on the presence of RE or UX vulnerabilities.
+- **`labels.csv`**: A CSV file containing the labels for the manually synthesized scenarios. This file categorizes the contracts based on the presence of RE vulnerabilities.
 - **`solidity_codes/`**: Contains the manually synthesized smart contracts designed to demonstrate specific vulnerabilities, particularly Reentrancy.
-- **`tool-results/`**: Results of the tool analysis applied to the synthesized smart contracts.
+- **`tool-results/`**: This directory contains the file `tools_RE.csv`, which stores the results of the tool analysis applied to the synthesized smart contracts, specifically for Reentrancy vulnerabilities.
+
+## Example Structure of the Tool Files
+
+The tool results are stored in CSV files with the following columns:
+
+- **Smart Contract**: The address of the smart contract.
+- **Function Name**: The name of the function within the smart contract.
+- **sailfish, slither, solhint, mythril, conkas**: Columns representing the results from various static analysis tools. These tools identify potential vulnerabilities, with "1" indicating the presence of the vulnerability and "0" indicating its absence. If a contract was not parsed successfully by a tool, the result will be marked as "N/A".
+- **Actual**: The actual result of the vulnerability (either "1" for detected or "0" for not detected).
+
+Here is an example structure for the file `tools_RE.csv` (for Reentrancy vulnerabilities):
+
+| Smart Contract                               | Function Name                                          | sailfish | slither | solhint | mythril | conkas | Actual |
+|---------------------------------------------|-------------------------------------------------------|----------|---------|---------|---------|--------|--------|
+| 0x000000000000541e251335090ac5b47176af4f7e  | dexblue.spendgastokens                                | N/A      | 1       | 0       | 0       | 0      | 1      |
+| 0x000000000000541e251335090ac5b47176af4f7e  | dexbluesettlementmodule.matchorderwithreserve        | N/A      | 1       | 0       | 0       | 0      | 1      |
+| 0x000000000000541e251335090ac5b47176af4f7e  | dexbluesettlementmodule.matchorderwithreservewithdata| N/A      | 1       | 0       | 0       | 0      | 1      |
+| 0x000000000000541e251335090ac5b47176af4f7e  | dexbluesettlementmodule.settleringtrade              | N/A      | 1       | 0       | 0       | 0      | 1      |
+| 0x000000000000541e251335090ac5b47176af4f7e  | dexbluesettlementmodule.settleringtradewithdata     | N/A      | 1       | 0       | 0       | 0      | 1      |
+| 0x000000000000541e251335090ac5b47176af4f7e  | dexbluesettlementmodule.swapwithreserve             | N/A      | 1       | 0       | 0       | 0      | 0      |
+| 0x0000000000b3f879cb30fe243b4dfee438691c04  | gastoken2.destroychildren                             | N/A      | 1       | 0       | 0       | 1      | 1      |
+| 0x0003ed19f80564745e84b4cc411a7b6be4f0cf31  | neverjeet.opentrading                                | N/A      | 1       | 0       | N/A     | 0      | 0      |
+| 0x00195777bed7025e78819156281192c85fb3cf9b  | game.startraffle                                     | 0        | 1       | 1       | 0       | 0      | 1      |
+
+In this table:
+- The **"Smart Contract"** and **"Function Name"** columns identify the contract and function analyzed.
+- The **tool columns** (e.g., sailfish, slither, etc.) represent the results of various static analysis tools used to detect vulnerabilities.
+- **"Actual"** represents the real vulnerability outcome, with "1" indicating the vulnerability was detected and "0" indicating it was not.
 
 ## How to Use
 
@@ -46,5 +74,4 @@ We welcome contributions from the community to improve this dataset. If you have
 ## Acknowledgments
 
 - The dataset was created as part of ongoing research to improve smart contract security and bug detection.
-
 
