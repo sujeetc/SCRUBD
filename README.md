@@ -31,7 +31,7 @@ The tool results are stored in CSV files with the following columns:
 
 - **Smart Contract**: The address of the smart contract.
 - **Function Name**: The name of the function within the smart contract.
-- **sailfish, slither, solhint, mythril, conkas**: Columns representing the results from various static analysis tools. These tools identify potential vulnerabilities, with "1" indicating the presence of the vulnerability and "0" indicating its absence. If a contract was not parsed successfully by a tool, the result will be marked as "N/A".
+- **sailfish, slither, solhint, mythril, conkas, smartcheck**: Columns representing the results from various static analysis tools. These tools identify potential vulnerabilities, with "1" indicating the presence of the vulnerability and "0" indicating its absence. If a contract was not parsed successfully by a tool, the result will be marked as "N/A".
 - **Actual**: The actual result of the vulnerability (either "1" for detected or "0" for not detected).
 
 Here is an example structure for the file `tools_RE.csv` (for Reentrancy vulnerabilities):
