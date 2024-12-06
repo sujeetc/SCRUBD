@@ -16,6 +16,42 @@ Within this folder, you'll find the following subdirectories:
 - **`labels.csv`**: A CSV file containing labels for the dataset. It specifies whether the smart contract is vulnerable to RE or UX.
 - **`solidity_codes/`**: A folder containing Solidity smart contract codes. These are the actual contracts associated with the labels.
 - **`tool-results/`**: This directory contains two files, `tools_RE.csv` and `tools_UX.csv`, which store the results of automated tool analyses applied to the smart contract codes, indicating vulnerabilities identified by various static analysis tools.
+- **` labels-with-comments.csv`**
+
+This file contains labeled data for smart contracts with an emphasis on **Reentrancy (RENT)** and **Unhandled Exceptions (UE)** vulnerabilities. The file provides detailed comments explaining whether each contract function is vulnerable to these issues or not.
+
+#### File Structure
+
+The file contains the following headers:
+
+- **Smart Contract**: The address of the smart contract being analyzed.
+- **Function Name**: The name of the function within the smart contract.
+- **RENT**: Indicates whether the contract is vulnerable to Reentrancy. A value of `1` means vulnerable, while `0` means not vulnerable.
+- **UE**: Indicates whether the contract is vulnerable to Unhandled Exceptions. A value of `1` means vulnerable, while `0` means not vulnerable.
+- **Comments**: Detailed explanation for the vulnerability status, including reasons for identifying the vulnerability or not.
+
+#### Sample Data
+
+| Smart Contract                               | Function Name                                             | RENT | UE  | Comments                                                            |
+|---------------------------------------------|----------------------------------------------------------|------|-----|---------------------------------------------------------------------|
+| 0x000000000000541e251335090ac5b47176af4f7e  | dexBlue.settleReserveReserveTrade(dexBlueStructs.TradeInputPacked) | 0    | 0   |                                                                     |
+| 0x000000000000541e251335090ac5b47176af4f7e  | dexBlue.spendGasTokens(uint256)                          | 0    | 1   | -- No REENT: no ether involved                                       |
+| 0x0000000000b3f879cb30fe243b4dfee438691c04  | GasToken2.makeChild()                                    | 0    | 1   | -- Reason for no REENT: No state changes after external call       | 
+| 0x0003ed19f80564745e84b4cc411a7b6be4f0cf31  | NeverJeet.openTrading()                                  | 0    | 0   |                                                                     |
+| 0x00195777bed7025e78819156281192c85fb3cf9b  | GAME.startRaffle(uint256)                                | 1    | 0   | -- REENT -- state var jackpot                                       |
+| 0x0030f75e27f6df16383f47ae11ae34abc21f5f2c  | TYRANT.GoLive()                                          | 0    | 0   | -- no REENT: modifier onlyowner                                     |
+| 0x0041fb383081576f9750c5a9b507180992e1c5da  | GMI2.forceSwapAndSendDividends(uint256)                  | 0    | 0   |                                                                     |
+| 0x0043a4a809be33afa17c1e3e37e19977622e4700  | WithdrawableV2._withdrawAllSurcharges()                  | 1    | 0   |                                                                     |
+| 0x005d068a5dd27f3e49a047deac6785b426145bbc  | ParasyteInu.openTrading()                                | 0    | 0   | -- No REENT: modifier onlyowner-- No UE: balanceOf does not fail    |
+
+#### Explanation of Columns
+
+- **RENT (Reentrancy)**: This column indicates whether the smart contract is vulnerable to **Reentrancy** attacks. A value of `1` means the function is vulnerable, and `0` means the function is not vulnerable. Reentrancy vulnerabilities occur when a contract calls an external contract and the external contract calls back into the original contract, potentially causing unintended behavior.
+
+- **UE (Unhandled Exceptions)**: This column indicates whether the smart contract function has **Unhandled Exceptions**. A value of `1` means there is a vulnerability, and `0` means there isn't. Unhandled exceptions can occur when the contract fails to handle error cases properly, such as failing to account for the failure of external contract calls or operations that could revert the transaction.
+
+- **Comments**: This column provides explanations for the vulnerabilities (or lack thereof). It describes why a function is marked as vulnerable or not, such as the lack of state changes or the presence of modifiers that prevent reentrancy.
+
 
 ### 3. `SCRUBD-SD/` (Synthesized Dataset)
 This folder contains manually synthesized Reentrancy (RE) scenarios designed to aid in the study of Reentrancy vulnerabilities in smart contracts.
