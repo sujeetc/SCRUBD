@@ -1,0 +1,19 @@
+SELECT
+    contracts.address,
+    balances.eth_balance total_eth_balance,
+    COUNT(transactions.to_address) AS transaction_count
+FROM
+    `bigquery-public-data.crypto_ethereum.contracts` AS contracts
+JOIN
+    `bigquery-public-data.crypto_ethereum.balances` AS balances
+ON
+    balances.address = contracts.address
+LEFT JOIN
+    `bigquery-public-data.crypto_ethereum.transactions` AS transactions
+ON
+    transactions.to_address = contracts.address
+GROUP BY
+    contracts.address, total_eth_balance
+HAVING transaction_count > 1
+ORDER BY
+    total_eth_balance DESC;
