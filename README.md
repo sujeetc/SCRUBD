@@ -21,7 +21,7 @@ Within this folder, you'll find the following subdirectories:
 	* Usage: python3 ExtFromEtherScan.py
 	* contracts.csv contains addresses of Real World Smart Contracts used in SCRUBD-CD
 
--- **`labels.csv`**: Vulnerability Labels for Smart Contracts
+- **`labels.csv`**: Vulnerability Labels for Smart Contracts
 
 This CSV file contains labels for the dataset, detailing the vulnerability status of Smart Contracts with an emphasis on **Reentrancy (RE)** and **Unhandled Exceptions (UX)** vulnerabilities. Each entry includes detailed comments explaining the rationale behind the vulnerability assessment.
 
