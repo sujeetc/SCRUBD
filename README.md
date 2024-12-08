@@ -15,8 +15,8 @@ This folder contains a crowdsourced dataset with labeled smart contract data, fo
 Within this folder, you'll find the following subdirectories:
 - **`solidity_codes/`**: A folder containing Solidity smart contract codes. These are the actual contracts associated with the labels.
 - **`tool-results/`**: This directory contains two files, `tools_RE.csv` and `tools_UX.csv`, which store the results of automated tool analyses applied to the smart contract codes, indicating vulnerabilities identified by various static analysis tools.
-- **`labels.csv`**: A CSV file containing labels for the dataset. It specifies whether the smart contract is vulnerable to RE or UX.
 - **`Google-Bigquery.db`**: Contains a Google BigQuery SQL query that lists smart contracts with more than one transaction, sorted by their Ethereum balances. This query can be run on [Google Cloud BigQuery](https://cloud.google.com/bigquery).
+- **`labels.csv`**: A CSV file containing labels for the dataset. It specifies whether the smart contract is vulnerable to RE or UX.
 
 This file contains labeled data for smart contracts with an emphasis on **Reentrancy (RENT)** and **Unhandled Exceptions (UE)** vulnerabilities. The file provides detailed comments explaining whether each contract function is vulnerable to these issues or not.
 
