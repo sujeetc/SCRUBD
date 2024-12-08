@@ -7,11 +7,11 @@ The `limitations/` folder explores the limitations in existing smart contract da
 ### `Turn-The-Rudder/`
 This folder contains three CSV files that highlight different levels of function similarities in smart contracts, focusing on vulnerabilities:
 
-- **`duplicates-semantically-unique.csv`**: This file lists smart contract functions that are semantically unique but may contain duplicate or similar-looking code. It is useful for understanding how small syntactical differences may or may not affect vulnerability detection tools.
+- **`duplicates-semantically-unique.csv`**: This file lists smart contract functions that are semantically unique but may contain duplicate or similar-looking code. 
   
-- **`duplicates-unique.csv`**: This file contains data where duplicate function names exist, but the functions are unique in terms of their logic or structure. This highlights potential challenges in detecting vulnerabilities when function names are reused but their logic diverges.
+- **`duplicates-unique.csv`**: This file contains a list of unique functions from duplicates.csv  
 
-- **`duplicates.csv`**: This file lists completely identical functions found in different smart contracts. These duplicates share both the same function names and bodies, making them ideal for analysis of exact matches and vulnerability propagation.
+- **`duplicates.csv`**: This file lists completely identical functions found in different smart contracts. These duplicates share both the same function names and bodies.
 
 Each file contains the following columns:
 
