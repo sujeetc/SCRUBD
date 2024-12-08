@@ -18,7 +18,7 @@ Within this folder, you'll find the following subdirectories:
 - **`Google-Bigquery.db`**: Contains a Google BigQuery SQL query that lists smart contracts with more than one transaction, sorted by their Ethereum balances. This query can be run on [Google Cloud BigQuery](https://cloud.google.com/bigquery).
 - **`labels.csv`**: A CSV file containing labels for the dataset. It specifies whether the smart contract is vulnerable to RE or UX.
 
-This file contains labeled data for smart contracts with an emphasis on **Reentrancy (RENT)** and **Unhandled Exceptions (UE)** vulnerabilities. The file provides detailed comments explaining whether each contract function is vulnerable to these issues or not.
+This file contains labeled data for smart contracts with an emphasis on **Reentrancy (RE)** and **Unhandled Exceptions (UX)** vulnerabilities. The file provides detailed comments explaining whether each contract function is vulnerable to these issues or not.
 
 #### File Structure
 
@@ -26,13 +26,13 @@ The file contains the following headers:
 
 - **Smart Contract**: The address of the smart contract being analyzed.
 - **Function Name**: The name of the function within the smart contract.
-- **RENT**: Indicates whether the contract is vulnerable to Reentrancy. A value of `1` means vulnerable, while `0` means not vulnerable.
+- **RE**: Indicates whether the contract is vulnerable to Reentrancy. A value of `1` means vulnerable, while `0` means not vulnerable.
 - **UX**: Indicates whether the contract is vulnerable to Unhandled Exceptions. A value of `1` means vulnerable, while `0` means not vulnerable.
 - **Comments**: Detailed explanation for the vulnerability status, including reasons for identifying the vulnerability or not.
 
 #### Sample Data
 
-| Smart Contract                               | Function Name                                             | RENT | UE  | Comments                                                            |
+| Smart Contract                               | Function Name                                             | RE | UX  | Comments                                                            |
 |---------------------------------------------|----------------------------------------------------------|------|-----|---------------------------------------------------------------------|
 | 0x000000000000541e251335090ac5b47176af4f7e  | dexBlue.spendGasTokens(uint256)                          | 0    | 1   | -- No REENT: no ether involved                                       |
 | 0x0000000000b3f879cb30fe243b4dfee438691c04  | GasToken2.makeChild()                                    | 0    | 1   | -- Reason for no REENT: No state changes after external call       | 
@@ -42,9 +42,9 @@ The file contains the following headers:
 
 #### Explanation of Columns
 
-- **RENT (Reentrancy)**: This column indicates whether the smart contract is vulnerable to **Reentrancy** attacks. A value of `1` means the function is vulnerable, and `0` means the function is not vulnerable. Reentrancy vulnerabilities occur when a contract calls an external contract and the external contract calls back into the original contract, potentially causing unintended behavior.
+- **RE (Reentrancy)**: This column indicates whether the smart contract is vulnerable to **Reentrancy** attacks. A value of `1` means the function is vulnerable, and `0` means the function is not vulnerable. Reentrancy vulnerabilities occur when a contract calls an external contract and the external contract calls back into the original contract, potentially causing unintended behavior.
 
-- **UE (Unhandled Exceptions)**: This column indicates whether the smart contract function has **Unhandled Exceptions**. A value of `1` means there is a vulnerability, and `0` means there isn't. Unhandled exceptions can occur when the contract fails to handle error cases properly, such as failing to account for the failure of external contract calls or operations that could revert the transaction.
+- **UX (Unhandled Exceptions)**: This column indicates whether the smart contract function has **Unhandled Exceptions**. A value of `1` means there is a vulnerability, and `0` means there isn't. Unhandled exceptions can occur when the contract fails to handle error cases properly, such as failing to account for the failure of external contract calls or operations that could revert the transaction.
 
 - **Comments**: This column provides explanations for the vulnerabilities (or lack thereof). It describes why a function is marked as vulnerable or not, such as the lack of state changes or the presence of modifiers that prevent reentrancy.
 
