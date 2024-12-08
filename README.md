@@ -15,6 +15,31 @@ This folder contains a crowdsourced dataset with labeled Smart Contract data, fo
 Within this folder, you'll find the following subdirectories:
 - **`solidity_codes/`**: A folder containing Solidity Smart Contract codes. These are the actual contracts associated with the labels.
 - **`tool-results/`**: This directory contains two files, `tools_RE.csv` and `tools_UX.csv`, which store the results of automated tool analyses applied to the Smart Contract codes, indicating vulnerabilities identified by various static analysis tools.
+
+#### Example Structure of the Tool Files (tools\_RE.csv)
+
+The tool results are stored in CSV files with the following columns:
+
+- ***Smart Contract***: The address of the Smart Contract.
+- ***Function Name***: The name of the function within the Smart Contract.
+- ***sailfish, slither, solhint, mythril, conkas, smartcheck***: Columns representing the results from various static analysis tools. These tools identify potential vulnerabilities, with "1" indicating the presence of the vulnerability and "0" indicating its absence. If a contract was not parsed successfully by a tool, the result will be marked as "N/A".
+- ***Actual***: The actual result of the vulnerability (either "1" for detected or "0" for not detected).
+
+Here is an example structure for the file `tools_RE.csv` (for Reentrancy vulnerabilities):
+
+| Smart Contract                               | Function Name                                          | sailfish | slither | solhint | mythril | conkas | Actual |
+|---------------------------------------------|-------------------------------------------------------|----------|---------|---------|---------|--------|--------|
+| 0x000000000000541e251335090ac5b47176af4f7e  | dexblue.spendgastokens                                | N/A      | 1       | 0       | 0       | 0      | 1      |
+| 0x000000000000541e251335090ac5b47176af4f7e  | dexbluesettlementmodule.matchorderwithreserve        | N/A      | 1       | 0       | 0       | 0      | 1      |
+| 0x000000000000541e251335090ac5b47176af4f7e  | dexbluesettlementmodule.matchorderwithreservewithdata| N/A      | 1       | 0       | 0       | 0      | 1      |
+| 0x000000000000541e251335090ac5b47176af4f7e  | dexbluesettlementmodule.settleringtrade              | N/A      | 1       | 0       | 0       | 0      | 1      |
+| 0x000000000000541e251335090ac5b47176af4f7e  | dexbluesettlementmodule.settleringtradewithdata     | N/A      | 1       | 0       | 0       | 0      | 1      |
+| 0x00195777bed7025e78819156281192c85fb3cf9b  | game.startraffle                                     | 0        | 1       | 1       | 0       | 0      | 1      |
+
+In this table:
+- The ***"Smart Contract"*** and ***"Function Name"*** columns identify the contract and function analyzed.
+- The ***tool columns*** (e.g., sailfish, slither, etc.) represent the results of various static analysis tools used to detect vulnerabilities.
+- ***"Actual"*** represents the real vulnerability outcome, with "1" indicating the vulnerability was detected and "0" indicating it was not.
 - **`Google-Bigquery.db`**: Contains a Google BigQuery SQL query that lists Smart Contracts with more than one transaction, sorted by their Ethereum balances. This query can be run on [Google Cloud BigQuery](https://cloud.google.com/bigquery).
 
 - **`ExtFromEtherScan.py`**: can be used to collect Real World Smart Contracts from Etherscan API
@@ -72,30 +97,6 @@ Similar to `SCRUBD-CD`, this folder also contains the following subdirectories:
 - **`solidity_codes/`**: Contains the manually synthesized Smart Contracts designed to demonstrate specific vulnerabilities, particularly Reentrancy.
 - **`tool-results/`**: This directory contains the file `tools_RE.csv`, which stores the results of the tool analysis applied to the synthesized Smart Contracts, specifically for Reentrancy vulnerabilities.
 
-## Example Structure of the Tool Files
-
-The tool results are stored in CSV files with the following columns:
-
-- **Smart Contract**: The address of the Smart Contract.
-- **Function Name**: The name of the function within the Smart Contract.
-- **sailfish, slither, solhint, mythril, conkas, smartcheck**: Columns representing the results from various static analysis tools. These tools identify potential vulnerabilities, with "1" indicating the presence of the vulnerability and "0" indicating its absence. If a contract was not parsed successfully by a tool, the result will be marked as "N/A".
-- **Actual**: The actual result of the vulnerability (either "1" for detected or "0" for not detected).
-
-Here is an example structure for the file `tools_RE.csv` (for Reentrancy vulnerabilities):
-
-| Smart Contract                               | Function Name                                          | sailfish | slither | solhint | mythril | conkas | Actual |
-|---------------------------------------------|-------------------------------------------------------|----------|---------|---------|---------|--------|--------|
-| 0x000000000000541e251335090ac5b47176af4f7e  | dexblue.spendgastokens                                | N/A      | 1       | 0       | 0       | 0      | 1      |
-| 0x000000000000541e251335090ac5b47176af4f7e  | dexbluesettlementmodule.matchorderwithreserve        | N/A      | 1       | 0       | 0       | 0      | 1      |
-| 0x000000000000541e251335090ac5b47176af4f7e  | dexbluesettlementmodule.matchorderwithreservewithdata| N/A      | 1       | 0       | 0       | 0      | 1      |
-| 0x000000000000541e251335090ac5b47176af4f7e  | dexbluesettlementmodule.settleringtrade              | N/A      | 1       | 0       | 0       | 0      | 1      |
-| 0x000000000000541e251335090ac5b47176af4f7e  | dexbluesettlementmodule.settleringtradewithdata     | N/A      | 1       | 0       | 0       | 0      | 1      |
-| 0x00195777bed7025e78819156281192c85fb3cf9b  | game.startraffle                                     | 0        | 1       | 1       | 0       | 0      | 1      |
-
-In this table:
-- The **"Smart Contract"** and **"Function Name"** columns identify the contract and function analyzed.
-- The **tool columns** (e.g., sailfish, slither, etc.) represent the results of various static analysis tools used to detect vulnerabilities.
-- **"Actual"** represents the real vulnerability outcome, with "1" indicating the vulnerability was detected and "0" indicating it was not.
 
 ## How to Use
 
