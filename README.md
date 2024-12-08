@@ -21,37 +21,47 @@ Within this folder, you'll find the following subdirectories:
 	* Usage: python3 ExtFromEtherScan.py
 	* contracts.csv contains addresses of Real World Smart Contracts used in SCRUBD-CD
 
-- **`labels.csv`**: A CSV file containing labels for the dataset. It specifies whether the Smart Contract is vulnerable to RE or UX.
+-- **`labels.csv`**: Vulnerability Labels for Smart Contracts
 
-This file contains labeled data for Smart Contracts with an emphasis on **Reentrancy (RE)** and **Unhandled Exceptions (UX)** vulnerabilities. The file provides detailed comments explaining whether each contract function is vulnerable to these issues or not.
+This CSV file contains labels for the dataset, detailing the vulnerability status of Smart Contracts with an emphasis on **Reentrancy (RE)** and **Unhandled Exceptions (UX)** vulnerabilities. Each entry includes detailed comments explaining the rationale behind the vulnerability assessment.
 
 #### File Structure
 
-The file contains the following headers:
+The file includes the following headers:
 
-- **Smart Contract**: The address of the Smart Contract being analyzed.
-- **Function Name**: The name of the function within the Smart Contract.
-- **RE**: Indicates whether the contract is vulnerable to Reentrancy. A value of `1` means vulnerable, while `0` means not vulnerable.
-- **UX**: Indicates whether the contract is vulnerable to Unhandled Exceptions. A value of `1` means vulnerable, while `0` means not vulnerable.
-- **Comments**: Detailed explanation for the vulnerability status, including reasons for identifying the vulnerability or not.
+- ****Smart Contract****: The Ethereum address of the Smart Contract under analysis.
+- ****Function Name****: Specifies the function within the Smart Contract being evaluated.
+- ****RE****: Indicates the vulnerability of the contract to Reentrancy attacks. A value of `1` means the function is vulnerable, while `0` indicates it is not.
+- ****UX****: Reflects the potential for Unhandled Exceptions within the function. A `1` denotes a vulnerability, whereas `0` signifies no vulnerabilities detected.
+- ****is_student****: Indicates whether the analysis or mock scenario was designed or influenced by student involvement. `1` for yes, `0` for no.
+- ****Comments****: Provides a detailed explanation for the vulnerability status, including reasons for identifying or dismissing the presence of vulnerabilities.
 
 #### Sample Data
 
-| Smart Contract                               | Function Name                                             | RE | UX  | Comments                                                            |
-|---------------------------------------------|----------------------------------------------------------|------|-----|---------------------------------------------------------------------|
-| 0x000000000000541e251335090ac5b47176af4f7e  | dexBlue.spendGasTokens(uint256)                          | 0    | 1   | -- No REENT: no ether involved                                       |
-| 0x0000000000b3f879cb30fe243b4dfee438691c04  | GasToken2.makeChild()                                    | 0    | 1   | -- Reason for no REENT: No state changes after external call       | 
-| 0x0003ed19f80564745e84b4cc411a7b6be4f0cf31  | NeverJeet.openTrading()                                  | 0    | 0   |                                                                     |
-| 0x00195777bed7025e78819156281192c85fb3cf9b  | GAME.startRaffle(uint256)                                | 1    | 0   | -- REENT -- state var jackpot                                       |
-| 0x0030f75e27f6df16383f47ae11ae34abc21f5f2c  | TYRANT.GoLive()                                          | 0    | 0   | -- no REENT: modifier onlyowner                                     |
+Here is a sample from the dataset showcasing the structure and type of data recorded:
+
+| Smart Contract                               | Function Name                                             | RE | UX  | is_student | Comments                                                   |
+|----------------------------------------------|-----------------------------------------------------------|----|-----|------------|------------------------------------------------------------|
+| 0x000000000000541e251335090ac5b47176af4f7e   | dexBlue.spendGasTokens                                    | 1  | 1   | 1          | RE -- Multi call bug                                       |
+| 0x000000000000541e251335090ac5b47176af4f7e   | dexBlueSettlementModule.matchOrderWithReserve            | 1  |     | 0          | RE -- balances[order.sellToken][order.signee]              |
+| 0x000000000000541e251335090ac5b47176af4f7e   | dexBlueSettlementModule.matchOrderWithReserveWithData    | 1  |     | 0          | RE -- balances[order.sellToken][order.signee]              |
+| 0x000000000000541e251335090ac5b47176af4f7e   | dexBlueSettlementModule.settleRingTrade                  | 1  |     | 0          | RE -- balances[trades[i].giveToken][reserve]               |
+| 0x000000000000541e251335090ac5b47176af4f7e   | dexBlueSettlementModule.settleRingTradeWithData          | 1  |     | 0          | RE -- balances[trades[i].giveToken][reserve]               |
+| 0x000000000000541e251335090ac5b47176af4f7e   | dexBlueSettlementModule.swapWithReserve                  | 0  |     | 0          | No vulnerabilities detected                                |
+| 0x0000000000b3f879cb30fe243b4dfee438691c04   | GasToken2.destroyChildren                                 | 1  |     | 0          | RE -- Multi call bug                                       |
+| 0x00195777bed7025e78819156281192c85fb3cf9b   | GAME.startRaffle                                          | 1  | 0   | 1          | RE -- state var jackpot                                    |
+| 0x0030f75e27f6df16383f47ae11ae34abc21f5f2c   | TYRANT.internalTransfer                                   | 1  |     | 0          | Possible RE vulnerability detected                         |
 
 #### Explanation of Columns
 
-- **RE (Reentrancy)**: This column indicates whether the Smart Contract is vulnerable to **Reentrancy** attacks. A value of `1` means the function is vulnerable, and `0` means the function is not vulnerable. Reentrancy vulnerabilities occur when a contract calls an external contract and the external contract calls back into the original contract, potentially causing unintended behavior.
+- ****RE (Reentrancy)****: This column indicates whether the Smart Contract is vulnerable to reentrancy attacks. A value of `1` suggests vulnerability, pointing to potential risks where the contract might be called recursively before the first invocation of the function is completed, leading to unexpected behaviors or states.
 
-- **UX (Unhandled Exceptions)**: This column indicates whether the Smart Contract function has **Unhandled Exceptions**. A value of `1` means there is a vulnerability, and `0` means there isn't. Unhandled exceptions can occur when the contract fails to handle error cases properly, such as failing to account for the failure of external contract calls or operations that could revert the transaction.
+- ****UX (Unhandled Exceptions)****: This column shows whether the function is prone to unhandled exceptions, which might occur if the contract does not properly check or handle the outcomes of external calls or operations that fail, potentially reverting transactions or leading to loss of funds.
 
-- **Comments**: This column provides explanations for the vulnerabilities (or lack thereof). It describes why a function is marked as vulnerable or not, such as the lack of state changes or the presence of modifiers that prevent reentrancy.
+- ****Comments****: Provides context and clarification on the vulnerability status of each function, detailing specific conditions or coding patterns that contribute to the security assessment.
+
+This structured approach in `labels.csv` ensures that researchers and developers have clear insights into the vulnerabilities of smart contracts, supporting more informed security practices and enhancements.
+
 
 
 ### 3. `SCRUBD-SD/` (Synthesized Dataset)
