@@ -5,6 +5,7 @@ The `limitations/` folder explores the limitations in existing smart contract da
 ## Folder Structure
 
 ### `Turn-The-Rudder/`
+#### `Zibin Zheng, Neng Zhang, Jianzhong Su, Zhijie Zhong, Mingxi Ye, and Jiachi Chen. 2023. Turn the Rudder: A Beacon of Reentrancy Detection for Smart Contracts on Ethereum. In Proceedings of the 45th International Conference on Software Engineering (ICSE '23). IEEE Press, 295–306. https://doi.org/10.1109/ICSE48619.2023.00036`
 This folder contains three CSV files that highlight different levels of function similarities in smart contracts, focusing on vulnerabilities:
 
 - **`duplicates-semantically-unique.csv`**: This file lists smart contract functions that are semantically unique but may contain duplicate or similar-looking code. 
