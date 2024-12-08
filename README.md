@@ -37,9 +37,9 @@ Here is an example structure for the file `tools_RE.csv` (for Reentrancy vulnera
 | 0x00195777bed7025e78819156281192c85fb3cf9b  | game.startraffle                                     | 0        | 1       | 1       | 0       | 0      | 1      |
 
 In this table:
-- The ***"Smart Contract"*** and ***"Function Name"*** columns identify the contract and function analyzed.
-- The ***tool columns*** (e.g., sailfish, slither, etc.) represent the results of various static analysis tools used to detect vulnerabilities.
-- ***"Actual"*** represents the real vulnerability outcome, with "1" indicating the vulnerability was detected and "0" indicating it was not.
+- The ****"Smart Contract"**** and ****"Function Name"**** columns identify the contract and function analyzed.
+- The ****tool columns**** (e.g., sailfish, slither, etc.) represent the results of various static analysis tools used to detect vulnerabilities.
+- ****"Actual"**** represents the real vulnerability outcome, with "1" indicating the vulnerability was detected and "0" indicating it was not.
 - **`Google-Bigquery.db`**: Contains a Google BigQuery SQL query that lists Smart Contracts with more than one transaction, sorted by their Ethereum balances. This query can be run on [Google Cloud BigQuery](https://cloud.google.com/bigquery).
 
 - **`ExtFromEtherScan.py`**: can be used to collect Real World Smart Contracts from Etherscan API
