@@ -6,9 +6,9 @@ import pandas as pd
 import time
 import os
 import sys
-csv_address_file='contracts.csv'
+csv_address_file='../data/contracts.csv'
 
-report_dir = '/home'
+report_dir = '.'
 keys = ['XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX','XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX']
 #Get API Keys from https://etherscan.io
 
