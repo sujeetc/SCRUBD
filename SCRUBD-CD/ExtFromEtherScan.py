@@ -9,7 +9,7 @@ import sys
 csv_address_file='contracts.csv'
 
 report_dir = '/home'
-#keys = ['XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX','XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX']
+keys = ['XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX','XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX']
 #Get API Keys from https://etherscan.io
 
 present_dir = os.getcwd()
