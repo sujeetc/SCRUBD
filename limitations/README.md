@@ -23,7 +23,7 @@ Each file contains the following columns:
 
 - **`Exact-Function-In-Non-Vuln`**: A hash of the function body that has been matched with a non-vulnerable function in a different contract. This column shows cases where a function is vulnerable in one contract but matches exactly with a non-vulnerable version in another contract. The format of this field is:
 
-<hash-of-function-body>,<SmartContractAddress>-<FunctionName>,<SmartContractAddress>-<FunctionName>
+\<hash-of-function-body\>,\<SmartContractAddress\>-\<FunctionName\>,\<SmartContractAddress\>-\<FunctionName\>
 
 
 ##### Sample Data from `duplicates.csv`
