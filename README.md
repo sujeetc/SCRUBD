@@ -132,3 +132,12 @@ We welcome contributions from the community to improve this dataset. If you have
 
 - The dataset was created as part of ongoing research to improve Smart Contract security and bug detection.
 
+
+## Contact Us
+
+For any inquiries or feedback regarding the SCRUBD dataset, please feel free to contact us:
+
+- **Email**: [sujeetc@cse.iitk.ac.in](mailto:sujeetc@cse.iitk.ac.in)
+
+We look forward to your contributions and feedback!
+
