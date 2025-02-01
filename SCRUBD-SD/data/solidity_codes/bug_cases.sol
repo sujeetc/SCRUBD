@@ -1,8 +1,3 @@
-/*
- * @source: http://blockchain.unica.it/projects/ethereum-survey/attacks.html#simpledao
- * @author: Atzei N., Bartoletti M., Cimoli T
- * Modified by Josselin Feist
- */
 pragma solidity 0.4.24;
 
 contract SimpleDAO {
@@ -22,7 +17,6 @@ contract SimpleDAO {
     mapping (address => Holder) public Bcc;
 
     function check_if () public {
-            //slither-plus:no
             if(b<10)
                 msg.sender.call.value(a)();
             b = b - 10;
@@ -88,7 +82,6 @@ function indirect_control_dep_ref2() public {
 
         function require_wbc_4 () public {
             uint clocal;
-            //slither-plus:no
             b = b - 10;
             msg.sender.call.value(a)();
             if(b<10)
@@ -99,31 +92,23 @@ function indirect_control_dep_ref2() public {
         }
 
     function Collect_2(uint _am) public 
-        //slither-plus:no
     {
         if(a<10)
             b++;
         if(b<10) 
             msg.sender.call.value(_am)();
         a = a+1;
-        // if(acc.balance >= MinSum && msg.sender.call.value(_am)() && acc.balance >= 20)
-        //     acc.balance -= _am;
     }
 
     function buggy_Collect_2(uint _am) public
-        //slither-plus:no
     {
-        // var acc = Acc[msg.sender];
         if(a<10 && msg.sender.call.value(_am)())
             a = a+1;
-        // if(acc.balance >= MinSum && msg.sender.call.value(_am)() && acc.balance >= 20)
-        //     acc.balance -= _am;
     }
 
 
 
 function Collect_222(uint _am) public 
-        //slither-plus:no
     {
         var acc = Acc[msg.sender];
         if(a<10)
@@ -136,8 +121,7 @@ function Collect_222(uint _am) public
     }
 
 
-function Collect_23(uint _am) public // Non Buggy and Tool also says non Buggy
-        //slither-plus:no
+function Collect_23(uint _am) public 
         {
             var acc = Acc[msg.sender];
             if(a<10 && msg.sender.call.value(_am)())
@@ -146,18 +130,16 @@ function Collect_23(uint _am) public // Non Buggy and Tool also says non Buggy
                 acc.balance -= _am;
         }
 
-        function Collect_12(uint _am) public // Non Buggy and Tool also says non Buggy
-        //slither-plus:no
+        function Collect_12(uint _am) public 
         {
             if(a<10 && msg.sender.call.value(_am)() && a++<10)
                 b = b+1;
         }
 
-    function slither_31 () public { // reentrancy: yes, reentrancy-eth: yes
-// slither-plus: no
+    function slither_31 () public {
 // only one non-reentrant call will pass, others will fail
 // in case of reentrancy, all calls will pass
-        if(a>50) {                  // Slither: Yes, Our: No, Real: Yes
+        if(a>50) {                 
             c = c-10;
         }
         msg.sender.call.value(b)();
@@ -174,28 +156,23 @@ function Collect_23(uint _am) public // Non Buggy and Tool also says non Buggy
           a = a + 10;
         }
 
-    function slither_dd () public { // reentrancy: yes, reentrancy-eth: yes
+    function slither_dd () public {
         msg.sender.call.value(b)();
         b = b+50;
     }
 
-    function slither_dd_if () public { // reentrancy: yes, reentrancy-eth: yes
+    function slither_dd_if () public { 
         if (msg.sender.call.value(b)())
             b = b+50;
     }
 
-        function test_call(uint _am) public // Non Buggy and Tool also says non Buggy
-        //slither-plus:no
+        function test_call(uint _am) public
         {
             if(msg.sender.call.value(a)() && a++<10)
                 b = b + 1;
-            // if(acc.balance >= MinSum && msg.sender.call.value(_am)() && acc.balance >= 20)
-            //     acc.balance -= _am;
         }
 
-
-        function test_call2(uint _am) public // Non Buggy and Tool also says non Buggy
-        //slither-plus:no
+        function test_call2(uint _am) public 
         {
             var acc = Acc[msg.sender];
             if(msg.sender.call.value(a)() && a++<10)
@@ -221,7 +198,7 @@ function Collect_23(uint _am) public // Non Buggy and Tool also says non Buggy
         b = b + 10;
     }
 
-    function fun_1 () public {  // NON Buggy
+    function fun_1 () public {  
          if(b<10 && msg.sender.call.value(a)() && b-- < 10)
          {
                  c = c - 10;
@@ -229,7 +206,7 @@ function Collect_23(uint _am) public // Non Buggy and Tool also says non Buggy
     }
     uint public MinSum;
 
-    function Collect_1(uint _am) public // Buggy but our tool says its not buggy
+    function Collect_1(uint _am) public 
     {
         var acc = Acc[msg.sender];
         if( acc.balance>=MinSum && msg.sender.call.value(acc.balance)() && now>acc.unlockTime)
@@ -237,7 +214,6 @@ function Collect_23(uint _am) public // Non Buggy and Tool also says non Buggy
     }
 
     function Collect_21(uint _am) public 
-        //slither-plus:yes
     {
         var acc = Acc[msg.sender];
         if(acc.balance >= MinSum && msg.sender.call.value(_am)() && acc.balance++ >= 20)
@@ -246,13 +222,10 @@ function Collect_23(uint _am) public // Non Buggy and Tool also says non Buggy
     
     mapping(address => uint) balances_re_ent8;
     function dd_wac_1 () public {
-        // slither-plus:yes
-        // check_indirect_cd -- reentrancy.py
         msg.sender.call.value(balances_re_ent8[msg.sender ])("");
         balances_re_ent8[msg.sender] = 0;
     }
     function Collect_21_updated(uint _am) public
-        //slither-plus:no
     {
         var acc = Acc[msg.sender];
         if(a >= MinSum && msg.sender.call.value(_am)() && a++ >= 20)
@@ -260,21 +233,19 @@ function Collect_23(uint _am) public // Non Buggy and Tool also says non Buggy
     }
 
     function Collect_khichdi(uint _am) public 
-        //slither-plus:yes
-        // check_writes_af_call_node() function -- reentrancy.py
     {
         b = b + 10;
         if(msg.sender.call.value(a)() && a++ >= 20)
             _am -= 10;
     }
 
-    function check_dd(uint _am) public // Buggy and tool says Buggy
+    function check_dd(uint _am) public 
     {
         msg.sender.call.value(a)();
         a -= _am;        
     }
 
-    function check_dd_local(uint _am) public // Buggy and tool says Buggy
+    function check_dd_local(uint _am) public
     {
         uint alocal = 10;
         uint blocal = 20;
@@ -285,9 +256,7 @@ function Collect_23(uint _am) public // Non Buggy and Tool also says non Buggy
         b = alocal + blocal;      
     }
     
-
-
-    function check_cd_local(uint _am) public // Buggy and tool says Buggy
+    function check_cd_local(uint _am) public
     {
         uint alocal = 10;
         uint blocal = 20;
@@ -334,7 +303,6 @@ function Collect_23(uint _am) public // Non Buggy and Tool also says non Buggy
    }
 
     function check_writes_af_call_node(uint _am) public
-        //slither-plus:no
     {
         if(msg.sender.call.value(a)() && a++ >= 20)
             b -= _am;
@@ -349,9 +317,7 @@ function Collect_23(uint _am) public // Non Buggy and Tool also says non Buggy
                 z ++;
             }
     }
-    function analyze() public { // Real:Yes, Slither: Yes, Our: No
-        // checkWrites -- reentrancy.py
-        // slither-plus:yes
+    function analyze() public { 
         if(b < 10)
             if(msg.sender.call.value(a)())
                 b = b - 10;
@@ -386,7 +352,7 @@ function Collect_23(uint _am) public // Non Buggy and Tool also says non Buggy
         b = b - 10;
     }
 
-    function unsafe_process_require_assert_wbc(uint) public // reentrancy: yes, reentrancy-eth: yes
+    function unsafe_process_require_assert_wbc(uint) public 
     {
         a = a + 10;
         msg.sender.call.value(b)();
@@ -395,13 +361,10 @@ function Collect_23(uint _am) public // Non Buggy and Tool also says non Buggy
 
 
     function CollectReal(uint _am) public payable
-        // checkWrites -- reentrancy.py
-        //slither-plus:yes
     {
         var acc = Acc[msg.sender];
         if(acc.balance >= MinSum && acc.balance >= _am && now > acc.unlockTime)
         {
-            // <yes> <report> REENTRANCY
             if(msg.sender.call.value(_am)())
             {
                 acc.balance -= _am;

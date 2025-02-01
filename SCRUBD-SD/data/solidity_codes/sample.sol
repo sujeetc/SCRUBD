@@ -24,45 +24,24 @@ contract SimpleDAO {
   bool public not_called;
   bool intitalized;
 
-// Slither-Plus says following functions has reentrancy
-// CollectReal(uint256)
-// Collect_1(uint256)
-// Collect_DD(uint256)
-// Collect_khichdi(uint256)
-// analyze()
-// analyze()
-// slither_fn_2()
-// slither_fn_5()
-// slither_fn_6()
-// slithera_13()
-// slitherfun3()
-// test_writes_within_node()
-// withdraw_balances_re_ent8()
 
     function withdraw_balances_re_ent8 () public {
-        // slither-plus:yes
-        // check_indirect_cd -- reentrancy.py
         (bool success) = msg.sender.call.value(balances_re_ent8[msg.sender ])("");
         if (success)
             balances_re_ent8[msg.sender] = 0;
     }
 
-    function slither_fn_2 () public { // Real: Yes, Slither: No, Our : Yes
-        //slither-plus:yes
-        // check_writes_af_call_node -- reentrancy.py
-        // check_indirect_cd -- reentrancy.py
+    function slither_fn_2 () public { 
         if(msg.sender.call.value(a)() && a++ < 10)
             b = c;
     }
 
     function slither () public {
-        //slither-plus:no
         if(a++<10 && msg.sender.call.value(a)() && a<10)
             b = b + 10;
     }
 
     function slither_2 () public {
-        //slither-plus:no
         if(a++<10)
          msg.sender.call.value(a)();
          if(a<10)
@@ -71,9 +50,6 @@ contract SimpleDAO {
 
 
     function slithera_13 () public {
-        // Slither-Plus does not flag this function as buggy if we check for only this function
-        // However, it mark it as buggy when checked with other functions also
-        //slither-plus: yes
         a = a + 10;
         if(c > 10)
             msg.sender.call.value(b)();
@@ -94,13 +70,11 @@ contract SimpleDAO {
     mapping(address => uint) balances_re_ent8;
 
     function Test(uint _am) public {
-        //slither-plus:no
         var acc = Acc[msg.sender];
         msg.sender.call.value(acc.balance)();
     }
 
-    function Collect_DD_1(uint _am) public // Buggy and our tool says its buggy
-        //slither-plus:yes
+    function Collect_DD_1(uint _am) public
     {
         var acc = Acc[msg.sender];
         msg.sender.call.value(acc.balance)();
@@ -109,8 +83,7 @@ contract SimpleDAO {
 
 
 
-        function Collect_DDz(uint _am) public // Buggy and our tool says its buggy
-        //slither-plus:yes
+        function Collect_DDz(uint _am) public
     {
         var acc = Acc[msg.sender];
         msg.sender.call.value(acc.balance)();
@@ -127,7 +100,6 @@ contract SimpleDAO {
     }
 
     function Collect_uoiu(uint _am) public 
-        //slither-plus:no
         // Not buggy because no state variable is getting updated
         // We checked it in Remix editor
     {
@@ -140,7 +112,6 @@ contract SimpleDAO {
     }
 
     function Collect_uoiuz(uint _am) public 
-        //slither-plus:no
         // Not buggy because no state variable is getting updated
         // We checked it in Remix editor
     {
@@ -152,8 +123,7 @@ contract SimpleDAO {
     }
 
 
-    function Collect_2(uint _am) public // TODO: Buggy and Tool also says non Buggy
-        //slither-plus:no
+    function Collect_2(uint _am) public
     {
         var acc = Acc[msg.sender];
         if(acc.balance >= MinSum && msg.sender.call.value(_am)() && acc.balance >= 20)
@@ -162,8 +132,6 @@ contract SimpleDAO {
 
 
     function Collect_khichdi(uint _am) public 
-        //slither-plus:yes
-        // check_writes_af_call_node() function -- reentrancy.py
     {
         var acc = Acc[msg.sender];
         b = b + 10;
@@ -172,8 +140,6 @@ contract SimpleDAO {
     }
 
     function CollectReal(uint _am) public payable
-        // checkWrites -- reentrancy.py
-        //slither-plus:yes
     {
         var acc = Acc[msg.sender];
         if(acc.balance >= MinSum && acc.balance >= _am && now > acc.unlockTime)
@@ -187,18 +153,12 @@ contract SimpleDAO {
     }
 
     function test_writes_within_node() public 
-        //slither-plus:yes
-        // check_dd_if -- reentrancy.py
-        // check_indirect_cd -- reentrancy.py
     { 
         if(c++ < 10 && msg.sender.call.value(d++)() && b++ < 10)
             d++;
     }
 
     function test_writes_within_nodez() public 
-        //slither-plus:yes
-        // check_dd_if -- reentrancy.py
-        // check_indirect_cd -- reentrancy.py
     { 
         if(c++ < 10 && msg.sender.call.value(d++)() && b++ < 10)
             d++;
@@ -207,7 +167,6 @@ contract SimpleDAO {
     }
 
     function no_eth() public {
-        //slither-plus:no
         if(not_called)
             if( ! (msg.sender.call() ) ){
                 revert();
@@ -216,33 +175,28 @@ contract SimpleDAO {
     }   
 
     function withdraw_dd() public {
-        //slither-plus:no
         msg.sender.transfer(a);
         a = a - 10;
     }
 
-    function slither_fP_3 () public { // Real: No, Slither: Yes, Our : Yes
-        //slither-plus:no
+    function slither_fP_3 () public {
         if(msg.sender.call.value(a)() && b < 10)
             b = b + 10;
     }
 
-    function slither_fP_3z () public { // Real: No, Slither: Yes, Our : Yes
-        //slither-plus:no
+    function slither_fP_3z () public {
         if(msg.sender.call.value(a)() && b < 10)
             b = b + 10;
         c = a ;
     }
 
     function slither_fn_4 () public {
-        //slither-plus:no
         if(msg.sender.call.value(z)() &&  msg.sender.call.value(a)())
             b = b + 10;
     }
 
 
     function slither_fn_4z () public {
-        //slither-plus:no
         if(msg.sender.call.value(z)() &&  msg.sender.call.value(a)())
             z = z +10;
             b = b + 10;
@@ -250,39 +204,29 @@ contract SimpleDAO {
     }
 
     function slitherfun1 () public {
-        //slither-plus:no
         if(msg.sender.call.value(a)() || b<10)
             b = b - 10;
     }
     function slitherfun2 () public {
-        //slither-plus:no
         if(msg.sender.call.value(a)())
             if(b < 10)
                 b = b - 10;
     }
 
     function slitherfun3 () public {
-        // slither-plus:yes
-        // check_dd_if -- reentrancy.py
-        // check_indirect_cd -- reentrancy.py
         if(c++ > 10 && msg.sender.call.value(a)() && b < 10)
             a = a - 10;
     }
 
-    function slither_fn_5 () public { // Real: No, Slither: Yes, Our : Yes
-        // slither-plus:yes
-        // check_dd_if -- reentrancy.py
+    function slither_fn_5 () public {
         if(b < 10 || msg.sender.call.value(a)())
             b = b + 10;
     }
-    function slither_fn_6 () public { // Real: No, Slither: Yes, Our : Yes
-        //slither-plus:yes
+    function slither_fn_6 () public {
         if(msg.sender.call.value(a)() || b < 10)
             b = b + 10;
     }
-    function analyze() public { // Real:Yes, Slither: Yes, Our: No
-        // checkWrites -- reentrancy.py
-        // slither-plus:yes
+    function analyze() public {
         if(b < 10)
             if(msg.sender.call.value(a)())
                 b = b - 10;
