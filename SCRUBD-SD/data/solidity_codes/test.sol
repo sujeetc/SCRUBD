@@ -35,7 +35,7 @@ contract test
 			a++;
 	}
 
-    function non_buggy4() public { //No Bug 
+    function non_buggy4() public { 
         if(b<10){
             d++;
         }
@@ -43,7 +43,7 @@ contract test
         b++;
     }
 
-    function non_buggy5() public { //No Bug
+    function non_buggy5() public { 
         if(b<10){
             if(d>10)
                 b++;
@@ -53,7 +53,7 @@ contract test
         d++;
     }
 
-    function buggy6() public {  // Buggy function
+    function buggy6() public {  
         if(d<10){
             if(b>10)
                 b++;
@@ -63,7 +63,7 @@ contract test
         d++;
     }
 
-    function buggy7() public { //issue
+    function buggy7() public { 
         if(b<10){
             if(e>10) 
                 d = b+10;
@@ -73,7 +73,7 @@ contract test
         e = e+10;
     }
 
-    function buggy9() public { //issue
+    function buggy9() public {
         if(b>10)
             d++;
         else if(c<10){f++;}

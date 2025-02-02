@@ -1,8 +1,3 @@
-/*
- * @source: http://blockchain.unica.it/projects/ethereum-survey/attacks.html#simpledao
- * @author: Atzei N., Bartoletti M., Cimoli T
- * Modified by Josselin Feist
- */
 pragma solidity 0.4.24;
 
 contract SimpleDAO {
@@ -20,20 +15,17 @@ contract SimpleDAO {
   uint public w;
 
 
-  function withdraw_multi_call(address a1, address a2) public { // This case is not captured by our tool
-            require(a1.call.value(c)());                        // It can be captured easily
-            require(a2.call.value(c)());                        // Look out for first call then scan all its son nodes
-                                                                // If any of the son contains another call then match a1 and a2 of both
-                                                                // If a1 is not equal to a2 then buggy
-                                                                  // @ Sujeet: I am not doing this currently because I think its a rare case
+  function withdraw_multi_call(address a1, address a2) public { 
+            require(a1.call.value(c)());                       
+            require(a2.call.value(c)());                        
   }
 
-  function withdraw_for_loop(address[] addr) public { // Slither: Yes, Our tool: Yes, We are capturing this bug
+  function withdraw_for_loop(address[] addr) public { 
         for (a=0; a>10; a++)    {
             require(addr[a].call.value(c)());
         }
     }
-  function withdraw_for_loop_1(address[] addr, address a2) public { // Slither: Yes, Our tool: Yes, We are capturing this bug
+  function withdraw_for_loop_1(address[] addr, address a2) public {
         for (a=0; a>10; a++)    {
             require(addr[a].call.value(c)());
         }
@@ -41,7 +33,7 @@ contract SimpleDAO {
     }
 
 
-   function withdraw_while_1() public {  // Slither: Yes, Our TOol: Yes, Real: Yes
+   function withdraw_while_1() public {  
       while (b > 10)
       {
         c = c - 10;
@@ -49,7 +41,7 @@ contract SimpleDAO {
       }
   }
 
-   function withdraw_while_2() public {  // Slither: Yes, Our TOol: Yes, Real: Yes
+   function withdraw_while_2() public {  
       while (b > 10)
       {
         c = c - 10;
@@ -59,7 +51,7 @@ contract SimpleDAO {
   }
 
 
-   function non_buggy_while_1() public {  // Slither: Yes, Our TOol: No, Real: No
+   function non_buggy_while_1() public {  
       while (b > 10)
       {
         a = a - 10;
@@ -68,7 +60,7 @@ contract SimpleDAO {
   }
 
 
-   function non_buggy_do_while_1() public {  // Our: no, Slither: Yes, Real: No bug
+   function non_buggy_do_while_1() public {  
       do
       {
         a = a - 10;
@@ -88,7 +80,7 @@ contract SimpleDAO {
 
 
 
-   function buggy_for_1() public {  // Slither: Yes, Our Tool: Yes, Real : Yes
+   function buggy_for_1() public { 
       for (b=0; b > 10; b++)
       {
         require(msg.sender.call.value(c)());

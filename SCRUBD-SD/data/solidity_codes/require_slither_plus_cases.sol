@@ -1,14 +1,4 @@
 
-/*
-
- * @source: http://blockchain.unica.it/projects/ethereum-survey/attacks.html#simpledao
-
- * @author: Atzei N., Bartoletti M., Cimoli T
-
- * Modified by Josselin Feist
-
- */
-
 pragma solidity 0.4.24;
 
 
@@ -51,7 +41,7 @@ contract SimpleDAO {
 
 
 
-function slithermine_1() public { // Buggy // // SLither-plus does not catch the bug
+function slithermine_1() public { 
 
     a = a + 10;
 
@@ -64,7 +54,7 @@ function slithermine_1() public { // Buggy // // SLither-plus does not catch the
 
 }
 
-function slithermine_2() public { // Not Buggy --> Buggy Now
+function slithermine_2() public { 
 
     a = a + 10;
 
@@ -77,7 +67,7 @@ function slithermine_2() public { // Not Buggy --> Buggy Now
 
 }
 
-function buggy_require_1() public { // Not Buggy --> Buggy Now
+function buggy_require_1() public { 
     // d = 12, a = 42, c = 3
     d = d - 1;
 
@@ -97,7 +87,7 @@ function buggy_require_1() public { // Not Buggy --> Buggy Now
 
 
 
-function slithermine_18() public { // Buggy // SLither-plus does not catch the bug
+function slithermine_18() public { 
 
     if(a>15) c = c + 40;
 
@@ -109,7 +99,7 @@ function slithermine_18() public { // Buggy // SLither-plus does not catch the b
 
 }
 
-function slithermine_24() public { // Buggy // SLither-plus does not catch the bug
+function slithermine_24() public { 
 
     require(c<10);
 

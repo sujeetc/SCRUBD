@@ -1,8 +1,3 @@
-/*
- * @source: http://blockchain.unica.it/projects/ethereum-survey/attacks.html#simpledao
- * @author: Atzei N., Bartoletti M., Cimoli T
- * Modified by Josselin Feist
- */
 pragma solidity 0.4.24;
 
 contract SimpleDAO {
@@ -19,7 +14,7 @@ contract SimpleDAO {
   uint public x;
   uint public w;
 
-  function non_reentrant() public{ // Real: No Bug, SLither: Bug, Our : Bug
+  function non_reentrant() public{ // Real: No Bug
     if(d==0){
       d=1;
       require(msg.sender.call.value(a)());}
@@ -33,14 +28,9 @@ contract SimpleDAO {
   function withdraw_call(uint amount) public {
     if ( c > 5 )
 	    d = d + 5;
-    //else
-	  //{
-	  //c = c + 10;
     require(msg.sender.call.value(amount + a)());
 		d = d - 5;
-	  //}
     if ( a >= amount ) {
-    //  require(msg.sender.call.value(amount + a)());
       a -= amount;
     }
 	  b = b - 10;
@@ -60,7 +50,6 @@ contract SimpleDAO {
               require(msg.sender.call.value(amount)());
             }
           else {
-                // c = c + 10;
                 d = d - 5;
             }
             if (a > 10)
@@ -92,9 +81,7 @@ contract SimpleDAO {
 
   } 
 
-   function withdraw_call_if() public { // This case not captured
-	      //b = a + 10;
-	      //a = a + 10;
+   function withdraw_call_if() public { 
               if (a > 10)
 		  a = a + 10;
 	      else if (b < 10)
@@ -105,7 +92,7 @@ contract SimpleDAO {
               a = a + 10;
   } 
 
-  function withdraw_call_ifz() public { // This case not captured
+  function withdraw_call_ifz() public { 
 	      b = a + 10;
 	      a = a + 10;
               if (a > 10)
@@ -169,8 +156,6 @@ contract SimpleDAO {
         }
         x = x - 10;
     }
-  //  c = c - 10;
-   
   }
 
 
@@ -198,16 +183,9 @@ contract SimpleDAO {
    } 
 
     function test() public {
-      // z = a;
-      // if (z > 10)
-      //   b = b - 10;
      b = a;
      require(msg.sender.call.value(b)());
      a = a;
-
-    //  if (c > 10)
-        // a = a - 1
-      // z = a;
    } 
 
 
@@ -218,21 +196,13 @@ contract SimpleDAO {
      b = a;
      require(msg.sender.call.value(b)());
      a = a;
-
-    //  if (c > 10)
-        // a = a - 1
-      // z = a;
    } 
 
 
    function testz() public {
-      // z = a;
-      // if (z > 10)
-      //   b = b - 10;
      b = a;
      require(msg.sender.call.value(b)());
      a = a;
-
      if (c > 10)
         a = a - 1;
       z = a;
@@ -260,7 +230,7 @@ function testzzz() public {
    // Create a data structure for parameters of call: [node: set(variables)]
 
 
-   function buggy_wbc_1() public { // Slither: Yes, Our tool: Yes, Real : Yes
+   function buggy_wbc_1() public { // Buggy: Yes
      // a = 1
      z = a + 10;                   
      if(z > 10){
@@ -284,7 +254,8 @@ function testzzz() public {
 
           c = a + 10;
   }
-  function withdraw_while_loop_2() public { // Buggy: Yes, Our tool: yes, Slither: No
+
+  function withdraw_while_loop_2() public { 
       while (a > 10)
       {
           a --;
@@ -293,7 +264,7 @@ function testzzz() public {
   }
 
 
-  function withdraw_while_loop_3() public { // Buggy: Yes, Our tool: yes, Slither: No
+  function withdraw_while_loop_3() public { 
       while (a > 10)
       {
 			    c = c - 10;
@@ -315,15 +286,6 @@ function testzzz() public {
 
           c = a + 10;
   }
-
-
-
-
-
-
-  // Solution to above problem:
-  // 1. parameter in the call is control dependent on variable getting updated
-  // 2nd case. Execution of the call is control dependent on variable getting updated
 
 
   function withdraw_call_4() public {

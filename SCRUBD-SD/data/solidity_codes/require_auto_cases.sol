@@ -50,7 +50,7 @@ contract SimpleDAO {
 
 
 
-function buggy_require_wbc_1() public { // Buggy // // SLither-plus does not catch the bug
+function buggy_require_wbc_1() public {
     // a = 25
     // c = 13
     a = a + 10;
@@ -308,7 +308,7 @@ function slithermine_17() public { // Not Buggy
 
 
 
-function slithermine_18() public { // Buggy // SLither-plus does not catch the bug
+function slithermine_18() public { // Buggy
 
     if(a>15) c = c + 40;
 
@@ -322,7 +322,7 @@ function slithermine_18() public { // Buggy // SLither-plus does not catch the b
 
 
 
-function slithermine_19() public { // Buggy // SLither-plus does not catch the bug // Debug the reason for it
+function slithermine_19() public { // Buggy
 
     require(c<10);
 
@@ -393,7 +393,7 @@ function slithermine_23() public { // Not Buggy
 
 
 
-function slithermine_24() public { // Buggy // SLither-plus does not catch the bug
+function slithermine_24() public { // Buggy
 
     require(c<10);
 

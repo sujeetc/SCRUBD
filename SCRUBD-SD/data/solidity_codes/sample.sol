@@ -1,8 +1,3 @@
-/*
- * @source: http://blockchain.unica.it/projects/ethereum-survey/attacks.html#simpledao
- * @author: Atzei N., Bartoletti M., Cimoli T
- * Modified by Josselin Feist
- */
 pragma solidity 0.4.24;
 
 contract SimpleDAO {

@@ -1,46 +1,7 @@
-// Note : reentrancy-eth marked in this file is different from reetrancy-eth from Slither tool
-// Here we say that the function has reentrancy-eth if an attacker can get extra benefits as compared to normal non-reentrant calls
-// However, if we mark that a function has reentrancy and it does not have reentrancy-eth, then we say that the function behaves differently for reentrant case and non reentrant case, but attacker won't get any benefits
-// Common example for
 pragma solidity 0.4.24;
 
 contract SimpleDAO {
 
-// Following functions are buggy according to Slither-plus
-
-// Collect_khichdaai(uint256)
-// analyze()
-// analyze()
-// bug_require()
-// bug_require_22()
-// bug_require_3()
-// bug_require_4()
-// bug_require_4()
-// bug_require_5()
-// bug_require_6()
-// bug_require_single_st()
-// bug_require_single_st_2()
-// multi_call()
-// multi_call()
-// not_covered()
-// require_1()
-// require_test()
-// require_test_5()
-// slither_2()
-// slither_2a()
-// slither_2a_1()
-// slither_2b()
-// slither_31()
-// slither_318()
-// slither_32341()
-// slither_3_DD()
-// slither_n31()
-// test_writes_before_calls(uint256)
-// withdraw_call(uint256)
-// withdraw_cd(uint256)
-// withdraw_conditional(uint256)
-// withdraw_dd(uint256)
-// withdraw_indirect_cd(uint256)
 
   uint public a;
   uint public b;
@@ -67,40 +28,40 @@ contract SimpleDAO {
     uint public MinSum;
 
 
-    function non_buggy_single_st_req_1 () public { // reentrancy: no, reentrancy-eth: no
+    function non_buggy_single_st_req_1 () public {
             require(msg.sender.call.value(b++)());
     }
     
 
-    function bug_require_22() public{ // reentrancy: yes, reentrancy-eth: yes
+    function bug_require_22() public{
         a++;
         require(msg.sender.call.value(b)());
         require(a>10);
     }   
 
-    function non_buggy_single_st_req_2 () public { // reentrancy: yes, reentrancy-eth: no
+    function non_buggy_single_st_req_2 () public { 
         require(a--<10 && msg.sender.call.value(a)());
     }
 
-    function non_buggy_single_st_req_3 () public { // reentrancy: yes, reentrancy-eth: no
+    function non_buggy_single_st_req_3 () public {
         require(a++<10 && msg.sender.call.value(b)());
     }
 
-    function slither_2b () public { // reentrancy:yes , reentrancy-eth: yes
+    function slither_2b () public {
                                     // parameter of call is updated after call
         require(msg.sender.call.value(a)() && a++<10);
     }
 
-    function non_buggy_single_st_req_4 () public { // reentrancy:yes, reentrancy-eth: no
+    function non_buggy_single_st_req_4 () public { 
         require(msg.sender.call.value(b)() && a++<10);
     }
 
 
-    function slither_2 () public { // reentrancy: yes, reentrancy-eth: yes
+    function slither_2 () public { 
         require(a++<10 && msg.sender.call.value(a)() && a<10);
     }
 
-    function non_buggy_1 () public { // reentrancy: no, reentrancy-eth: no
+    function non_buggy_1 () public {
             a = a+10;
             require(c>10);
             msg.sender.call.value(b)();
@@ -108,8 +69,7 @@ contract SimpleDAO {
                 a+=10;
     }
 
-// TODO
-function buggy_require_1 () public { // reentrancy: yes, reentrancy-eth: yes
+function buggy_require_1 () public { 
     // c = 12, a = 52
     require(c>10);
     a = a+10;
@@ -119,14 +79,14 @@ function buggy_require_1 () public { // reentrancy: yes, reentrancy-eth: yes
     }
 }
 
-function slither_3_DD () public { // reentrancy: yes, reentrancy-eth: yes
+function slither_3_DD () public { 
     require(c>10);
     c = a+4;
     msg.sender.call.value(b)();
     a = a+10;
 }
 
-function non_buggy_require_1 () public {  // reentrancy: no, reentrancy-eth: no
+function non_buggy_require_1 () public { 
     require(y>10);
     z = c+10;
     msg.sender.call.value(b)();
@@ -135,8 +95,8 @@ function non_buggy_require_1 () public {  // reentrancy: no, reentrancy-eth: no
     }
 }
 
-function buggy_require_indirect_cd () public {  // reentrancy: yes, reentrancy-eth: yes
-                                // Real BUG, Slither-Plus: No Bug, Slither: No Bug, 
+function buggy_require_indirect_cd () public { 
+                                // Real BUG
                                 // b is getting updated before call
                                 // updation of c depends on b (indirectly through a)
                                 // require(c>10) might fail or success based on updation of c
@@ -156,7 +116,7 @@ function buggy_require_indirect_cd () public {  // reentrancy: yes, reentrancy-e
 
 
 
-function buggy_require_wbc_1 () public {  // reentrancy: yes, reentrancy-eth: yes
+function buggy_require_wbc_1 () public {  
     // a = 62, c = 12
     a = a-10;                   // require checks for c, c depends on a, a is updated before call
     msg.sender.call.value(b)(); // c will get updated if reentrant calls set a greater than 50
@@ -166,7 +126,7 @@ function buggy_require_wbc_1 () public {  // reentrancy: yes, reentrancy-eth: ye
     }
 }
 
-function slither_n31 () public { // reentrancy: yes, reentrancy-eth: yes
+function slither_n31 () public { 
                             // reentrant calls will set c greater than a and require will always pass, which won't happen in normal non-reentrant scenario
                             // BUG, Slither-Plus: No Bug, Slither: No Bug, 
     a = a+10;
@@ -180,8 +140,7 @@ function slither_n31 () public { // reentrancy: yes, reentrancy-eth: yes
 // can there be bug if require is before call
 
 
-
-function buggy_wac_1 () public { // reentrancy: yes, reentrancy-eth: yes
+function buggy_wac_1 () public { 
     // a = 8                           // 1st reason for bug: a is updated after call, call is control dependent on a
     
     if(a<10)                    // 2nd reason for bug: require has c in it. c is updated after call
@@ -198,9 +157,8 @@ function buggy_wac_1 () public { // reentrancy: yes, reentrancy-eth: yes
     require(c>10);
 }
 
-// Parameters of require is updated after call
 
-    function Collect_khichdaai(uint _am) public // reentrancy: yes, reentrancy-eth: yes
+    function Collect_khichdaai(uint _am) public 
     {
         a = a + 10;
         b = a + 1;
@@ -208,7 +166,7 @@ function buggy_wac_1 () public { // reentrancy: yes, reentrancy-eth: yes
         require(a>50);
     }
 
-    function Collect_khichdasai(uint _am) public // reentrancy: yes, reentrancy-eth: yes
+    function Collect_khichdasai(uint _am) public 
     {
         var acc = Acc[msg.sender];
         acc.balance++;
@@ -217,36 +175,16 @@ function buggy_wac_1 () public { // reentrancy: yes, reentrancy-eth: yes
     }
 
 
-    // function test_writes(uint amount) public{
-    //     e = z - 10;                  // no need to mark this function as this function was created to test writes and not to test bug
-    //     if (b < 10)
-    //         m = z - 10;
-    //     else
-    //     {
-    //         n = a - 10;
-    //         require(msg.sender.call.value(amount + a)());
-    //     }
-    //     f = y - 10;
-    //     require(msg.sender.call.value(n)());
-    //     k = w - 10;
-    //     require(msg.sender.call.value(n)());
-    // }
-
-
-
-
-
-
-    function withdraw_call(uint amount) public{ // reentrancy: yes, reentrancy-eth: yes
+    function withdraw_call(uint amount) public{
                     require(msg.sender.call.value(amount + a)());
                     a = a - 10;
     }
-    function withdraw_conditional(uint amount) public{ // reentrancy: yes, reentrancy-eth: yes
+    function withdraw_conditional(uint amount) public{ 
                     if (a > 10)
                         require(msg.sender.call.value(amount + b)());
                     a = a - 10;
     }
-    function buggy_indirect_dep_1() public { // reentrancy: yes, reentrancy-eth: yes
+    function buggy_indirect_dep_1() public {
                                     // parameter of call: x
                                     // x depends on b, b depends on z, z depends on a
                                     // a is updated after call, thats whu buggy
@@ -294,9 +232,7 @@ function buggy_wac_1 () public { // reentrancy: yes, reentrancy-eth: yes
      }
 
     function analyze() public { 
-                        // reentrancy: yes, reentrancy-eth: yes
                         // bug exists without require also
-                        // Real :yes, Slither: Yes, Our: No
         if(b<10)
         {
             require(msg.sender.call.value(a)());
@@ -308,7 +244,6 @@ function buggy_wac_1 () public { // reentrancy: yes, reentrancy-eth: yes
 
 
     function bug_require_1() public{ 
-                                // reentrancy:yes, reentrancy-eth: no
                                 // Through reentrancy, the value of a can be set such that require condition fails, all previous reentrant calls in the stack will also fail
         require(a<10);          // However for normal non reentrant execution, initial few calls will pass
         a++;                    // But there is no reentrancy-eth as attacker won't get any benefits here
@@ -316,34 +251,32 @@ function buggy_wac_1 () public { // reentrancy: yes, reentrancy-eth: yes
     }   
 
     function non_buggy_require_2() public{ 
-                                // reentrancy: yes, reentrancy-eth: no
         a++;
         require(a<10);
         require(msg.sender.call.value(b)());
     }   
 
     function bug_require_3() public{ 
-                                    // reentrancy:yes, reentrancy-eth: yes
                                     // Through reentrancy, value of a can be set such that require always pass
         a++;
         require(msg.sender.call.value(b)());
         require(a<10);
     }
 
-    function bug_require_4() public{ // reentrancy:yes, reentrancy-eth: yes
+    function bug_require_4() public{ 
                                     // this is buggy because require condition might become false after upating a
         require(a<10);              // However, updation of a will be delayed in case of reentrancy
         require(msg.sender.call.value(b)());
         a++;
     }   
 
-    function bug_require_5() public{ // reentrancy: yes, reentrancy-eth: no
+    function bug_require_5() public{ 
         require(msg.sender.call.value(b)());
         require(a<10);
         a++;
     }   
 
-    function bug_require_6() public{ // reentrancy: yes, reentrancy-eth: no
+    function bug_require_6() public{ 
         require(msg.sender.call.value(b)());
         a++;
         require(a<10);
@@ -351,66 +284,65 @@ function buggy_wac_1 () public { // reentrancy: yes, reentrancy-eth: yes
 
     // Extract parameters of require before call
     // check if same parameters are updated after require statement
-    function bug_require2() public{ // reentrancy: yes, reentrancy-eth: yes
+    function bug_require2() public{ 
         require(not_called == true && msg.sender.call.value(b)());
         not_called = false;
     }
 
-    function non_buggy_require_3() public{ // reentrancy: yes, reentrancy-eth: no
+    function non_buggy_require_3() public{ 
         require(msg.sender.call.value(b)() && not_called == true );
         not_called = false;
     }
 
-    function bug_require_89() public{ // reentrancy: no, reentrancy-eth: no
+    function bug_require_89() public{ 
         require(msg.sender.call.value(b)() && a < 5 );
         not_called = false;
     }
 
 
-    function bug_require_single_st() public{  // reentrancy: yes, reentrancy-eth: yes
-                        // Buggy but SLither_plus says not buggy
+    function bug_require_single_st() public{  // buggy
 	// a = 6
         require(a++ > 5 && msg.sender.call.value(b)() && a>10);        
     }
 
-    function bug_require_single_st_2() public{  //reentrancy: yes, reentrancy-eth: no
+    function bug_require_single_st_2() public{  
                     // This is buggy because of IR Level
         require(a++ < 10 && msg.sender.call.value(b)()); 
     }
 
 
-    function non_buggy1() public{ // reentrancy: no, reentrancy-eth: no
+    function non_buggy1() public{
         require(msg.sender.call.value(a++)());
     }
    
 
 
-    function non_buggy_require_6() public{ // reentrancy: no, reentrancy-eth:no
+    function non_buggy_require_6() public{ 
         a = a - 10;
         bool zz = msg.sender.call.value(a)();
         require(zz);
     }
 
-    function require_test() public{ // reentrancy: yes, reentrancy-eth: yes
+    function require_test() public{ 
         not_called = false;
         require(msg.sender.call.value(b)());        
         require(not_called);
     }   
 
-    function require_test_5() public{ // reentrancy: yes, reentrancy-eth: yes
+    function require_test_5() public{ 
         a = a - 10;
         require(msg.sender.call.value(b)());        
         require(a < 10);
     }
 
 
-    function bug_require_test_2() public{ // reentrancy: no, reentrancy-eth: no
+    function bug_require_test_2() public{ 
         require(not_called);
         require(msg.sender.call.value(b)());
         y -= 10;        
     }   
     
-    function multi_call() public{ // reentrancy: yes, reentrancy-eth: yes
+    function multi_call() public{ 
                                 // buggy because c is updated after call
                                 // bug doesn't have to do anything with multicall
                                 // buggy without require statement
@@ -422,7 +354,7 @@ function buggy_wac_1 () public { // reentrancy: yes, reentrancy-eth: yes
     }   
 
 
-    function buggy_require_wbc_2() public{ // reentrancy: yes, reentrancy-eth: yes
+    function buggy_require_wbc_2() public{ 
                                 // c depends on d, d is updated after call
 	// x = 12, d = 40
         c = d -10;
@@ -431,13 +363,13 @@ function buggy_wac_1 () public { // reentrancy: yes, reentrancy-eth: yes
             d = d - 5;
     }
 
-    function non_buggy_require_4() public{ // reentrancy: no, reentrancy-eth: no
+    function non_buggy_require_4() public{ 
         c = d -10;
         require(msg.sender.call.value(c)());
     }
 
 
-    function non_buggy_require_5() public{ // reentrancy: no, reentrancy-eth: no
+    function non_buggy_require_5() public{ 
         if(a>10)
             require(msg.sender.call.value(b)());
         else 

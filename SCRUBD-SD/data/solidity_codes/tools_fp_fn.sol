@@ -1,4 +1,3 @@
-// pragma solidity 0.5.0;
 pragma solidity 0.4.19;
 
 contract SimpleDAO {
@@ -15,22 +14,16 @@ contract SimpleDAO {
         credit[msg.sender]-=amount;
     }
     function non_buggy_2() public {
-        // Slither, Oyente, Mythril, Sailfish : Buggy
-        // Securify2: CANNOT COMPILE
         require(msg.sender.call.value(c)() && credit[msg.sender] < 10);
         credit[msg.sender]-=amount;
     }
     function non_buggy_send() public{
-        // send userBalance[msg.sender] ethers to msg.sender
-        // if mgs.sender is a contract, it will call its fallback function
         if( msg.sender.send(a)  && userBalance[msg.sender] > 0) {
             userBalance[msg.sender] = 0;
         }        
     }
 
     function non_buggy_call() public{
-        // send userBalance[msg.sender] ethers to msg.sender
-        // if mgs.sender is a contract, it will call its fallback function
         if( msg.sender.call.value(a)()  && userBalance[msg.sender] > 0) {
             userBalance[msg.sender] = 0;
         }        
@@ -59,8 +52,6 @@ contract SimpleDAO {
     }
 
     function buggy_withdrawBalance() public{
-        // send userBalance[msg.sender] ethers to msg.sender
-        // if mgs.sender is a contract, it will call its fallback function
         if( ! (msg.sender.call.value(userBalance[msg.sender])() ) ){
             revert();
         }

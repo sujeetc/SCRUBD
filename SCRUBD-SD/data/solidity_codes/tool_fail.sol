@@ -8,10 +8,6 @@ contract tool_fail{
     bool public boolean;
     bool public not_called;
 
-//function buggy1(uint amount) public{
-//    require(b++<10 && msg.sender.call.value(b)()  );
-//}
-
 function buggy1(uint amount) public{
     if(b<10)
        require(b++<10 && msg.sender.call.value(b)()  );
@@ -39,17 +35,17 @@ function buggy21(uint amount) public{
             e++;
 }
 
-    function non_buggy_case1() public { //Not Buggy
+    function non_buggy_case1() public { 
         if(msg.sender.call.value(a)() && b<10) 
             b=b-10; 
     }
 
-    function buggy_case4() public { // Buggy
+    function buggy_case4() public { 
         if(b<10 && msg.sender.call.value(a)()) 
             b=b-10; 
     }
 
-    function buggy_case3() public { //Buggy
+    function buggy_case3() public { 
         if(msg.sender.call.value(a)() && b<10 && msg.sender.call.value(a)() && c > 10) 
             c=b-10; 
     }
@@ -74,9 +70,6 @@ function buggy21(uint amount) public{
 
 function requiredee() public{     
             (msg.sender.call.value(b++)());
-            //  made function to test, whether it is issue
-            // of not getting update in call as before and taking b++ as after 
-            // first need to see whether it is a bug or not
             require(b<10);               
         }
 
@@ -84,7 +77,6 @@ function requiredee() public{
     function requirdeepf() public{
         require(b<10);
         ( msg.sender.call.value(b++ ));
-        // this function support that update in call is considered after call, lets make another example, if it is after call, we will put require before nd see
     }
 
     function buggy_case() public{     
@@ -93,7 +85,6 @@ function requiredee() public{
             msg.sender.call.value(b);
             d = d+1;
             require(c<10);
-            //this function support that update in call is considered after call, lets make another example, if it is after call, we will put require before nd see
     }
 
     function buggy_case2() public{     
@@ -103,7 +94,6 @@ function requiredee() public{
         msg.sender.call.value(b);
         d = d+1;
         require(e<10);
-        //this function support that update in call is considered after call, lets make another example, if it is after call, we will put require before nd see               
     }
 
     function non_buggy_requirem() public{     
@@ -169,7 +159,5 @@ function requiredee() public{
     function non_buggy_single_statement() public{
         require(msg.sender.call.value(b+c)()    && a<10 );
     }
-
-
  
 }
