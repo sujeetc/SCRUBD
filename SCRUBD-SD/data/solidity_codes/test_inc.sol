@@ -13,10 +13,6 @@ contract tool_fail{
         require(a < 10 && msg.sender.call.value(a++)());
     }
 
-    function non_buggy1() public{
-        require(msg.sender.call.value(a++)());
-    }
-
     function buggy_require() public{
         require(msg.sender.call.value(a++)());
         a = a + 1;

@@ -41,31 +41,6 @@ contract SimpleDAO {
 
 
 
-function slithermine_1() public { 
-
-    a = a + 10;
-
-    msg.sender.call.value(b)();
-
-    if(a>50) 
-        c = c + 4;
-
-    require(c<10);
-
-}
-
-function slithermine_2() public { 
-
-    a = a + 10;
-
-    msg.sender.call.value(b)();
-
-    require(c<10);
-
-    if(a>50)
-        c = c + 4;
-
-}
 
 function buggy_require_1() public { 
     // d = 12, a = 42, c = 3

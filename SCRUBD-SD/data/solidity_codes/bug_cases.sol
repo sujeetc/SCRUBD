@@ -16,12 +16,6 @@ contract SimpleDAO {
     mapping (address => Holder) public Acc;
     mapping (address => Holder) public Bcc;
 
-    function check_if () public {
-            if(b<10)
-                msg.sender.call.value(a)();
-            b = b - 10;
-    }
-
     function indirect_control_dep_ref () public {
         var acc = Acc[msg.sender];
         // var bcc = Bcc[msg.sender];
@@ -99,13 +93,6 @@ function indirect_control_dep_ref2() public {
             msg.sender.call.value(_am)();
         a = a+1;
     }
-
-    function buggy_Collect_2(uint _am) public
-    {
-        if(a<10 && msg.sender.call.value(_am)())
-            a = a+1;
-    }
-
 
 
 function Collect_222(uint _am) public 
@@ -198,12 +185,6 @@ function Collect_23(uint _am) public
         b = b + 10;
     }
 
-    function fun_1 () public {  
-         if(b<10 && msg.sender.call.value(a)() && b-- < 10)
-         {
-                 c = c - 10;
-         }
-    }
     uint public MinSum;
 
     function Collect_1(uint _am) public 
@@ -273,23 +254,6 @@ function Collect_23(uint _am) public
             blocal = blocal + 20;
     }
 
-    modifier mod_slither_dd () {
-        _;
-        require(msg.sender.call.value(b)());
-        b = b+50;
-    }
-
-    function update_var() public mod_slither_dd {
-        // b = c + 10;
-        c = c - 10;
-	    require(b==c);
-    }
-
-    function update_var2() public mod_slither_dd {
-        b = c + 10;
-        c = c - 10;
-	require(b==c);
-    }
 
     constructor() public{
         require(b==c);
@@ -352,44 +316,10 @@ function Collect_23(uint _am) public
         b = b - 10;
     }
 
-    function unsafe_process_require_assert_wbc(uint) public 
-    {
-        a = a + 10;
-        msg.sender.call.value(b)();
-        require(a>50);
-    }
-
-
-    function CollectReal(uint _am) public payable
-    {
-        var acc = Acc[msg.sender];
-        if(acc.balance >= MinSum && acc.balance >= _am && now > acc.unlockTime)
-        {
-            if(msg.sender.call.value(_am)())
-            {
-                acc.balance -= _am;
-            }
-        }
-    }
-
-    function non_buggy_1() public {
-        if(b<10 && msg.sender.call.value(a)())
-        {
-                b = c;
-        }
-    }
-
     function call_within_if_dd() public {  // Buggy
         if(b<10 && msg.sender.call.value(a)())
         {
                 a = c;
-        }
-    }
-
-    function non_buggy_call_within_if_1() public {  // Non Buggy
-        if(b<10 && msg.sender.call.value(a)() && c<10)
-        {
-                c = c+10;
         }
     }
 }

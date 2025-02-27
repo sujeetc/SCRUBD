@@ -19,11 +19,6 @@ contract SimpleDAO {
         x = x + 10;
     }
 
-    function non_buggy_multi_call_if_1() public
-    {
-        if(msg.sender.call.value(a)() && b++ < 10 && msg.sender.call.value(b++)()) //1==1 ? b++ < 10: 0 < 10)
-            x = x + 10;
-    }
 
     function buggy_multi_call_if_2() public
     {

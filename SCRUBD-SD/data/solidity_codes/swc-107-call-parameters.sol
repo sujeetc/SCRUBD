@@ -230,18 +230,6 @@ function testzzz() public {
    // Create a data structure for parameters of call: [node: set(variables)]
 
 
-   function buggy_wbc_1() public { // Buggy: Yes
-     // a = 1
-     z = a + 10;                   
-     if(z > 10){
-       b = b + 10;
-     }
-     x = b + x;
-     require(msg.sender.call.value(x)());
-     a = a - 1;
-   }
-
-
 
 
   function withdraw_while_loop() public {
@@ -254,24 +242,6 @@ function testzzz() public {
 
           c = a + 10;
   }
-
-  function withdraw_while_loop_2() public { 
-      while (a > 10)
-      {
-          a --;
-          require(msg.sender.call.value(c)());
-      }
-  }
-
-
-  function withdraw_while_loop_3() public { 
-      while (a > 10)
-      {
-			    c = c - 10;
-          require(msg.sender.call.value(c)());
-      }
-  }
-
 
 
   function withdraw_while_loopz() public {

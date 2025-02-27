@@ -179,11 +179,7 @@ function buggy_wac_1 () public {
                     require(msg.sender.call.value(amount + a)());
                     a = a - 10;
     }
-    function withdraw_conditional(uint amount) public{ 
-                    if (a > 10)
-                        require(msg.sender.call.value(amount + b)());
-                    a = a - 10;
-    }
+
     function buggy_indirect_dep_1() public {
                                     // parameter of call: x
                                     // x depends on b, b depends on z, z depends on a
@@ -223,24 +219,6 @@ function buggy_wac_1 () public {
           require(msg.sender.send(b));
         a = a - 10;
      }
-
-    function withdraw_indirect_cd() public{
-        if(a>10)
-          b = b - 10;
-        require(msg.sender.send(b));
-        a = a - 10;
-     }
-
-    function analyze() public { 
-                        // bug exists without require also
-        if(b<10)
-        {
-            require(msg.sender.call.value(a)());
-            b = b-10;
-        }
-    }
-
-
 
 
     function bug_require_1() public{ 
@@ -282,13 +260,6 @@ function buggy_wac_1 () public {
         require(a<10);
     }   
 
-    // Extract parameters of require before call
-    // check if same parameters are updated after require statement
-    function bug_require2() public{ 
-        require(not_called == true && msg.sender.call.value(b)());
-        not_called = false;
-    }
-
     function non_buggy_require_3() public{ 
         require(msg.sender.call.value(b)() && not_called == true );
         not_called = false;
@@ -304,17 +275,6 @@ function buggy_wac_1 () public {
 	// a = 6
         require(a++ > 5 && msg.sender.call.value(b)() && a>10);        
     }
-
-    function bug_require_single_st_2() public{  
-                    // This is buggy because of IR Level
-        require(a++ < 10 && msg.sender.call.value(b)()); 
-    }
-
-
-    function non_buggy1() public{
-        require(msg.sender.call.value(a++)());
-    }
-   
 
 
     function non_buggy_require_6() public{ 
