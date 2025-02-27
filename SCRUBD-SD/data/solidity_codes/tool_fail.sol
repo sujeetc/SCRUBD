@@ -145,6 +145,11 @@ function requiredee() public{
             e++;
     }
 
+    function non_buggy_funct() public returns (bool){
+        d++;
+        return true;
+    }
+
     function buggy_cross_function() public {
         if(msg.sender.call.value(d)() && non_buggy_funct())
             c++;
