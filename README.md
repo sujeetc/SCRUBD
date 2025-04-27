@@ -2,6 +2,49 @@
 
 SCRUBD is a dataset designed for the detection of bugs in Smart Contracts, with a focus on **Reentrancy** (RE) and **Unhandled Exceptions** (UX). The dataset includes both real-world and synthetically generated scenarios, providing a comprehensive resource for advancing Smart Contract bug detection research.
 
+## Version History
+
+### v1.0.0 - 2nd Feb 2025 ([`50ac33d`](https://github.com/sujeetc/SCRUBD/tree/50ac33d08aa8c7f29a528d92db5254081cedf3a2))
+Initial release of SCRUBD
+
+| Dataset    | Total RE Functions | RE Vuln | RE Non-Vuln | Total UX Functions |  UX Vuln | UX Non-Vuln |
+|------------|-----------------|------------|----------------|-----------|------------|------------|
+| **SCRUBD/SD** | 239           | 155        | 84             | N/A       | N/A        | N/A |
+| **SCRUBD/CD** | 746         | 245        | 501            | 566       | 275        |291|
+
+
+### v2.0.0 - 27th Feb 2025 ([`5612fd6`](https://github.com/sujeetc/SCRUBD/tree/5612fd62329ed55674765c4234435555189fd7cd))
+#### Updates
+- Updated `SCRUBD-SD/data/solidity_codes/tool_fail.sol`
+- Updated `SCRUBD-SD/data/labels.csv`
+- Cleaned up Solidity code files in `SCRUBD-SD/data/solidity_codes`:
+  - Removed unnecessary files
+  - Removed redundant functions
+
+| Dataset    | Total RE Functions | RE Vuln | RE Non-Vuln | Total UX Functions |  UX Vuln | UX Non-Vuln |
+|------------|-----------------|------------|----------------|-----------|------------|------------|
+| **SCRUBD/SD** | 242           | 154        | 88             | N/A       | N/A        | N/A
+| **SCRUBD/CD** | 746         | 245        | 501            | 566       | 275        | 291
+
+
+### v3.0.0 - 1st April 2025 ([`411744f`](https://github.com/sujeetc/SCRUBD/tree/411744f15ffc8236d093b7bb7da9dbc762d5bf7c))
+#### Updates
+- Updated SCRUBD-SD/data/labels.csv
+- Rectified some errors
+
+| Dataset    | Total RE Functions | RE Vuln | RE Non-Vuln | Total UX Functions |  UX Vuln | UX Non-Vuln |
+|------------|-----------------|------------|----------------|-----------|------------|------------|
+| **SCRUBD/SD** | 242           | 153        | 89             | N/A       | N/A        | N/A |
+| **SCRUBD/CD** | 746         | 245        | 501            | 566      | 275        | 291
+
+
+### Commit History
+| Commit Hash | Github Link | Date       | Changes |
+|-------------|------------|------------|---------|
+| `50ac33d`   |https://github.com/sujeetc/SCRUBD/tree/50ac33d08aa8c7f29a528d92db5254081cedf3a2 | 2nd Feb 2025 | Initial release of SCRUBD |
+| `5612fd6`   |https://github.com/sujeetc/SCRUBD/tree/5612fd62329ed55674765c4234435555189fd7cd | 27th Feb 2025 | Cleanup |
+| `411744f`   |https://github.com/sujeetc/SCRUBD/tree/411744f15ffc8236d093b7bb7da9dbc762d5bf7c | 1st April 2025 | Fixed annotation errors |
+
 ## Project Structure
 
 The repository is organized into the following main folders:
