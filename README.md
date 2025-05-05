@@ -4,16 +4,17 @@ SCRUBD is a dataset designed for the detection of bugs in Smart Contracts, with 
 
 ## Version History
 
-### v1.0.0 - 2nd Feb 2025 ([`50ac33d`](https://github.com/sujeetc/SCRUBD/tree/50ac33d08aa8c7f29a528d92db5254081cedf3a2))
-Initial release of SCRUBD
+### v3.0 - 1st April 2025 ([`411744f`](https://github.com/sujeetc/SCRUBD/tree/411744f15ffc8236d093b7bb7da9dbc762d5bf7c))
+#### Updates
+- Updated SCRUBD-SD/data/labels.csv
+- Rectified some errors
 
 | Dataset    | Total RE Functions | RE Vuln | RE Non-Vuln | Total UX Functions |  UX Vuln | UX Non-Vuln |
 |------------|-----------------|------------|----------------|-----------|------------|------------|
-| **SCRUBD/SD** | 239           | 155        | 84             | N/A       | N/A        | N/A |
-| **SCRUBD/CD** | 746         | 245        | 501            | 566       | 275        |291|
+| **SCRUBD/SD** | 242           | 153        | 89             | N/A       | N/A        | N/A |
+| **SCRUBD/CD** | 746         | 245        | 501            | 566      | 275        | 291
 
-
-### v2.0.0 - 27th Feb 2025 ([`5612fd6`](https://github.com/sujeetc/SCRUBD/tree/5612fd62329ed55674765c4234435555189fd7cd))
+### v2.0 - 27th Feb 2025 ([`5612fd6`](https://github.com/sujeetc/SCRUBD/tree/5612fd62329ed55674765c4234435555189fd7cd))
 #### Updates
 - Updated `SCRUBD-SD/data/solidity_codes/tool_fail.sol`
 - Updated `SCRUBD-SD/data/labels.csv`
@@ -26,24 +27,23 @@ Initial release of SCRUBD
 | **SCRUBD/SD** | 242           | 154        | 88             | N/A       | N/A        | N/A
 | **SCRUBD/CD** | 746         | 245        | 501            | 566       | 275        | 291
 
-
-### v3.0.0 - 1st April 2025 ([`411744f`](https://github.com/sujeetc/SCRUBD/tree/411744f15ffc8236d093b7bb7da9dbc762d5bf7c))
-#### Updates
-- Updated SCRUBD-SD/data/labels.csv
-- Rectified some errors
+### v1.0 - 2nd Feb 2025 ([`50ac33d`](https://github.com/sujeetc/SCRUBD/tree/50ac33d08aa8c7f29a528d92db5254081cedf3a2))
+Initial release of SCRUBD
 
 | Dataset    | Total RE Functions | RE Vuln | RE Non-Vuln | Total UX Functions |  UX Vuln | UX Non-Vuln |
 |------------|-----------------|------------|----------------|-----------|------------|------------|
-| **SCRUBD/SD** | 242           | 153        | 89             | N/A       | N/A        | N/A |
-| **SCRUBD/CD** | 746         | 245        | 501            | 566      | 275        | 291
+| **SCRUBD/SD** | 239           | 155        | 84             | N/A       | N/A        | N/A |
+| **SCRUBD/CD** | 746         | 245        | 501            | 566       | 275        |291|
+
+
 
 
 ### Commit History
-| Commit Hash | Github Link | Date       | Changes |
-|-------------|------------|------------|---------|
-| `50ac33d`   |https://github.com/sujeetc/SCRUBD/tree/50ac33d08aa8c7f29a528d92db5254081cedf3a2 | 2nd Feb 2025 | Initial release of SCRUBD |
-| `5612fd6`   |https://github.com/sujeetc/SCRUBD/tree/5612fd62329ed55674765c4234435555189fd7cd | 27th Feb 2025 | Cleanup |
-| `411744f`   |https://github.com/sujeetc/SCRUBD/tree/411744f15ffc8236d093b7bb7da9dbc762d5bf7c | 1st April 2025 | Fixed annotation errors |
+|Version| Commit Hash | Github Link | Date       | Changes |
+|-------------|-------------|------------|------------|---------|
+| V3.0 |`411744f`   |https://github.com/sujeetc/SCRUBD/tree/411744f15ffc8236d093b7bb7da9dbc762d5bf7c | 1st April 2025 | Fixed annotation errors |
+| V2.0 | `5612fd6`   |https://github.com/sujeetc/SCRUBD/tree/5612fd62329ed55674765c4234435555189fd7cd | 27th Feb 2025 | Cleanup |
+| V1.0 | `50ac33d`   |https://github.com/sujeetc/SCRUBD/tree/50ac33d08aa8c7f29a528d92db5254081cedf3a2 | 2nd Feb 2025 | Initial release of SCRUBD |
 
 ## Project Structure
 
@@ -183,4 +183,3 @@ For any inquiries or feedback regarding the SCRUBD dataset, please feel free to 
 - **Email**: [sujeetc@cse.iitk.ac.in](mailto:sujeetc@cse.iitk.ac.in)
 
 We look forward to your contributions and feedback!
-
