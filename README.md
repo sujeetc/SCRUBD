@@ -4,7 +4,7 @@ SCRUBD is a dataset designed for the detection of bugs in Smart Contracts, with 
 
 ## Version History
 
-### v4.0 - 6th May 2025 ([`e9636ea`](https://github.com/sujeetc/SCRUBD/tree/e9636eacd8077c1a56705a07e77deb20366c4211))
+### v4.0 - 6th May 2025 ([`Version 4`](https://github.com/sujeetc/SCRUBD/tree/V4.0))
 #### Updates
 - Updated SCRUBD-SD/data/labels.csv
 - Rectified some errors
@@ -15,7 +15,7 @@ SCRUBD is a dataset designed for the detection of bugs in Smart Contracts, with 
 | **SCRUBD/CD** | 746         | 245        | 501            | 566      | 275        | 291
 
 
-### v3.0 - 1st April 2025 ([`411744f`](https://github.com/sujeetc/SCRUBD/tree/411744f15ffc8236d093b7bb7da9dbc762d5bf7c))
+### v3.0 - 1st April 2025 ([`Version 3`](https://github.com/sujeetc/SCRUBD/tree/V3.0))
 #### Updates
 - Updated SCRUBD-SD/data/labels.csv
 - Rectified some errors
@@ -25,7 +25,7 @@ SCRUBD is a dataset designed for the detection of bugs in Smart Contracts, with 
 | **SCRUBD/SD** | 242           | 153        | 89             | N/A       | N/A        | N/A |
 | **SCRUBD/CD** | 746         | 245        | 501            | 566      | 275        | 291
 
-### v2.0 - 27th Feb 2025 ([`5612fd6`](https://github.com/sujeetc/SCRUBD/tree/5612fd62329ed55674765c4234435555189fd7cd))
+### v2.0 - 27th Feb 2025 ([`Version 2`](https://github.com/sujeetc/SCRUBD/tree/V2.0))
 #### Updates
 - Updated `SCRUBD-SD/data/solidity_codes/tool_fail.sol`
 - Updated `SCRUBD-SD/data/labels.csv`
@@ -38,7 +38,7 @@ SCRUBD is a dataset designed for the detection of bugs in Smart Contracts, with 
 | **SCRUBD/SD** | 242           | 154        | 88             | N/A       | N/A        | N/A
 | **SCRUBD/CD** | 746         | 245        | 501            | 566       | 275        | 291
 
-### v1.0 - 2nd Feb 2025 ([`50ac33d`](https://github.com/sujeetc/SCRUBD/tree/50ac33d08aa8c7f29a528d92db5254081cedf3a2))
+### v1.0 - 2nd Feb 2025 ([`Version 1`](https://github.com/sujeetc/SCRUBD/tree/V1.0))
 Initial release of SCRUBD
 
 | Dataset    | Total RE Functions | RE Vuln | RE Non-Vuln | Total UX Functions |  UX Vuln | UX Non-Vuln |
