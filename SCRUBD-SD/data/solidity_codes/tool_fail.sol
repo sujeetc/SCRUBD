@@ -45,7 +45,7 @@ function buggy21(uint amount) public{
             b=b-10; 
     }
 
-    function buggy_case3() public { 
+    function non_buggy_case_cif() public { // cif - call inside if condition
         if(msg.sender.call.value(a)() && b<10 && msg.sender.call.value(a)() && c > 10) 
             c=b-10; 
     }
@@ -68,30 +68,30 @@ function buggy21(uint amount) public{
         require(b>11);
     }
 
-function requiredee() public{     
+function buggy_require_cbr() public{     //cbr : call before require
             (msg.sender.call.value(b++)());
             require(b<10);               
         }
 
 
-    function requirdeepf() public{
+    function buggy_require_car() public{ // car : call after require
         require(b<10);
-        ( msg.sender.call.value(b++ ));
+        ( msg.sender.call.value(b++ )());
     }
 
-    function buggy_case() public{     
+    function buggy_case_require() public{     
             e = d;
             c = d+1;
-            msg.sender.call.value(b);
+            msg.sender.call.value(b)();
             d = d+1;
             require(c<10);
     }
 
-    function buggy_case2() public{     
+    function buggy_case2_require() public{     
         if(d<10)
             e = e+1;
         c = d+1;
-        msg.sender.call.value(b);
+        msg.sender.call.value(b)();
         d = d+1;
         require(e<10);
     }

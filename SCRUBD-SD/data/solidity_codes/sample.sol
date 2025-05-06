@@ -31,7 +31,7 @@ contract SimpleDAO {
             b = c;
     }
 
-    function slither () public {
+    function non_buggy_cif () public { // cif - call inside if condition
         if(a++<10 && msg.sender.call.value(a)() && a<10)
             b = b + 10;
     }
