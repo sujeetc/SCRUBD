@@ -47,15 +47,6 @@ Initial release of SCRUBD
 | **SCRUBD/CD** | 746         | 245        | 501            | 566       | 275        |291|
 
 
-
-
-### Commit History
-|Version| Commit Hash | Github Link | Date       | Changes |
-|-------------|-------------|------------|------------|---------|
-| V3.0 |`411744f`   |https://github.com/sujeetc/SCRUBD/tree/411744f15ffc8236d093b7bb7da9dbc762d5bf7c | 1st April 2025 | Fixed annotation errors |
-| V2.0 | `5612fd6`   |https://github.com/sujeetc/SCRUBD/tree/5612fd62329ed55674765c4234435555189fd7cd | 27th Feb 2025 | Cleanup |
-| V1.0 | `50ac33d`   |https://github.com/sujeetc/SCRUBD/tree/50ac33d08aa8c7f29a528d92db5254081cedf3a2 | 2nd Feb 2025 | Initial release of SCRUBD |
-
 ## Project Structure
 
 The repository is organized into the following main folders:
