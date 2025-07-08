@@ -4,6 +4,17 @@ SCRUBD is a dataset designed for the detection of bugs in Smart Contracts, with 
 
 ## Version History
 
+### v5.0 - 8th July 2025 ([`Version-5`](https://github.com/sujeetc/SCRUBD/tree/V5.0))
+#### Updates
+- Updated SCRUBD-CD/data/labels.csv
+- Rectified an error
+
+| Dataset    | Total RE Functions | RE Vuln | RE Non-Vuln | Total UX Functions |  UX Vuln | UX Non-Vuln |
+|------------|-----------------|------------|----------------|-----------|------------|------------|
+| **SCRUBD/SD** | 242           | 151        | 91             | N/A       | N/A        | N/A |
+| **SCRUBD/CD** | 746         | 244        | 502            | 566      | 275        | 291
+
+
 ### v4.0 - 6th May 2025 ([`Version-4`](https://github.com/sujeetc/SCRUBD/tree/V4.0))
 #### Updates
 - Updated SCRUBD-SD/data/labels.csv
@@ -123,7 +134,7 @@ The tool results are stored in CSV files with the following columns:
 
 Here is an example structure for the file `tools_RE.csv` (for Reentrancy vulnerabilities):
 
-| Smart Contract                               | Function Name                                          | sailfish | slither | solhint | mythril | conkas | Actual |
+| Smart Contract                               | Function Name                                          | conkas | mythril | sailfish | slither | solhint | Actual |
 |---------------------------------------------|-------------------------------------------------------|----------|---------|---------|---------|--------|--------|
 | 0x000000000000541e251335090ac5b47176af4f7e  | dexblue.spendgastokens                                | N/A      | 1       | 0       | 0       | 0      | 1      |
 | 0x000000000000541e251335090ac5b47176af4f7e  | dexbluesettlementmodule.matchorderwithreserve        | N/A      | 1       | 0       | 0       | 0      | 1      |
