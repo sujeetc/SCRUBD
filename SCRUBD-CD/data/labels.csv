@@ -8,7 +8,7 @@ Smart Contract,Function Name,RE,UX,is_student,Comments
 0x0000000000b3f879cb30fe243b4dfee438691c04,GasToken2.destroyChildren,1,,0,RE -- Multi call bug
 0x00195777bed7025e78819156281192c85fb3cf9b,GAME.startRaffle,1,0,1,---------- RE -- state var jackpot
 0x0030f75e27f6df16383f47ae11ae34abc21f5f2c,TYRANT.internalTransfer,1,,0,
-0x0043a4a809be33afa17c1e3e37e19977622e4700,WithdrawableV2._withdrawAllSurcharges,1,0,1,--------
+0x0043a4a809be33afa17c1e3e37e19977622e4700,WithdrawableV2._withdrawAllSurcharges,0,0,1,--------protected by modifier
 0x00898f652934eff850886289a94d41cf9457e7af,FarmMain._mintFarmTokenAmount,1,,0,
 0x00898f652934eff850886289a94d41cf9457e7af,FarmMain._removeLiquidity,1,,0,"RE -- _safeTransfer(setupInfo.liquidityPoolTokenAddress, exitFeeWallet, fee);"
 0x00898f652934eff850886289a94d41cf9457e7af,FarmMain._toggleSetup,1,0,1,"RE -- require(block.number > _setupsInfo[setup.infoIndex].startBlock, ""Too early for this setup"");--------"
@@ -239,7 +239,7 @@ Smart Contract,Function Name,RE,UX,is_student,Comments
 0x308af1c4759dcb9f2ac2accdcd301862702df40f,Escrow.cancelTokenTransaction,1,1,1,---------- It does not have reentrancy vulnerability because its visibility is private; it cannot be called through any other public functions. Attacker can't reach the function
 0x308af1c4759dcb9f2ac2accdcd301862702df40f,Escrow.cancelTransaction,1,,0,
 0x308af1c4759dcb9f2ac2accdcd301862702df40f,Escrow.createTokenTransaction,0,,0,No RE --- modifier
-0x308af1c4759dcb9f2ac2accdcd301862702df40f,Escrow.releaseFunds,1,1,1,---------- Reason for RE: releaseFunds can be called by release function. reentrancy because of following lines: Transaction storage transaction = transactions[_tag]; require(transaction.status == transactionStatus.Pending); ........................................................................................ .............................Code Logic......................................... ........................................................................................ transaction.status = transactionStatus.PendingR1; -- Reason for UX: token.transfer returns boolean value
+0x308af1c4759dcb9f2ac2accdcd301862702df40f,Escrow.releaseFunds,0,1,1,---------- Reason for no RE: Access to function protected by modifiers; -- Reason for UX: token.transfer returns boolean value
 0x308af1c4759dcb9f2ac2accdcd301862702df40f,Escrow.userRecover,0,,0,
 0x30f85ebcfac9f6dd69503955e95ab7f55fa3fdec,EthTokenToSmthSwaps.createSwap,1,,0,
 0x30f85ebcfac9f6dd69503955e95ab7f55fa3fdec,EthTokenToSmthSwaps.createSwapTarget,1,,0,
@@ -364,7 +364,7 @@ Smart Contract,Function Name,RE,UX,is_student,Comments
 0xd5967fed03e85d1cce44cab284695b41bc675b5c,demo.transfer,0,1,1,--------Reentrancy Vulnerability:- The function uses a loop to make external contract calls within the the loop using 'caddress.call(id;from;_tos;v);'. This cause to a reenterancy vulnerablity if the called contracts have a fallback function that allows external call if they modify their own state in an unsafe way. If the malicious contract is among the '_tos' addresses and reenters the 'transfer' function before it completes; it can manipulate the contracts state. To prevent reentrancy attacks the user should create checks-effects-interactions patterns. 
 0xd5e5ab3438c14a6c823886baa24d8f41636b1d34,TokenERC20.fallback,0,,0,Dynamic No RE --         if (users[msg.sender].invested != 0) {
 0xd5e5ab3438c14a6c823886baa24d8f41636b1d34,TokenERC20.investedbuy,0,,0,Dynamic No RE --         if (users[msg.sender].invested != 0) {
-0xd5e5ab3438c14a6c823886baa24d8f41636b1d34,TokenERC20.withdrawcommissions,1,1,1,---------- Reason for RE: users[msg.sender].pot updated after external call; through modifier olyowner one can set the value of variable aipi to attacker's address
+0xd5e5ab3438c14a6c823886baa24d8f41636b1d34,TokenERC20.withdrawcommissions,0,1,1,---------- Reason for no RE: Access to function protected by olyowner modifier
 0xd67aa6a98e99f979f23bf0da772d113fe6dbe50a,Crowdsale.fallback,1,0,1,--------
 0xd72d254737ab0a8de2ac43ba95557885ed13bbfd,MenloTokenTimelock.release,1,1,1,---------- Reason for RE: balance[msg.sender]-- Reason for UX: token.transfer() returns boolean value
 0xd84b6aec4985e68ef5882de0b5d0b30992bb5057,EthTokenToSmthSwaps.createSwap,1,,0,

@@ -4,6 +4,17 @@ SCRUBD is a dataset designed for the detection of bugs in Smart Contracts, with 
 
 ## Version History
 
+### v6.0 - 26th February 2026 ([`Version-6`](https://github.com/sujeetc/SCRUBD/tree/V6.0))
+#### Updates
+- Updated SCRUBD-CD/data/labels.csv
+- Rectified some errors
+
+| Dataset    | Total RE Functions | RE Vuln | RE Non-Vuln | Total UX Functions |  UX Vuln | UX Non-Vuln |
+|------------|-----------------|------------|----------------|-----------|------------|------------|
+| **SCRUBD/SD** | 242           | 151        | 91             | N/A       | N/A        | N/A |
+| **SCRUBD/CD** | 746         | 241        | 505            | 566      | 275        | 291 
+
+
 ### v5.0 - 8th July 2025 ([`Version-5`](https://github.com/sujeetc/SCRUBD/tree/V5.0))
 #### Updates
 - Updated SCRUBD-CD/data/labels.csv
