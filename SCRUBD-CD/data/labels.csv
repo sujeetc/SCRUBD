@@ -69,7 +69,7 @@ Smart Contract,Function Name,RE,UX,is_student,Comments
 0x08759550264b7f8078d95eff8a0577001c833483,Canvas.buy,1,1,1,---------- gas limit may change in future
 0x08cce68cfe23bbf13e3151c2a43dcc02623710d6,MoneyPrinter.distributeDividend,1,1,1,--------
 0x08cce68cfe23bbf13e3151c2a43dcc02623710d6,SaylorsLastHope._transfer,0,,0,"No RE -- 2nd external call at the end, 1st begining ext call does not reenter"
-0x091ac882e57b89e071c8b153be3aab668a80303d,Town.claimExternalTokens,1,0,1,--------
+0x091ac882e57b89e071c8b153be3aab668a80303d,Town.claimExternalTokens,0,0,1,"No RE -- function transfer() is fixed"
 0x091ac882e57b89e071c8b153be3aab668a80303d,Town.claimFunds,1,,0,
 0x091ac882e57b89e071c8b153be3aab668a80303d,Town.getTownTokens,1,0,1,--------
 0x091ac882e57b89e071c8b153be3aab668a80303d,Town.remuneration,1,0,1,RE -- if (restOfTokens > 0) {--------
@@ -78,7 +78,7 @@ Smart Contract,Function Name,RE,UX,is_student,Comments
 0x097a5e3d974332aa5612675caaaeb117091dc743,ShibaUncle._transfer,0,,0,"No RE -- external call at the end, begining ext call does not reenter"
 0x099764910a38190bbd317857e635e6f461b11119,IronHands.payout,1,0,1,---------- RE: payoutOrder
 0x09a80172ed7335660327cd664876b5df6fe06108,Distribution.doPayments,1,,0,
-0x09a80172ed7335660327cd664876b5df6fe06108,OMPxContract.getFee,1,1,1,--------
+0x09a80172ed7335660327cd664876b5df6fe06108,OMPxContract.getFee,0,1,1,"NO RE -- No ext Call"
 0x09ab651217b86d1ee7236e0fad1ebb19185fe769,MonkeyScam.determinePID,1,,0,RE -- getPlayerName can reenter
 0x09ab651217b86d1ee7236e0fad1ebb19185fe769,MonkeyScam.endRound,0,0,1,No RE -- send Eth to fixed address--------
 0x09d063d9950cdf02d545ec6fb0166491e3ea4fd2,BEAST._transfer,0,,0,
@@ -152,7 +152,7 @@ Smart Contract,Function Name,RE,UX,is_student,Comments
 0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879,Sargasso.tokenSend,0,,0,No RE -- secondaryUserLock[msg.sender] = false; -- reentrancy lock 
 0x0ffaa8eeb2ee18c9174e4c5d6af6ce48199c6879,Sargasso.withdraw,1,,0,
 0x10452f898766f59a8514dc6856ff62bbdc6a0f51,Piggy_BNK.Collect,1,0,1,--------Reentrancy is the a vulnerability where an external contract can call back into the current contract before the current function has completed. This can potentially lead to unexpected behavior. In the above code snippet the 'msg.sender.call.value(_am)()' line is a call to an external contract using the low-level 'call' function.
-0x10819fae72282b9a594e34c647a7bc446ef4ad2e,CryptoFun.doInvest,1,0,1,--------
+0x10819fae72282b9a594e34c647a7bc446ef4ad2e,CryptoFun.doInvest,0,0,1,"no RE: Ext call target is trusted"
 0x108523415a8cd7cb8ef2d6b12177181f489ec210,DividendDistributor.distributeDividend,1,1,1,--------
 0x10bbbebacd34509b1388a528003dbb77c20b22ba,MappingTokenFactory._createMappingToken,1,,0,
 0x10bbbebacd34509b1388a528003dbb77c20b22ba,MappingTokenFactory.createMappableToken,1,,0,
@@ -236,8 +236,8 @@ Smart Contract,Function Name,RE,UX,is_student,Comments
 0x2e6d72d5948c0cb0b9ac1adc2034e16d02cdabda,MILADYXP._transfer,0,,0,
 0x300af88747b3f913012753071f209b48b30ea1ac,BabyApe._transfer,0,,0,
 0x300af88747b3f913012753071f209b48b30ea1ac,DividendDistributor.distributeDividend,1,0,1,--------
-0x308af1c4759dcb9f2ac2accdcd301862702df40f,Escrow.cancelTokenTransaction,1,1,1,---------- It does not have reentrancy vulnerability because its visibility is private; it cannot be called through any other public functions. Attacker can't reach the function
-0x308af1c4759dcb9f2ac2accdcd301862702df40f,Escrow.cancelTransaction,1,,0,
+0x308af1c4759dcb9f2ac2accdcd301862702df40f,Escrow.cancelTokenTransaction,0,1,1,"No RE: protected by modifier onlyAllowed"
+0x308af1c4759dcb9f2ac2accdcd301862702df40f,Escrow.cancelTransaction,0,,0,"No RE: protected by modifier onlyAllowed"
 0x308af1c4759dcb9f2ac2accdcd301862702df40f,Escrow.createTokenTransaction,0,,0,No RE --- modifier
 0x308af1c4759dcb9f2ac2accdcd301862702df40f,Escrow.releaseFunds,0,1,1,---------- Reason for no RE: Access to function protected by modifiers; -- Reason for UX: token.transfer returns boolean value
 0x308af1c4759dcb9f2ac2accdcd301862702df40f,Escrow.userRecover,0,,0,
@@ -269,7 +269,7 @@ Smart Contract,Function Name,RE,UX,is_student,Comments
 0x3c9bdc41ef0c823a43bd16fe2392a9217dc70215,LiquidityPool.reinvestRewards,0,,0,No RE --- array issue
 0x3f513977cd827428e0459fdef7217cd6272dc893,KittenSelfDrop2.fallback,1,1,1,"---------- Reason for reentrancy vuln:  1. require (participants[msg.sender] < dropNumber && kittensRemainingToDrop > basicReward); --> checked before external call 2. kittenContract.transfer(msg.sender; tokensIssued); participants[msg.sender] = dropNumber; kittensRemainingToDrop -= tokensIssued; kittensDroppedToTheWorld += tokensIssued; --> updated after external call transfer() -- Reason for UX: transfer function declared in ""contract KittenCoin"" returns boolean"
 0x400e115f1be2b646139c298272a43b2cff2b127e,PiggY_BANK.Collect,1,0,1,---------- Reason for RE: State variable acc.balance
-0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a,CrwdTimelock.release,1,0,1,---------- Reason for RE: State variable balances[_beneficiary]-- Reason for no UX: transfer function defined in token contract always return true; no need to check the return value
+0x40da24a66f729d0bd0453681c5a6506bdc2a7a6a,CrwdTimelock.release,0,0,1,---------- Reason for no RE: transfer() is hardcoded -- Reason for no UX: transfer function defined in token contract always return true; no need to check the return value
 0x41021442eab722c0a52c61738550faabfd0fca4e,Crowdsale.fallback,0,0,1,---------- Reason for no UX: tokenreward.transfer() does not return any value
 0x42a4a749123469ca6a8b6ca494b1953076a26ef7,SendTokensContract.withdrawTokens,1,0,1,---------- Reason for no UX: token.transfer() does not return any value
 0x4470887011bbf1e196b62020266aa5ae1081bd70,Deposit.ClaimMTU,1,,0,
@@ -288,7 +288,7 @@ Smart Contract,Function Name,RE,UX,is_student,Comments
 0x4e73b32ed6c35f570686b89848e5f39f20ecc106,PRIVATE_ETH_CELL.Collect,1,0,1,--------Reason for RE: state var. balances[msg.sender]
 0x4f0499f4da2d75d03fcc2dc2d97ffae976246809,VestingContractWT.transfer,1,0,1,---------- Reason for RE: state vars. account_data[msg.sender].current_transferred and account_data[msg.sender].current_balance
 0x5211475520dc4a13fee1cc7c2c0c1167998bcbb8,AuctionContract.closeAuction,1,1,1,No RE --- assert(msg.sender == winner) -- However state variable winner can be written by a public function. ---------- Reason for RE: state var. isActive -- Reason for UX:  auctioneer.createAuctionContract() can fail
-0x530a9cceee0c45f58229ae5c256e414e6df957ad,ABIO_BaseICO.burnRestTokens,1,,0,
+0x530a9cceee0c45f58229ae5c256e414e6df957ad,ABIO_BaseICO.burnRestTokens,0,,0,"No RE -- abioToken is fixed and not attacker controlled"
 0x533411c7c401ee3a136ddc7a2fc95d6624c9e041,VestingContractWTTEST.transfer,1,0,1,---------- Reason for RE: state vars. account_data[msg.sender].current_transferred and account_data[msg.sender].current_balance
 0x561eac93c92360949ab1f1403323e6db345cbf31,BANK_SAFE.Collect,1,0,1,--------
 0x57acbe7bf11b8a4584403cc900e230a18a7ab138,Locker.unlock,0,0,1,No RE --- transfer to fixed address ---------- Reason for no RE: receiver is fixed and attacker cannot change the value of receiver
@@ -305,7 +305,7 @@ Smart Contract,Function Name,RE,UX,is_student,Comments
 0x644417f540bf96fd218287454501b2eb13c83295,Dividends.fallback,1,0,1,---------- Reason for RE: users[user]
 0x652729577d5c5a13060f81c256aa79adb264f188,VNETTokenPreSale.fallback,1,0,1,---------- No UX: msg.sender.transfer() does not return any value; it throws exception on failing -- RE: State var. ratioNext
 0x6cd171ef32b2ffa2b54481bea9d72692cd44f053,Crowdsale.fallback,1,0,1,--------Reason for RE: Event TokenFree(tokenFree); will have different values in two different invocations (one with reentrancy and one without reentrancy). Ref: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
-0x6d84769b1e287a27f282a938c8110b22714dbf78,ABIO_BaseICO.burnRestTokens,1,,0,
+0x6d84769b1e287a27f282a938c8110b22714dbf78,ABIO_BaseICO.burnRestTokens,0,,0,"Reason for No RE: abioToken is fixed and not attacker controlled"
 0x6e3c384480e71792948c29e9fc8d7b9c9d75ae8f,p_bank.Collect,1,0,1,--------
 0x7183169973eda16209f66a602f2e27e1303bf414,BoomerangLiquidity.payout,1,1,1,---------- Reason for UX: participants[payoutOrder].etherAddress.call.value(payoutToSend).gas(1000000)();-- Reason for RE: Attacker can reenter through etherAddress.call.value() and before payoutOrder is updated. payoutToSend is calculated based on payoutOrder variable. That is used to send Ether.
 0x71aaf9dc418e9dde76aee42e431fc203d9cfd0c2,VestingContractWTTEST.transfer,1,0,1,---------- Reason for RE: 1. we_test_token.transfer(); 2. account_data[msg.sender].current_transferred and account_data[msg.sender].current_balance
@@ -325,7 +325,7 @@ Smart Contract,Function Name,RE,UX,is_student,Comments
 0x8c7777c45481dba411450c228cb692ac3d550344,ETH_VAULT.CashOut,1,0,1,---------- Reason for RE: State variable balances[msg.sender]
 0x8c944c3f4029c14c22b6525ac3155482c2559541,BDSM_Presale.fallback,1,0,1,--------
 0x8e3e25958ad448aeb5982a01b63bcb91355d56a5,Swap.fallback,1,1,1,---------- It stores true in the check[msg.sender] variable after it sends the the amount to the beneficiary which will cause reentrancy if the fallback function calls it again.
-0x91d7e5895f7a635ba8bdce9e2be544e5e527135f,Crowdsale.safeWithdrawal,1,,0,
+0x91d7e5895f7a635ba8bdce9e2be544e5e527135f,Crowdsale.safeWithdrawal,0,,0,"no RE: beneficiary address is fixed and not attacker controlled"
 0x92579f2fa430b20bf6ce9d19938fe061aad992e2,DCY_preICO.bringBackTokens,1,0,1,---------- It does not have UX because transfer function defined in token contract does not return any value
 0x92579f2fa430b20bf6ce9d19938fe061aad992e2,DCY_preICO.fallback,1,,0,
 0x92579f2fa430b20bf6ce9d19938fe061aad992e2,DCY_preICO.safeWithdrawal,0,,0,"No RE --- if (fundingGoalReached && beneficiary == msg.sender) -- will be executed only if first if fails. It is like: ""else if"""
@@ -346,7 +346,7 @@ Smart Contract,Function Name,RE,UX,is_student,Comments
 0xac355d24591c01ad44f8da36ec7629d275a2c6e1,ShortOrder.tokenFulfillmentDeposit,1,,0,RE -- orderRecord[msg.sender][orderHash].tokenDeposit = true;
 0xaf7aea249098f2c2f50cc11d4000ccf798194373,ZTCrowdsale.refund,0,,0,"No RE --- Dynamically on buggy, smartly written function"
 0xb0ceaa9cc523332cbef9fc606221cc0bc2d0872d,Mattew.fallback,1,1,1,"--------The reentrancy vulnerability occurs when a contract makes an external call before it has finished executing its own logic. In this function; the vulnerable portion is this part: ""  bool isSuccess = whale.send(stake);  ""    . The external call to whale.send(stake) allows the whale contract to execute arbitrary code; including calls back into the current contract. An attacker can create a malicious contract that calls this contract repeatedly before the state is updated; allowing the attacker to drain funds from the contract."
-0xb48e28b7de69e921e37c9786f11a6f73274777ef,Crowdsale.fallback,1,1,1,---------- Reason for not RE: beneficiary and tokenReward will get the money if the attack is successful. These variables are set by owner. Owner is not malicious.
+0xb48e28b7de69e921e37c9786f11a6f73274777ef,Crowdsale.fallback,0,1,1,---------- Reason for not RE: beneficiary and tokenReward will get the money if the attack is successful. These variables are set by owner. Owner is not malicious.
 0xb7c5c5aa4d42967efe906e1b66cb8df9cebf04f7,keepMyEther.withdraw,1,1,1,--------
 0xb98de64d4dbe2956e80149e88ce9135bb05e9400,Bounty.getTokens,1,1,1,Cross function RE---------- Reason for RE: 1. require(validPurchase(beneficiary)); and 2. participated[beneficiary] = true; -- Reason for UX: token.transfer() returns boolean
 0xbaea5bc6568dcb1f1c5aa24223a47333a6b3a8f5,TrustlessOTC.cancelTrade,0,1,1,---------- Reason for UX: Token(o.tokenFrom).transfer(o.creator; o.amountFrom) returns boolean
@@ -379,10 +379,10 @@ Smart Contract,Function Name,RE,UX,is_student,Comments
 0xde1fa94c7fa043fccf3938f47e9911ca584baed4,DailyGreed.fallback,0,1,1,Dynamic No RE--------The function does not have reentrancy vulnerability. There is no benefit to the attacker. Moreover the balance will get updated once the reentrant call finishes
 0xde7c2911cac44d5949cbe80b0c7d38f7a476cbad,SimpleWallet.withdraw,1,1,1,RE -- Multi call bug---------- Reason for RE: wallet1 can reenter and take all money (wallet1.send)
 0xe7e0bb725a6c1ed81b89042b1d37756b21db4958,BDSM_Crowdsale.fallback,1,0,1,--------
-0xe85083dec29ca5287a00a29f667a8c5489cdf297,OpportyWhiteListHold.unlockTokens,1,0,1,---------- Reason for no RE: OppToken.transfer() is defined and it does not call any external function -- Reason for no UX: OppToken.transfer() always return true; no need to check
+0xe85083dec29ca5287a00a29f667a8c5489cdf297,OpportyWhiteListHold.unlockTokens,0,0,1,---------- Reason for no RE: OppToken.transfer() is defined and it does not call any external function -- Reason for no UX: OppToken.transfer() always return true; no need to check
 0xea9c15f733ee4cd9e24c97bdddd66077a757b474,BoomerangLiquidity.payout,1,1,1,--------There is reentrancy bug. If the fallback function of the contract which is being paid by the line flmContract.call.value(investment).gas(1000000)() calls payout() again; it can keep getting money until balance <= 1. There is unchecked call return value because the success of flmContract.call.value(investment).gas(1000000)() is not being validated by checking the output. The code goes ahead even if the money transfer failed. This can lead to inconsistencies in the state of the contract.
 0xebbe139afc4f0706cc928311b6748701b6549a31,Contagion.Count,0,1,1,No RE --  modifier--------
-0xec94d178d97bac527fdcd4b3d4bf41b57d640c5b,Crowdsale.devResWithdrawal,1,,0,
+0xec94d178d97bac527fdcd4b3d4bf41b57d640c5b,Crowdsale.devResWithdrawal,0,,0,"Reason for no RE: benefiary address is fixed and not malicious"
 0xf1add8bf553d0066be17768d6816f3730c476237,EasySmartolution.getOut,0,,0,
 0xf1add8bf553d0066be17768d6816f3730c476237,EasySmartolution.processPayment,1,,0,
 0xf847b0052b9d369401b0d71465f28392ea7e3304,Pandora.returnDeposit,1,,0,
